@@ -127,6 +127,10 @@ def avaliar_ideia(ideia: dict, decisor, cfg) -> dict:
             "rotulo": dor.rotulo, "escore_dor": round(dor.score_dor, 3),
             "escore_interna": round(dor.score_interna, 3),
             "margem": round(dor.margem, 3), "desvio": round(dor.desvio, 3),
+            # brutos, para permitir recalibrar os limiares depois (ver recalibrar.py)
+            "sondas": {k: round(v, 4) for k, v in (dor.detalhe or {}).items()},
+            "por_parafrase": {v: {k: round(x, 4) for k, x in d.items()}
+                              for v, d in (dor.por_parafrase or {}).items()},
         },
         "indice": idx,
         "tier": tier(idx),

@@ -133,6 +133,64 @@ O **Indice de Acao** e a media de `fit` e `venda`. Todo indicador vem com **conf
 confianca baixa significa que o modelo viu ambiguidade real na ideia, nao que o valor esteja
 errado.
 
+## Recalibrar para um nicho novo
+
+As 4 sondas sao genericas, mas os **limiares foram ajustados sobre 17 ideias do nicho de
+turismo**. O que faz o dono comprar varia por nicho. Usar o limiar de outro nicho produz o
+sintoma classico: quase tudo sai `INSTAVEL` ou `INDETERMINADO`, porque as sondas divergem
+mais entre parafrases do que os limiares esperam.
+
+### O procedimento
+
+**1. Colete um conjunto rotulado** (ideal: 20 a 30 ideias). Nao precisa de LLM para gerar
+texto, so da descricao de cada ideia:
+
+```bash
+# ideias.json aceita [{"nome": "...", "descricao": "..."}] ou ["descricao 1", ...]
+python3 gerar_estudo.py "seu nicho" --ideias-arquivo ideias.json \
+    --so-avaliar --saida coleta --mock-llm
+```
+
+`--so-avaliar` para depois da avaliacao (nao escreve os planos). Cada ideia recebe as 12
+chamadas do algoritmo, e `coleta/dados.json` guarda as sondas cruas por parafrase.
+
+**2. Rode a varredura:**
+
+```bash
+python3 recalibrar.py coleta/dados.json
+```
+
+O rotulo e o indicador `venda` do proprio decisor: o classificador existe para **prever** a
+facilidade de venda. Ideias com `venda` perto do corte ficam numa zona morta e sao ignoradas,
+porque nelas nem o decisor se decidiu.
+
+A varredura imprime a tabela de combinacoes e recomenda a melhor. A ordem de prioridade e
+deliberada:
+
+1. **zero erro perigoso** (falso FORTE: mandar atacar uma ideia que nao vende);
+2. mais acertos;
+3. menos escalonamento.
+
+O resultado e conservador de proposito: prefere dizer "revise a mao" a arriscar um veredito
+errado na direcao que custa dinheiro.
+
+**3. Aplique e registre a regressao.** Cole as constantes em `nicho/algoritmo.py`:
+
+```python
+LIMIAR_FORTE = 0.65      # ajustado para <nicho>, <data>
+LIMIAR_FRACA = 0.50
+LIMIAR_INSTAVEL = 0.15
+```
+
+E **guarde o conjunto de dados**: ele e o teste que impede a calibracao de regredir na
+proxima mudanca de sonda. Sem isso, a proxima alteracao no algoritmo vira chute.
+
+### O que a recalibracao nao resolve
+
+Se nenhuma combinacao zera o falso FORTE, o problema nao e o limiar: as 4 sondas nao separam
+esse nicho. O caminho entao e outro — acrescentar uma sonda especifica do nicho (ex.: "o
+cliente final nota a diferenca?" para servicos de balcao) em vez de continuar girando numeros.
+
 ## Cache
 
 Toda resposta crua vai para `.cache.json` na pasta de saida. Reexecutar o mesmo comando nao

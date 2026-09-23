@@ -12,6 +12,8 @@ class Config:
     ticket_mes: int = 300
     n_ideias: int = 8
     saida: str = "estudo"
+    ideias_arquivo: str = ""   # JSON com a lista de ideias (pula a geracao)
+    so_avaliar: bool = False    # para depois da avaliacao (coleta para recalibrar)
 
     # LLM (qualquer endpoint compativel com OpenAI chat/completions)
     llm_base_url: str = field(default_factory=lambda: os.environ.get(
