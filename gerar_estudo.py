@@ -264,6 +264,8 @@ def main() -> int:
     p.add_argument("--saida", default="estudo", help="pasta de saida (padrao ./estudo)")
     p.add_argument("--ideias-arquivo", default="",
                    help="JSON com a lista de ideias: pula a geracao por LLM")
+    p.add_argument("--metodo-dor", choices=("escolha", "noul"), default="escolha",
+                   help="como medir a dor: escolha (padrao, 3 opcoes) ou noul (4 sondas)")
     p.add_argument("--so-avaliar", action="store_true",
                    help="para depois da avaliacao (coleta dados para recalibrar)")
     p.add_argument("--mock", action="store_true",
@@ -282,7 +284,8 @@ def main() -> int:
     try:
         cfg = Config(nicho=nicho, cidade=a.cidade, ticket_mes=a.ticket, n_ideias=a.ideias,
                      saida=a.saida, ideias_arquivo=a.ideias_arquivo,
-                     so_avaliar=a.so_avaliar, mock=a.mock, mock_llm=a.mock_llm,
+                     so_avaliar=a.so_avaliar, metodo_dor=a.metodo_dor,
+                     mock=a.mock, mock_llm=a.mock_llm,
                      mock_decisor=a.mock_decisor, pdf=a.pdf, paralelo=a.paralelo,
                      timeout=a.timeout)
     except ValueError as e:

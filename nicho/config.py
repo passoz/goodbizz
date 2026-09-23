@@ -14,6 +14,7 @@ class Config:
     saida: str = "estudo"
     ideias_arquivo: str = ""   # JSON com a lista de ideias (pula a geracao)
     so_avaliar: bool = False    # para depois da avaliacao (coleta para recalibrar)
+    metodo_dor: str = "escolha"  # "escolha" (3 opcoes) ou "noul" (4 sondas antigas)
 
     # LLM (qualquer endpoint compativel com OpenAI chat/completions)
     llm_base_url: str = field(default_factory=lambda: os.environ.get(

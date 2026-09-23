@@ -20,7 +20,12 @@ Saida: um veredito por sonda (util / instavel / contraditoria) e a recomendacao.
 
 Uso
 ---
-    python3 diagnosticar.py --ideias exemplos.json
+    goodbizz diagnosticar --ideias exemplos.json
+
+Mede o metodo `noul` (as 4 sondas de afirmacao). Foi ele que expos o problema do
+ima `tecnologia`. O metodo padrao hoje e `escolha`: a estabilidade dele entre as
+3 redacoes fica em dados.json e e o que `recalibrar.py` consome. Para voltar ao
+metodo antigo em qualquer rodada, use `goodbizz gerar --metodo-dor noul`.
 
 `exemplos.json` aceita [{"nome": "...", "descricao": "..."}] ou ["descricao", ...].
 O ideal e usar 5 a 10 ideias do nicho real, incluindo pelo menos uma que

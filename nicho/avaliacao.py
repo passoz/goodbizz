@@ -1,9 +1,10 @@
 """Indicadores, agregacao, tiers e o algoritmo de dor (reusa o modulo ja calibrado)."""
 from __future__ import annotations
 
-from statistics import fmean
+from statistics import fmean, pstdev
 
 from . import algoritmo as ALG
+from . import dor_escolha
 
 NIVEIS = {
     "fit": [
@@ -43,13 +44,10 @@ def perguntas_indicadores() -> dict[str, dict]:
                       "instructions": "Quao disruptiva e esta ideia para o setor, na pratica?",
                       "criteria": NIVEIS["disrupcao"]},
         "dor": {"type": "choice",
-                "instructions": "Que tipo de dor este produto resolve?",
-                "criteria": {
-                    "dinheiro_direto": "Evita perder vendas, aumenta ticket ou garante comissoes.",
-                    "reputacao": "Protege a imagem publica que atrai clientes.",
-                    "backoffice": "Organiza documentos, burocracia ou processos internos.",
-                    "tecnologia": "Protege outras tecnologias.",
-                }},
+                "instructions": "Que tipo de dor esta ideia resolve?",
+                # sem a opcao 'tecnologia': ela capturava toda ideia deste tipo de projeto
+                # (ver nicho/dor_escolha.py)
+                "criteria": dict(dor_escolha.OPCOES)},
         "solo": {"type": "noul",
                  "instructions": "E viavel um consultor solo manter isso para 30 clientes sem "
                                  "enlouquecer com suporte?"},
@@ -69,6 +67,29 @@ def perguntas_negocio(ticket_mes: int) -> dict[str, dict]:
                                   "solucao, comparado ao valor financeiro que ela gera para o dono?",
                   "criteria": NIVEIS["preco"]},
     }
+
+
+class _ResultadoEscolha:
+    """Adapta a medicao por escolha ao formato que o resto do codigo ja consome."""
+
+    def __init__(self, medido: dict) -> None:
+        s = medido["sondas"]
+        self.detalhe = s
+        self.por_parafrase = medido["por_parafrase"]
+        self.score_dor = max(s["dinheiro"], s["reputacao"])
+        self.score_interna = max(s["processo"], s["tecnologia"])
+        self.margem = self.score_dor - self.score_interna
+        sondas = list(next(iter(self.por_parafrase.values())).keys())
+        self.desvio = max(
+            (pstdev([p[k] for p in self.por_parafrase.values()]) for k in sondas), default=0.0)
+        if self.desvio > ALG.LIMIAR_INSTAVEL:
+            self.rotulo = "INSTAVEL"
+        elif self.score_dor >= ALG.LIMIAR_FORTE and self.score_dor > self.score_interna:
+            self.rotulo = "FORTE"
+        elif self.score_interna >= ALG.LIMIAR_FRACA and self.score_interna > self.score_dor:
+            self.rotulo = "FRACA"
+        else:
+            self.rotulo = "INDETERMINADO"
 
 
 def _score(ans: dict) -> float:
@@ -98,10 +119,15 @@ def avaliar_ideia(ideia: dict, decisor, cfg) -> dict:
     ind = decisor.ask(estado, perguntas_indicadores())
     neg = decisor.ask(estado + f"\nPreco proposto: R$ {cfg.ticket_mes} por mes.",
                       perguntas_negocio(cfg.ticket_mes))
-    # algoritmo de dor: 4 sondas x N parafrases, com limiar calibrado e escalonamento
-    variantes = tuple(list(ALG.SONDAS)[: max(ALG.MIN_PARAFRASES, cfg.parafrases)])
-    dor = ALG.avaliar(ideia["descricao"], backend=decisor, contexto=cfg.contexto(),
-                      variantes=variantes)
+    # medicao da dor: por escolha (padrao) ou pelas 4 sondas noul antigas
+    if cfg.metodo_dor == "escolha":
+        medido = dor_escolha.medir(decisor, estado)
+        variantes = list(medido["por_parafrase"])
+        dor = _ResultadoEscolha(medido)
+    else:
+        variantes = tuple(list(ALG.SONDAS)[: max(ALG.MIN_PARAFRASES, cfg.parafrases)])
+        dor = ALG.avaliar(ideia["descricao"], backend=decisor, contexto=cfg.contexto(),
+                          variantes=variantes)
 
     fit, venda = _score(ind["fit"]), _score(ind["venda"])
     idx = indice_acao(fit, venda)

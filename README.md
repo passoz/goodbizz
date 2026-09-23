@@ -143,7 +143,7 @@ o mesmo.
 | 1. brief | `nicho/geracao.py` | LLM escreve o contexto de mercado |
 | 2. ideias | `nicho/geracao.py` | LLM propoe N ideias em JSON, com mecanismos distintos |
 | 3. avaliacao | `nicho/avaliacao.py` | decisor responde 8 perguntas por ideia |
-| 4. dor | `nicho/algoritmo.py` | 4 sondas x 3 parafrases, limiar seguro e escalonamento |
+| 4. dor | `nicho/dor_escolha.py` ou `nicho/algoritmo.py` | mede o tipo de dor (escolha de 3 consequencias, ou as 4 sondas noul antigas) |
 | 5. planos | `nicho/geracao.py` | LLM escreve o plano, usando so os numeros medidos |
 | 6. verificacao | `nicho/verificacao.py` | checa secoes, acentos, tabelas e presenca dos numeros |
 | saida | `nicho/relatorios.py`, `nicho/render.py` | indice, tabelao, CSV, JSON, PDF |
@@ -158,6 +158,43 @@ Ferramentas de apoio:
 **A regra que atravessa tudo:** os numeros sao calculados pelo codigo. O LLM escreve a prosa
 em volta deles e nao tem permissao de inventar numero novo. O verificador confere que os
 valores medidos aparecem no texto final.
+
+### Medicao da dor: dois metodos
+
+O tipo de dor e o indicador que mais pesa na decisao. Existem duas formas de medi-lo, e a
+diferenca entre elas foi **medida**, nao escolhida no gosto:
+
+| Metodo | Como funciona | Estado |
+|---|---|---|
+| `escolha` (**padrao**) | uma pergunta de escolha entre 3 consequencias concretas, repetida em 3 redacoes | funciona |
+| `noul` | as 4 sondas de afirmacao (dinheiro, reputacao, processo, tecnologia) | **quebrado com decisores reais** |
+
+O que foi medido, com o decisor local:
+
+- a sonda `noul` de `tecnologia` e um **ima**: vencia para qualquer coisa, inclusive "uma
+  planilha de papel". A afirmacao e a negacao voltavam as duas altas (contradicao 1.16 a 1.24,
+  num limiar de 1.20). Faz sentido: toda ideia deste tipo de projeto **e** tecnologia, entao
+  "isso protege tecnologia?" responde sim para todas.
+- as binarias tambem falharam: para "a pousada perde reserva porque o dono nao le as
+  mensagens", a pergunta "o dono perde dinheiro que entra?" voltou **0.00**.
+- com a pergunta de escolha e **sem** a opcao `tecnologia`, os casos passaram a classificar
+  certo. Conjunto de teste com 6 casos (uma dor de dinheiro, uma de reputacao, uma interna e
+  dois negativos claros):
+
+| caso | dinheiro | reputacao | processo | resultado |
+|---|---|---|---|---|
+| reserva perdida (dinheiro) | **0.42** | 0.28 | 0.30 | maior massa em dinheiro |
+| avaliacao sem resposta (reputacao) | 0.01 | **0.97** | 0.02 | correto |
+| notas fiscais na planilha (interno) | 0.26 | 0.14 | **0.60** | correto |
+| planilha de papel (nada) | 0.10 | 0.03 | 0.86 | nao e dor de compra |
+| caderno de receitas (nada) | 0.10 | 0.06 | 0.84 | nao e dor de compra |
+
+Por isso `tecnologia` saiu do conjunto de opcoes, e o padrao passou a ser a escolha de 3.
+
+**Consequencia importante:** a calibracao de limiares dos 17 casos de turismo foi feita sobre
+as 4 sondas `noul`. Trocando o metodo, a escala muda (as 3 opcoes somam 1) e os limiares
+precisam ser refeitos com `goodbizz recalibrar`. Usar `--metodo-dor noul` mantem o
+comportamento antigo, para comparar.
 
 ### Os indicadores
 
