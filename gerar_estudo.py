@@ -20,8 +20,8 @@ O que ele faz, em ordem:
   7. SAIDA      - md + csv + json e, com --pdf, um PDF unico com tudo.
 
 Configuracao por variavel de ambiente:
-  NICHO_LLM_URL / NICHO_LLM_MODEL / NICHO_LLM_KEY   (endpoint compativel com OpenAI)
-  NICHO_DECISOR_URL / NICHO_DECISOR_MODEL / NICHO_DECISOR_KEY   (System One / laya)
+  GOODBIZZ_LLM_URL / GOODBIZZ_LLM_MODEL / GOODBIZZ_LLM_KEY   (endpoint compativel com OpenAI)
+  GOODBIZZ_DECISOR_URL / GOODBIZZ_DECISOR_MODEL / GOODBIZZ_DECISOR_KEY   (System One / laya)
 
 Sem credencial, rode com --mock: o encanamento inteiro executa com dados deterministicos.
 """

@@ -1,0 +1,85 @@
+#!/bin/sh
+# Ponto de entrada unico das ferramentas. O instalar.sh coloca um link para este
+# arquivo no seu PATH, entao o uso e `goodbizz <subcomando>` sem chamar python.
+set -eu
+
+# resolve o caminho real do repo mesmo quando chamado por link em ~/bin
+ALVO=$(readlink -f -- "$0" 2>/dev/null || echo "$0")
+RAIZ=$(CDPATH= cd -- "$(dirname -- "$ALVO")/.." && pwd)
+PY=${GOODBIZZ_PYTHON:-python3}
+
+uso() {
+  cat <<'FIM'
+goodbizz — estudo de nicho: de um prompt a um plano de negocio por ideia
+
+USO
+  goodbizz <subcomando> [opcoes]
+
+SUBCOMANDOS
+  gerar "<nicho>"      Gera o estudo: brief, ideias, avaliacao no decisor e um
+                       plano por ideia. Saida em markdown, csv, json e pdf.
+  recalibrar <dados>   Varre os limiares do classificador de dor contra um
+                       conjunto ja rotulado (dados.json de uma coleta).
+  diagnosticar         Mede se as sondas de dor sao coerentes e estaveis com o
+                       seu decisor. Rode isto ANTES de recalibrar.
+  ajuda                Esta mensagem.
+
+EXEMPLOS
+  goodbizz gerar "clinicas odontologicas em cidade media" --ideias 8 --pdf
+
+  goodbizz gerar "qualquer nicho" --ideias 5 --mock        # sem credencial
+  goodbizz gerar "seu nicho" --ideias-arquivo ideias.json \
+      --so-avaliar --saida coleta --mock-llm               # so coleta dados
+
+  goodbizz diagnosticar --ideias exemplos.json --nicho "seu nicho"
+  goodbizz recalibrar coleta/dados.json
+
+OPCOES
+  Rode `goodbizz <subcomando> --help` para a lista completa de cada um.
+
+CONFIGURACAO
+  O LLM e o decisor vem de variaveis de ambiente:
+    GOODBIZZ_LLM_URL, GOODBIZZ_LLM_MODEL, GOODBIZZ_LLM_KEY
+    GOODBIZZ_DECISOR_URL, GOODBIZZ_DECISOR_MODEL, GOODBIZZ_DECISOR_KEY
+  Sem nenhuma delas, use --mock (tudo simulado) ou --mock-llm / --mock-decisor.
+FIM
+}
+
+checar_python() {
+  if ! command -v "$PY" >/dev/null 2>&1; then
+    echo "goodbizz: nao encontrei o interpretador '$PY'" >&2
+    echo "  defina GOODBIZZ_PYTHON ou instale o python 3.10+" >&2
+    exit 127
+  fi
+  if ! "$PY" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)'; then
+    echo "goodbizz: precisa de python 3.10 ou mais novo (achei $("$PY" -V 2>&1))" >&2
+    exit 1
+  fi
+}
+
+case "${1:-}" in
+  gerar|study|estudo)
+    shift
+    checar_python
+    exec "$PY" "$RAIZ/gerar_estudo.py" "$@"
+    ;;
+  recalibrar)
+    shift
+    checar_python
+    exec "$PY" "$RAIZ/recalibrar.py" "$@"
+    ;;
+  diagnosticar)
+    shift
+    checar_python
+    exec "$PY" "$RAIZ/diagnosticar.py" "$@"
+    ;;
+  ajuda|help|-h|--help|"")
+    uso
+    ;;
+  *)
+    echo "goodbizz: subcomando desconhecido: $1" >&2
+    echo >&2
+    uso >&2
+    exit 2
+    ;;
+esac

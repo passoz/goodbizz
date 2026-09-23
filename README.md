@@ -1,4 +1,4 @@
-# bonsnegocios
+# goodbizz
 
 Um prompt pequeno entra, um estudo de negocio completo sai.
 
@@ -27,19 +27,54 @@ achar 10 ideias.
 
 ## Instalacao
 
-Nao tem. Python 3.10+ e biblioteca padrao. PDF opcional usa o `chromium` do sistema.
+Sem dependencia: Python 3.10+ e biblioteca padrao. PDF opcional usa o `chromium` do sistema.
 
 ```bash
-git clone git@github.com:passoz/bonsnegocios.git
-cd bonsnegocios
+git clone git@github.com:passoz/goodbizz.git
+cd goodbizz
+./instalar.sh
 ```
+
+O `instalar.sh` cria um link em `~/bin/goodbizz` apontando para o repo. Depois disso o uso e
+`goodbizz <subcomando>`, sem chamar python e sem depender da pasta atual. O instalador tambem:
+
+- confere a versao do python e avisa se for antiga demais;
+- avisa se `~/bin` nao estiver no PATH (nao mexe no seu shell rc);
+- avisa se faltar `chromium` (so o PDF deixa de sair);
+- avisa quantas variaveis `GOODBIZZ_*` estao no ambiente.
+
+Opcoes:
+
+```bash
+./instalar.sh --bin ~/.local/bin    # instala em outra pasta
+./instalar.sh --uninstall           # remove o link
+```
+
+Para atualizar, basta `git pull` — o link aponta para o repo, nao para uma copia.
+
+### Sem instalar
+
+Os scripts rodam direto, se voce preferir nao mexer no PATH:
+
+```bash
+python3 gerar_estudo.py --nicho "..." --mock
+```
+
+## Comandos
+
+| Comando | Para que serve |
+|---|---|
+| `goodbizz gerar "<nicho>"` | gera o estudo completo |
+| `goodbizz diagnosticar` | mede se as sondas de dor funcionam com o seu decisor |
+| `goodbizz recalibrar` | varre os limiares do classificador contra um conjunto rotulado |
+| `goodbizz ajuda` | lista tudo |
 
 ## Uso
 
 ### Sem credencial nenhuma
 
 ```bash
-python3 gerar_estudo.py --nicho "oficinas mecanicas de bairro" --ideias 5 --mock --pdf
+goodbizz gerar --nicho "oficinas mecanicas de bairro" --ideias 5 --mock --pdf
 ```
 
 O `--mock` troca o LLM e o decisor por versoes deterministicas. Serve para ver o formato
@@ -48,7 +83,7 @@ final e para validar alteracoes no codigo. **A saida nao tem valor analitico.**
 ### Com decisor real e LLM simulado
 
 ```bash
-python3 gerar_estudo.py --nicho "..." --ideias 5 --mock-llm --pdf
+goodbizz gerar --nicho "..." --ideias 5 --mock-llm --pdf
 ```
 
 Util para validar a integracao com o decisor sem gastar token de LLM.
@@ -56,15 +91,15 @@ Util para validar a integracao com o decisor sem gastar token de LLM.
 ### Completo
 
 ```bash
-export NICHO_LLM_URL=https://api.exemplo.com/v1
-export NICHO_LLM_MODEL=modelo-x
-export NICHO_LLM_KEY=...
+export GOODBIZZ_LLM_URL=https://api.exemplo.com/v1
+export GOODBIZZ_LLM_MODEL=modelo-x
+export GOODBIZZ_LLM_KEY=...
 
-export NICHO_DECISOR_URL=http://seu-decisor/api/predict
-export NICHO_DECISOR_KEY=...
-export NICHO_DECISOR_MODEL=multilingual
+export GOODBIZZ_DECISOR_URL=http://seu-decisor/api/predict
+export GOODBIZZ_DECISOR_KEY=...
+export GOODBIZZ_DECISOR_MODEL=multilingual
 
-python3 gerar_estudo.py --nicho "clinicas odontologicas em cidade media" \
+goodbizz gerar --nicho "clinicas odontologicas em cidade media" \
     --cidade "Regiao dos Lagos" --ticket 350 --ideias 8 --saida estudo --pdf
 ```
 
@@ -153,7 +188,7 @@ isso a ordem e: primeiro a sonda, depois o limiar.
 ### Passo 0 — a sonda esta medindo alguma coisa?
 
 ```bash
-python3 diagnosticar.py --ideias exemplos.json --nicho "seu nicho"
+goodbizz diagnosticar --ideias exemplos.json --nicho "seu nicho"
 ```
 
 Use 5 a 10 ideias do nicho real, incluindo pelo menos uma que claramente **nao** tenha a
@@ -187,7 +222,7 @@ Ideal: 20 a 30 ideias. Nao precisa de LLM para gerar texto, so da descricao de c
 
 ```bash
 # ideias.json aceita [{"nome": "...", "descricao": "..."}] ou ["descricao 1", ...]
-python3 gerar_estudo.py "seu nicho" --ideias-arquivo ideias.json \
+goodbizz gerar "seu nicho" --ideias-arquivo ideias.json \
     --so-avaliar --saida coleta --mock-llm
 ```
 
@@ -197,7 +232,7 @@ chamadas do algoritmo, e `coleta/dados.json` guarda as sondas cruas por parafras
 ### Passo 2 — varra os limiares
 
 ```bash
-python3 recalibrar.py coleta/dados.json
+goodbizz recalibrar coleta/dados.json
 ```
 
 O rotulo e o indicador `venda` do proprio decisor: o classificador existe para **prever** a
