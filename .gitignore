@@ -1,0 +1,22 @@
+# Segredos
+.env
+.env.local
+
+# Credenciais locais das ferramentas
+.envrc.local
+
+# Artefatos de execucao
+__pycache__/
+*.pyc
+**/.cache.json
+
+# Saidas do gerar_estudo.py
+estudo/
+estudo-*/
+/estudo-completo.html
+/estudo-completo.pdf
+
+# Sistema
+.DS_Store
+*.swp
+*~
