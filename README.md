@@ -97,7 +97,7 @@ export GOODBIZZ_LLM_KEY=...
 
 export GOODBIZZ_DECISOR_URL=http://seu-decisor/v1/systemone
 export GOODBIZZ_DECISOR_KEY=...
-export GOODBIZZ_DECISOR_MODEL=multilingual
+export GOODBIZZ_DECISOR_MODEL=systemone-latest
 
 goodbizz gerar --nicho "clinicas odontologicas em cidade media" \
     --cidade "Regiao dos Lagos" --ticket 350 --ideias 8 --saida estudo --pdf

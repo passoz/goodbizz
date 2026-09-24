@@ -24,10 +24,10 @@ class Config:
     llm_key: str = field(default_factory=lambda: os.environ.get(
         "GOODBIZZ_LLM_KEY", os.environ.get("OPENAI_API_KEY", "")))
 
-    # Decisor (System One / laya). Sem url, cai no modo simulado.
+    # Decisor (System One). Sem url, cai no modo simulado.
     decisor_url: str = field(default_factory=lambda: os.environ.get("GOODBIZZ_DECISOR_URL", ""))
     decisor_model: str = field(default_factory=lambda: os.environ.get(
-        "GOODBIZZ_DECISOR_MODEL", "laya-latest"))
+        "GOODBIZZ_DECISOR_MODEL", "systemone-latest"))
     decisor_key: str = field(default_factory=lambda: os.environ.get("GOODBIZZ_DECISOR_KEY", ""))
 
     mock: bool = False          # simula LLM e decisor

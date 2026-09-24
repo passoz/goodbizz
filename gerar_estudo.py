@@ -21,7 +21,7 @@ O que ele faz, em ordem:
 
 Configuracao por variavel de ambiente:
   GOODBIZZ_LLM_URL / GOODBIZZ_LLM_MODEL / GOODBIZZ_LLM_KEY   (endpoint compativel com OpenAI)
-  GOODBIZZ_DECISOR_URL / GOODBIZZ_DECISOR_MODEL / GOODBIZZ_DECISOR_KEY   (System One / laya)
+  GOODBIZZ_DECISOR_URL / GOODBIZZ_DECISOR_MODEL / GOODBIZZ_DECISOR_KEY   (System One)
 
 Sem credencial, rode com --mock: o encanamento inteiro executa com dados deterministicos.
 """

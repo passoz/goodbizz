@@ -1,4 +1,4 @@
-"""Cliente do decisor (System One / laya) + modo simulado.
+"""Cliente do decisor (System One) + modo simulado.
 
 O `url` aponta para o endpoint System One do decisor — o mesmo padrao de endpoint
 do Jev, `POST /v1/systemone`:

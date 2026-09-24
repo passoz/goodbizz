@@ -10,7 +10,7 @@ Calibracao atual: limiares ajustados sobre 17 casos do nicho de turismo
 (`LIMIAR_FORTE = 0.65`, `LIMIAR_FRACA = 0.50`, `LIMIAR_INSTAVEL = 0.15`).
 Trocando de nicho, revalide antes de confiar no rotulo.
 
-Simula, num decisor tipo System One (Jev / laya), o teste de uma pergunta:
+Simula, num decisor tipo System One, o teste de uma pergunta:
     "essa dor tira dinheiro do dono hoje, ou suja o nome dele hoje?"
 
 Por que não é uma pergunta só
@@ -131,7 +131,7 @@ class Backend(Protocol):
 
 @dataclass
 class HttpBackend:
-    """Adaptador para qualquer endpoint no formato System One / Jev / laya.
+    """Adaptador para qualquer endpoint no formato System One.
 
     Espera um POST JSON:
         {"state": "...", "model": "...",
@@ -143,7 +143,7 @@ class HttpBackend:
 
     url: str
     api_key: str | None = None
-    model: str = "laya-latest"
+    model: str = "systemone-latest"
     timeout: float = 30.0
     extrair: Callable[[dict[str, Any]], dict[str, float]] | None = None
 
