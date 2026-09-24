@@ -95,7 +95,7 @@ export GOODBIZZ_LLM_URL=https://api.exemplo.com/v1
 export GOODBIZZ_LLM_MODEL=modelo-x
 export GOODBIZZ_LLM_KEY=...
 
-export GOODBIZZ_DECISOR_URL=http://seu-decisor/api/predict
+export GOODBIZZ_DECISOR_URL=http://seu-decisor/v1/systemone
 export GOODBIZZ_DECISOR_KEY=...
 export GOODBIZZ_DECISOR_MODEL=multilingual
 

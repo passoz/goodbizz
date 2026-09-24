@@ -1,10 +1,13 @@
 """Cliente do decisor (System One / laya) + modo simulado.
 
-Fala o formato System One:
+O `url` aponta para o endpoint System One do decisor — o mesmo padrao de endpoint
+do Jev, `POST /v1/systemone`:
     POST {url}
     {"state": ..., "model": ...,
      "questions": {"id": {"type": "noul|choice|score", "instructions": ..., "criteria": ...}}}
     -> {"answers": {"id": {...}}}
+So o campo `answers` e lido: `noul` traz a probabilidade, `choice` traz
+`probabilities` e `score` traz o nivel esperado.
 """
 from __future__ import annotations
 
