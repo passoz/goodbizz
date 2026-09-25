@@ -52,6 +52,7 @@ from __future__ import annotations
 import json
 import statistics
 import sys
+import urllib.parse
 import urllib.request
 from dataclasses import dataclass, field
 from typing import Any, Callable, Protocol
@@ -131,14 +132,14 @@ class Backend(Protocol):
 
 @dataclass
 class HttpBackend:
-    """Adaptador para qualquer endpoint no formato System One.
+    """Adaptador para qualquer endpoint no formato System One (Jev, Laya, locais).
 
     Espera um POST JSON:
         {"state": "...", "model": "...",
          "questions": {"p_dinheiro": {"type": "noul", "instructions": "..."}}}
     e uma resposta com:
         {"answers": {"p_dinheiro": {"type": "noul", "noul": 0.81}}}
-    Ajuste `extrair` se o seu serviço devolver outra forma.
+    Ajuste `extrair` se o seu servico devolver outra forma.
     """
 
     url: str
@@ -147,40 +148,62 @@ class HttpBackend:
     timeout: float = 30.0
     extrair: Callable[[dict[str, Any]], dict[str, float]] | None = None
 
+    def __post_init__(self) -> None:
+        u = self.url.strip().rstrip("/")
+        if u:
+            parsed = urllib.parse.urlparse(u)
+            if not parsed.path or parsed.path == "/":
+                u = f"{u}/v1/systemone"
+            elif parsed.path.endswith("/v1"):
+                u = f"{u}/systemone"
+            self.url = u
+
     def perguntar(self, state: str, perguntas: dict[str, str]) -> dict[str, float]:
-        payload = {
+        payload: dict[str, Any] = {
             "state": state,
-            "model": self.model,
             "questions": {
                 pid: {"type": "noul", "instructions": txt} for pid, txt in perguntas.items()
             },
         }
+        if self.model:
+            payload["model"] = self.model
+        headers = {"Content-Type": "application/json", "User-Agent": "goodbizz/1.0"}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+            headers["x-api-key"] = self.api_key
         req = urllib.request.Request(
             self.url,
-            data=json.dumps(payload).encode(),
-            headers={
-                "Content-Type": "application/json",
-                **({"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}),
-            },
+            data=json.dumps(payload, ensure_ascii=False).encode(),
+            headers=headers,
         )
         with urllib.request.urlopen(req, timeout=self.timeout) as r:
-            body = json.loads(r.read())
+            body = json.loads(r.read().decode("utf-8", errors="replace"))
         extractor = self.extrair or _extrair_padrao
         return extractor(body)
 
 
 def _extrair_padrao(body: dict[str, Any]) -> dict[str, float]:
     out: dict[str, float] = {}
-    for pid, ans in body["answers"].items():
+    answers = body.get("answers") or body.get("results") or body.get("data")
+    if not isinstance(answers, dict):
+        answers = {k: v for k, v in body.items() if isinstance(v, (dict, int, float))}
+    for pid, ans in answers.items():
         if isinstance(ans, dict):
-            for chave in ("noul", "bool", "probabilidade", "probability", "p"):
+            for chave in ("noul", "bool", "probabilidade", "probability", "p",
+                          "act_probability", "score", "value"):
                 if chave in ans:
-                    out[pid] = float(ans[chave])
-                    break
+                    val = ans[chave]
+                    try:
+                        out[pid] = 1.0 if val is True else (0.0 if val is False else float(val))
+                        break
+                    except (TypeError, ValueError):
+                        pass
         else:
-            out[pid] = float(ans)
+            try:
+                out[pid] = float(ans)
+            except (TypeError, ValueError):
+                pass
     return out
-
 
 @dataclass
 class StubBackend:

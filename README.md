@@ -90,17 +90,45 @@ Util para validar a integracao com o decisor sem gastar token de LLM.
 
 ### Completo
 
-```bash
-export GOODBIZZ_LLM_URL=https://api.exemplo.com/v1
-export GOODBIZZ_LLM_MODEL=modelo-x
-export GOODBIZZ_LLM_KEY=...
+O LLM e o decisor podem ser configurados via variaveis de ambiente ou argumentos de linha de comando.
+O decisor aceita **qualquer endpoint compativel com System One** (Jev, Laya, runtimes locais, etc.):
 
-export GOODBIZZ_DECISOR_URL=http://seu-decisor/v1/systemone
-export GOODBIZZ_DECISOR_KEY=...
-export GOODBIZZ_DECISOR_MODEL=systemone-latest
+#### Opcao A: Variaveis de ambiente
+
+```bash
+# LLM (qualquer endpoint compativel com OpenAI)
+export GOODBIZZ_LLM_URL=https://api.openai.com/v1
+export GOODBIZZ_LLM_MODEL=gpt-4o-mini
+export GOODBIZZ_LLM_KEY=sk-...
+
+# Decisor — Exemplo com Laya Studio (Cloud):
+export GOODBIZZ_DECISOR_URL=https://api.laya.studio/v1/systemone
+export GOODBIZZ_DECISOR_MODEL=laya-multilingual-v1
+export GOODBIZZ_DECISOR_KEY=lsk_...
+
+# Decisor — Exemplo com Laya Local / Self-hosted:
+# export GOODBIZZ_DECISOR_URL=http://localhost:8770/api/predict
+# export GOODBIZZ_DECISOR_MODEL=multilingual
+# export GOODBIZZ_DECISOR_KEY=sua-chave-se-houver
+
+# Decisor — Exemplo com Jev (TypeSafe AI):
+# export GOODBIZZ_DECISOR_URL=https://api.typesafe.ai/v1/systemone
+# export GOODBIZZ_DECISOR_MODEL=jev-latest
+# export GOODBIZZ_DECISOR_KEY=sua-chave-typesafe
 
 goodbizz gerar --nicho "clinicas odontologicas em cidade media" \
     --cidade "Regiao dos Lagos" --ticket 350 --ideias 8 --saida estudo --pdf
+```
+
+#### Opcao B: Argumentos de linha de comando
+
+```bash
+goodbizz gerar "clinicas odontologicas em cidade media" \
+    --decisor-url https://api.laya.studio/v1/systemone \
+    --decisor-model laya-multilingual-v1 \
+    --decisor-key lsk_... \
+    --llm-key sk-... \
+    --ticket 350 --ideias 8 --pdf
 ```
 
 ### Opcoes
@@ -112,13 +140,21 @@ goodbizz gerar --nicho "clinicas odontologicas em cidade media" \
 | `--ticket` | 300 | ticket mensal, em reais, usado para medir disposicao a pagar |
 | `--ideias` | 8 | quantas ideias gerar |
 | `--saida` | `estudo` | pasta de saida |
+| `--ideias-arquivo` | — | JSON com lista de ideias pronta (pula geracao LLM) |
+| `--metodo-dor` | `escolha` | como medir a dor: `escolha` (3 opcoes) ou `noul` (4 sondas) |
+| `--so-avaliar` | — | para depois da avaliacao (coleta dados para recalibrar) |
+| `--decisor-url` | `GOODBIZZ_DECISOR_URL` | URL do endpoint System One (Jev, Laya, local, etc.) |
+| `--decisor-model` | `GOODBIZZ_DECISOR_MODEL` | modelo do decisor (ex: `jev-latest`, `laya-multilingual-v1`) |
+| `--decisor-key` | `GOODBIZZ_DECISOR_KEY` | chave do decisor (Bearer ou x-api-key) |
+| `--llm-url` | `GOODBIZZ_LLM_URL` | URL base compativel com OpenAI |
+| `--llm-model` | `GOODBIZZ_LLM_MODEL` | modelo do LLM (`gpt-4o-mini`, `deepseek-chat`, etc.) |
+| `--llm-key` | `GOODBIZZ_LLM_KEY` | chave de API do LLM |
 | `--mock` | — | simula LLM e decisor |
 | `--mock-llm` | — | simula so o LLM |
 | `--mock-decisor` | — | simula so o decisor |
 | `--pdf` | — | gera tambem um PDF unico |
 | `--paralelo` | 8 | chamadas simultaneas |
 | `--timeout` | 60 | timeout por chamada, em segundos |
-
 ## O que sai
 
 ```

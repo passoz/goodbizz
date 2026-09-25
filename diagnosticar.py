@@ -124,6 +124,14 @@ def main() -> int:
     ap.add_argument("--cidade", default="")
     ap.add_argument("--limiar", type=float, default=1.20,
                     help="soma afirmacao+negacao acima disto = contraditoria (padrao 1.20)")
+    ap.add_argument("--decisor-url", default=None,
+                    help="URL do endpoint System One (Jev, Laya, local, etc.)")
+    ap.add_argument("--decisor-model", default=None,
+                    help="modelo do decisor (ex: jev-latest, laya-multilingual-v1)")
+    ap.add_argument("--decisor-key", default=None,
+                    help="chave de autenticacao do decisor")
+    ap.add_argument("--mock", action="store_true",
+                    help="simula o decisor com respostas deterministicas")
     a = ap.parse_args()
 
     dados = json.loads(Path(a.ideias).read_text(encoding="utf-8"))
@@ -140,8 +148,18 @@ def main() -> int:
         print("nenhuma ideia no arquivo", file=sys.stderr)
         return 2
 
+    cfg_args = {
+        "nicho": a.nicho, "cidade": a.cidade, "mock_llm": True,
+        "mock_decisor": a.mock,
+    }
+    if a.decisor_url is not None:
+        cfg_args["decisor_url"] = a.decisor_url
+    if a.decisor_model is not None:
+        cfg_args["decisor_model"] = a.decisor_model
+    if a.decisor_key is not None:
+        cfg_args["decisor_key"] = a.decisor_key
     try:
-        cfg = Config(nicho=a.nicho, cidade=a.cidade)
+        cfg = Config(**cfg_args)
     except ValueError as e:
         print(f"erro de configuracao: {e}", file=sys.stderr)
         return 2

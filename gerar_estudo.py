@@ -19,9 +19,10 @@ O que ele faz, em ordem:
   6. VERIFICACAO- checa secoes, acentos, tabelas e presenca dos numeros; normaliza acentos.
   7. SAIDA      - md + csv + json e, com --pdf, um PDF unico com tudo.
 
-Configuracao por variavel de ambiente:
-  GOODBIZZ_LLM_URL / GOODBIZZ_LLM_MODEL / GOODBIZZ_LLM_KEY   (endpoint compativel com OpenAI)
-  GOODBIZZ_DECISOR_URL / GOODBIZZ_DECISOR_MODEL / GOODBIZZ_DECISOR_KEY   (System One)
+Configuracao por variavel de ambiente ou argumento CLI:
+  GOODBIZZ_LLM_URL / GOODBIZZ_LLM_MODEL / GOODBIZZ_LLM_KEY (--llm-url, --llm-model, --llm-key)
+  GOODBIZZ_DECISOR_URL / GOODBIZZ_DECISOR_MODEL / GOODBIZZ_DECISOR_KEY (--decisor-url, --decisor-model, --decisor-key)
+  Funciona com qualquer System One: Jev, Laya (cloud/local), self-hosted ou gateway.
 
 Sem credencial, rode com --mock: o encanamento inteiro executa com dados deterministicos.
 """
@@ -276,18 +277,45 @@ def main() -> int:
     p.add_argument("--pdf", action="store_true", help="gera tambem um PDF unico")
     p.add_argument("--paralelo", type=int, default=8, help="chamadas simultaneas (padrao 8)")
     p.add_argument("--timeout", type=float, default=60.0, help="timeout por chamada, em segundos")
+    p.add_argument("--decisor-url", default=None,
+                   help="URL do endpoint System One (Jev, Laya, local, etc.)")
+    p.add_argument("--decisor-model", default=None,
+                   help="modelo do decisor (ex: jev-latest, laya-multilingual-v1)")
+    p.add_argument("--decisor-key", default=None,
+                   help="chave de autenticacao do decisor (Bearer ou x-api-key)")
+    p.add_argument("--llm-url", default=None,
+                   help="URL base do LLM compativel OpenAI")
+    p.add_argument("--llm-model", default=None,
+                   help="modelo do LLM (padrao: gpt-4o-mini)")
+    p.add_argument("--llm-key", default=None,
+                   help="chave de API do LLM")
     a = p.parse_args()
 
     nicho = (a.nicho_opt or a.nicho or "").strip()
     if not nicho:
         p.error("informe o nicho: --nicho \"...\" (ou como primeiro argumento)")
+    cfg_args = {
+        "nicho": nicho, "cidade": a.cidade, "ticket_mes": a.ticket, "n_ideias": a.ideias,
+        "saida": a.saida, "ideias_arquivo": a.ideias_arquivo,
+        "so_avaliar": a.so_avaliar, "metodo_dor": a.metodo_dor,
+        "mock": a.mock, "mock_llm": a.mock_llm,
+        "mock_decisor": a.mock_decisor, "pdf": a.pdf, "paralelo": a.paralelo,
+        "timeout": a.timeout,
+    }
+    if a.decisor_url is not None:
+        cfg_args["decisor_url"] = a.decisor_url
+    if a.decisor_model is not None:
+        cfg_args["decisor_model"] = a.decisor_model
+    if a.decisor_key is not None:
+        cfg_args["decisor_key"] = a.decisor_key
+    if a.llm_url is not None:
+        cfg_args["llm_base_url"] = a.llm_url
+    if a.llm_model is not None:
+        cfg_args["llm_model"] = a.llm_model
+    if a.llm_key is not None:
+        cfg_args["llm_key"] = a.llm_key
     try:
-        cfg = Config(nicho=nicho, cidade=a.cidade, ticket_mes=a.ticket, n_ideias=a.ideias,
-                     saida=a.saida, ideias_arquivo=a.ideias_arquivo,
-                     so_avaliar=a.so_avaliar, metodo_dor=a.metodo_dor,
-                     mock=a.mock, mock_llm=a.mock_llm,
-                     mock_decisor=a.mock_decisor, pdf=a.pdf, paralelo=a.paralelo,
-                     timeout=a.timeout)
+        cfg = Config(**cfg_args)
     except ValueError as e:
         print(f"erro de configuracao: {e}", file=sys.stderr)
         return 2

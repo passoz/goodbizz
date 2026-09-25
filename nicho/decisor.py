@@ -1,13 +1,14 @@
-"""Cliente do decisor (System One) + modo simulado.
+"""Cliente do decisor (System One) compativel com qualquer provedor (Jev, Laya, locais) + modo simulado.
 
-O `url` aponta para o endpoint System One do decisor — o mesmo padrao de endpoint
-do Jev, `POST /v1/systemone`:
+Funciona com qualquer endpoint que implemente o padrao System One:
     POST {url}
     {"state": ..., "model": ...,
      "questions": {"id": {"type": "noul|choice|score", "instructions": ..., "criteria": ...}}}
     -> {"answers": {"id": {...}}}
-So o campo `answers` e lido: `noul` traz a probabilidade, `choice` traz
-`probabilities` e `score` traz o nivel esperado.
+
+Suporta autenticacao via Bearer token ou x-api-key (compativel com Jev, Laya Studio,
+gateways customizados e runtimes locais/self-hosted como GGUF, MLX e daemon local).
+Normaliza a URL automaticamente e tolera variacoes no encapsulamento de resposta.
 """
 from __future__ import annotations
 
@@ -15,6 +16,7 @@ import hashlib
 import json
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from typing import Any, Protocol
 
@@ -26,35 +28,95 @@ class Decisor(Protocol):
         ...
 
 
-def _p(resposta: dict) -> float:
-    """Extrai a probabilidade de 'sim' de uma resposta bool/noul."""
-    for campo in ("noul", "bool", "probability", "probabilidade", "p", "score"):
-        if campo in resposta:
-            try:
-                return float(resposta[campo])
-            except (TypeError, ValueError):
-                pass
-    raise ValueError(f"resposta sem probabilidade: {resposta}")
+def normalizar_url(url: str) -> str:
+    """Garante que a URL aponte para um endpoint valido de System One.
 
+    Se a URL for uma raiz (ex: https://api.typesafe.ai ou https://api.laya.studio),
+    adiciona automaticamente /v1/systemone. Se ja trouxer um caminho especifico
+    (ex: /v1/systemone, /api/predict, /api/decide), respeita o caminho informado.
+    """
+    url = url.strip().rstrip("/")
+    if not url:
+        return ""
+    parsed = urllib.parse.urlparse(url)
+    if not parsed.path or parsed.path == "/":
+        return f"{url}/v1/systemone"
+    if parsed.path.endswith("/v1"):
+        return f"{url}/systemone"
+    return url
+
+
+def _extrair_respostas(corpo: Any, questions: dict[str, dict] | None = None) -> dict[str, dict]:
+    """Extrai o bloco de respostas de forma tolerante a diferentes formatos de encapsulamento."""
+    if not isinstance(corpo, dict):
+        raise ValueError(f"resposta do decisor nao e um objeto JSON valido: {type(corpo)}")
+    for campo in ("answers", "results", "data", "questions", "decisions"):
+        if campo in corpo and isinstance(corpo[campo], dict):
+            return corpo[campo]
+    # Se os IDs das perguntas foram devolvidos diretamente no nivel raiz:
+    if questions and any(qid in corpo for qid in questions):
+        return {qid: v for qid, v in corpo.items() if qid in questions and isinstance(v, (dict, int, float, str))}
+    if "answers" in corpo and isinstance(corpo["answers"], dict):
+        return corpo["answers"]
+    raise KeyError(
+        f"resposta do decisor sem envelope de respostas ('answers', 'results', 'data'): "
+        f"{list(corpo.keys())[:10]}"
+    )
+
+
+def _p(resposta: Any) -> float:
+    """Extrai a probabilidade de 'sim' de uma resposta bool/noul de qualquer provedor."""
+    if isinstance(resposta, (int, float)):
+        return float(resposta)
+    if isinstance(resposta, dict):
+        for campo in ("noul", "bool", "probability", "probabilidade", "p", "score",
+                      "value", "act_probability"):
+            if campo in resposta:
+                val = resposta[campo]
+                if isinstance(val, bool):
+                    return 1.0 if val else 0.0
+                try:
+                    return float(val)
+                except (TypeError, ValueError):
+                    pass
+        if "choice" in resposta:
+            c = str(resposta["choice"]).strip().lower()
+            if c in ("true", "yes", "sim", "1"):
+                return 1.0
+            if c in ("false", "no", "nao", "0"):
+                return 0.0
+    raise ValueError(f"resposta sem probabilidade reconhecida: {resposta}")
 
 class DecisorHttp:
-    def __init__(self, url: str, model: str, key: str = "", timeout: float = 60.0,
+    """Cliente HTTP compativel com qualquer endpoint System One (Jev, Laya, runtimes locais, etc.)."""
+
+    def __init__(self, url: str, model: str = "", key: str = "", timeout: float = 60.0,
                  tentativas: int = 3) -> None:
-        self.url, self.model, self.key = url, model, key
-        self.timeout, self.tentativas = timeout, tentativas
+        self.url = normalizar_url(url)
+        self.model = model.strip() if model else ""
+        self.key = key.strip() if key else ""
+        self.timeout = timeout
+        self.tentativas = tentativas
 
     def ask(self, state: str, questions: dict[str, dict]) -> dict[str, dict]:
-        corpo = {"state": state, "model": self.model, "questions": questions}
+        corpo: dict[str, Any] = {"state": state, "questions": questions}
+        if self.model:
+            corpo["model"] = self.model
         dados = json.dumps(corpo, ensure_ascii=False).encode()
+        headers = {
+            "Content-Type": "application/json",
+            "User-Agent": "goodbizz/1.0",
+        }
+        if self.key:
+            headers["Authorization"] = f"Bearer {self.key}"
+            headers["x-api-key"] = self.key
         ultimo: Exception | None = None
         for n in range(self.tentativas):
             try:
-                req = urllib.request.Request(
-                    self.url, data=dados,
-                    headers={"Content-Type": "application/json",
-                             **({"Authorization": f"Bearer {self.key}"} if self.key else {})})
+                req = urllib.request.Request(self.url, data=dados, headers=headers)
                 with urllib.request.urlopen(req, timeout=self.timeout) as r:
-                    return json.loads(r.read())["answers"]
+                    raw = json.loads(r.read().decode("utf-8", errors="replace"))
+                    return _extrair_respostas(raw, questions)
             except urllib.error.HTTPError as e:
                 # o corpo traz o motivo real (ex.: "type must be choice, score or noul");
                 # sem ele o erro fica impossivel de diagnosticar
@@ -118,4 +180,4 @@ def construir(cfg) -> Decisor:
     return DecisorHttp(cfg.decisor_url, cfg.decisor_model, cfg.decisor_key, cfg.timeout)
 
 
-__all__ = ["Decisor", "DecisorHttp", "DecisorMock", "construir", "_p"]
+__all__ = ["Decisor", "DecisorHttp", "DecisorMock", "construir", "normalizar_url", "_p"]

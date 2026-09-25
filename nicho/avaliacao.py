@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 from statistics import fmean, pstdev
+from typing import Any
 
 from . import algoritmo as ALG
 from . import dor_escolha
-
+from .decisor import _p
 NIVEIS = {
     "fit": [
         "Ruim: exige escala corporativa ou processos maduros.",
@@ -92,13 +93,30 @@ class _ResultadoEscolha:
             self.rotulo = "INDETERMINADO"
 
 
-def _score(ans: dict) -> float:
-    return float(ans.get("score", 0.0))
+def _score(ans: Any) -> float:
+    if isinstance(ans, (int, float)):
+        return float(ans)
+    if isinstance(ans, dict):
+        for k in ("score", "value", "level", "nota", "posicao"):
+            if k in ans:
+                try:
+                    return float(ans[k])
+                except (TypeError, ValueError):
+                    pass
+    return 0.0
 
 
-def _conf(ans: dict) -> float:
-    return float(ans.get("confidence", 0.0))
-
+def _conf(ans: Any) -> float:
+    if isinstance(ans, (int, float)):
+        return float(ans)
+    if isinstance(ans, dict):
+        for k in ("confidence", "conf", "confianca"):
+            if k in ans:
+                try:
+                    return float(ans[k])
+                except (TypeError, ValueError):
+                    pass
+    return 0.0
 
 def indice_acao(fit: float, venda: float) -> float:
     return round((fit + venda) / 2, 3)
@@ -129,25 +147,39 @@ def avaliar_ideia(ideia: dict, decisor, cfg) -> dict:
         dor = ALG.avaliar(ideia["descricao"], backend=decisor, contexto=cfg.contexto(),
                           variantes=variantes)
 
-    fit, venda = _score(ind["fit"]), _score(ind["venda"])
+    fit, venda = _score(ind.get("fit", {})), _score(ind.get("venda", {}))
     idx = indice_acao(fit, venda)
+
+    dor_ans = ind.get("dor", {})
+    if isinstance(dor_ans, dict):
+        dor_choice = dor_ans.get("choice") or ""
+        dor_probs = dor_ans.get("probabilities") or dor_ans.get("probs") or {}
+        if not dor_probs and dor_choice:
+            dor_probs = {dor_choice: 1.0}
+    else:
+        dor_choice = str(dor_ans) if dor_ans else ""
+        dor_probs = {dor_choice: 1.0} if dor_choice else {}
+
+    solo_ans = ind.get("solo", {})
+    wtp_ans = neg.get("wtp", {})
+    meta30_ans = neg.get("meta30", {})
 
     return {
         "nome": ideia["nome"],
         "setor": ideia.get("setor", ""),
         "descricao": ideia["descricao"],
         "indicadores": {
-            "fit": fit, "fit_conf": _conf(ind["fit"]),
-            "venda": venda, "venda_conf": _conf(ind["venda"]),
-            "disrupcao": _score(ind["disrupcao"]), "disrupcao_conf": _conf(ind["disrupcao"]),
-            "dor": ind["dor"].get("choice"), "dor_probs": ind["dor"].get("probabilities", {}),
-            "dor_conf": _conf(ind["dor"]),
-            "solo": float(ind["solo"].get("noul", ind["solo"].get("bool", 0.0))),
+            "fit": fit, "fit_conf": _conf(ind.get("fit")),
+            "venda": venda, "venda_conf": _conf(ind.get("venda")),
+            "disrupcao": _score(ind.get("disrupcao")), "disrupcao_conf": _conf(ind.get("disrupcao")),
+            "dor": dor_choice, "dor_probs": dor_probs,
+            "dor_conf": _conf(dor_ans),
+            "solo": _p(solo_ans) if solo_ans else 0.0,
         },
         "negocio": {
-            "wtp": float(neg["wtp"].get("noul", neg["wtp"].get("bool", 0.0))),
-            "meta30": float(neg["meta30"].get("noul", neg["meta30"].get("bool", 0.0))),
-            "preco": _score(neg["preco"]), "preco_conf": _conf(neg["preco"]),
+            "wtp": _p(wtp_ans) if wtp_ans else 0.0,
+            "meta30": _p(meta30_ans) if meta30_ans else 0.0,
+            "preco": _score(neg.get("preco")), "preco_conf": _conf(neg.get("preco")),
         },
         "algoritmo": {
             "rotulo": dor.rotulo, "escore_dor": round(dor.score_dor, 3),

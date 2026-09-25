@@ -61,9 +61,15 @@ def medir(decisor, estado: str) -> dict:
     """Devolve {"sondas": {...medias...}, "por_parafrase": {i: {...}}}."""
     por_parafrase: dict[str, dict[str, float]] = {}
     for n, q in enumerate(perguntas(), 1):
-        probs = decisor.ask(estado, {"dor": q})["dor"]["probabilities"]
+        res = decisor.ask(estado, {"dor": q})
+        ans = res.get("dor", {})
+        if isinstance(ans, dict):
+            probs = ans.get("probabilities") or ans.get("probs") or {}
+            if not probs and "choice" in ans:
+                probs = {ans["choice"]: 1.0}
+        else:
+            probs = {str(ans): 1.0} if ans else {}
         por_parafrase[f"P{n}"] = {MAPA[k]: float(probs.get(k, 0.0)) for k in OPCOES}
-
     sondas = {s: 0.0 for s in SONDAS}
     for s in ("dinheiro", "reputacao", "processo"):
         sondas[s] = round(sum(p[s] for p in por_parafrase.values()) / len(por_parafrase), 4)

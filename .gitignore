@@ -1,22 +1,45 @@
-# Segredos
+# Segredos e variaveis de ambiente
 .env
-.env.local
+.env.*
+.env*
+.envrc
+.envrc.*
 
-# Credenciais locais das ferramentas
-.envrc.local
+# Ambientes virtuais
+.venv/
+venv/
+env/
+ENV/
 
-# Artefatos de execucao
+# Artefatos de execucao e cache Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
 **/.cache.json
+*.cache
+*.cache.json
 
-# Saidas do gerar_estudo.py
+# Saidas de execucao (estudos, coletas e relatorios)
 estudo/
 estudo-*/
+coleta/
+coleta-*/
 /estudo-completo.html
 /estudo-completo.pdf
+*.pdf
+*.html
 
-# Sistema
-.DS_Store
+# IDEs e editores
+.vscode/
+.idea/
 *.swp
+*.swo
 *~
+*.sublime-*
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+.directory

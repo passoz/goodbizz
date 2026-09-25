@@ -24,7 +24,7 @@ class Config:
     llm_key: str = field(default_factory=lambda: os.environ.get(
         "GOODBIZZ_LLM_KEY", os.environ.get("OPENAI_API_KEY", "")))
 
-    # Decisor (System One). Sem url, cai no modo simulado.
+    # Decisor (System One: Jev, Laya ou qualquer endpoint compativel). Sem url, cai no modo simulado.
     decisor_url: str = field(default_factory=lambda: os.environ.get("GOODBIZZ_DECISOR_URL", ""))
     decisor_model: str = field(default_factory=lambda: os.environ.get(
         "GOODBIZZ_DECISOR_MODEL", "systemone-latest"))
@@ -55,7 +55,7 @@ class Config:
             self.mock_llm = self.mock_decisor = True
         if not self.mock_llm and not self.llm_key:
             raise ValueError(
-                "defina a chave do LLM (GOODBIZZ_LLM_KEY ou OPENAI_API_KEY) ou use --mock")
+                "defina a chave do LLM (GOODBIZZ_LLM_KEY, OPENAI_API_KEY ou --llm-key) ou use --mock")
         if not self.decisor_url and not self.mock_decisor:
             raise ValueError(
-                "defina a URL do decisor (GOODBIZZ_DECISOR_URL) ou use --mock")
+                "defina a URL do decisor (GOODBIZZ_DECISOR_URL ou --decisor-url) ou use --mock")

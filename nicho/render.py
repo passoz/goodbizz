@@ -34,14 +34,21 @@ table, pre, blockquote { break-inside: avoid; }
 """
 
 
+def _link_seguro(match: re.Match) -> str:
+    texto = match.group(1)
+    href = match.group(2).strip()
+    if re.match(r"^(?:javascript|data|vbscript):", href, re.I):
+        return html.escape(texto)
+    return f'<a href="{html.escape(href, quote=True)}">{texto}</a>'
+
+
 def _inline(txt: str) -> str:
     txt = html.escape(txt, quote=False)
     txt = re.sub(r"`([^`]+)`", r"<code>\1</code>", txt)
     txt = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", txt)
     txt = re.sub(r"(?<![*\w])\*([^*\n]+)\*(?!\*)", r"<em>\1</em>", txt)
-    txt = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r'<a href="\2">\1</a>', txt)
+    txt = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", _link_seguro, txt)
     return txt
-
 
 def md_para_html(md: str) -> str:
     linhas = md.splitlines()
@@ -160,8 +167,8 @@ def para_pdf(html_path: Path, pdf_path: Path, timeout: float = 120.0) -> tuple[b
     if not exe:
         return False, ("chromium nao encontrado; instale-o ou gere so o HTML "
                        "(o .md e o .html ja sao entregaveis)")
-    cmd = [exe, "--headless", "--disable-gpu", "--no-sandbox", "--no-pdf-header-footer",
-           f"--print-to-pdf={pdf_path}", html_path.resolve().as_uri()]
+    cmd = [exe, "--headless", "--disable-gpu", "--no-sandbox", "--disable-javascript",
+           "--no-pdf-header-footer", f"--print-to-pdf={pdf_path}", html_path.resolve().as_uri()]
     try:
         r = subprocess.run(cmd, capture_output=True, timeout=timeout)
     except subprocess.TimeoutExpired:
