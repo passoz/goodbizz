@@ -21,6 +21,9 @@ Saida: um veredito por sonda (util / instavel / contraditoria) e a recomendacao.
 Uso
 ---
     goodbizz diagnosticar --ideias exemplos.json
+    goodbizz diagnosticar --ideias exemplos.json --mock       # teste deterministico offline
+    goodbizz diagnosticar --ideias exemplos.json \
+        --decisor-url http://localhost:8770/api/predict --decisor-model multilingual
 
 Mede o metodo `noul` (as 4 sondas de afirmacao). Foi ele que expos o problema do
 ima `tecnologia`. O metodo padrao hoje e `escolha`: a estabilidade dele entre as

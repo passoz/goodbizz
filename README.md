@@ -2,32 +2,98 @@
 
 Um prompt pequeno entra, um estudo de negocio completo sai.
 
-Voce descreve um nicho em uma frase. A ferramenta gera ideias de produto, submete cada uma a
-um **decisor** (modelo System One, que devolve probabilidade em vez de texto) e escreve um
-plano de negocio por ideia: estrategia de venda, marketing, precificacao, SWOT, Business
-Model Canvas, Porter, matriz de risco, roadmap e KPIs.
+Voce descreve um nicho de mercado em uma frase. A ferramenta gera ideias de produto, avalia cada uma em um **decisor System One** (modelo probabilistico que mede chances reais em vez de alucinar texto) e redige planos de negocio executivos: estrategia comercial, marketing, precificacao, analise SWOT, Business Model Canvas, 5 Forcas de Porter, matriz de risco, roadmap de implantacao e KPIs.
 
 ```
-nicho  ->  brief  ->  ideias  ->  decisor  ->  planos  ->  md + csv + pdf
+                    [ Nicho em uma frase ]
+                              │
+                              ▼
+                   [ 1. Brief de Mercado ]
+                    LLM mapeia o contexto real
+                              │
+                              ▼
+                   [ 2. Geracao de N Ideias ]
+                    LLM propoe hipoteses com mecanismos distintos
+                              │
+                              ▼
+                [ 3. Avaliacao no Decisor System One ]
+                 Jev, Laya (cloud/local) ou endpoint compativel
+                 ├─ Fit de mercado (escala 0..2)
+                 ├─ Facilidade de venda (escala 0..2)
+                 ├─ Disrupcao (escala 0..2)
+                 ├─ Natureza da dor (escolha entre 3 consequencias)
+                 ├─ Viabilidade solo (probabilidade de manter 30 clientes)
+                 └─ Disposicao a pagar (WTP no ticket mensal informado)
+                              │
+                              ▼
+                   [ 4. Medicao da Dor ]
+                    Ensemble de 3 parafrases + medicao de variancia
+                    -> FORTE, FRACA, INDETERMINADO ou INSTAVEL
+                              │
+                              ▼
+                   [ 5. Ranquear e Tiers ]
+                    Indice de Acao = media(fit, venda) -> Tiers A, B, C
+                              │
+                              ▼
+                   [ 6. Planos de Negocio ]
+                    LLM redige plano completo de cada ideia, amarrado
+                    estritamente aos numeros medidos (sem inventar dados)
+                              │
+                              ▼
+                   [ 7. Verificacao & Entrega ]
+                    Checagem estrutural + normalizacao
+                    -> README.md (ranking) + 00-brief.md + tabelao (md/csv)
+                       + dados.json + planos individuais + PDF executivo
 ```
 
-## Por que um decisor, e nao so um LLM
+---
 
-Um LLM escreve texto. Ele nao sabe *quanto* uma ideia e boa nem *qual a chance* de o dono
-pagar por ela. Um decisor System One responde perguntas tipadas e devolve numero:
+## Por que um decisor System One, e nao so um LLM
 
-| Pergunta | O que volta |
-|---|---|
-| `score` | posicao em uma escala que voce define, com distribuicao de probabilidade |
-| `choice` | uma opcao de um conjunto fechado, com a probabilidade de cada uma |
-| `noul` | probabilidade de "sim" para uma afirmacao |
+Modelos de linguagem generativos convencionais (LLMs tipo ChatGPT ou Claude) sao lentos, caros e sofrem de viés de concordancia (*sycophancy*): se voce perguntar se uma ideia fraca e boa, o modelo inventara dez paragrafos justificando por que ela e excelente. Ele escreve prosa convincente, mas nao sabe quantificar probabilidade real de compra.
 
-Medido em milissegundos e custo de centavos. E o que permite ranquear 10 ideias em vez de
-achar 10 ideias.
+Um modelo **System One** (como o **Jev** da TypeSafe ou o **Laya** da Convai) e treinado especificamente para **decisao e calibracao probabilistica**:
+
+| Tipo de Pergunta | O que o Decisor devolve | Para que serve |
+|---|---|---|
+| `score` | Posicao numa escala ordenada com distribuicao de probabilidade | Medir fit de mercado, facilidade de venda e grau de disrupcao |
+| `choice` | A opcao vencedora e a distribuicao completa de probabilidades | Determinar a dor real do cliente (dinheiro direto, imagem ou backoffice) |
+| `noul` | Probabilidade calibrada (0.00 a 1.00) de uma afirmacao | Medir disposicao a pagar no ticket informado e viabilidade de operacao solo |
+
+Respostas chegam em milissegundos e a custo de centavos.
+
+**A divisao de trabalho no goodbizz:**
+* O **Decisor System One** e o juiz imparcial: mede probabilidades, calcula indices e ranqueia as ideias com frieza matematica.
+* O **LLM** e o redator executivo: escreve o brief e os planos de negocio, mas sob um guardrail estrito: **os numeros sao fornecidos pelo codigo**, e o LLM e proibido de inventar numeros novos. Um verificador automatico confere se os valores medidos aparecem no texto final.
+
+---
+
+## Provedores Compativeis
+
+O `goodbizz` e agnostico e funciona com qualquer provedor que implemente os protocolos padrao da industria:
+
+### 1. Decisores (System One)
+* **Laya Studio (Cloud)**: `https://api.laya.studio/v1/systemone` (modelos: `laya-multilingual-v1`, `laya-english-v1`)
+* **Laya Local / Auto-hospedado**: execucao local via MLX, GGUF ou daemon (`convaiinnovations/laya`), em endpoints como `http://localhost:8770/api/predict` ou `http://localhost:8000/v1/systemone`
+* **Jev (TypeSafe AI)**: `https://api.typesafe.ai/v1/systemone` (modelos: `jev-latest`, `typesafe/jev-1.13`)
+* **Gateways e Proxies System One**: qualquer servidor compativel com o formato wire `POST /v1/systemone`
+* **Modo Simulado (`--mock`)**: gerador deterministico baseado em SHA-256 integrado, 100% offline, zero chamadas de rede e zero custo, ideal para testes e demonstracao
+
+> **Compatibilidade automatica:** o cliente HTTP do decisor normaliza URLs (adiciona `/v1/systemone` automaticamente se informada apenas a raiz), envia autenticacao dupla (`Bearer` e `x-api-key`) e tolera respostas empacotadas em `answers`, `results`, `data` ou no nivel raiz.
+
+### 2. LLMs (Geracao de texto)
+Qualquer endpoint compativel com a API da OpenAI (`POST /v1/chat/completions`):
+* OpenAI (`gpt-4o-mini`, `gpt-4o`)
+* DeepSeek (`deepseek-chat`)
+* Groq, OpenRouter, LiteLLM, Together AI
+* Servidores locais: Ollama, vLLM, LM Studio, llama.cpp
+
+---
 
 ## Instalacao
 
-Sem dependencia: Python 3.10+ e biblioteca padrao. PDF opcional usa o `chromium` do sistema.
+Zero dependencias externas no Python: requer apenas **Python 3.10+ e biblioteca padrao**.
+A geracao de PDF opcional usa o `chromium` do proprio sistema.
 
 ```bash
 git clone git@github.com:passoz/goodbizz.git
@@ -35,83 +101,79 @@ cd goodbizz
 ./instalar.sh
 ```
 
-O `instalar.sh` cria um link em `~/bin/goodbizz` apontando para o repo. Depois disso o uso e
-`goodbizz <subcomando>`, sem chamar python e sem depender da pasta atual. O instalador tambem:
+O `instalar.sh` cria um link simbolico em `~/bin/goodbizz` apontando para o repositorio. O uso passa a ser `goodbizz <subcomando>` a partir de qualquer pasta:
 
-- confere a versao do python e avisa se for antiga demais;
-- avisa se `~/bin` nao estiver no PATH (nao mexe no seu shell rc);
-- avisa se faltar `chromium` (so o PDF deixa de sair);
-- avisa quantas variaveis `GOODBIZZ_*` estao no ambiente.
+* confere se o Python atende a versao minima (3.10+);
+* avisa se `~/bin` nao estiver no seu `PATH`;
+* avisa se o `chromium` esta disponivel (sem ele, sai tudo exceto o PDF);
+* informa quantas credenciais `GOODBIZZ_*` estao configuradas.
 
-Opcoes:
-
+Opcoes do instalador:
 ```bash
-./instalar.sh --bin ~/.local/bin    # instala em outra pasta
-./instalar.sh --uninstall           # remove o link
+./instalar.sh --bin ~/.local/bin    # instala em outra pasta do PATH
+./instalar.sh --uninstall           # remove o link simbolico
 ```
-
-Para atualizar, basta `git pull` — o link aponta para o repo, nao para uma copia.
 
 ### Sem instalar
-
-Os scripts rodam direto, se voce preferir nao mexer no PATH:
-
+Se preferir rodar sem criar links no PATH:
 ```bash
-python3 gerar_estudo.py --nicho "..." --mock
+python3 gerar_estudo.py --nicho "oficinas mecanicas de bairro" --mock
 ```
+
+---
 
 ## Comandos
 
-| Comando | Para que serve |
+| Comando | Descricao |
 |---|---|
-| `goodbizz gerar "<nicho>"` | gera o estudo completo |
-| `goodbizz diagnosticar` | mede se as sondas de dor funcionam com o seu decisor |
-| `goodbizz recalibrar` | varre os limiares do classificador contra um conjunto rotulado |
-| `goodbizz ajuda` | lista tudo |
+| `goodbizz gerar "<nicho>"` | Gera o estudo completo: brief, ideias, avaliacao no decisor e plano por ideia |
+| `goodbizz diagnosticar` | Mede a coerencia e estabilidade das sondas contra o seu decisor real |
+| `goodbizz recalibrar` | Realiza busca em grade nos limiares contra um conjunto rotulado de dados |
+| `goodbizz ajuda` | Exibe a mensagem de ajuda e opcoes |
 
-## Uso
+---
 
-### Sem credencial nenhuma
+## Guia de Uso
+
+### 1. Teste rapido sem nenhuma credencial (Modo Mock)
 
 ```bash
 goodbizz gerar --nicho "oficinas mecanicas de bairro" --ideias 5 --mock --pdf
 ```
 
-O `--mock` troca o LLM e o decisor por versoes deterministicas. Serve para ver o formato
-final e para validar alteracoes no codigo. **A saida nao tem valor analitico.**
+O `--mock` simula o LLM e o decisor de forma deterministica. Executa em menos de 1 segundo, gera todos os arquivos, pastas, CSVs e PDF para inspecao visual da estrutura. **A saida simulada nao possui valor analitico de mercado.**
 
-### Com decisor real e LLM simulado
+### 2. Teste do Decisor real sem gastar tokens de LLM
 
 ```bash
-goodbizz gerar --nicho "..." --ideias 5 --mock-llm --pdf
+goodbizz gerar --nicho "pousadas em cidades historicas" --ideias 3 --mock-llm
 ```
 
-Util para validar a integracao com o decisor sem gastar token de LLM.
+Avalia as ideias no decisor configurado, mas gera os textos dos planos com fixtures locais. Util para validar a latencia e calibracao do seu endpoint System One sem custo de LLM.
 
-### Completo
+### 3. Execucao Completa
 
-O LLM e o decisor podem ser configurados via variaveis de ambiente ou argumentos de linha de comando.
-O decisor aceita **qualquer endpoint compativel com System One** (Jev, Laya, runtimes locais, etc.):
+As credenciais e endpoints podem ser passados por **variaveis de ambiente** ou por **argumentos de linha de comando**:
 
-#### Opcao A: Variaveis de ambiente
+#### Via Variaveis de Ambiente
 
 ```bash
-# LLM (qualquer endpoint compativel com OpenAI)
+# LLM (OpenAI, DeepSeek, etc.)
 export GOODBIZZ_LLM_URL=https://api.openai.com/v1
 export GOODBIZZ_LLM_MODEL=gpt-4o-mini
 export GOODBIZZ_LLM_KEY=sk-...
 
-# Decisor — Exemplo com Laya Studio (Cloud):
+# Decisor — Exemplo com Laya Studio (Cloud)
 export GOODBIZZ_DECISOR_URL=https://api.laya.studio/v1/systemone
 export GOODBIZZ_DECISOR_MODEL=laya-multilingual-v1
-export GOODBIZZ_DECISOR_KEY=lsk_...
+export GOODBIZZ_DECISOR_KEY=lsk_live_...
 
-# Decisor — Exemplo com Laya Local / Self-hosted:
+# Decisor — Exemplo com Laya Local / Self-hosted (daemon/GGUF/MLX)
 # export GOODBIZZ_DECISOR_URL=http://localhost:8770/api/predict
 # export GOODBIZZ_DECISOR_MODEL=multilingual
 # export GOODBIZZ_DECISOR_KEY=sua-chave-se-houver
 
-# Decisor — Exemplo com Jev (TypeSafe AI):
+# Decisor — Exemplo com Jev (TypeSafe AI)
 # export GOODBIZZ_DECISOR_URL=https://api.typesafe.ai/v1/systemone
 # export GOODBIZZ_DECISOR_MODEL=jev-latest
 # export GOODBIZZ_DECISOR_KEY=sua-chave-typesafe
@@ -120,253 +182,202 @@ goodbizz gerar --nicho "clinicas odontologicas em cidade media" \
     --cidade "Regiao dos Lagos" --ticket 350 --ideias 8 --saida estudo --pdf
 ```
 
-#### Opcao B: Argumentos de linha de comando
+#### Via Argumentos CLI (sem exportar variaveis)
 
 ```bash
 goodbizz gerar "clinicas odontologicas em cidade media" \
     --decisor-url https://api.laya.studio/v1/systemone \
     --decisor-model laya-multilingual-v1 \
-    --decisor-key lsk_... \
+    --decisor-key lsk_live_... \
     --llm-key sk-... \
-    --ticket 350 --ideias 8 --pdf
+    --ticket 350 --ideias 8 --saida estudo --pdf
 ```
 
-### Opcoes
+---
 
-| Opcao | Padrao | Para que serve |
+## Opcoes do Comando `gerar`
+
+| Opcao | Padrao | Descricao |
 |---|---|---|
-| `--nicho` | — | o nicho, em uma frase (obrigatorio) |
-| `--cidade` | vazio | recorte geografico |
-| `--ticket` | 300 | ticket mensal, em reais, usado para medir disposicao a pagar |
-| `--ideias` | 8 | quantas ideias gerar |
-| `--saida` | `estudo` | pasta de saida |
-| `--ideias-arquivo` | — | JSON com lista de ideias pronta (pula geracao LLM) |
-| `--metodo-dor` | `escolha` | como medir a dor: `escolha` (3 opcoes) ou `noul` (4 sondas) |
-| `--so-avaliar` | — | para depois da avaliacao (coleta dados para recalibrar) |
-| `--decisor-url` | `GOODBIZZ_DECISOR_URL` | URL do endpoint System One (Jev, Laya, local, etc.) |
-| `--decisor-model` | `GOODBIZZ_DECISOR_MODEL` | modelo do decisor (ex: `jev-latest`, `laya-multilingual-v1`) |
-| `--decisor-key` | `GOODBIZZ_DECISOR_KEY` | chave do decisor (Bearer ou x-api-key) |
-| `--llm-url` | `GOODBIZZ_LLM_URL` | URL base compativel com OpenAI |
-| `--llm-model` | `GOODBIZZ_LLM_MODEL` | modelo do LLM (`gpt-4o-mini`, `deepseek-chat`, etc.) |
-| `--llm-key` | `GOODBIZZ_LLM_KEY` | chave de API do LLM |
-| `--mock` | — | simula LLM e decisor |
-| `--mock-llm` | — | simula so o LLM |
-| `--mock-decisor` | — | simula so o decisor |
-| `--pdf` | — | gera tambem um PDF unico |
-| `--paralelo` | 8 | chamadas simultaneas |
-| `--timeout` | 60 | timeout por chamada, em segundos |
-## O que sai
+| `--nicho` | — | O nicho em uma frase (obrigatorio) |
+| `--cidade` | vazio | Recorte geografico / regiao alvo |
+| `--ticket` | 300 | Ticket mensal estimado, em reais, para medir a disposicao a pagar |
+| `--ideias` | 8 | Quantidade de ideias de produto a gerar e avaliar |
+| `--saida` | `estudo` | Pasta onde os artefatos serao salvos |
+| `--ideias-arquivo` | — | Caminho de um JSON com ideias prontas (pula a etapa de geracao do LLM) |
+| `--metodo-dor` | `escolha` | Metodo de medicao da dor: `escolha` (3 consequencias) ou `noul` (4 sondas antigas) |
+| `--so-avaliar` | — | Interrompe o fluxo apos a avaliacao e salva `dados.json` (ideal para calibracao) |
+| `--decisor-url` | env | URL do endpoint System One (Jev, Laya, runtimes locais, etc.) |
+| `--decisor-model` | env | Modelo do decisor (`systemone-latest`, `jev-latest`, `laya-multilingual-v1`) |
+| `--decisor-key` | env | Chave de autenticacao do decisor (suporta Bearer token e x-api-key) |
+| `--llm-url` | env | URL base compativel com OpenAI (padrao: `https://api.openai.com/v1`) |
+| `--llm-model` | env | Modelo do LLM (padrao: `gpt-4o-mini`) |
+| `--llm-key` | env | Chave de API do LLM |
+| `--mock` | — | Simula tanto o LLM quanto o decisor (offline e deterministico) |
+| `--mock-llm` | — | Simula apenas o LLM (usa o decisor real) |
+| `--mock-decisor` | — | Simula apenas o decisor (usa o LLM real) |
+| `--pdf` | — | Compila todo o estudo em um unico arquivo PDF estruturado |
+| `--paralelo` | 8 | Numero maximo de chamadas simultaneas a API (via semaforo asyncio) |
+| `--timeout` | 60.0 | Tempo limite por requisicao HTTP, em segundos |
+
+---
+
+## O que sai no final
+
+A pasta de saida gera uma estrutura completa de negocio:
 
 ```
 estudo/
-├── README.md            ranking, medias e grupos de dor
-├── 00-brief.md          leitura de mercado que orientou as ideias
-├── 00-tabelao.md        todos os indicadores em uma tabela
-├── 00-tabelao.csv       o mesmo, para planilha
-├── dados.json           tudo, para reprocessar sem chamar API
-├── 01-<ideia>/README.md plano completo da ideia melhor colocada
-├── 02-<ideia>/README.md ...
-└── estudo-completo.pdf  so com --pdf
+├── README.md              # Indice executivo: ranking geral, medias e grupos de dor
+├── 00-brief.md            # Leitura de contexto do mercado que orientou as ideias
+├── 00-tabelao.md          # Tabela comparativa com todos os indicadores por ideia
+├── 00-tabelao.csv         # O mesmo tabelao pronto para importar em planilhas
+├── dados.json             # Dump completo de dados brutos e confiancas para reuso
+├── .cache.json            # Cache local de chamadas HTTP (evita gastar API em reexecucoes)
+├── 01-<ideia-campea>/     # Pasta da ideia #1 no ranking
+│   └── README.md          # Plano de negocio completo (SWOT, Canvas, Porter, Roadmap)
+├── 02-<segunda-ideia>/    # Pasta da ideia #2 no ranking
+│   └── README.md
+├── ...
+├── estudo-completo.html   # Documento HTML unificado (com --pdf)
+└── estudo-completo.pdf    # PDF executivo diagramado (com --pdf e chromium instalado)
 ```
 
-As pastas seguem a **ordem do ranking**: o numero da pasta e a posicao no indice sao sempre
-o mesmo.
+As pastas sao nomeadas seguindo rigorosamente a **ordem do ranking**: a pasta `01-` e sempre a mais bem avaliada, a `02-` e a segunda, e assim por diante.
 
-## Como funciona, por dentro
+---
 
-| Etapa | Modulo | O que faz |
+## Indicadores e Metodologia
+
+Cada ideia e submetida a um conjunto padronizado de perguntas no decisor:
+
+| Indicador | Tipo | Escala | O que mede |
+|---|---|---|---|
+| `fit` | score | 0 a 2 | **Aderencia ao balcao:** 0 exige escala corporativa, 2 resolve a dor diaria sem exigir mudanca de habitos |
+| `venda` | score | 0 a 2 | **Facilidade comercial:** 0 beneficio invisivel a curto prazo, 2 ataca perda imediata de dinheiro ou imagem |
+| `disrupcao` | score | 0 a 2 | **Grau de inovacao:** 0 apenas automatiza o basico, 2 cria novo modelo operacional ou receita |
+| `dor` | choice | 3 opcoes | **Natureza da dor:** dinheiro direto, reputacao/imagem ou backoffice/processo |
+| `solo` | noul | 0 a 1 | **Operabilidade:** probabilidade de um consultor solo manter 30 clientes sem colapsar no suporte |
+| `wtp` | noul | 0 a 1 | **Disposicao a pagar:** probabilidade de o dono pagar o ticket mensal informado |
+| `meta30` | noul | 0 a 1 | **Viabilidade de meta:** viabilidade de conquistar 30 clientes pagantes na regiao em 24 meses |
+| `preco` | score | 0 a 2 | **Margem de precificacao:** preco abaixo, compativel ou acima do valor percebido |
+
+### Indice de Acao e Tiers
+
+O **Indice de Acao** e a media aritmetica entre `fit` e `venda`:
+$$\text{Indice de Acao} = \frac{\text{fit} + \text{venda}}{2}$$
+
+Com base no indice, cada ideia e classificada em um Tier de prioridade:
+* **Tier A** ($\ge 1.84$): Ideias com forte aderencia e venda natural imediata.
+* **Tier B** ($\ge 1.60$): Boas ideias, mas exigem provar valor ou demandam suporte moderado.
+* **Tier C** ($< 1.60$): Ideias arriscadas, de venda dificil ou dependentes de mudanca cultural profunda.
+
+---
+
+## Medicao da Dor: Por que Escolha de 3 Vias?
+
+O tipo de dor e o preditor mais forte do sucesso de um SaaS/produto de servico. O `goodbizz` suporta dois metodos:
+
+| Metodo | Funcionamento | Comportamento com Decisores Reais |
 |---|---|---|
-| 1. brief | `nicho/geracao.py` | LLM escreve o contexto de mercado |
-| 2. ideias | `nicho/geracao.py` | LLM propoe N ideias em JSON, com mecanismos distintos |
-| 3. avaliacao | `nicho/avaliacao.py` | decisor responde 8 perguntas por ideia |
-| 4. dor | `nicho/dor_escolha.py` ou `nicho/algoritmo.py` | mede o tipo de dor (escolha de 3 consequencias, ou as 4 sondas noul antigas) |
-| 5. planos | `nicho/geracao.py` | LLM escreve o plano, usando so os numeros medidos |
-| 6. verificacao | `nicho/verificacao.py` | checa secoes, acentos, tabelas e presenca dos numeros |
-| saida | `nicho/relatorios.py`, `nicho/render.py` | indice, tabelao, CSV, JSON, PDF |
+| `escolha` (**padrao**) | Pergunta de escolha entre 3 consequencias objetivas, repetida em 3 redacoes independentes | **Classificacao estavel e calibrada** |
+| `noul` (legado) | 4 sondas de afirmacao direta (dinheiro, reputacao, processo, tecnologia) | Inconsistente em modelos reais (ima de falso positivo) |
 
-Ferramentas de apoio:
+### O experimento que motivou a mudanca
 
-| Ferramenta | Para que serve |
-|---|---|
-| `diagnosticar.py` | mede se as sondas de dor sao coerentes e estaveis com o seu decisor |
-| `recalibrar.py` | varre os limiares do classificador contra um conjunto ja rotulado |
+Durante testes com decisores reais, mediu-se o comportamento das 4 sondas binarias antigas:
+1. A sonda `tecnologia` atuava como um **ima**: ela respondia "sim" para absolutamente qualquer ideia de automacao (mesmo para propostas absurdas como "uma planilha de papel"). A afirmacao e a negacao dela voltavam ambas altas (contradicao de 1.16 a 1.24 num limiar de 1.20). Como qualquer ideia de software *e* tecnologia, a pergunta "isso protege a tecnologia?" sempre pontuava maximo.
+2. Isso inflava a dor interna, colocava as sondas em conflito e classificava a quase totalidade das ideias como `INSTAVEL`.
+3. Ao substituir as sondas por uma pergunta de **escolha forcada entre 3 consequencias concretas para o bolso do dono** (dinheiro direto, reputacao publica ou desorganizacao interna de backoffice) e **remover a opcao 'tecnologia'**, a acuracia foi restaurada: ideias que resolvem sangria de caixa pontuam em dinheiro, avaliacoes negativas pontuam em reputacao, e tarefas burocraticas pontuam em backoffice.
 
-**A regra que atravessa tudo:** os numeros sao calculados pelo codigo. O LLM escreve a prosa
-em volta deles e nao tem permissao de inventar numero novo. O verificador confere que os
-valores medidos aparecem no texto final.
+---
 
-### Medicao da dor: dois metodos
+## Recalibracao e Diagnostico para Novos Nichos
 
-O tipo de dor e o indicador que mais pesa na decisao. Existem duas formas de medi-lo, e a
-diferenca entre elas foi **medida**, nao escolhida no gosto:
+Os limiares de classificacao de dor foram ajustados sobre casos reais. Ao migrar para um nicho muito diferente ou ao testar um novo modelo de System One, use as ferramentas de apoio integradas:
 
-| Metodo | Como funciona | Estado |
-|---|---|---|
-| `escolha` (**padrao**) | uma pergunta de escolha entre 3 consequencias concretas, repetida em 3 redacoes | funciona |
-| `noul` | as 4 sondas de afirmacao (dinheiro, reputacao, processo, tecnologia) | **quebrado com decisores reais** |
+```
+[ diagnosticar.py ] -> Mede se o decisor responde com coerencia logica nas sondas
+         │
+         ▼
+[ gerar_estudo --so-avaliar ] -> Coleta 20 a 30 ideias rotuladas em dados.json
+         │
+         ▼
+[ recalibrar.py ] -> Varre a grade de limiares para zerar o erro de falso FORTE
+```
 
-O que foi medido, com o decisor local:
+### 1. Diagnostico de sondas (`diagnosticar.py`)
 
-- a sonda `noul` de `tecnologia` e um **ima**: vencia para qualquer coisa, inclusive "uma
-  planilha de papel". A afirmacao e a negacao voltavam as duas altas (contradicao 1.16 a 1.24,
-  num limiar de 1.20). Faz sentido: toda ideia deste tipo de projeto **e** tecnologia, entao
-  "isso protege tecnologia?" responde sim para todas.
-- as binarias tambem falharam: para "a pousada perde reserva porque o dono nao le as
-  mensagens", a pergunta "o dono perde dinheiro que entra?" voltou **0.00**.
-- com a pergunta de escolha e **sem** a opcao `tecnologia`, os casos passaram a classificar
-  certo. Conjunto de teste com 6 casos (uma dor de dinheiro, uma de reputacao, uma interna e
-  dois negativos claros):
-
-| caso | dinheiro | reputacao | processo | resultado |
-|---|---|---|---|---|
-| reserva perdida (dinheiro) | **0.42** | 0.28 | 0.30 | maior massa em dinheiro |
-| avaliacao sem resposta (reputacao) | 0.01 | **0.97** | 0.02 | correto |
-| notas fiscais na planilha (interno) | 0.26 | 0.14 | **0.60** | correto |
-| planilha de papel (nada) | 0.10 | 0.03 | 0.86 | nao e dor de compra |
-| caderno de receitas (nada) | 0.10 | 0.06 | 0.84 | nao e dor de compra |
-
-Por isso `tecnologia` saiu do conjunto de opcoes, e o padrao passou a ser a escolha de 3.
-
-**Consequencia importante:** a calibracao de limiares dos 17 casos de turismo foi feita sobre
-as 4 sondas `noul`. Trocando o metodo, a escala muda (as 3 opcoes somam 1) e os limiares
-precisam ser refeitos com `goodbizz recalibrar`. Usar `--metodo-dor noul` mantem o
-comportamento antigo, para comparar.
-
-### Os indicadores
-
-| Indicador | Escala | O que significa |
-|---|---|---|
-| `fit` | 0 a 2 | aderencia ao mercado: 0 exige escala corporativa, 2 resolve o caos sem mudar habito |
-| `venda` | 0 a 2 | 0 beneficio invisivel, 2 ataca perda de dinheiro ou reputacao imediata |
-| `disrupcao` | 0 a 2 | 0 so automatiza o existente, 2 muda o modelo de operacao |
-| `dor` | escolha | dinheiro direto, reputacao, backoffice ou tecnologia |
-| `solo` | 0 a 1 | viabilidade de operar 30 clientes sozinho |
-| `dor verificada` | rotulo | FORTE, FRACA, INDETERMINADO ou INSTAVEL |
-| `wtp` | 0 a 1 | probabilidade de o dono pagar o ticket informado |
-
-O **Indice de Acao** e a media de `fit` e `venda`. Todo indicador vem com **confianca**:
-confianca baixa significa que o modelo viu ambiguidade real na ideia, nao que o valor esteja
-errado.
-
-## Recalibrar para um nicho novo
-
-As 4 sondas sao genericas, mas os **limiares foram ajustados sobre 17 ideias do nicho de
-turismo, com um decisor especifico**. O que faz o dono comprar varia por nicho — e as sondas
-podem se comportar de outra forma com outro decisor. Usar a configuracao de outro contexto
-produz o sintoma classico: quase tudo sai `INSTAVEL`.
-
-Limiar e so um corte. **Se o valor por tras dele for ruido, mexer no corte nao resolve.** Por
-isso a ordem e: primeiro a sonda, depois o limiar.
-
-### Passo 0 — a sonda esta medindo alguma coisa?
+Verifica se o seu decisor responde de forma consistente antes de voce confiar nos limiares:
 
 ```bash
 goodbizz diagnosticar --ideias exemplos.json --nicho "seu nicho"
 ```
 
-Use 5 a 10 ideias do nicho real, incluindo pelo menos uma que claramente **nao** tenha a
-caracteristica perguntada (ex.: um servico que nada tem a ver com tecnologia). O script mede
-duas coisas por sonda:
+O script testa duas propriedades matematicas:
+* **Consistencia:** pergunta a afirmacao e a negacao da mesma afirmacao. Um modelo logico devolve $P(\text{afirmacao}) + P(\text{negacao}) \approx 1.0$. Somas superiores a 1.2 indicam contradicao (o modelo diz sim para as duas).
+* **Estabilidade:** avalia 3 parafrases distintas da mesma questao. Desvio padrao alto indica instabilidade textual.
 
-- **consistencia:** pergunta a afirmacao e a negacao. Um decisor coerente devolve
-  `P(afirmacao) + P(negacao)` perto de 1.0. Acima de 1.2, ele esta dizendo "sim" para as duas
-  coisas e o valor nao mede nada.
-- **estabilidade:** repete em 3 parafrases e mede o desvio. Sonda que muda conforme a redacao
-  nao sustenta um limiar fino.
+### 2. Recalibracao de limiares (`recalibrar.py`)
 
-Medido no nicho de turismo com um decisor System One local:
-
-| sonda | media | desvio | contradicao | veredito |
-|---|---|---|---|---|
-| dinheiro | 0.43 | 0.104 | 0.87 | util |
-| reputacao | 0.38 | 0.083 | 0.92 | util |
-| processo | 0.36 | 0.193 | 1.09 | instavel |
-| tecnologia | 0.50 | 0.097 | **1.24** | **contraditoria** |
-
-A sonda de `tecnologia` respondia "sim" para ideias que nada tem a ver com tecnologia (uma
-peneira de WhatsApp marcava 1.00). Isso inflava a dor interna, que competia com a dor forte e
-empurrava quase tudo para `INSTAVEL` — o sintoma que motivou a recalibracao. **Nenhum limiar
-conserta isso.** O caminho e reescrever a sonda ancorando em exemplo concreto do nicho, ou
-descartar a sonda e recalibrar com as que sobraram.
-
-### Passo 1 — colete um conjunto rotulado
-
-Ideal: 20 a 30 ideias. Nao precisa de LLM para gerar texto, so da descricao de cada ideia:
-
-```bash
-# ideias.json aceita [{"nome": "...", "descricao": "..."}] ou ["descricao 1", ...]
-goodbizz gerar "seu nicho" --ideias-arquivo ideias.json \
-    --so-avaliar --saida coleta --mock-llm
-```
-
-`--so-avaliar` para depois da avaliacao (nao escreve os planos). Cada ideia recebe as 12
-chamadas do algoritmo, e `coleta/dados.json` guarda as sondas cruas por parafrase.
-
-### Passo 2 — varra os limiares
+Com uma base de 20 a 30 ideias coletadas via `goodbizz gerar --so-avaliar`, rode a varredura em grade:
 
 ```bash
 goodbizz recalibrar coleta/dados.json
 ```
 
-O rotulo e o indicador `venda` do proprio decisor: o classificador existe para **prever** a
-facilidade de venda. Ideias com `venda` perto do corte ficam numa zona morta e sao ignoradas,
-porque nelas nem o decisor se decidiu.
+O algoritmo busca os limiares que respeitam a ordem de prioridade executiva:
+1. **Zero falso FORTE** (o erro perigoso: investir tempo e capital numa ideia que nao vende);
+2. Maximizacao de acertos;
+3. Minimizacao de casos que demandam escalonamento para revisao humana.
 
-A ordem de prioridade e deliberada:
+---
 
-1. **zero erro perigoso** (falso FORTE: mandar atacar uma ideia que nao vende);
-2. mais acertos;
-3. menos escalonamento.
+## Para Desenvolvedores e Engenheiros
 
-### Passo 3 — aplique e registre a regressao
+### Arquitetura de Codigo
+* **`nicho/decisor.py`**: Cliente de protocolo System One com normalizacao de endpoint, headers duplos, retentativas com backoff exponencial e suporte a mock hash-based.
+* **`nicho/avaliacao.py`**: Orquestrador das avaliacoes por ideia, construcao de prompts tipados e agregacao de confiancas.
+* **`nicho/dor_escolha.py`**: Medicao da dor por ensemble de escolha de 3 opcoes.
+* **`nicho/algoritmo.py`**: Classificador de dor (limiares FORTE, FRACA, INDETERMINADO, INSTAVEL) e `HttpBackend` agnostico.
+* **`nicho/geracao.py`**: Templates de engenharia de prompt para brief, geracao estruturada de ideias em JSON e redacao vinculada dos planos.
+* **`nicho/relatorios.py`**: Gerador deterministico de indices, tabeloes e arquivos CSV.
+* **`nicho/render.py`**: Conversor de Markdown para HTML e gerador de PDF via Chromium headless (com flag `--disable-javascript` e sanitizacao de links para execucao segura).
+* **`nicho/verificacao.py`**: Guardrail de qualidade: valida a presenca das secoes obrigatorias, checa a integridade das tabelas e garante que os numeros medidos pelo System One constam literalmente no texto do LLM.
 
-Cole as constantes em `nicho/algoritmo.py`:
+### Execucao de Autoteste
 
-```python
-LIMIAR_FORTE = 0.65      # ajustado para <nicho>, <data>
-LIMIAR_FRACA = 0.50
-LIMIAR_INSTAVEL = 0.15
+O modulo de algoritmo possui um autoteste deterministico integrado (sem necessidade de rede ou credenciais):
+
+```bash
+python3 nicho/algoritmo.py --self-test
 ```
 
-E **guarde o conjunto de dados**: ele e o teste que impede a calibracao de regredir na
-proxima mudanca de sonda.
+Saida esperada:
+```
+[ok ] forte     -> FORTE           dor=0.85 interna=0.10 margem=+0.75 desvio=0.000
+[ok ] fraca     -> FRACA           dor=0.20 interna=0.70 margem=-0.50 desvio=0.000
+[ok ] cinzenta  -> INDETERMINADO   dor=0.55 interna=0.40 margem=+0.15 desvio=0.000
+[ok ] rejeitou 1 parafrase (guarda funcionando)
+[ok ] ruidosa   -> INSTAVEL        dor=0.63 interna=0.63 margem=+0.00 desvio=0.377
 
-### O que a recalibracao nao resolve
+SELF-TEST: PASSOU
+```
 
-Se `recalibrar.py` mostrar "Mais da metade escalona" ou um falso FORTE que nao zera, o
-problema nao e o limiar: as sondas nao separam esse caso. Volte ao passo 0. Duas saidas:
+---
 
-- reescrever a sonda com exemplo concreto do nicho (o que quase sempre resolve);
-- acrescentar uma sonda especifica do nicho (ex.: "o cliente final nota a diferenca?" para
-  servicos de balcao) em vez de continuar girando numeros.
+## Sistema de Cache Inteligente
 
-## Cache
+Todas as respostas brutas de APIs (tanto do LLM quanto do Decisor) sao cacheadas em `.cache.json` no diretorio de saida sob uma chave de hash SHA-256 baseada nos parametros da chamada.
 
-Toda resposta crua vai para `.cache.json` na pasta de saida. Reexecutar o mesmo comando nao
-gasta API de novo. Apagar o arquivo forca tudo de novo. Trocar nicho, ticket ou numero de
-ideias invalida a chave correspondente.
+* Reexecutar o mesmo estudo reaproveita 100% dos dados salvos, sem gastar novas chamadas ou tokens.
+* Alterar o nicho, ticket ou descricao de uma ideia invalida seletivamente apenas a chave correspondente.
+* Para forcar uma nova avaliacao completa do zero, basta remover o arquivo `.cache.json` ou apontar para outra pasta com `--saida`.
 
-## Limites
+---
 
-1. **Gera hipoteses, nao pesquisa de mercado.** O brief vem de um LLM, sem busca na web nem
-   dado oficial. Numeros de mercado inventados devem estar marcados `[INFERENCE]` — e sao
-   exatamente os que voce precisa conferir antes de usar com cliente.
-2. **Os indicadores sao julgamento de um modelo**, com ruido entre execucoes. Servem para
-   ordenar e para expor pontos fracos, nao para decidir sozinhos.
-3. **Os limiares do algoritmo foram calibrados sobre 17 casos de um nicho so.** Trocando de
-   nicho, revalide antes de confiar no rotulo de dor. Ver `nicho/algoritmo.py`.
-4. **O decisor precisa responder em portugues.** Confira o roteamento do modelo: se o seu
-   servico mandar texto latino para um modelo treinado so em ingles, a acuracia cai. O
-   parametro `--model` do decisor existe para isso.
-5. **Nao coloque dado pessoal no `--nicho`.** Ele vai inteiro para o LLM e para o decisor.
+## Convencoes e Limites
 
-## Convencao
-
-Os documentos gerados saem **sem acento**, seguindo a convencao do projeto onde esta
-ferramenta nasceu. O codigo e os comentarios seguem a mesma regra.
-
-## Procedencia
-
-`nicho/algoritmo.py` e vendorizado de `evolucsia/strategy/algoritmo_teste_dor.py`, onde foi
-calibrado e validado contra 17 casos reais. Este repo mantem a propria copia para nao
-depender de outro repositorio; se a calibracao mudar, atualize aqui de proposito.
+1. **Textos sem acento:** Por convencao de projeto, todos os documentos gerados, codigo-fonte e comentarios sao mantidos sem acentuacao grafica. O verificador normaliza automaticamente o texto gerado pelo LLM.
+2. **Hipoteses vs Pesquisa:** O brief e as ideias sao gerados por modelos de IA sem navegacao web em tempo real. Valores numericos de mercado sao estimativas e vem anotados com `[INFERENCE]`.
+3. **Privacidade de dados:** Nunca insira informacoes pessoais, segredos comerciais ou dados sensiveis no parametro `--nicho`. O texto e transmitido para os endpoints configurados de LLM e Decisor.

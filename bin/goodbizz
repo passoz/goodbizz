@@ -38,10 +38,11 @@ OPCOES
   Rode `goodbizz <subcomando> --help` para a lista completa de cada um.
 
 CONFIGURACAO
-  O LLM e o decisor vem de variaveis de ambiente:
-    GOODBIZZ_LLM_URL, GOODBIZZ_LLM_MODEL, GOODBIZZ_LLM_KEY
-    GOODBIZZ_DECISOR_URL, GOODBIZZ_DECISOR_MODEL, GOODBIZZ_DECISOR_KEY
-  Sem nenhuma delas, use --mock (tudo simulado) ou --mock-llm / --mock-decisor.
+  O LLM e o decisor vem de variaveis de ambiente ou argumentos de linha de comando:
+    GOODBIZZ_LLM_URL, GOODBIZZ_LLM_MODEL, GOODBIZZ_LLM_KEY (--llm-url, --llm-model, --llm-key)
+    GOODBIZZ_DECISOR_URL, GOODBIZZ_DECISOR_MODEL, GOODBIZZ_DECISOR_KEY (--decisor-url, --decisor-model, --decisor-key)
+  Decisores compativeis: Jev, Laya (cloud/local), endpoints System One ou runtimes locais.
+  Sem credenciais, use --mock (tudo simulado) ou --mock-llm / --mock-decisor.
 FIM
 }
 

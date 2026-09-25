@@ -88,5 +88,5 @@ pronto. teste com:
     goodbizz ajuda
     goodbizz gerar "any niche" --ideias 3 --mock
 
-sem credencial nenhuma, use --mock. Com credencial, exporte as GOODBIZZ_* antes.
+sem credencial nenhuma, use --mock. Com credencial, exporte as GOODBIZZ_* ou use as flags --decisor-* e --llm-*.
 FIM
