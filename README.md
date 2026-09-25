@@ -98,10 +98,10 @@ A geracao de PDF opcional usa o `chromium` do proprio sistema.
 ```bash
 git clone git@github.com:passoz/goodbizz.git
 cd goodbizz
-./instalar.sh
+./install.sh
 ```
 
-O `instalar.sh` cria um link simbolico em `~/bin/goodbizz` apontando para o repositorio. O uso passa a ser `goodbizz <subcomando>` a partir de qualquer pasta:
+O `install.sh` cria um link simbolico em `~/bin/goodbizz` apontando para o repositorio. O uso passa a ser `goodbizz <subcomando>` a partir de qualquer pasta:
 
 * confere se o Python atende a versao minima (3.10+);
 * avisa se `~/bin` nao estiver no seu `PATH`;
@@ -109,27 +109,24 @@ O `instalar.sh` cria um link simbolico em `~/bin/goodbizz` apontando para o repo
 * informa quantas credenciais `GOODBIZZ_*` estao configuradas.
 
 Opcoes do instalador:
-```bash
-./instalar.sh --bin ~/.local/bin    # instala em outra pasta do PATH
-./instalar.sh --uninstall           # remove o link simbolico
+./install.sh --bin ~/.local/bin    # instala em outra pasta do PATH
+./install.sh --uninstall           # remove o link simbolico
 ```
 
 ### Sem instalar
 Se preferir rodar sem criar links no PATH:
 ```bash
-python3 gerar_estudo.py --nicho "oficinas mecanicas de bairro" --mock
+python3 generate_study.py --niche "oficinas mecanicas de bairro" --mock
 ```
 
 ---
 
 ## Comandos
 
-| Comando | Descricao |
-|---|---|
-| `goodbizz gerar "<nicho>"` | Gera o estudo completo: brief, ideias, avaliacao no decisor e plano por ideia |
-| `goodbizz diagnosticar` | Mede a coerencia e estabilidade das sondas contra o seu decisor real |
-| `goodbizz recalibrar` | Realiza busca em grade nos limiares contra um conjunto rotulado de dados |
-| `goodbizz ajuda` | Exibe a mensagem de ajuda e opcoes |
+| `goodbizz generate "<niche>"` | Gera o estudo completo (alias: `gerar`) |
+| `goodbizz diagnose` | Mede coerencia e estabilidade das sondas contra o seu decisor (alias: `diagnosticar`) |
+| `goodbizz recalibrate` | Realiza busca em grade nos limiares contra conjunto rotulado (alias: `recalibrar`) |
+| `goodbizz help` | Exibe a mensagem de ajuda e opcoes (alias: `ajuda`) |
 
 ---
 
@@ -138,7 +135,7 @@ python3 gerar_estudo.py --nicho "oficinas mecanicas de bairro" --mock
 ### 1. Teste rapido sem nenhuma credencial (Modo Mock)
 
 ```bash
-goodbizz gerar --nicho "oficinas mecanicas de bairro" --ideias 5 --mock --pdf
+goodbizz generate --niche "oficinas mecanicas de bairro" --ideas 5 --mock --pdf
 ```
 
 O `--mock` simula o LLM e o decisor de forma deterministica. Executa em menos de 1 segundo, gera todos os arquivos, pastas, CSVs e PDF para inspecao visual da estrutura. **A saida simulada nao possui valor analitico de mercado.**
@@ -146,7 +143,7 @@ O `--mock` simula o LLM e o decisor de forma deterministica. Executa em menos de
 ### 2. Teste do Decisor real sem gastar tokens de LLM
 
 ```bash
-goodbizz gerar --nicho "pousadas em cidades historicas" --ideias 3 --mock-llm
+goodbizz generate --niche "pousadas em cidades historicas" --ideas 3 --mock-llm
 ```
 
 Avalia as ideias no decisor configurado, mas gera os textos dos planos com fixtures locais. Util para validar a latencia e calibracao do seu endpoint System One sem custo de LLM.
@@ -178,48 +175,47 @@ export GOODBIZZ_DECISOR_KEY=lsk_live_...
 # export GOODBIZZ_DECISOR_MODEL=jev-latest
 # export GOODBIZZ_DECISOR_KEY=sua-chave-typesafe
 
-goodbizz gerar --nicho "clinicas odontologicas em cidade media" \
-    --cidade "Regiao dos Lagos" --ticket 350 --ideias 8 --saida estudo --pdf
+goodbizz generate --niche "clinicas odontologicas em cidade media" \
+    --city "Regiao dos Lagos" --ticket 350 --ideas 8 --output estudo --pdf
 ```
 
 #### Via Argumentos CLI (sem exportar variaveis)
 
 ```bash
-goodbizz gerar "clinicas odontologicas em cidade media" \
-    --decisor-url https://api.laya.studio/v1/systemone \
-    --decisor-model laya-multilingual-v1 \
-    --decisor-key lsk_live_... \
+goodbizz generate "clinicas odontologicas em cidade media" \
+    --decider-url https://api.laya.studio/v1/systemone \
+    --decider-model laya-multilingual-v1 \
+    --decider-key lsk_live_... \
     --llm-key sk-... \
-    --ticket 350 --ideias 8 --saida estudo --pdf
+    --ticket 350 --ideas 8 --output estudo --pdf
 ```
 
 ---
 
-## Opcoes do Comando `gerar`
+## Opcoes do Comando `generate`
 
 | Opcao | Padrao | Descricao |
 |---|---|---|
-| `--nicho` | — | O nicho em uma frase (obrigatorio) |
-| `--cidade` | vazio | Recorte geografico / regiao alvo |
+| `--niche`, `--nicho` | — | O nicho em uma frase (obrigatorio) |
+| `--city`, `--cidade` | vazio | Recorte geografico / regiao alvo |
 | `--ticket` | 300 | Ticket mensal estimado, em reais, para medir a disposicao a pagar |
-| `--ideias` | 8 | Quantidade de ideias de produto a gerar e avaliar |
-| `--saida` | `estudo` | Pasta onde os artefatos serao salvos |
-| `--ideias-arquivo` | — | Caminho de um JSON com ideias prontas (pula a etapa de geracao do LLM) |
-| `--metodo-dor` | `escolha` | Metodo de medicao da dor: `escolha` (3 consequencias) ou `noul` (4 sondas antigas) |
-| `--so-avaliar` | — | Interrompe o fluxo apos a avaliacao e salva `dados.json` (ideal para calibracao) |
-| `--decisor-url` | env | URL do endpoint System One (Jev, Laya, runtimes locais, etc.) |
-| `--decisor-model` | env | Modelo do decisor (`systemone-latest`, `jev-latest`, `laya-multilingual-v1`) |
-| `--decisor-key` | env | Chave de autenticacao do decisor (suporta Bearer token e x-api-key) |
+| `--ideas`, `--ideias` | 8 | Quantidade de ideias de produto a gerar e avaliar |
+| `--output`, `--saida` | `estudo` | Pasta onde os artefatos serao salvos |
+| `--ideas-file`, `--ideias-arquivo` | — | Caminho de um JSON com ideias prontas (pula a etapa de geracao do LLM) |
+| `--pain-method`, `--metodo-dor` | `choice` | Metodo de medicao da dor: `choice` (3 consequencias) ou `noul` (4 sondas antigas) |
+| `--eval-only`, `--so-avaliar` | — | Interrompe o fluxo apos a avaliacao e salva `dados.json` (ideal para calibracao) |
+| `--decider-url`, `--decisor-url` | env | URL do endpoint System One (Jev, Laya, runtimes locais, etc.) |
+| `--decider-model`, `--decisor-model` | env | Modelo do decisor (`systemone-latest`, `jev-latest`, `laya-multilingual-v1`) |
+| `--decider-key`, `--decisor-key` | env | Chave de autenticacao do decisor (suporta Bearer token e x-api-key) |
 | `--llm-url` | env | URL base compativel com OpenAI (padrao: `https://api.openai.com/v1`) |
 | `--llm-model` | env | Modelo do LLM (padrao: `gpt-4o-mini`) |
 | `--llm-key` | env | Chave de API do LLM |
 | `--mock` | — | Simula tanto o LLM quanto o decisor (offline e deterministico) |
 | `--mock-llm` | — | Simula apenas o LLM (usa o decisor real) |
-| `--mock-decisor` | — | Simula apenas o decisor (usa o LLM real) |
+| `--mock-decider`, `--mock-decisor` | — | Simula apenas o decisor (usa o LLM real) |
 | `--pdf` | — | Compila todo o estudo em um unico arquivo PDF estruturado |
-| `--paralelo` | 8 | Numero maximo de chamadas simultaneas a API (via semaforo asyncio) |
+| `--concurrency`, `--paralelo` | 8 | Numero maximo de chamadas simultaneas a API (via semaforo asyncio) |
 | `--timeout` | 60.0 | Tempo limite por requisicao HTTP, em segundos |
-
 ---
 
 ## O que sai no final
@@ -306,24 +302,24 @@ Os limiares de classificacao de dor foram ajustados sobre casos reais. Ao migrar
 [ recalibrar.py ] -> Varre a grade de limiares para zerar o erro de falso FORTE
 ```
 
-### 1. Diagnostico de sondas (`diagnosticar.py`)
+### 1. Diagnostico de sondas (`diagnose.py`)
 
 Verifica se o seu decisor responde de forma consistente antes de voce confiar nos limiares:
 
 ```bash
-goodbizz diagnosticar --ideias exemplos.json --nicho "seu nicho"
+goodbizz diagnose --ideas exemplos.json --niche "seu nicho"
 ```
 
 O script testa duas propriedades matematicas:
 * **Consistencia:** pergunta a afirmacao e a negacao da mesma afirmacao. Um modelo logico devolve $P(\text{afirmacao}) + P(\text{negacao}) \approx 1.0$. Somas superiores a 1.2 indicam contradicao (o modelo diz sim para as duas).
 * **Estabilidade:** avalia 3 parafrases distintas da mesma questao. Desvio padrao alto indica instabilidade textual.
 
-### 2. Recalibracao de limiares (`recalibrar.py`)
+### 2. Recalibracao de limiares (`recalibrate.py`)
 
-Com uma base de 20 a 30 ideias coletadas via `goodbizz gerar --so-avaliar`, rode a varredura em grade:
+Com uma base de 20 a 30 ideias coletadas via `goodbizz generate --eval-only`, rode a varredura em grade:
 
 ```bash
-goodbizz recalibrar coleta/dados.json
+goodbizz recalibrate coleta/dados.json
 ```
 
 O algoritmo busca os limiares que respeitam a ordem de prioridade executiva:
@@ -336,21 +332,22 @@ O algoritmo busca os limiares que respeitam a ordem de prioridade executiva:
 ## Para Desenvolvedores e Engenheiros
 
 ### Arquitetura de Codigo
-* **`nicho/decisor.py`**: Cliente de protocolo System One com normalizacao de endpoint, headers duplos, retentativas com backoff exponencial e suporte a mock hash-based.
-* **`nicho/avaliacao.py`**: Orquestrador das avaliacoes por ideia, construcao de prompts tipados e agregacao de confiancas.
-* **`nicho/dor_escolha.py`**: Medicao da dor por ensemble de escolha de 3 opcoes.
-* **`nicho/algoritmo.py`**: Classificador de dor (limiares FORTE, FRACA, INDETERMINADO, INSTAVEL) e `HttpBackend` agnostico.
-* **`nicho/geracao.py`**: Templates de engenharia de prompt para brief, geracao estruturada de ideias em JSON e redacao vinculada dos planos.
-* **`nicho/relatorios.py`**: Gerador deterministico de indices, tabeloes e arquivos CSV.
-* **`nicho/render.py`**: Conversor de Markdown para HTML e gerador de PDF via Chromium headless (com flag `--disable-javascript` e sanitizacao de links para execucao segura).
-* **`nicho/verificacao.py`**: Guardrail de qualidade: valida a presenca das secoes obrigatorias, checa a integridade das tabelas e garante que os numeros medidos pelo System One constam literalmente no texto do LLM.
+* **`goodbizz/decider.py`**: Cliente de protocolo System One com normalizacao de endpoint, headers duplos, retentativas com backoff exponencial e suporte a mock hash-based.
+* **`goodbizz/evaluation.py`**: Orquestrador das avaliacoes por ideia, construcao de prompts tipados e agregacao de confiancas.
+* **`goodbizz/pain_choice.py`**: Medicao da dor por ensemble de escolha de 3 opcoes.
+* **`goodbizz/algorithm.py`**: Classificador de dor (limiares FORTE, FRACA, INDETERMINADO, INSTAVEL) e `HttpBackend` agnostico.
+* **`goodbizz/generation.py`**: Templates de engenharia de prompt para brief, geracao estruturada de ideias em JSON e redacao vinculada dos planos.
+* **`goodbizz/reports.py`**: Gerador deterministico de indices, tabeloes e arquivos CSV.
+* **`goodbizz/render.py`**: Conversor de Markdown para HTML e gerador de PDF via Chromium headless (com flag `--disable-javascript` e sanitizacao de links para execucao segura).
+* **`goodbizz/verification.py`**: Guardrail de qualidade: valida a presenca das secoes obrigatorias, checa a integridade das tabelas e garante que os numeros medidos pelo System One constam literalmente no texto do LLM.
+* **`goodbizz/config.py`**: Configuracao central da ferramenta com tipagem estrita e dataclasses.
 
 ### Execucao de Autoteste
 
 O modulo de algoritmo possui um autoteste deterministico integrado (sem necessidade de rede ou credenciais):
 
 ```bash
-python3 nicho/algoritmo.py --self-test
+python3 goodbizz/algorithm.py --self-test
 ```
 
 Saida esperada:

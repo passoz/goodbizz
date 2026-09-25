@@ -1,86 +1,84 @@
 #!/bin/sh
-# Ponto de entrada unico das ferramentas. O instalar.sh coloca um link para este
-# arquivo no seu PATH, entao o uso e `goodbizz <subcomando>` sem chamar python.
+# Single entrypoint for goodbizz tools.
+# install.sh creates a symlink to this file in ~/bin (or your specified PATH).
 set -eu
 
-# resolve o caminho real do repo mesmo quando chamado por link em ~/bin
-ALVO=$(readlink -f -- "$0" 2>/dev/null || echo "$0")
-RAIZ=$(CDPATH= cd -- "$(dirname -- "$ALVO")/.." && pwd)
+TARGET=$(readlink -f -- "$0" 2>/dev/null || echo "$0")
+ROOT=$(CDPATH= cd -- "$(dirname -- "$TARGET")/.." && pwd)
 PY=${GOODBIZZ_PYTHON:-python3}
 
-uso() {
-  cat <<'FIM'
-goodbizz — estudo de nicho: de um prompt a um plano de negocio por ideia
+usage() {
+  cat <<'EOF'
+goodbizz — from a single niche prompt to an executive business study
 
-USO
-  goodbizz <subcomando> [opcoes]
+USAGE
+  goodbizz <subcommand> [options]
 
-SUBCOMANDOS
-  gerar "<nicho>"      Gera o estudo: brief, ideias, avaliacao no decisor e um
-                       plano por ideia. Saida em markdown, csv, json e pdf.
-  recalibrar <dados>   Varre os limiares do classificador de dor contra um
-                       conjunto ja rotulado (dados.json de uma coleta).
-  diagnosticar         Mede se as sondas de dor sao coerentes e estaveis com o
-                       seu decisor. Rode isto ANTES de recalibrar.
-  ajuda                Esta mensagem.
+SUBCOMMANDS
+  generate "<niche>"     Generate full study: brief, ideas, System One decider evaluation,
+                         and per-idea business plan. Outputs markdown, csv, json, and pdf.
+  diagnose               Test whether pain probes provide coherent and stable signal
+                         with your decider. Run this BEFORE recalibrating.
+  recalibrate <data>     Grid-search decision thresholds against a labeled dataset
+                         (dados.json from previous runs).
+  help                   Show this message.
 
-EXEMPLOS
-  goodbizz gerar "clinicas odontologicas em cidade media" --ideias 8 --pdf
+EXAMPLES
+  goodbizz generate "clinicas odontologicas em cidade media" --ideas 8 --pdf
+  goodbizz generate "any niche" --ideas 5 --mock           # offline demo, no credentials
+  goodbizz generate "your niche" --ideas-file ideas.json \
+      --eval-only --output collection --mock-llm           # collects evaluation data only
 
-  goodbizz gerar "qualquer nicho" --ideias 5 --mock        # sem credencial
-  goodbizz gerar "seu nicho" --ideias-arquivo ideias.json \
-      --so-avaliar --saida coleta --mock-llm               # so coleta dados
+  goodbizz diagnose --ideas examples.json --niche "your niche"
+  goodbizz recalibrate collection/dados.json
 
-  goodbizz diagnosticar --ideias exemplos.json --nicho "seu nicho"
-  goodbizz recalibrar coleta/dados.json
+OPTIONS
+  Run `goodbizz <subcommand> --help` for full parameter options.
 
-OPCOES
-  Rode `goodbizz <subcomando> --help` para a lista completa de cada um.
-
-CONFIGURACAO
-  O LLM e o decisor vem de variaveis de ambiente ou argumentos de linha de comando:
+CONFIGURATION
+  LLM and decider credentials can be set via environment variables or CLI flags:
     GOODBIZZ_LLM_URL, GOODBIZZ_LLM_MODEL, GOODBIZZ_LLM_KEY (--llm-url, --llm-model, --llm-key)
-    GOODBIZZ_DECISOR_URL, GOODBIZZ_DECISOR_MODEL, GOODBIZZ_DECISOR_KEY (--decisor-url, --decisor-model, --decisor-key)
-  Decisores compativeis: Jev, Laya (cloud/local), endpoints System One ou runtimes locais.
-  Sem credenciais, use --mock (tudo simulado) ou --mock-llm / --mock-decisor.
-FIM
+    GOODBIZZ_DECISOR_URL, GOODBIZZ_DECISOR_MODEL, GOODBIZZ_DECISOR_KEY (--decider-url, --decider-model, --decider-key)
+  Compatible deciders: Jev, Laya (cloud/local), generic System One endpoints or local daemons.
+  Without credentials, use --mock (fully simulated) or --mock-llm / --mock-decider.
+EOF
 }
 
-checar_python() {
+check_python() {
   if ! command -v "$PY" >/dev/null 2>&1; then
-    echo "goodbizz: nao encontrei o interpretador '$PY'" >&2
-    echo "  defina GOODBIZZ_PYTHON ou instale o python 3.10+" >&2
+    echo "goodbizz: interpreter '$PY' not found" >&2
+    echo "  set GOODBIZZ_PYTHON or install Python 3.10+" >&2
     exit 127
   fi
   if ! "$PY" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)'; then
-    echo "goodbizz: precisa de python 3.10 ou mais novo (achei $("$PY" -V 2>&1))" >&2
+    echo "goodbizz: requires Python 3.10 or newer (found $("$PY" -V 2>&1))" >&2
     exit 1
   fi
 }
 
 case "${1:-}" in
-  gerar|study|estudo)
+  generate|gerar|study|estudo)
     shift
-    checar_python
-    exec "$PY" "$RAIZ/gerar_estudo.py" "$@"
+    check_python
+    exec "$PY" "$ROOT/generate_study.py" "$@"
     ;;
-  recalibrar)
+  recalibrate|recalibrar)
     shift
-    checar_python
-    exec "$PY" "$RAIZ/recalibrar.py" "$@"
+    check_python
+    exec "$PY" "$ROOT/recalibrate.py" "$@"
     ;;
-  diagnosticar)
+  diagnose|diagnosticar)
     shift
-    checar_python
-    exec "$PY" "$RAIZ/diagnosticar.py" "$@"
+    check_python
+    exec "$PY" "$ROOT/diagnose.py" "$@"
     ;;
-  ajuda|help|-h|--help|"")
-    uso
+  help|ajuda|-h|--help|"")
+    usage
     ;;
   *)
-    echo "goodbizz: subcomando desconhecido: $1" >&2
+    echo "goodbizz: unknown subcommand: $1" >&2
     echo >&2
-    uso >&2
+    usage >&2
     exit 2
     ;;
 esac
