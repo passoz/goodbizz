@@ -165,12 +165,31 @@ Erros: `422` payload invalido (com detalhes de validacao), `404` estudo ou artef
 
 ## Interface web
 
-`GET /` lista os estudos e traz o formulario. `GET /studies/:id` mostra o ranking, as medias, os grupos
-de dor e o plano completo da primeira ideia; os artefatos ficam linkados para a API.
+`GET /` lista os estudos e traz o formulario. `GET /studies/:id` mostra o cabecalho do estudo, a
+legenda de leitura, o ranking, as medias, os grupos de dor, os artefatos e o plano completo.
+
+**Leitura guiada.** Todo dado apresentado vem com o seu helper, no formato `dado 0.89 (maior e
+melhor)`: direcao, escala e o que o numero significa. Cada coluna de tabela, bloco de metrica,
+selo e card de artefato carrega essa leitura, entao nao e preciso conhecer a metodologia para
+interpretar o resultado.
+
+**Glossario no hover.** Passar o mouse (ou focar pelo teclado) em uma sigla ou nome abre uma caixa
+com a explicacao curta: `WTP`, `Tier`, `fit`, `venda`, `disrupcao`, `desvio`, `FORTE`, `FRACA`,
+`INSTAVEL`, `System One`, `LLM`, `guardrail`, `CSRF`, `ticket`, `[INFERENCE]` e outros. As
+explicacoes vivem em uma fonte unica (`GLOSSARY` em `src/infrastructure/http/ui/layout.tsx`) e o
+texto fica no DOM, portanto e alcancavel por leitor de tela.
+
+**Estilo.** Glassmorphism em CSS nativo sobre uma aurora fixa de tres gradientes: filmes
+translucidos, borda clara, brilho interno e sombra difusa, com um unico acento (honey) reservado
+para acao e para o sinal de dor forte. Sem `backdrop-filter` de proposito (custo de composicao sem
+ganho visual sobre um fundo ja suave), sem animacao de entrada (conteudo nunca depende de um frame
+para aparecer) e com fallback solido para `prefers-reduced-transparency`, alem de desligar
+transicoes em `prefers-reduced-motion`.
 
 A interface consome a **mesma API** (`POST /api/studies` via `fetch`) e mantem um caminho sem
-JavaScript (`POST /ui/studies`) protegido por CSRF: mesma origem (`Origin`/`Referer`, fail-closed) mais
-token double-submit em cookie assinado, comparado em tempo constante.
+JavaScript (`POST /ui/studies`) protegido por CSRF: mesma origem (`Origin`/`Referer`, fail-closed)
+mais token double-submit em cookie assinado, comparado em tempo constante. O token e emitido uma vez
+por sessao: rotacionar a cada resposta invalidaria qualquer formulario ja aberto.
 
 ---
 
