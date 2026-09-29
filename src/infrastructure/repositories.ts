@@ -286,4 +286,12 @@ export class SqliteStudyRepository implements StudyRepository {
         .run();
     });
   }
+
+  /** Apaga o estudo e as avaliações dele na mesma transação. */
+  async delete(id: string): Promise<void> {
+    this.db.transaction((tx) => {
+      tx.delete(evaluations).where(eq(evaluations.studyId, id)).run();
+      tx.delete(studies).where(eq(studies.id, id)).run();
+    });
+  }
 }

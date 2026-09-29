@@ -34,7 +34,7 @@ function escapeHtmlNoQuote(text: string): string {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-/** Escapa tambem aspas (equivalente a html.escape(text, quote=True)). */
+/** Escapa também aspas (equivalente a html.escape(text, quote=True)). */
 function escapeHtmlQuote(text: string): string {
   return escapeHtmlNoQuote(text).replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
 }
@@ -46,7 +46,7 @@ function inline(text: string): string {
   out = out.replace(/(?<![*\w])\*([^*\n]+)\*(?!\*)/g, "<em>$1</em>");
   out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match: string, label: string, href: string) => {
     const target = href.trim();
-    // mantem o link apenas quando o href nao usa esquemas perigosos
+    // mantem o link apenas quando o href não usa esquemas perigosos
     if (/^(?:javascript|data|vbscript):/i.test(target)) {
       return escapeHtmlQuote(label);
     }

@@ -190,7 +190,7 @@ export function recalibrate(
     );
   }
   if (positives < 3 || cases.length - positives < 3) {
-    warnings.push("uma classe tem menos de 3 casos; o resultado nao estabelece separacao confiavel");
+    warnings.push("uma classe tem menos de 3 casos; o resultado não estabelece separação confiavel");
   }
 
   const current = evaluateGrid(cases, cutoff, STRONG_THRESHOLD, WEAK_THRESHOLD, UNSTABLE_THRESHOLD);
@@ -207,9 +207,9 @@ export function recalibrate(
 
   const best = ranking[0] as RecalibrateRow;
   if (best.fp > 0) {
-    warnings.push("nenhuma combinacao zerou o falso FORTE neste conjunto");
+    warnings.push("nenhuma combinação zerou o falso FORTE neste conjunto");
   } else if (best.escalate > cases.length / 2) {
-    warnings.push("mais de metade dos casos escalou para revisao manual: a separacao e fraca nestas sondas");
+    warnings.push("mais de metade dos casos escalou para revisão manual: a separação é fraca nestas sondas");
   }
 
   return { cases: cases.length, positives, ignored, warnings, current, best, ranking: ranking.slice(0, 12) };

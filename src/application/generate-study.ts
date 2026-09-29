@@ -15,7 +15,6 @@ import { fullHtml, mdToHtml } from "./render.ts";
 import { folderName } from "./reports.ts";
 import { summarizeStudy } from "./summary.ts";
 import { checkDocument } from "./verification.ts";
-import { stripAccents } from "./normalize.ts";
 import type { Logger, LlmClient, DeciderClient, ArtifactFile } from "../domain/ports.ts";
 import type { Idea, IdeaEvaluation, StudyConfig, StudySummary } from "../domain/types.ts";
 
@@ -136,7 +135,7 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
   });
 
   if (cfg.evaluateOnly) {
-    progress("[4/6] modo --so-avaliar: parou depois da avaliacao");
+    progress("[4/6] modo --so-avaliar: parou depois da avaliação");
     return {
       brief,
       ideas,
@@ -168,7 +167,7 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
       text = await generateDocument(llm, evaluation, cfg, brief);
       await cache.put(key, text);
     }
-    text = `${stripAccents(text.replace(/\r\n/g, "\n").trim())}\n`;
+    text = `${text.replace(/\r\n/g, "\n").trim()}\n`;
     const indicators = evaluation.indicators;
     const numbers = [
       evaluation.index,
@@ -191,14 +190,9 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
   for (const item of written) documents[item.name] = item.text;
 
   const produced = buildArtifactFiles(cfg, brief, summary, evaluations, folders, documents);
-  // Passo 6/6 do baseline: normalizar acentos em TODO markdown do estudo. Sem isto, o texto vindo do
-  // LLM (brief, indice, tabelao) escaparia da convencao sem acento, que so era aplicada no documento
-  // de cada ideia. O json/csv ficam como estao, igual ao baseline.
-  const files = produced.map((file) =>
-    file.path.endsWith(".md") && typeof file.content === "string"
-      ? { ...file, content: stripAccents(file.content) }
-      : file,
-  );
+  // O markdown vai como o LLM escreveu, em português acentuado: a normalização que removia
+  // diacríticos (convenção do baseline Python) foi revogada.
+  const files = produced;
   progress(`[6/6] ${files.length} artefatos preparados`);
 
   if (cfg.pdf) {

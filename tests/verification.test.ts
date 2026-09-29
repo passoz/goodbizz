@@ -3,9 +3,7 @@ import { describe, expect, test } from "bun:test";
 import {
   REQUIRED_SECTIONS,
   checkDocument,
-  hasAccents,
   numberVariants,
-  stripAccents,
   unalignedTables,
 } from "../src/application/verification.ts";
 
@@ -29,9 +27,11 @@ describe("checkDocument", () => {
     expect(checkDocument(compliantDoc(), [0, -5])).toEqual([]);
   });
 
-  test("acento produz achado especifico", () => {
-    const doc = `${compliantDoc()}\nvers\u00e3o final`;
-    expect(checkDocument(doc, [12.5], ["promocao"])).toContain("1 accented character(s)");
+  test("texto acentuado e o esperado, nao um achado", () => {
+    const doc = `${compliantDoc()}\nvers\u00e3o final com acentua\u00e7\u00e3o`;
+    const issues = checkDocument(doc, [12.5], ["promocao"]);
+    expect(issues).not.toContain("1 accented character(s)");
+    expect(issues.some((issue) => issue.includes("accented"))).toBe(false);
   });
 
   test("tabela desalinhada produz achado com a linha inicial", () => {
@@ -42,9 +42,9 @@ describe("checkDocument", () => {
   });
 
   test("secao ausente produz achado especifico", () => {
-    const doc = compliantDoc().replace("## 10. Proximos passos", "linha sem secao.");
+    const doc = compliantDoc().replace("## 10. Próximos passos", "linha sem secao.");
     expect(checkDocument(doc, [12.5], ["promocao"])).toContain(
-      "1 section(s) missing: ['10. Proximos passos']",
+      "1 section(s) missing: ['10. Próximos passos']",
     );
   });
 
@@ -80,13 +80,5 @@ describe("numberVariants", () => {
 
   test("valor nao numerico devolve apenas ele mesmo", () => {
     expect([...numberVariants("abc")]).toEqual(["abc"]);
-  });
-});
-
-describe("stripAccents", () => {
-  test("remove diacriticos", () => {
-    expect(stripAccents("acao n\u00e3o")).toBe("acao nao");
-    expect(hasAccents("acao n\u00e3o")).toBe(true);
-    expect(hasAccents("acao nao")).toBe(false);
   });
 });

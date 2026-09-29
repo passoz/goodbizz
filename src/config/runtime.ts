@@ -97,7 +97,7 @@ export function resolveStudyConfig(overrides: StudyConfigOverrides): StudyConfig
 
 /**
  * Market context phrase used as the `state` of every decision question.
- * Kept byte-identical to the baseline so the decider sees the same prompt.
+ * Kept byte-identical to the baseline só the decider sees the same prompt.
  */
 export function studyContext(cfg: Pick<StudyConfig, "niche" | "city">): string {
   const targetCity = cfg.city ? ` Target city/region: ${cfg.city}.` : "";

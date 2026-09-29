@@ -164,8 +164,8 @@ describe("protecao CSRF da interface", () => {
     const page = await harness.app.request(location, { headers: { Cookie: cookiePair } });
     const html = await page.text();
     const meta = html.match(/id="study-meta"[^>]*>([\s\S]*?)<\/p>/)?.[1] ?? "";
-    expect(meta).toContain("concluido");
-    // Regressao: o cabecalho repetia estado e etapa ("concluido · concluido").
-    expect(meta.match(/concluido/gi)?.length).toBe(1);
+    expect(meta).toContain("concluído");
+    // Regressao: o cabecalho repetia estado e etapa ("concluído · concluído").
+    expect(meta.match(/concluído/gi)?.length).toBe(1);
   });
 });

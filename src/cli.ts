@@ -202,29 +202,29 @@ const RECALIBRATE_SPEC: CommandSpec = {
 };
 
 function printGenerateHelp(): void {
-  console.log(`Uso: goodbizz generate <nicho> [opcoes]
+  console.log(`Uso: goodbizz generate <nicho> [opções]
 
-Gera um estudo completo de nicho (brief, ideias, avaliacao, documentos e relatorios).
+Gera um estudo completo de nicho (brief, ideias, avaliação, documentos e relatórios).
 
 Argumentos:
   nicho                              o nicho em uma frase (equivale a --niche)
 
 Opcoes:
   --niche, --nicho <texto>           o nicho (alternativa ao argumento posicional)
-  --city, --cidade <texto>           cidade ou regiao alvo
-  --ticket <inteiro>                 ticket mensal em BRL (padrao: 300)
-  --ideas, --ideias <inteiro>        numero de ideias a gerar (padrao: 8)
-  --output, --output-dir, --saida <dir>  diretorio de saida (padrao: estudo)
-  --ideas-file, --ideias-arquivo <arquivo>  JSON com ideias (pula a geracao por LLM)
-  --pain-method, --metodo-dor <choice|escolha|noul>  metodo de medicao de dor (padrao: choice)
-  --eval-only, --so-avaliar          para depois da avaliacao (coleta dados para calibracao)
+  --city, --cidade <texto>           cidade ou região alvo
+  --ticket <inteiro>                 ticket mensal em BRL (padrão: 300)
+  --ideas, --ideias <inteiro>        número de ideias a gerar (padrão: 8)
+  --output, --output-dir, --saída <dir>  diretorio de saída (padrão: estudo)
+  --ideas-file, --ideias-arquivo <arquivo>  JSON com ideias (pula a geração por LLM)
+  --pain-method, --metodo-dor <choice|escolha|noul>  método de medição de dor (padrão: choice)
+  --eval-only, --so-avaliar          para depois da avaliação (coleta dados para calibração)
   --mock                             roda offline com LLM e decisor simulados
   --mock-llm                         simula apenas o LLM (usa o decisor real)
   --mock-decider, --mock-decisor     simula apenas o decisor (usa o LLM real)
-  --pdf                              compila um PDF unico do estudo
-  --concurrency, --paralelo <inteiro>  chamadas concorrentes (padrao: 8)
-  --timeout <segundos>               timeout por chamada (padrao: 60)
-  --llm-url <url>                    URL base compativel com OpenAI
+  --pdf                              compila um PDF único do estudo
+  --concurrency, --paralelo <inteiro>  chamadas concorrentes (padrão: 8)
+  --timeout <segundos>               timeout por chamada (padrão: 60)
+  --llm-url <url>                    URL base compatível com OpenAI
   --llm-model <modelo>               modelo do LLM
   --llm-key <chave>                  chave da API do LLM
   --decider-url, --decisor-url <url>  endpoint System One (Jev, Laya, local, etc.)
@@ -234,16 +234,16 @@ Opcoes:
 }
 
 function printDiagnoseHelp(): void {
-  console.log(`Uso: goodbizz diagnose --ideas <arquivo.json> [opcoes]
+  console.log(`Uso: goodbizz diagnose --ideas <arquivo.json> [opções]
 
-Mede a coerencia das sondas de dor antes de recalibrar limiares: consistencia
-(afirmacao+negacao perto de 1.00) e estabilidade entre parafrases.
+Mede a coerência das sondas de dor antes de recalibrar limiares: consistencia
+(afirmacao+negacao perto de 1.00) e estabilidade entre paráfrases.
 
 Opcoes:
-  --ideas, --ideias <arquivo>        JSON com 5 a 10 ideias (obrigatorio)
-  --niche, --nicho <texto>           o nicho (padrao: o nicho em uma frase)
-  --city, --cidade <texto>           cidade ou regiao alvo
-  --threshold, --limiar <numero>     soma afirmacao+negacao acima disso = contraditoria (padrao: 1.20)
+  --ideas, --ideias <arquivo>        JSON com 5 a 10 ideias (obrigatório)
+  --niche, --nicho <texto>           o nicho (padrão: o nicho em uma frase)
+  --city, --cidade <texto>           cidade ou região alvo
+  --threshold, --limiar <número>     soma afirmação+negação acima disso = contraditória (padrão: 1.20)
   --decider-url, --decisor-url <url>  endpoint System One (Jev, Laya, local, etc.)
   --decider-model, --decisor-model <modelo>  modelo do decisor
   --decider-key, --decisor-key <chave>  chave do decisor
@@ -252,7 +252,7 @@ Opcoes:
 }
 
 function printRecalibrateHelp(): void {
-  console.log(`Uso: goodbizz recalibrate <dados.json...> [opcoes]
+  console.log(`Uso: goodbizz recalibrate <dados.json...> [opções]
 
 Recalibra os limiares do classificador de dor contra um conjunto de casos rotulados.
 
@@ -260,34 +260,34 @@ Argumentos:
   dados.json...                      um ou mais arquivos dados.json de execucoes anteriores
 
 Opcoes:
-  --cutoff, --corte <numero>         venda >= cutoff conta como dor real (padrao: 1.40)
+  --cutoff, --corte <número>         venda >= cutoff conta como dor real (padrão: 1.40)
   -h, --help                         mostra esta ajuda`);
 }
 
 function printServeHelp(): void {
   console.log(`Uso: goodbizz serve
 
-Sobe o servico HTTP (API, interface web e rotas de saude) ouvindo em PORT.
-A configuracao vem do ambiente; encerra de forma graciosa em SIGTERM/SIGINT.
+Sobe o serviço HTTP (API, interface web e rotas de saude) ouvindo em PORT.
+A configuração vem do ambiente; encerra de forma graciosa em SIGTERM/SIGINT.
 
 Opcoes:
   -h, --help                         mostra esta ajuda`);
 }
 
 function printGeneralHelp(print: (line: string) => void = (line) => console.log(line)): void {
-  print("goodbizz — estudos de nicho, diagnostico de sondas e recalibracao de limiares.");
+  print("goodbizz — estudos de nicho, diagnostico de sondas e recalibração de limiares.");
   print("");
-  print("Uso: goodbizz <comando> [opcoes]");
+  print("Uso: goodbizz <comando> [opções]");
   print("");
   print("Comandos:");
   print("  generate, gerar, study, estudo   gera um estudo completo a partir do nicho");
-  print("  diagnose, diagnosticar           mede a coerencia das sondas de dor");
+  print("  diagnose, diagnosticar           mede a coerência das sondas de dor");
   print("  recalibrate, recalibrar          recalibra os limiares com dados rotulados");
-  print("  serve, servico, server           sobe o servico HTTP");
+  print("  serve, serviço, server           sobe o serviço HTTP");
   print("  help, ajuda                      mostra esta ajuda");
   print("");
   print("Opcoes globais:");
-  print("  -v, --version                    mostra a versao");
+  print("  -v, --version                    mostra a versão");
   print("  -h, --help                       mostra a ajuda de um comando");
   print("");
   print('Use "goodbizz <comando> --help" para ver as flags de cada comando.');
@@ -298,9 +298,9 @@ function printSummary(cfg: StudyConfig, result: GenerateStudyResult): void {
   for (const file of result.files) console.log(`  ${file.path}`);
   console.log(`  cache: ${result.cacheCount} respostas guardadas (${result.cacheHits} reaproveitadas)`);
   console.log(
-    "\nComo ler: indice de acao 0 a 2 (maior e melhor; Tier A >= 1.84, B >= 1.60) | " +
-      "dor FORTE >= 0.65 e dominante | desvio entre parafrases menor e melhor (< 0.15) | " +
-      "WTP e meta30 sao probabilidades de 0 a 1 (maior e melhor) | ticket e teto, nao piso.",
+    "\nComo ler: índice de ação 0 a 2 (maior e melhor; Tier A >= 1.84, B >= 1.60) | " +
+      "dor FORTE >= 0.65 e dominante | desvio entre paráfrases menor e melhor (< 0.15) | " +
+      "WTP e meta30 são probabilidades de 0 a 1 (maior e melhor) | ticket é teto, não piso.",
   );
   if (result.issues.length > 0) {
     console.log(`\n${result.issues.length} documento(s) com aviso:`);
@@ -308,8 +308,8 @@ function printSummary(cfg: StudyConfig, result: GenerateStudyResult): void {
   }
   if (cfg.mockLlm || cfg.mockDecider) {
     const parts: string[] = [];
-    if (cfg.mockLlm) parts.push("texto sintetico (LLM simulado)");
-    if (cfg.mockDecider) parts.push("numeros deterministicos (decisor simulado)");
+    if (cfg.mockLlm) parts.push("texto sintético (LLM simulado)");
+    if (cfg.mockDecider) parts.push("números deterministicos (decisor simulado)");
     console.log(`\nAVISO: ${parts.join(" e ")}. Nao use esta saida como estudo real.`);
   }
 }
@@ -429,7 +429,7 @@ async function runDiagnose(argv: string[]): Promise<number> {
   }
   console.log(`\nsondas utilizaveis: ${report.usable.length > 0 ? report.usable.join(", ") : "nenhuma"}`);
   console.log(
-    `referencia: soma afirmacao+negacao de 1.00 e coerencia perfeita; ` +
+    `referência: soma afirmação+negação de 1.00 é coerência perfeita; ` +
       `acima de ${report.threshold} a sonda responde sim para as duas`,
   );
   for (const note of report.notes) console.log(`\n${note}`);

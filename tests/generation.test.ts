@@ -126,24 +126,24 @@ describe("parseIdeas", () => {
 describe("dataBlock", () => {
   test("renders every measured number with the baseline layout", () => {
     const block = dataBlock(makeEvaluation(), makeConfig());
-    expect(block).toContain("INDICE DE ACAO: 1.5 | TIER: C");
-    expect(block).toContain("fit: 1.5/2.00 (confianca 0.80)");
-    expect(block).toContain("facilidade de venda: 1.5/2.00 (confianca 0.75)");
-    expect(block).toContain("disrupcao: 1/2.00 (confianca 0.60)");
+    expect(block).toContain("ÍNDICE DE AÇÃO: 1.5 | TIER: C");
+    expect(block).toContain("fit: 1.5/2.00 (confiança 0.80)");
+    expect(block).toContain("facilidade de venda: 1.5/2.00 (confiança 0.75)");
+    expect(block).toContain("disrupção: 1/2.00 (confiança 0.60)");
     expect(block).toContain("suporte solo: 0.40");
     expect(block).toContain("ALGORITMO DA DOR:");
-    expect(block).toContain("VALIDACAO: pagaria R$ 300/mes = 0.50");
+    expect(block).toContain("VALIDAÇÃO: pagaria R$ 300/mês = 0.50");
     expect(block).toContain("margem +0.15");
     expect(block).toContain("Escalas:");
-    expect(block).toContain("Regras de negocio para este plano:");
-    expect(block).toContain("Ticket assumido: R$ 300/mes (R$ 3600/ano)");
+    expect(block).toContain("Regras de negócio para este plano:");
+    expect(block).toContain("Ticket assumido: R$ 300/mês (R$ 3600/ano)");
     expect(block).toContain("Nicho: clinicas");
   });
 
   test("sorts the pain probability distribution by key with 2 decimals", () => {
     const block = dataBlock(makeEvaluation(), makeConfig());
     expect(block).toContain(
-      "tipo de dor: dinheiro_direto (confianca 0.70) | distribuicao: " +
+      "tipo de dor: dinheiro_direto (confiança 0.70) | distribuição: " +
         "backoffice=0.25, dinheiro_direto=0.50, reputacao=0.25",
     );
   });
@@ -152,9 +152,9 @@ describe("dataBlock", () => {
     const evaluation = makeEvaluation();
     evaluation.sector = "";
     const withCity = dataBlock(evaluation, makeConfig({ city: "Sorocaba" }));
-    expect(withCity).toContain("Nicho: clinicas | Cidade/regiao: Sorocaba");
-    expect(withCity).toContain("(setor: nao informado)");
-    expect(dataBlock(evaluation, makeConfig())).not.toContain("Cidade/regiao");
+    expect(withCity).toContain("Nicho: clinicas | Cidade/região: Sorocaba");
+    expect(withCity).toContain("(setor: não informado)");
+    expect(dataBlock(evaluation, makeConfig())).not.toContain("Cidade/região");
   });
 });
 
@@ -164,7 +164,7 @@ describe("prompts", () => {
     for (const title of DOC_SECTIONS) {
       expect(DOC_SYSTEM_PROMPT).toContain(title);
     }
-    expect(DOC_LITERALS).toEqual(["Tier", "SWOT", "Business Model Canvas", "Porter", "Proximos passos"]);
+    expect(DOC_LITERALS).toEqual(["Tier", "SWOT", "Business Model Canvas", "Porter", "Próximos passos"]);
   });
 });
 
@@ -175,7 +175,7 @@ describe("generation calls", () => {
     expect(brief).toBe("brief texto");
     expect(llm.calls[0]?.system).toBe(BRIEF_SYSTEM_PROMPT);
     expect(llm.calls[0]?.user).toBe(
-      "Nicho: clinicas\n" + "Cidade ou regiao alvo: nao informada\n" + "Ticket mensal considerado: R$ 300\n",
+      "Nicho: clinicas\n" + "Cidade ou região alvo: não informada\n" + "Ticket mensal considerado: R$ 300\n",
     );
   });
 
@@ -195,7 +195,7 @@ describe("generation calls", () => {
     expect(llm.calls[0]?.system).toBe(IDEAS_SYSTEM_PROMPT);
     expect(llm.calls[0]?.user).toBe(
       "Nicho: clinicas\n" +
-        "Cidade ou regiao alvo: nao informada\n" +
+        "Cidade ou região alvo: não informada\n" +
         "Ticket mensal considerado: R$ 300\n\n" +
         "Brief de mercado:\nbrief de teste\n\n" +
         "Gere exatamente 6 ideias em JSON. Retorne apenas o array.",

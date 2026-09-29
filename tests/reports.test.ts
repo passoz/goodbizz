@@ -179,7 +179,7 @@ describe("scopeNotice", () => {
   test("cita nicho, cidade e ticket", () => {
     const notice = scopeNotice(config);
     expect(notice).toContain("**Clinica Odontologica em Recife**");
-    expect(notice).toContain("R$ 300/mes");
+    expect(notice).toContain("R$ 300/mês");
     expect(notice.endsWith("\n")).toBe(true);
   });
 
@@ -281,7 +281,7 @@ describe("indexMarkdown", () => {
 
   test("inclui medias, grupos de dor e brief", () => {
     const text = indexMarkdown(config, "Brief curto de mercado.", summary, folders);
-    expect(text).toContain("- fit **0.8** · venda **0.767** · disrupcao **0.5** · suporte solo **0.8**");
+    expect(text).toContain("- fit **0.8** · venda **0.767** · disrupção **0.5** · suporte solo **0.8**");
     expect(text).toContain("- tiers — A: 0 · B: 0 · C: 3");
     expect(text).toContain("- Dor mista: nenhuma");
     expect(text).toContain("## Brief de contexto\n\nBrief curto de mercado.");

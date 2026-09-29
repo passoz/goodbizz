@@ -36,6 +36,13 @@ export class NotFoundError extends DomainError {
   }
 }
 
+/** Ação recusada pelo estado atual do recurso (ex.: excluir um estudo em execução). */
+export class ConflictError extends DomainError {
+  constructor(message: string) {
+    super("CONFLICT", message, 409);
+  }
+}
+
 export class LlmError extends DomainError {
   constructor(message: string) {
     super("LLM_FAILED", message, 502);

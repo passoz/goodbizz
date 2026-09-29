@@ -1,6 +1,6 @@
 /**
  * `dados.json`: o esquema de chaves em portugues que o `recalibrate` le.
- * Mantenha os nomes estaveis — o leitor do baseline depende deles.
+ * Mantenha os nomes estáveis — o leitor do baseline depende deles.
  */
 import { readFileSync } from "node:fs";
 
@@ -9,7 +9,7 @@ import type { Idea, IdeaEvaluation, StudyConfig, StudySummary, Tier } from "../d
 
 /**
  * Mapa campo do `StudyConfig` -> chave gravada em `config` dentro de dados.json.
- * Ordem das chaves = ordem de gravacao.
+ * Ordem das chaves = ordem de gravação.
  */
 export const DADOS_CONFIG_KEYS: Record<string, string> = {
   niche: "nicho",
@@ -20,7 +20,7 @@ export const DADOS_CONFIG_KEYS: Record<string, string> = {
   evaluateOnly: "so_avaliar",
 };
 
-/** Converte uma avaliacao para o formato gravado em dados.json. */
+/** Converte uma avaliação para o formato gravado em dados.json. */
 export function evaluationToJson(evaluation: IdeaEvaluation): Record<string, unknown> {
   const i = evaluation.indicators;
   const g = evaluation.business;
@@ -61,7 +61,7 @@ export function evaluationToJson(evaluation: IdeaEvaluation): Record<string, unk
   };
 }
 
-/** Le uma avaliacao de dados.json; entrada desconhecida ou parcial vira valores neutros. */
+/** Le uma avaliação de dados.json; entrada desconhecida ou parcial vira valores neutros. */
 export function evaluationFromJson(raw: unknown): IdeaEvaluation {
   const root = asRecord(raw);
   const ind = asRecord(root["indicadores"]);
@@ -106,8 +106,8 @@ export function evaluationFromJson(raw: unknown): IdeaEvaluation {
 }
 
 /**
- * Serializa o conteudo de dados.json.
- * @param _brief guardado no banco, nao em dados.json (o baseline nao o grava aqui).
+ * Serializa o conteúdo de dados.json.
+ * @param _brief guardado no banco, não em dados.json (o baseline não o grava aqui).
  */
 export function serializeDados(
   cfg: StudyConfig,
@@ -168,8 +168,8 @@ function asParaphraseMatrix(value: unknown): Record<string, Record<string, numbe
 }
 
 /**
- * Le a lista de ideias de um arquivo: aceita `[{"nome","setor","descricao"}]`,
- * `[{"name","sector","description"}]`, `["descricao"]` ou um objeto com `ideias`/`ideas`.
+ * Le a lista de ideias de um arquivo: aceita `[{"nome","setor","descrição"}]`,
+ * `[{"name","sector","description"}]`, `["descrição"]` ou um objeto com `ideias`/`ideas`.
  */
 export function loadIdeas(path: string): Idea[] {
   const parsed: unknown = JSON.parse(readFileSync(path, "utf-8"));

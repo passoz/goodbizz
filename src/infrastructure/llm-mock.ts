@@ -9,33 +9,33 @@ export const MOCK_IDEAS: Idea[] = [
   {
     name: "Triagem de WhatsApp",
     sector: "atendimento",
-    description: "Le as mensagens que chegam, separa duvida simples de intencao real e avisa quem decide.",
+    description: "Lê as mensagens que chegam, separa dúvida simples de intenção real e avisa quem decide.",
   },
   {
     name: "Confirmacao de horario",
     sector: "agenda",
-    description: "Confirma compromissos algumas horas antes e realoca a vaga quando alguem desmarca.",
+    description: "Confirma compromissos algumas horas antes e realoca a vaga quando alguém desmarca.",
   },
   {
     name: "Ficha do cliente",
     sector: "cadastro",
-    description: "Extrai os dados do cliente a partir do documento e preenche o cadastro obrigatorio.",
+    description: "Extrai os dados do cliente a partir do documento e preenche o cadastro obrigatório.",
   },
   {
     name: "Resgate de insatisfacao",
     sector: "reputacao",
     description:
-      "Le as conversas em andamento, detecta insatisfacao e avisa antes de virar avaliacao publica.",
+      "Lê as conversas em andamento, detecta insatisfação e avisa antes de virar avaliação pública.",
   },
   {
     name: "Previsao de movimento",
     sector: "operacao",
-    description: "Preve o movimento do dia e gera lista de compras e de preparo.",
+    description: "Prevê o movimento do dia e gera lista de compras e de preparo.",
   },
   {
     name: "Livro de indicacoes",
     sector: "rede",
-    description: "Registra quem indicou quem e fecha o acerto do mes.",
+    description: "Registra quem indicou quem e fecha o acerto do mês.",
   },
 ];
 
@@ -44,13 +44,13 @@ export const MOCK_BRIEF = `# Brief (modo simulado)
 Premissas fixas do modo --mock. Substitua por um LLM real para um brief de verdade.
 
 - Comprador: dono-operador, decide sozinho, sem equipe de TI.
-- Orcamento: baixo e mensal; o dinheiro sai do bolso dele, nao de um departamento.
-- Canal de compra: WhatsApp e indicacao de conhecido.
-- Dor que faz comprar: perda de dinheiro visivel ou risco de imagem.
-- Volume de mensagens: alto e concentrado em poucos horarios.
+- Orçamento: baixo e mensal; o dinheiro sai do bolso dele, não de um departamento.
+- Canal de compra: WhatsApp e indicação de conhecido.
+- Dor que faz comprar: perda de dinheiro visível ou risco de imagem.
+- Volume de mensagens: alto e concentrado em poucos horários.
 `;
 
-/** Texto apos a primeira ocorrencia de `marker`, ou null se ausente (maxsplit=1). */
+/** Texto após a primeira ocorrencia de `marker`, ou null se ausente (maxsplit=1). */
 function afterFirst(text: string, marker: string): string | null {
   const index = text.indexOf(marker);
   return index < 0 ? null : text.slice(index + marker.length);
@@ -85,22 +85,22 @@ function documentFixture(user: string): string {
     (lines[field] ?? fallback).replaceAll(" | ", " · ").trim();
 
   const name = lines["Ideia"] ?? lines["Idea"] ?? "ideia de exemplo";
-  const indexVal = first("INDICE DE ACAO", first("ACTION INDEX", "-"));
+  const indexVal = first("ÍNDICE DE AÇÃO", first("ACTION INDEX", "-"));
   let tierVal = first("TIER") || complete("TIER");
-  if ((lines["INDICE DE ACAO"] ?? "").includes("TIER:")) {
-    tierVal = beforeFirst(afterFirst(lines["INDICE DE ACAO"]!, "TIER:")!, " | ").trim();
+  if ((lines["ÍNDICE DE AÇÃO"] ?? "").includes("TIER:")) {
+    tierVal = beforeFirst(afterFirst(lines["ÍNDICE DE AÇÃO"]!, "TIER:")!, " | ").trim();
   }
 
   const fit = first("fit");
   const sale = first("facilidade de venda", first("sale ease", "-"));
-  const disruption = first("disrupcao", first("disruption", "-"));
+  const disruption = first("disrupção", first("disruption", "-"));
   const solo = first("suporte solo", first("solo support", "-"));
   const pain = complete("tipo de dor", complete("pain type", "-"));
   const algo = complete("ALGORITMO DA DOR", complete("PAIN ALGORITHM", "-"));
-  const val = complete("VALIDACAO", complete("VALIDATION", "-"));
+  const val = complete("VALIDAÇÃO", complete("VALIDATION", "-"));
   let ticket = "300";
   for (const part of val.split("R$ ")) {
-    if (part.includes("por mes") || part.includes("per month")) {
+    if (part.includes("por mês") || part.includes("por mes") || part.includes("per month")) {
       ticket = part.split(" ")[0]!.trim();
       break;
     }
@@ -108,18 +108,18 @@ function documentFixture(user: string): string {
 
   return `# ${name}
 
-**Indice de Acao:** ${indexVal} · **Tier:** ${tierVal}
+**Índice de Ação:** ${indexVal} · **Tier:** ${tierVal}
 **Dor verificada:** ${algo}
 
-> Documento gerado em modo \`--mock\`. O texto abaixo e sintetico e existe apenas para
-> exercitar o pipeline de ponta a ponta. Nao use como estudo real.
+> Documento gerado em modo \`--mock\`. O texto abaixo é sintético e existe apenas para
+> exercitar o pipeline de ponta a ponta. Não use como estudo real.
 
 ## 1. Resumo executivo
 
-Esta e uma saida de exemplo. Em execucao real, o LLM escreve aqui o veredito da ideia,
-as duas ou tres fraquezas que o plano precisa resolver e o alerta de preco.
+Esta é uma saída de exemplo. Em execução real, o LLM escreve aqui o veredito da ideia,
+as duas ou três fraquezas que o plano precisa resolver e o alerta de preço.
 
-O indice de acao medido foi ${indexVal}, com Tier ${tierVal}. A dor foi classificada como ${algo}.
+O índice de ação medido foi ${indexVal}, com Tier ${tierVal}. A dor foi classificada como ${algo}.
 
 ## 2. Indicadores coletados
 
@@ -127,109 +127,109 @@ O indice de acao medido foi ${indexVal}, com Tier ${tierVal}. A dor foi classifi
 
 | Indicador | Valor |
 |---|---|
-| Aderencia ao mercado (fit) | ${fit} |
+| Aderência ao mercado (fit) | ${fit} |
 | Facilidade de venda | ${sale} |
-| Disrupcao | ${disruption} |
+| Disrupção | ${disruption} |
 | Suporte solo | ${solo} |
 | Tipo de dor | ${pain} |
 
-### 2.2 Verificacao automatica da dor
+### 2.2 Verificação automática da dor
 
 ${algo}
 
 ### 2.3 Mercado
 
-Em execucao real, esta secao recebe as ancoras de mercado do brief. Nenhum numero de
-mercado e gerado pelo modelo: ou vem do brief, ou e marcado \`[INFERENCE]\`.
+Em execução real, esta seção recebe as âncoras de mercado do brief. Nenhum número de
+mercado é gerado pelo modelo: ou vem do brief, ou é marcado \`[INFERENCE]\`.
 
-### 2.4 Validacao de preco e meta
+### 2.4 Validação de preço e meta
 
 ${val}
 
-O ticket de R$ ${ticket} por mes e **teto, nao piso**, e a meta de clientes e de 10 a 15 em
+O ticket de R$ ${ticket} por mês é **teto, não piso**, e a meta de clientes é de 10 a 15 em
 24 meses.
 
 ## 3. Como funciona
 
-Fluxo de exemplo: a mensagem entra, o decisor classifica, o codigo decide e o dono recebe
-apenas o que precisa de acao humana. Toda classificacao abaixo do limiar de confianca vai
-para revisao em vez de ser executada.
+Fluxo de exemplo: a mensagem entra, o decisor classifica, o código decide e o dono recebe
+apenas o que precisa de ação humana. Toda classificação abaixo do limiar de confiança vai
+para revisão em vez de ser executada.
 
 \`\`\`json
 {
   "intencao": {
     "type": "choice",
-    "instructions": "Classifique a intencao do cliente",
+    "instructions": "Classifique a intenção do cliente",
     "criteria": {"duvida": "...", "compra": "...", "problema": "..."}
   },
   "urgencia": {"type": "bool", "instructions": "O cliente demonstra pressa?"}
 }
 \`\`\`
 
-## 4. Estrategia de venda
+## 4. Estratégia de venda
 
-1. Demonstrar com o dado do proprio dono, sem cobrar.
-2. Diagnostico pago como filtro.
-3. Piloto com escopo fechado e metrica combinada.
+1. Demonstrar com o dado do próprio dono, sem cobrar.
+2. Diagnóstico pago como filtro.
+3. Piloto com escopo fechado e métrica combinada.
 4. Assinatura mensal.
 
-| Objecao | Resposta |
+| Objeção | Resposta |
 |---|---|
-| "Ja testei e nao funcionou" | Provar com o dado dele, nao com promessa. |
-| "E caro para o meu tamanho" | Comparar com a perda mensal medida. |
+| "Já testei e não funcionou" | Provar com o dado dele, não com promessa. |
+| "É caro para o meu tamanho" | Comparar com a perda mensal medida. |
 
-## 5. Estrategia de marketing
+## 5. Estratégia de marketing
 
-Posicionamento em uma frase, mensagem principal, canais e calendario sazonal quando fizer
-sentido. Nada de jargao de IA.
+Posicionamento em uma frase, mensagem principal, canais e calendário sazonal quando fizer
+sentido. Nada de jargão de IA.
 
-## 6. Precificacao e economia unitaria
+## 6. Precificação e economia unitária
 
-Entrada mais baixa que o teto, com migracao para o preco cheio depois de valor provado.
-Custo marginal de modelo de decisao e de centavos por milhar de chamadas.
+Entrada mais baixa que o teto, com migração para o preço cheio depois de valor provado.
+Custo marginal de modelo de decisão é de centavos por milhar de chamadas.
 
 ## 7. SWOT
 
-- Forcas: dor medida e mecanismo claro.
-- Fraquezas: suporte e integracao sao o gargalo, nao o modelo.
-- Oportunidades: vender via associacao local.
-- Ameacas: concorrente nacional e substituto gratuito.
+- Forças: dor medida e mecanismo claro.
+- Fraquezas: suporte e integração são o gargalo, não o modelo.
+- Oportunidades: vender via associação local.
+- Ameaças: concorrente nacional e substituto gratuito.
 
 ## 8. Business Model Canvas
 
-| Bloco | Conteudo |
+| Bloco | Conteúdo |
 |---|---|
 | Segmentos de cliente | dono-operador do nicho |
 | Proposta de valor | resolver a dor medida |
-| Canais | WhatsApp, indicacao, associacao |
-| Relacionamento | proximo na entrada, remoto no recorrente |
+| Canais | WhatsApp, indicação, associação |
+| Relacionamento | próximo na entrada, remoto no recorrente |
 | Fontes de receita | setup + mensalidade |
-| Recursos principais | o classificador e a integracao |
+| Recursos principais | o classificador e a integração |
 | Atividades principais | configurar, medir, vender |
-| Parcerias principais | associacao local e provedor do canal |
+| Parcerias principais | associação local e provedor do canal |
 | Estrutura de custos | API, infraestrutura, suporte |
 
 ## 9. Ferramentas complementares
 
-### 9.1 Cinco Forcas de Porter
+### 9.1 Cinco Forças de Porter
 
-| Forca | Intensidade |
+| Força | Intensidade |
 |---|---|
-| Rivalidade | media |
+| Rivalidade | média |
 | Poder dos clientes | alto |
 | Poder dos fornecedores | alto |
 | Novos entrantes | alta |
-| Substitutos | media |
+| Substitutos | média |
 
 ### 9.2 Matriz de risco
 
-| Risco | Probabilidade | Impacto | Mitigacao |
+| Risco | Probabilidade | Impacto | Mitigação |
 |---|---|---|---|
-| beneficios invisivel | media | alto | provar com o dado do cliente |
+| benefícios invisíveis | média | alto | provar com o dado do cliente |
 
 ### 9.3 4 Ps
 
-Produto, preco, praca e promocao definidos a partir dos indicadores medidos.
+Produto, preço, praça e promoção definidos a partir dos indicadores medidos.
 
 ### 9.4 Roadmap de 90 dias
 
@@ -241,15 +241,15 @@ Produto, preco, praca e promocao definidos a partir dos indicadores medidos.
 
 ### 9.5 KPIs
 
-Metricas de uso, de conversao e de churn.
+Métricas de uso, de conversão e de churn.
 
-## 10. Proximos passos
+## 10. Próximos passos
 
 1. Fechar a oferta.
-2. Conseguir um cliente conhecido para a demonstracao.
+2. Conseguir um cliente conhecido para a demonstração.
 3. Medir a linha de base.
-4. Definir o limiar de confianca.
-5. Levar o caso pronto a associacao local.
+4. Definir o limiar de confiança.
+5. Levar o caso pronto à associação local.
 `;
 }
 

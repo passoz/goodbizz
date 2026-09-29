@@ -1,11 +1,11 @@
-# goodbizz
+# GoodBizz
 
-Um prompt pequeno entra, um estudo de negocio completo sai — agora como **servico Bun/TypeScript**:
-CLI, API HTTP e interface web sobre a mesma logica, com persistencia SQLite.
+Um prompt pequeno entra, um estudo de negócio completo sai — agora como **serviço Bun/TypeScript**:
+CLI, API HTTP e interface web sobre a mesma lógica, com persistencia SQLite.
 
 Voce descreve um nicho de mercado em uma frase. A ferramenta gera ideias de produto, avalia cada uma
 em um **decisor System One** (modelo probabilistico que mede chances reais em vez de alucinar texto) e
-redige planos de negocio executivos: estrategia comercial, marketing, precificacao, analise SWOT,
+redige planos de negócio executivos: estratégia comercial, marketing, precificação, análise SWOT,
 Business Model Canvas, 5 Forcas de Porter, matriz de risco, roadmap de implantacao e KPIs.
 
 The original Python implementation is kept in this repository as the reference baseline
@@ -45,17 +45,17 @@ tests/               suite Bun (offline e deterministica)
 .pwn/, .specs/, .prompts/, .sources/, .todo/   governanca do harness pwn
 ```
 
-Regra de dependencia: `domain` nao importa `application` nem `infrastructure`. Nenhum acesso a dados
+Regra de dependencia: `domain` não importa `application` nem `infrastructure`. Nenhum acesso a dados
 escreve SQL cru — tudo via Drizzle sobre `bun:sqlite`.
 
-**Nada de inferencia local.** LLM e decisor continuam endpoints HTTP externos; a imagem nao carrega
+**Nada de inferencia local.** LLM e decisor continuam endpoints HTTP externos; a imagem não carrega
 pesos nem runtime de modelo.
 
 ---
 
 ## Requisitos
 
-- [Bun](https://bun.sh) 1.4+ (runtime unico: CLI, servico e testes)
+- [Bun](https://bun.sh) 1.4+ (runtime único: CLI, serviço e testes)
 - Chromium (opcional) apenas para gerar PDF
 - Docker (opcional) para a imagem
 
@@ -67,11 +67,11 @@ bun test             # suite offline
 
 ---
 
-## Configuracao (12-factor)
+## Configuração (12-factor)
 
 Segredos vivem **apenas** no ambiente. O contrato das chaves esta versionado em `.env.example`.
 
-| Variavel                | Padrao                      | Descricao                                             |
+| Variavel                | Padrao                      | Descrição                                             |
 | ----------------------- | --------------------------- | ----------------------------------------------------- |
 | `LLM_API_URL`           | `https://api.openai.com/v1` | base URL compativel com `/chat/completions`           |
 | `LLM_API_KEY`           | —                           | chave do provedor LLM (obrigatoria fora do modo mock) |
@@ -89,9 +89,9 @@ Segredos vivem **apenas** no ambiente. O contrato das chaves esta versionado em 
 | `GOODBIZZ_MOCK_LLM`     | `0`                         | `1` simula apenas o texto, mantendo o decisor real    |
 | `GOODBIZZ_MOCK_DECIDER` | `0`                         | `1` simula apenas os numeros, mantendo o LLM real     |
 
-Modo misto: o servico aceita simular um provedor e usar o outro de verdade, igual a CLI
+Modo misto: o serviço aceita simular um provedor e usar o outro de verdade, igual a CLI
 (`--mock-llm`, `--mock-decider`). A pagina `/new` mostra o que esta ativo. Provedores reais
-impoem fail-fast no startup: sem `LLM_API_KEY` (ou `DECISION_API_URL`) o processo nao sobe, a
+impoem fail-fast no startup: sem `LLM_API_KEY` (ou `DECISION_API_URL`) o processo não sobe, a
 menos que aquele provedor esteja marcado como simulado.
 
 O processo falha no startup quando uma chave obrigatoria do modo real esta ausente, e nenhuma chave
@@ -110,17 +110,17 @@ bun run cli help
 ```
 
 `bin/goodbizz` e o dispatcher (pode ser linkado no `PATH`); ele aceita `generate|gerar|study|estudo`,
-`diagnose|diagnosticar`, `recalibrate|recalibrar`, `serve|servico|server` e `help|ajuda`.
+`diagnose|diagnosticar`, `recalibrate|recalibrar`, `serve|serviço|server` e `help|ajuda`.
 
 Flags de `generate` (com aliases do baseline): `--niche/--nicho`, `--city/--cidade`, `--ticket`,
 `--ideas/--ideias`, `--output/--saida`, `--ideas-file/--ideias-arquivo`,
-`--pain-method/--metodo-dor`, `--eval-only/--so-avaliar`, `--mock`, `--mock-llm`,
+`--pain-method/--método-dor`, `--eval-only/--so-avaliar`, `--mock`, `--mock-llm`,
 `--mock-decider/--mock-decisor`, `--pdf`, `--concurrency/--paralelo`, `--timeout`, `--llm-url`,
 `--llm-model`, `--llm-key`, `--decider-url/--decisor-url`, `--decider-model/--decisor-model`,
 `--decider-key/--decisor-key`.
 
-Codigos de saida: `0` sucesso, `1` falha (ou menos de 3 sondas uteis no diagnose), `2` erro de
-configuracao/subcomando desconhecido, `130` interrupcao por teclado.
+Codigos de saida: `0` sucesso, `1` falha (ou menos de 3 sondas úteis no diagnose), `2` erro de
+configuração/subcomando desconhecido, `130` interrupcao por teclado.
 
 ### O que sai no final
 
@@ -142,22 +142,23 @@ estudo/
 
 ## API HTTP
 
-Prefixo `/api`. Sem CSRF (autentique no proxy, se necessario).
+Prefixo `/api`. Sem CSRF (autentique no proxy, se necessário).
 
-| Metodo | Rota                             | Efeito                                                |
-| ------ | -------------------------------- | ----------------------------------------------------- |
-| `GET`  | `/api/config`                    | quais provedores estao configurados (booleanos)       |
-| `POST` | `/api/studies`                   | cria um estudo e inicia a execucao (201)              |
-| `GET`  | `/api/studies`                   | lista os estudos com estado e topo do ranking         |
-| `GET`  | `/api/studies/:id`               | detalhe: avaliações ordenadas, resumo, artefatos      |
-| `POST` | `/api/studies/:id/run`           | reexecuta o pipeline do estudo                        |
-| `GET`  | `/api/studies/:id/artifacts`     | lista os caminhos relativos dos artefatos             |
-| `GET`  | `/api/studies/:id/artifacts.zip` | baixa tudo em um ZIP (pasta com o slug do nicho)      |
-| `GET`  | `/api/studies/:id/artifacts/*`   | conteudo do artefato (markdown, csv, json, html, pdf) |
-| `POST` | `/api/diagnose`                  | coerencia e estabilidade das sondas                   |
-| `POST` | `/api/recalibrate`               | busca em grade de limiares sobre `dados.json`         |
-| `GET`  | `/healthz`                       | liveness (nao toca o banco)                           |
-| `GET`  | `/readyz`                        | readiness (`select 1` no SQLite)                      |
+| Método   | Rota                             | Efeito                                                                         |
+| -------- | -------------------------------- | ------------------------------------------------------------------------------ |
+| `GET`    | `/api/config`                    | quais provedores estao configurados (booleanos)                                |
+| `POST`   | `/api/studies`                   | cria um estudo e inicia a execucao (201)                                       |
+| `GET`    | `/api/studies`                   | lista os estudos com estado e topo do ranking                                  |
+| `GET`    | `/api/studies/:id`               | detalhe: avaliações ordenadas, resumo, artefatos                               |
+| `POST`   | `/api/studies/:id/run`           | reexecuta o pipeline do estudo                                                 |
+| `DELETE` | `/api/studies/:id`               | apaga o estudo, as avaliações e os artefatos (`204`; `409` se estiver rodando) |
+| `GET`    | `/api/studies/:id/artifacts`     | lista os caminhos relativos dos artefatos                                      |
+| `GET`    | `/api/studies/:id/artifacts.zip` | baixa tudo em um ZIP (pasta com o slug do nicho)                               |
+| `GET`    | `/api/studies/:id/artifacts/*`   | conteudo do artefato (markdown, csv, json, html, pdf)                          |
+| `POST`   | `/api/diagnose`                  | coerencia e estabilidade das sondas                                            |
+| `POST`   | `/api/recalibrate`               | busca em grade de limiares sobre `dados.json`                                  |
+| `GET`    | `/healthz`                       | liveness (nao toca o banco)                                                    |
+| `GET`    | `/readyz`                        | readiness (`select 1` no SQLite)                                               |
 
 ```bash
 curl -s localhost:3000/api/studies \
@@ -166,7 +167,7 @@ curl -s localhost:3000/api/studies \
 curl -s localhost:3000/api/studies/<id> | jq '.evaluations[].name, .evaluations[].tier'
 ```
 
-Erros: `422` payload invalido (com detalhes de validacao), `404` estudo ou artefato inexistente,
+Erros: `422` payload invalido (com detalhes de validação), `404` estudo ou artefato inexistente,
 `500` erro interno sem stack trace. Nenhuma resposta inclui caminho de arquivo ou credencial.
 
 ---
@@ -175,53 +176,63 @@ Erros: `422` payload invalido (com detalhes de validacao), `404` estudo ou artef
 
 Quatro rotas: `GET /` lista os estudos como cartoes, `GET /new` traz o formulario de criacao,
 `GET /studies/:id` abre um estudo e `GET /como-ler` reune as regras de leitura. O cartao inteiro abre
-o estudo: o titulo carrega um link esticado que cobre a area e o selo "Abrir estudo" mostra a acao. O
-identificador aparece so como nota de rodape, para chamadas de API.
+o estudo: o título carrega um link esticado que cobre a area e o selo "Abrir estudo" mostra a ação. O
+identificador aparece so como nota de rodapé, para chamadas de API.
 
-No estudo, **"Baixar .zip"** e a acao do cabecalho (ao lado do titulo) e entrega a arvore inteira em
-um unico arquivo, dentro de uma pasta com o slug do nicho. O ZIP e escrito pelo proprio runtime
+No estudo, **"Baixar .zip"** e a ação do cabecalho (ao lado do título) e entrega a arvore inteira em
+um único arquivo, dentro de uma pasta com o slug do nicho. O ZIP e escrito pelo próprio runtime
 (`buildZip` em `src/application/artifacts.ts`, PKZIP com deflate e fallback para store): `Bun.Archive`
-escreve tar, nao zip, e assim a imagem nao depende de binario externo. Cada artefato tambem baixa
+escreve tar, não zip, e assim a imagem não depende de binario externo. Cada artefato também baixa
 direto (`download` no link), sem renderizar markdown dentro da pagina.
 
 **Progresso ao vivo.** Enquanto o pipeline roda, a pagina do estudo mostra o painel de progresso — o
-passo atual gravado pelo servico (`[3/6] ...`), a barra de seis fases e o selo do estado — e consulta
+passo atual gravado pelo serviço (`[3/6] ...`), a barra de seis fases e o selo do estado — e consulta
 `GET /api/studies/:id` a cada 2 s, recarregando sozinha quando o estudo termina. Sem JavaScript o
 texto do passo continua no HTML renderizado (recarregue a mao); a regiao usa `aria-live="polite"`.
 
-**Tema claro e escuro.** O cabecalho traz tres estados — `Auto` (segue `prefers-color-scheme`), `Claro`
+**Tema claro e escuro.** O cabecalho traz três estados — `Auto` (segue `prefers-color-scheme`), `Claro`
 e `Escuro` — persistidos em `localStorage` e aplicados antes do primeiro paint por um guarda inline em
-`<head>`, sem piscar. O tema escuro e o padrao; o claro reescreve superficie, linha, texto forte e
+`<head>`, sem piscar. O tema escuro e o padrão; o claro reescreve superficie, linha, texto forte e
 selos em `src/infrastructure/http/ui/layout.tsx`.
 
 **Como ler.** A legenda da metodologia (indicadores, limiares de tier e de dor, escala de cor) vive em
-`/como-ler`, alcancavel pela navegacao, em vez de ocupar o meio do estudo.
+`/como-ler`, alcançável pela navegação, em vez de ocupar o meio do estudo.
+
+**Plano em modal.** Clicar no nome de uma ideia (ranking) abre o plano dela num `<dialog>` nativo, com ESC
+e clique no fundo para fechar. O markdown vem renderizado pelo servidor (`GET /studies/:id/ideas/:n`, o
+mesmo `mdToHtml` do HTML/PDF exportado) — o navegador não carrega renderizador de markdown, e sem
+JavaScript o link cai no artefato cru.
+
+**Excluir estudo.** Cada cartão da lista e o cabeçalho do estudo têm "Excluir" (variante `btn-danger`,
+vermelho da escala). Com JavaScript há um diálogo de confirmação seguido de `DELETE /api/studies/:id`;
+sem JS o formulário posta em `/ui/studies/:id/delete` com token CSRF. Estudo em execução é recusado
+com `409`.
 
 **Paleta com significado.** As cores `#DD5855` `#D78133` `#BFC115` `#9FDB43` `#72CE3B` formam a
 escala do sistema: vermelho aponta sinal ruim ou quente, laranja pede atencao, amarelo e medio,
-limao e verde apontam sinal bom. A mesma escala colore o fundo, o indice de acao, o tier, a dor, o
-desvio, o estado do estudo e a disposicao a pagar, sempre com o limiar explicado na legenda.
+limao e verde apontam sinal bom. A mesma escala colore o fundo, o índice de ação, o tier, a dor, o
+desvio, o estado do estudo e a disposição a pagar, sempre com o limiar explicado na legenda.
 
 **Leitura guiada.** Todo dado apresentado vem com o seu helper, no formato `dado 0.89 (maior e
-melhor)`: direcao, escala e o que o numero significa. Cada coluna de tabela, bloco de metrica,
+melhor)`: direcao, escala e o que o número significa. Cada coluna de tabela, bloco de metrica,
 selo e card de artefato carrega essa leitura.
 
 **Glossario no hover.** Passar o mouse (ou focar pelo teclado) em uma sigla ou nome abre uma caixa
-com a explicacao curta: `WTP`, `Tier`, `fit`, `venda`, `disrupcao`, `desvio`, `FORTE`, `FRACA`,
-`INSTAVEL`, `System One`, `LLM`, `guardrail`, `CSRF`, `ticket`, `[INFERENCE]` e outros. As
+com a explicacao curta: `WTP`, `Tier`, `fit`, `venda`, `disrupção`, `desvio`, `FORTE`, `FRACA`,
+`INSTÁVEL`, `System One`, `LLM`, `guardrail`, `CSRF`, `ticket`, `[INFERENCE]` e outros. As
 explicacoes vivem em uma fonte unica (`GLOSSARY` em `src/infrastructure/http/ui/layout.tsx`) e o
 texto fica no DOM, portanto e alcancavel por leitor de tela.
 
 **Estilo.** Glassmorphism em CSS nativo: fundo saturado com cinco blobs, paineis com filme
 translucido, borda luminosa, brilho especular e sombra profunda, com `backdrop-filter` (blur ao
 vivo) habilitado quando o navegador suporta e fallback solido para
-`prefers-reduced-transparency`. Sem animacao de entrada (conteudo nunca depende de um frame para
+`prefers-reduced-transparency`. Sem animacao de entrada (conteúdo nunca depende de um frame para
 aparecer) e transicoes desligadas em `prefers-reduced-motion`.
 
 A interface consome a **mesma API** (`POST /api/studies` via `fetch`) e mantem um caminho sem
 JavaScript (`POST /ui/studies`) protegido por CSRF: mesma origem (`Origin`/`Referer`, fail-closed)
 mais token double-submit em cookie assinado, comparado em tempo constante. O token e emitido uma vez
-por sessao: rotacionar a cada resposta invalidaria qualquer formulario ja aberto.
+por sessao: rotacionar a cada resposta invalidaria qualquer formulario já aberto.
 
 ---
 
@@ -235,9 +246,9 @@ docker run --rm -p 3000:3000 -e GOODBIZZ_MOCK=1 \
 docker compose up --build
 ```
 
-Imagem multi-stage sobre `oven/bun:1.4`, usuario nao-root, `HEALTHCHECK` em `/healthz`, dados em
+Imagem multi-stage sobre `oven/bun:1.4`, usuário não-root, `HEALTHCHECK` em `/healthz`, dados em
 `/app/data` (`DATABASE_URL=/app/data/app.db`, `GOODBIZZ_STUDIES_DIR=/app/data/estudos`).
-Sem Chromium na imagem: o PDF nao e gerado e a mensagem explica como instalar.
+Sem Chromium na imagem: o PDF não e gerado e a mensagem explica como instalar.
 
 Publique via `docker compose` local ou pelo workflow de imagem (abaixo).
 
@@ -250,7 +261,7 @@ Publique via `docker compose` local ou pelo workflow de imagem (abaixo).
 | `.github/workflows/ci.yml`    | jobs `quality` (typecheck, lint, format), `test` (`bun test --coverage`), `security` (`bun audit`, gitleaks), `build` (imagem + smoke em `/healthz`) |
 | `.github/workflows/image.yml` | buildx multi-arquitetura, login em `ghcr.io`, push por tag/branch/SHA e cache GHA                                                                    |
 
-Migracoes rodam no boot do processo (`runMigrations`) e sao aditivas; para implantacoes com varias
+Migracoes rodam no boot do processo (`runMigrations`) e são aditivas; para implantacoes com varias
 replicas, rode `bun run db:migrate` como passo separado antes do deploy.
 
 ---
@@ -270,15 +281,15 @@ Indicadores por ideia (decisor System One):
 | `meta30`    | noul   | 0–1      | 30 clientes pagantes em 24 meses na regiao              |
 | `preco`     | score  | 0–2      | preco abaixo, compativel ou acima do valor percebido    |
 
-**Indice de Acao** = `(fit + venda) / 2`; **Tier A** `>= 1.84`, **B** `>= 1.60`, **C** abaixo.
+**Índice de Acao** = `(fit + venda) / 2`; **Tier A** `>= 1.84`, **B** `>= 1.60`, **C** abaixo.
 
-A dor tem dois metodos: `choice` (padrao, escolha forcada entre tres consequencias concretas) e
-`noul` (legado, quatro sondas x tres parafrases com desvio e escalonamento). Limiares calibrados:
-`STRONG_THRESHOLD=0.65`, `WEAK_THRESHOLD=0.50`, `UNSTABLE_THRESHOLD=0.15`, minimo de 3 parafrases.
+A dor tem dois metodos: `choice` (padrão, escolha forcada entre três consequencias concretas) e
+`noul` (legado, quatro sondas x três paráfrases com desvio e escalonamento). Limiares calibrados:
+`STRONG_THRESHOLD=0.65`, `WEAK_THRESHOLD=0.50`, `UNSTABLE_THRESHOLD=0.15`, minimo de 3 paráfrases.
 
-**Guardrail numerico:** o codigo calcula todos os numeros; o LLM so escreve prosa em volta do bloco
+**Guardrail numerico:** o código calcula todos os números; o LLM so escreve prosa em volta do bloco
 `DADOS MEDIDOS` e e proibido de inventar valor de mercado. Um verificador confere secoes obrigatorias,
-acentos, alinhamento de tabela e a presenca literal dos numeros medidos.
+acentos, alinhamento de tabela e a presenca literal dos números medidos.
 
 ---
 
@@ -295,8 +306,8 @@ bunx drizzle-kit generate   # nova migracao apos mudar src/infrastructure/schema
 ```
 
 `bun run cli generate --help` lista todas as flags. `--mock` roda o pipeline inteiro offline e
-deterministico em menos de um segundo — util para inspecionar a estrutura dos artefatos; **a saida
-simulada nao tem valor analitico de mercado**.
+determinístico em menos de um segundo — útil para inspecionar a estrutura dos artefatos; **a saida
+simulada não tem valor analitico de mercado**.
 
 ---
 
@@ -322,15 +333,17 @@ pwn validate --work 0001
 
 ---
 
-## Convencoes e limites
+## Convenções e limites
 
-1. **Textos sem acento.** Documentos gerados, prompts e artefatos sao mantidos sem acentuacao; a
-   normalizacao remove diacriticos antes de gravar.
-2. **Hipotese vs pesquisa.** O brief e as ideias vem de modelos sem navegacao em tempo real; numeros de
-   mercado sao estimativas marcadas `[INFERENCE]`.
-3. **Uso em rede confiavel.** Nao ha autenticacao multiusuario nem multitenancy: coloque a API atras de
+1. **Português do Brasil com acentuação.** Documentos gerados, prompts, interface e artefatos usam
+   acentuação correta — a convenção anterior (remover diacríticos antes de gravar, herdada do baseline
+   Python) foi revogada. Fica em ASCII apenas o que é identificador: nome de pasta (`01-nome-slug`),
+   chaves de `dados.json`, cabeçalho do CSV e nome de flag da CLI.
+2. **Hipótese vs pesquisa.** O brief e as ideias vêm de modelos sem navegação em tempo real; números de
+   mercado são estimativas marcadas `[INFERENCE]`.
+3. **Uso em rede confiável.** Não há autenticação multiusuário nem multitenancy: coloque a API atrás de
    um proxy autenticado se for exposta.
 4. **Privacidade.** Nunca coloque dado pessoal, segredo comercial ou informacao sensivel no nicho: o
    texto e transmitido aos endpoints configurados.
-5. **Baseline Python.** Os arquivos `*.py` permanecem no repositorio como referencia e evidencia do
+5. **Baseline Python.** Os arquivos `*.py` permanecem no repositorio como referência e evidencia do
    sistema; o runtime suportado e o Bun.

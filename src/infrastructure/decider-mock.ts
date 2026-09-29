@@ -46,7 +46,7 @@ export class DeciderMock implements DeciderClient {
     const answers = await this.ask(state, questions);
     const output: Record<string, number> = {};
     for (const [id, answer] of Object.entries(answers)) {
-      // The mock always answers a noul question with a numeric `noul` probability, so it reads its
+      // The mock always answers a noul question with a numeric `noul` probability, só it reads its
       // own envelope directly. Importing the HTTP client's extractor here would create a module
       // cycle (decider.ts already imports this class).
       const value = answer["noul"];

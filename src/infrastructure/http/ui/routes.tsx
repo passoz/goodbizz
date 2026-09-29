@@ -10,6 +10,8 @@ import { csrf } from "hono/csrf";
 import { jsxRenderer } from "hono/jsx-renderer";
 
 import { resolveStudyConfig } from "../../../config/runtime.ts";
+import { folderName } from "../../../application/reports.ts";
+import { mdToHtml } from "../../../application/render.ts";
 import type { StudyService } from "../../../application/study-service.ts";
 import { NotFoundError } from "../../../domain/errors.ts";
 import type { StudyRecord } from "../../../domain/types.ts";
@@ -32,7 +34,7 @@ const ABOUT_ROWS: Array<{ method: string; path: string; description: string }> =
   { method: "GET", path: "/api/studies/:id", description: "detalhe de um estudo" },
   { method: "POST", path: "/api/studies/:id/run", description: "executa o pipeline de um estudo" },
   { method: "GET", path: "/api/studies/:id/artifacts", description: "lista os artefatos" },
-  { method: "GET", path: "/api/studies/:id/artifacts/*", description: "conteudo de um artefato" },
+  { method: "GET", path: "/api/studies/:id/artifacts/*", description: "conteúdo de um artefato" },
   { method: "POST", path: "/api/diagnose", description: "diagnostica as sondas de dor" },
   { method: "POST", path: "/api/recalibrate", description: "recalibra os limiares" },
   { method: "GET", path: "/healthz", description: "liveness" },
@@ -52,7 +54,9 @@ export function buildUiApp(deps: UiDeps): Hono {
 
   ui.get("/", async (c) => {
     const studies = await deps.service.list();
-    return c.render(<StudiesList studies={studies} />, { title: "goodbizz — estudos" });
+    return c.render(<StudiesList studies={studies} token={c.get("csrfToken")} />, {
+      title: "GoodBizz — estudos",
+    });
   });
 
   ui.get("/new", (c) =>
@@ -62,11 +66,47 @@ export function buildUiApp(deps: UiDeps): Hono {
         defaults={{ monthlyTicket: 300, numIdeas: 8 }}
         providers={deps.providers}
       />,
-      { title: "goodbizz — novo estudo" },
+      { title: "GoodBizz — novo estudo" },
     ),
   );
 
-  ui.get("/como-ler", (c) => c.render(<HelpPage />, { title: "goodbizz — como ler" }));
+  ui.get("/como-ler", (c) => c.render(<HelpPage />, { title: "GoodBizz — como ler" }));
+
+  /**
+   * Plano de uma ideia em HTML (fragmento), para o modal da pagina do estudo.
+   * Renderizado no servidor com o mesmo `mdToHtml` do HTML/PDF exportado: o navegador nao carrega
+   * renderizador de markdown e o texto escapado pelo renderizador e o mesmo em todo lugar.
+   */
+  ui.get("/studies/:id/ideas/:position", async (c) => {
+    const id = c.req.param("id");
+    const position = Number(c.req.param("position"));
+    if (!Number.isInteger(position) || position < 1) {
+      return c.html('<p class="alert">posição inválida</p>', 400);
+    }
+    let study: StudyRecord;
+    try {
+      study = await deps.service.get(id);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        return c.html('<p class="alert">estudo não encontrado</p>', 404);
+      }
+      throw error;
+    }
+    const ranked = study.summary
+      ? study.summary.ordered
+      : [...study.evaluations].sort((left, right) => right.index - left.index);
+    const idea = ranked[position - 1];
+    if (idea === undefined) {
+      return c.html('<p class="alert">ideia não encontrada neste estudo</p>', 404);
+    }
+    let markdown: string;
+    try {
+      markdown = await deps.service.readArtifact(id, `${folderName(position, idea.name)}/README.md`);
+    } catch {
+      return c.html('<p class="alert">o plano desta ideia ainda não foi gravado</p>', 404);
+    }
+    return c.html(`<article class="plan-body">${mdToHtml(markdown)}</article>`);
+  });
 
   ui.get("/studies/:id", async (c) => {
     const id = c.req.param("id");
@@ -80,16 +120,29 @@ export function buildUiApp(deps: UiDeps): Hono {
       throw error;
     }
     const artifacts = await deps.service.artifactPaths(id);
-    return c.render(<StudyDetail study={study} artifacts={artifacts} />, {
-      title: `goodbizz — ${study.niche}`,
+    return c.render(<StudyDetail study={study} artifacts={artifacts} token={c.get("csrfToken")} />, {
+      title: `GoodBizz — ${study.niche}`,
     });
+  });
+
+  ui.post("/ui/studies/:id/delete", requireCsrf, async (c) => {
+    const id = c.req.param("id");
+    try {
+      await deps.service.delete(id);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        return c.json({ error: error.code, message: error.message }, 404);
+      }
+      throw error;
+    }
+    return c.redirect("/", 303);
   });
 
   ui.post("/ui/studies", requireCsrf, async (c) => {
     const body = await c.req.parseBody();
     const niche = typeof body["niche"] === "string" ? body["niche"].trim() : "";
     if (!niche) {
-      return c.json({ error: "VALIDATION_FAILED", message: "o nicho e obrigatorio" }, 422);
+      return c.json({ error: "VALIDATION_FAILED", message: "o nicho é obrigatório" }, 422);
     }
     const city = typeof body["city"] === "string" ? body["city"].trim() : "";
     const ticket = Number(body["monthlyTicket"]);
@@ -111,18 +164,18 @@ export function buildUiApp(deps: UiDeps): Hono {
       <section class="panel glass">
         <h2>Sobre a API</h2>
         <p class="lead">
-          Esta interface le e escreve os mesmos estudos da API publica, na mesma origem. O formulario usa o
-          endpoint de criacao; o restante fica disponivel para scripts e integracao.
+          Esta interface lê e escreve os mesmos estudos da API pública, na mesma origem. O formulário usa o
+          endpoint de criação; o restante fica disponível para scripts e integração.
         </p>
         <p class="sub">
-          A <Term of="CSRF">CSRF</Term> nao existe na API (ela tem autenticacao propria, se houver). A
+          A <Term of="CSRF">CSRF</Term> não existe na API (ela tem autenticação própria, se houver). A
           interface sim: toda rota que muda estado exige mesma origem e token assinado.
         </p>
         <div class="table-wrap">
           <table id="endpoints">
             <thead>
               <tr>
-                <th>Metodo</th>
+                <th>Método</th>
                 <th>Caminho</th>
                 <th>O que faz</th>
               </tr>
@@ -143,7 +196,7 @@ export function buildUiApp(deps: UiDeps): Hono {
           </table>
         </div>
       </section>,
-      { title: "goodbizz — sobre a API" },
+      { title: "GoodBizz — sobre a API" },
     ),
   );
 

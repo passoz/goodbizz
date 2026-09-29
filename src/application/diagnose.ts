@@ -12,17 +12,17 @@ import { extractProbability } from "../infrastructure/decider.ts";
 /** Contra-positive statement of each probe: P(affirmation) + P(negation) ~= 1.0 when coherent. */
 export const NEGATIONS: Record<string, string> = {
   dinheiro:
-    "E falso que o dono perca dinheiro de forma direta e perceptivel se este " +
-    "problema nao for resolvido: nao ha perda de dinheiro clara?",
+    "É falso que o dono perca dinheiro de forma direta e perceptível se este " +
+    "problema não for resolvido: não há perda de dinheiro clara?",
   reputacao:
-    "E falso que este produto proteja a imagem publica do negocio: ele nao tem " +
-    "relacao com avaliacao, nota ou boca a boca?",
+    "É falso que este produto proteja a imagem pública do negócio: ele não tem " +
+    "relação com avaliação, nota ou boca a boca?",
   processo:
-    "E falso que o valor principal deste produto seja organizar trabalho interno: " +
-    "os documentos, a burocracia e a planilha nao sao o ponto?",
+    "É falso que o valor principal deste produto seja organizar trabalho interno: " +
+    "os documentos, a burocracia e a planilha não são o ponto?",
   tecnologia:
-    "E falso que este produto exista para proteger tecnologia que o negocio ja " +
-    "usa: ele nao tem relacao com sistema ou IA que o dono ja opera?",
+    "É falso que este produto exista para proteger tecnologia que o negócio já " +
+    "usa: ele não tem relação com sistema ou IA que o dono já opera?",
 };
 
 export const DEFAULT_THRESHOLD = 1.2;
@@ -144,14 +144,14 @@ export async function diagnoseProbes(
   const notes: string[] = [];
   if (!usable.includes("dinheiro") && !usable.includes("reputacao")) {
     notes.push(
-      "As duas sondas de dor forte estao comprometidas. Nesse estado, nenhum limiar separa nada: " +
+      "As duas sondas de dor forte estão comprometidas. Nesse estado, nenhum limiar separa nada: " +
         "troque a redacao das sondas (mais concreta, com exemplo do nicho) ou troque de decisor antes " +
-        "de perder tempo com recalibracao.",
+        "de perder tempo com recalibração.",
     );
   } else if (INTERNAL_PROBES.some((probe) => !usable.includes(probe))) {
     notes.push(
-      "As sondas de dor interna estao comprometidas. Elas marcam 'tecnologia' alto em ideias que nao " +
-        "tem nada a ver com tecnologia, o que empurra tudo para INSTAVEL. Redija de novo ancorando em " +
+      "As sondas de dor interna estão comprometidas. Elas marcam 'tecnologia' alto em ideias que não " +
+        "tem nada a ver com tecnologia, o que empurra tudo para INSTÁVEL. Redija de novo ancorando em " +
         "exemplo concreto do nicho.",
     );
   }

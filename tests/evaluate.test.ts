@@ -122,7 +122,7 @@ describe("extratores e indices", () => {
     expect(tierOf(1.59)).toBe("C");
   });
 
-  test("le score e confianca de varias formas", () => {
+  test("le score e confiança de varias formas", () => {
     expect(extractScore({ score: 2 })).toBe(2);
     expect(extractScore(1.5)).toBe(1.5);
     expect(extractScore({ nota: "1" })).toBe(1);
@@ -142,7 +142,7 @@ describe("extratores e indices", () => {
     expect(business["wtp"]).toMatchObject({
       type: "noul",
       instructions:
-        "O dono deste negocio pagaria R$ 300 por mes por esta solucao, considerando o valor " +
+        "O dono deste negócio pagaria R$ 300 por mês por esta solução, considerando o valor " +
         "percebido por ele?",
     });
   });

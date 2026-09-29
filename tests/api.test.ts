@@ -1,9 +1,15 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { StudyCache } from "../src/application/cache.ts";
+import { StudyService } from "../src/application/study-service.ts";
+import { resolveStudyConfig } from "../src/config/runtime.ts";
+import { SqliteCacheStore } from "../src/infrastructure/cache-repository.ts";
+import { DeciderMock } from "../src/infrastructure/decider-mock.ts";
 import { buildApiApp } from "../src/infrastructure/http/api.ts";
-import { makeHarness, type TestHarness } from "./helpers.ts";
+import { SqliteStudyRepository } from "../src/infrastructure/repositories.ts";
+import { makeHarness, silentLogger, type TestHarness } from "./helpers.ts";
 
 let harness: TestHarness;
 
@@ -15,9 +21,9 @@ afterEach(() => {
   harness.close();
 });
 
-function api() {
+function api(service: StudyService = harness.service) {
   return buildApiApp({
-    service: harness.service,
+    service,
     providerStatus: () => ({ llm: false, decider: false, mockByDefault: true }),
   });
 }
@@ -177,5 +183,45 @@ describe("study API", () => {
     const pdf = await api().request(`/studies/${id}/artifacts/estudo-completo.pdf`);
     expect(pdf.status).toBe(200);
     expect(pdf.headers.get("content-type")).toBe("application/pdf");
+  });
+});
+
+describe("exclusão de estudo", () => {
+  test("apaga o estudo, as avaliações e os artefatos com 204", async () => {
+    const record = await harness.service.create(
+      resolveStudyConfig({ niche: "padarias de bairro", mock: true }),
+    );
+    mkdirSync(record.artifactDir, { recursive: true });
+    writeFileSync(join(record.artifactDir, "README.md"), "# Estudo\n", "utf8");
+
+    const response = await api().request(`/studies/${record.id}`, { method: "DELETE" });
+    expect(response.status).toBe(204);
+
+    expect((await api().request(`/studies/${record.id}`)).status).toBe(404);
+    expect(existsSync(record.artifactDir)).toBe(false);
+    const listing = (await (await api().request("/studies")).json()) as { studies: unknown[] };
+    expect(listing.studies).toHaveLength(0);
+  });
+
+  test("responde 404 ao excluir estudo inexistente", async () => {
+    expect((await api().request("/studies/nao-existe", { method: "DELETE" })).status).toBe(404);
+  });
+
+  test("recusa com 409 enquanto o pipeline esta rodando", async () => {
+    // Provedor que nunca responde: mantém o estudo `running` e dentro do inFlight do serviço.
+    const hanging = new StudyService({
+      repo: new SqliteStudyRepository(harness.db.db),
+      cache: new StudyCache(new SqliteCacheStore(harness.db.db)),
+      llm: { generateText: () => new Promise<string>(() => {}) },
+      decider: new DeciderMock(),
+      logger: silentLogger(),
+      artifactsRoot: harness.artifactsRoot,
+    });
+    const record = await hanging.create(resolveStudyConfig({ niche: "barbearias", mock: true }));
+    hanging.start(record.id);
+
+    const response = await api(hanging).request(`/studies/${record.id}`, { method: "DELETE" });
+    expect(response.status).toBe(409);
+    expect(((await response.json()) as { error: string }).error).toBe("CONFLICT");
   });
 });

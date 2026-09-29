@@ -9,13 +9,13 @@ const SECTION_HEADINGS = [
   "## 1. Resumo executivo",
   "## 2. Indicadores coletados",
   "## 3. Como funciona",
-  "## 4. Estrategia de venda",
-  "## 5. Estrategia de marketing",
-  "## 6. Precificacao e economia unitaria",
+  "## 4. Estratégia de venda",
+  "## 5. Estratégia de marketing",
+  "## 6. Precificação e economia unitária",
   "## 7. SWOT",
   "## 8. Business Model Canvas",
   "## 9. Ferramentas complementares",
-  "## 10. Proximos passos",
+  "## 10. Próximos passos",
 ];
 
 function baseConfig(overrides: Partial<StudyConfig> = {}): StudyConfig {
@@ -88,14 +88,14 @@ describe("LlmMock", () => {
       "Nicho: oficinas mecanicas | Cidade/regiao: Niteroi",
       "Ticket assumido: R$ 300/mes (R$ 3600/ano)",
       "",
-      "INDICE DE ACAO: 1.90 | TIER: A",
-      "fit: 1.80/2.00 (confianca 0.91)",
-      "facilidade de venda: 1.70/2.00 (confianca 0.88)",
-      "disrupcao: 1.60/2.00 (confianca 0.80)",
-      "tipo de dor: FORTE (confianca 0.75) | distribuicao: dinheiro=0.70",
+      "ÍNDICE DE AÇÃO: 1.90 | TIER: A",
+      "fit: 1.80/2.00 (confiança 0.91)",
+      "facilidade de venda: 1.70/2.00 (confiança 0.88)",
+      "disrupção: 1.60/2.00 (confiança 0.80)",
+      "tipo de dor: FORTE (confiança 0.75) | distribuição: dinheiro=0.70",
       "suporte solo: 0.82",
       "ALGORITMO DA DOR: dor forte | escore de dor 1.42 | dor interna 0.30 | margem +0.55 | desvio 0.09",
-      "VALIDACAO: pagaria R$ 297/mes = 0.88 | 30 clientes em 24 meses = 0.71 | preco vs valor 1.90/2.00 (confianca 0.86)",
+      "VALIDAÇÃO: pagaria R$ 297/mês = 0.88 | 30 clientes em 24 meses = 0.71 | preço vs valor 1.90/2.00 (confiança 0.86)",
       "FIM DOS DADOS",
     ].join("\n");
 
@@ -108,10 +108,10 @@ describe("LlmMock", () => {
     expect(document).toContain("SWOT");
     expect(document).toContain("Business Model Canvas");
     expect(document).toContain("Porter");
-    expect(document).toContain("Proximos passos");
+    expect(document).toContain("Próximos passos");
     const nonEmpty = document.split("\n").filter((line) => line.trim().length > 0);
     expect(nonEmpty.length).toBeGreaterThanOrEqual(80);
-    expect(document).not.toMatch(/[áàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ]/);
+    expect(document).toContain("execução");
     expect(document).toContain("1.90");
     expect(document).toContain("1.80");
     expect(document).toContain("0.82");
@@ -212,7 +212,7 @@ describe("LlmMock document markers", () => {
     const english = [
       "MEASURED DATA",
       "Ideia: Teste",
-      "INDICE DE ACAO: 1.5 | TIER: B",
+      "ÍNDICE DE AÇÃO: 1.5 | TIER: B",
       "VALIDATION: pagaria R$ 350 por mes = 0.60 | 30 clientes em 24 meses = 0.40",
       "END OF DATA",
       "",
@@ -221,6 +221,6 @@ describe("LlmMock document markers", () => {
     const document = await mock.generateText("voce e consultor", english);
     expect(document).toContain("Teste");
     expect(document).toContain("## 1. Resumo executivo");
-    expect(document).toContain("ticket de R$ 350 por mes");
+    expect(document).toContain("ticket de R$ 350 por mês");
   });
 });

@@ -1,5 +1,5 @@
 /**
- * HTTP error mapping. Domain errors become typed JSON; anything else becomes a generic 500 so no
+ * HTTP error mapping. Domain errors become typed JSON; anything else becomes a generic 500 só no
  * stack trace or internal detail can escape the process.
  */
 import type { Context, ErrorHandler, NotFoundHandler } from "hono";

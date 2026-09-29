@@ -1,9 +1,9 @@
 /**
- * Teste automatico de "dor forte x dor fraca" para ideias de produto.
+ * Teste automático de "dor forte x dor fraca" para ideias de produto.
  *
- * Portado de `goodbizz/algorithm.py`. Quatro sondas atomicas em tres parafrases
- * independentes; o desvio entre parafrases acima do limiar marca a medicao como instavel.
- * Os limiares foram calibrados sobre 17 casos reais e nao devem mudar.
+ * Portado de `goodbizz/algorithm.py`. Quatro sondas atomicas em três paráfrases
+ * independentes; o desvio entre paráfrases acima do limiar marca a medição como instável.
+ * Os limiares foram calibrados sobre 17 casos reais e não devem mudar.
  */
 import { ValidationError } from "../domain/errors.ts";
 import {
@@ -21,7 +21,7 @@ import {
 import type { DeciderClient } from "../domain/ports.ts";
 import type { PainLabel, PainResult } from "../domain/types.ts";
 
-/** Decisor minimo exigido pelo algoritmo: devolve P(sim) por id de sonda. */
+/** Decisor mínimo exigido pelo algoritmo: devolve P(sim) por id de sonda. */
 export interface PainBackend {
   queryProbes(state: string, probes: Record<string, string>): Promise<Record<string, number>>;
 }
@@ -41,13 +41,13 @@ export function roundTo(value: number, digits: number): number {
   return (sign * rounded) / factor;
 }
 
-/** Media populacional (equivale a statistics.mean); exata quando todos os valores sao iguais. */
+/** Média populacional (equivale a statistics.mean); exata quando todos os valores são iguais. */
 export function populationMean(values: readonly number[]): number {
   const base = values[0] ?? 0;
   return base + values.reduce((total, value) => total + (value - base), 0) / values.length;
 }
 
-/** Desvio padrao populacional (equivale a statistics.pstdev; divide por N). */
+/** Desvio padrão populacional (equivale a statistics.pstdev; divide por N). */
 export function populationStdDev(values: readonly number[]): number {
   const mean = populationMean(values);
   return Math.sqrt(values.reduce((total, value) => total + (value - mean) ** 2, 0) / values.length);
@@ -59,8 +59,8 @@ function signed(value: number, digits: number): string {
 }
 
 /**
- * Escada de classificacao compartilhada com a medicao por escolha forcada.
- * A ordem dos testes e a do baseline: instabilidade, dor forte, dor interna, resto.
+ * Escada de classificação compartilhada com a medição por escolha forcada.
+ * A ordem dos testes é a do baseline: instabilidade, dor forte, dor interna, resto.
  */
 export function classifyPain(
   painScore: number,
@@ -96,8 +96,8 @@ export function classifyPain(
 }
 
 /**
- * Roda as sondas em todas as parafrases e combina os resultados.
- * @param variants parafrases usadas; menos de `MIN_PARAPHRASES` nao e confiavel.
+ * Roda as sondas em todas as paráfrases e combina os resultados.
+ * @param variants paráfrases usadas; menos de `MIN_PARAPHRASES` não e confiavel.
  */
 export async function evaluatePain(
   description: string,
@@ -156,7 +156,7 @@ export async function evaluatePain(
   };
 }
 
-/** Traduz o rotulo em recomendacao de negocio. */
+/** Traduz o rótulo em recomendacao de negócio. */
 export function recommendPain(result: PainResult): string {
   if (result.label === "FORTE" && !result.escalate) {
     return "AVANÇAR — dor validada com dono claro; vá para precificação e pré-venda.";
@@ -167,7 +167,7 @@ export function recommendPain(result: PainResult): string {
   return "REVISAR À MÃO — não decida por este teste; veja o motivo e a margem.";
 }
 
-/** Linha de resumo de uma medicao, no formato do baseline. */
+/** Linha de resumo de uma medição, no formato do baseline. */
 function painSummary(result: PainResult): string {
   const tag = result.escalate ? "[ESCALATE]" : "          ";
   return (
@@ -177,7 +177,7 @@ function painSummary(result: PainResult): string {
   );
 }
 
-/** Decisor deterministico de teste: respostas fixas por id, com valor padrao. */
+/** Decisor determinístico de teste: respostas fixas por id, com valor padrão. */
 function stubDecider(answers: Record<string, number>, fallback = 0.5): DeciderClient {
   return {
     ask: async () => ({}),
@@ -208,7 +208,7 @@ function noisyDecider(): DeciderClient {
   };
 }
 
-/** Autoteste offline: forte, fraca, cinzenta, guarda de parafrases e medicao ruidosa. */
+/** Autoteste offline: forte, fraca, cinzenta, guarda de paráfrases e medição ruidosa. */
 export async function runPainSelfTest(): Promise<{
   ok: boolean;
   failures: number;

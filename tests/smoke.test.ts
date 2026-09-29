@@ -83,12 +83,12 @@ describe("end-to-end smoke (mock mode)", () => {
       "## 1. Resumo executivo",
       "## 7. SWOT",
       "## 8. Business Model Canvas",
-      "## 10. Proximos passos",
+      "## 10. Próximos passos",
     ]) {
       expect(plan).toContain(section);
     }
     expect(plan).toContain("Porter");
-    expect(plan).not.toMatch(/[áàâãäçéèêëíìîïñóòôõöúùûü]/i);
+    expect(plan).toContain("execução");
 
     expect(record.artifactDir).toBe(join(artifactsRoot, record.id));
     db.sqlite.close();

@@ -1,8 +1,8 @@
 /**
- * Relatorios deterministas: indice, tabelao markdown e tabelao csv.
- * Sem chamadas de LLM: apenas numeros ja medidos pelo decisor.
+ * Relatorios deterministas: índice, tabelão markdown e tabelão csv.
+ * Sem chamadas de LLM: apenas números já medidos pelo decisor.
  *
- * Os textos e o alinhamento das colunas sao copiados do baseline Python — nao altere.
+ * Os textos e o alinhamento das colunas são copiados do baseline Python — não altere.
  */
 import type { IdeaEvaluation, StudyConfig, StudySummary } from "../domain/types.ts";
 
@@ -21,25 +21,25 @@ export function folderName(rank: number, name: string): string {
   return `${String(rank).padStart(2, "0")}-${slug(name)}`;
 }
 
-/** Aviso de escopo repetido no topo de todo relatorio. */
+/** Aviso de escopo repetido no topo de todo relatório. */
 export function scopeNotice(cfg: StudyConfig): string {
   const location = cfg.city ? `${cfg.niche} em ${cfg.city}` : cfg.niche;
   return (
-    "> **Escopo e metodo:** este material foi gerado pelo goodbizz a partir do " +
-    `nicho **${location}**. Os indicadores vem de um decisor (System One) e o texto, de um ` +
-    `LLM. O ticket assumido e de R$ ${cfg.monthlyTicket}/mes e a meta de clientes e de 10 a ` +
-    "15 em 24 meses. **Confira os numeros de mercado antes de usar isto com cliente:** " +
-    "premissas marcadas `[INFERENCE]` sao estimativa, nao dado pesquisado.\n"
+    "> **Escopo e método:** este material foi gerado pelo goodbizz a partir do " +
+    `nicho **${location}**. Os indicadores vêm de um decisor (System One) e o texto, de um ` +
+    `LLM. O ticket assumido é de R$ ${cfg.monthlyTicket}/mês e a meta de clientes é de 10 a ` +
+    "15 em 24 meses. **Confira os números de mercado antes de usar isto com cliente:** " +
+    "premissas marcadas `[INFERENCE]` são estimativa, não dado pesquisado.\n"
   );
 }
 
 const PAIN_GROUP_LABELS: Record<string, string> = {
-  forte: "Dor forte (dinheiro direto ou reputacao)",
+  forte: "Dor forte (dinheiro direto ou reputação)",
   mista: "Dor mista",
   fraca: "Dor fraca (backoffice ou tecnologia)",
 };
 
-/** README.md raiz: ranking, medias, grupos de dor e avisos. */
+/** README.md raiz: ranking, médias, grupos de dor e avisos. */
 export function indexMarkdown(
   cfg: StudyConfig,
   brief: string,
@@ -53,16 +53,16 @@ export function indexMarkdown(
     "",
     "## Como ler",
     "",
-    "1. `00-brief.md` — leitura de mercado que orientou a geracao das ideias.",
-    "2. `00-tabelao.md` — todos os indicadores das ideias em uma tabela.",
+    "1. `00-brief.md` — leitura de mercado que orientou a geração das ideias.",
+    "2. `00-tabelão.md` — todos os indicadores das ideias em uma tabela.",
     "3. Uma pasta por ideia, cada uma com o plano completo.",
     "",
     "## Ranking",
     "",
-    "Ordenado pelo Indice de Acao (media de fit e facilidade de venda).",
+    "Ordenado pelo Índice de Ação (média de fit e facilidade de venda).",
     "`WTP` = probabilidade de o dono pagar o ticket mensal assumido.",
     "",
-    "| # | Ideia | Setor | Indice | Tier | WTP | Dor verificada |",
+    "| # | Ideia | Setor | Índice | Tier | WTP | Dor verificada |",
     "|---|---|---|---|---|---|---|",
   ];
   summary.ordered.forEach((idea, position) => {
@@ -79,10 +79,10 @@ export function indexMarkdown(
   const tiers = summary.tiers;
   lines.push(
     "",
-    "## Medias e grupos",
+    "## Médias e grupos",
     "",
     `- fit **${pythonFloat(means.fit)}** · venda **${pythonFloat(means.sale)}** · ` +
-      `disrupcao **${pythonFloat(means.disruption)}** · suporte solo **${pythonFloat(means.solo)}**`,
+      `disrupção **${pythonFloat(means.disruption)}** · suporte solo **${pythonFloat(means.solo)}**`,
     `- pagaria o ticket mensal (media): **${pythonFloat(means.wtp)}**`,
     `- 30 clientes em 24 meses (media): **${pythonFloat(means.meta30)}**`,
     `- tiers — A: ${tiers.A.length} · B: ${tiers.B.length} · C: ${tiers.C.length}`,
@@ -97,11 +97,11 @@ export function indexMarkdown(
     "",
     "## Avisos que valem para todas as ideias",
     "",
-    `1. **O ticket de R$ ${cfg.monthlyTicket}/mes e teto, nao piso.** A disposicao a pagar ` +
+    `1. **O ticket de R$ ${cfg.monthlyTicket}/mês é teto, não piso.** A disposição a pagar ` +
       `medida ficou em ${pythonFloat(means.wtp)} na media.`,
-    "2. **A meta de 30 clientes em 24 meses e otimista** " +
-      `(${pythonFloat(means.meta30)} de probabilidade media). Planejar 10 a 15 clientes.`,
-    "3. **TAM nacional nao serve como argumento.** Vender com o mercado da regiao e com o " +
+    "2. **A meta de 30 clientes em 24 meses é otimista** " +
+      `(${pythonFloat(means.meta30)} de probabilidade média). Planejar 10 a 15 clientes.`,
+    "3. **TAM nacional não serve como argumento.** Vender com o mercado da região e com o " +
       "que um operador solo consegue atender.",
     "",
   );
@@ -111,15 +111,15 @@ export function indexMarkdown(
   return lines.join("\n");
 }
 
-/** Tabela markdown com todos os indicadores, ordenada pelo indice decrescente. */
+/** Tabela markdown com todos os indicadores, ordenada pelo índice decrescente. */
 export function indicatorsTableMarkdown(cfg: StudyConfig, data: IdeaEvaluation[]): string {
   const lines = [
     `# Tabelao de indicadores — ${cfg.niche}`,
     "",
     scopeNotice(cfg),
     "",
-    "| # | Ideia | Setor | Fit | c | Venda | c | Disrupcao | c | Dor | Solo | Indice | " +
-      "Tier | Algo | Algo dor | Interna | Margem | Desvio | WTP | 30/24m | Preco |",
+    "| # | Ideia | Setor | Fit | c | Venda | c | Disrupcao | c | Dor | Solo | Índice | " +
+      "Tier | Algo | Algo dor | Interna | Margem | Desvio | WTP | 30/24m | Preço |",
     "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
   ];
   [...data]
@@ -140,8 +140,8 @@ export function indicatorsTableMarkdown(cfg: StudyConfig, data: IdeaEvaluation[]
     });
   lines.push(
     "",
-    "`c` = confianca (0 a 1). Confianca baixa significa que o modelo viu ambiguidade " +
-      "real na ideia, nao que o valor esteja errado.",
+    "`c` = confiança (0 a 1). Confianca baixa significa que o modelo viu ambiguidade " +
+      "real na ideia, não que o valor esteja errado.",
     "",
   );
   return lines.join("\n");
@@ -172,7 +172,7 @@ const CSV_HEADERS = [
   "preco_conf",
 ];
 
-/** Mesma tabela em CSV, com cabecalho fixo lido pelo recalibrate. */
+/** Mesma tabela em CSV, com cabeçalho fixo lido pelo recalibrate. */
 export function indicatorsTableCsv(data: IdeaEvaluation[]): string {
   const rows: string[] = [CSV_HEADERS.join(",")];
   for (const idea of [...data].sort((a, b) => b.index - a.index)) {
@@ -211,7 +211,7 @@ export function indicatorsTableCsv(data: IdeaEvaluation[]): string {
 
 /**
  * Reproduz `str(float)` do Python: inteiros ganham `.0` final (1 -> "1.0").
- * Os valores formatados aqui sao medias/indices pequenos, entao nao ha notacao cientifica.
+ * Os valores formatados aqui são médias/índices pequenos, então não há notação científica.
  */
 function pythonFloat(value: number): string {
   if (Object.is(value, -0)) return "-0.0";
@@ -220,7 +220,7 @@ function pythonFloat(value: number): string {
 
 const FLOAT_VIEW = new DataView(new ArrayBuffer(8));
 
-/** Arredonda a/b para o inteiro mais proximo, empate para o par (como o Python). */
+/** Arredonda a/b para o inteiro mais próximo, empate para o par (como o Python). */
 function roundHalfEven(numerator: bigint, denominator: bigint): bigint {
   const quotient = numerator / denominator;
   const doubledRest = (numerator % denominator) * 2n;

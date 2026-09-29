@@ -53,9 +53,9 @@ function buildEnv() {
 
       GOODBIZZ_STUDIES_DIR: z.string().min(1).default("estudo"),
       GOODBIZZ_MOCK: booleanFlag("0"),
-      /** Simula apenas o LLM (texto sintetico) mantendo o decisor real. */
+      /** Simula apenas o LLM (texto sintético) mantendo o decisor real. */
       GOODBIZZ_MOCK_LLM: booleanFlag("0"),
-      /** Simula apenas o decisor (numeros deterministicos) mantendo o LLM real. */
+      /** Simula apenas o decisor (números deterministicos) mantendo o LLM real. */
       GOODBIZZ_MOCK_DECIDER: booleanFlag("0"),
     },
     runtimeEnv: Bun.env,

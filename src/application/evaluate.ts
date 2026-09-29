@@ -1,7 +1,7 @@
 /**
- * Indicadores, agregacao, tiers e avaliacao de uma ideia.
+ * Indicadores, agregação, tiers e avaliação de uma ideia.
  *
- * Portado de `goodbizz/evaluation.py`: as perguntas, os niveis e os extratores sao identicos
+ * Portado de `goodbizz/evaluation.py`: as perguntas, os níveis e os extratores são idênticos
  * ao baseline para que o decisor veja exatamente os mesmos enunciados.
  */
 import { studyContext } from "../config/runtime.ts";
@@ -32,23 +32,23 @@ interface IndicatorLevels {
 const LEVELS: IndicatorLevels & Record<string, string[]> = {
   fit: [
     "Ruim: exige escala corporativa ou processos maduros.",
-    "Media: util, mas o dono precisa mudar muito sua rotina para usar.",
-    "Excelente: resolve um problema caotico da operacao diaria sem exigir mudanca de habitos.",
+    "Média: útil, mas o dono precisa mudar muito sua rotina para usar.",
+    "Excelente: resolve um problema caótico da operação diária sem exigir mudança de hábitos.",
   ],
   venda: [
-    "Alta: o beneficio e invisivel a curto prazo; dificil de explicar.",
-    "Media: o beneficio e claro, mas requer provar valor antes de fechar.",
-    "Baixa (venda facil): ataca perda de dinheiro direto ou reputacao imediata.",
+    "Alta: o benefício é invisível a curto prazo; difícil de explicar.",
+    "Média: o benefício é claro, mas requer provar valor antes de fechar.",
+    "Baixa (venda fácil): ataca perda de dinheiro direto ou reputação imediata.",
   ],
   disrupcao: [
-    "Nada disruptivo: e o que todo mundo ja faz, apenas automatizado.",
-    "Moderadamente novo: muda um processo interno, mas o cliente final nao percebe.",
-    "Muito disruptivo: muda o modelo de operacao ou cria fonte de receita que nao existia.",
+    "Nada disruptivo: é o que todo mundo já faz, apenas automatizado.",
+    "Moderadamente novo: muda um processo interno, mas o cliente final não percebe.",
+    "Muito disruptivo: muda o modelo de operação ou cria fonte de receita que não existia.",
   ],
   preco: [
-    "Preco acima do valor percebido.",
-    "Preco compativel com o valor percebido.",
-    "Preco abaixo do valor percebido, com folga para cobrar mais.",
+    "Preço acima do valor percebido.",
+    "Preço compatível com o valor percebido.",
+    "Preço abaixo do valor percebido, com folga para cobrar mais.",
   ],
 };
 
@@ -60,17 +60,17 @@ export function indicatorQuestions(): QuestionSet {
     fit: {
       type: "score",
       instructions:
-        "Qual a aderencia desta ideia para este mercado, onde o dono " + "atende no balcao e nao tem tempo?",
+        "Qual a aderência desta ideia para este mercado, onde o dono " + "atende no balcão e não tem tempo?",
       criteria: LEVELS.fit,
     },
     venda: {
       type: "score",
-      instructions: "Quao dificil e vender isso para este dono por uma assinatura mensal barata?",
+      instructions: "Quão difícil é vender isso para este dono por uma assinatura mensal barata?",
       criteria: LEVELS.venda,
     },
     disrupcao: {
       type: "score",
-      instructions: "Quao disruptiva e esta ideia para o setor, na pratica?",
+      instructions: "Quão disruptiva é esta ideia para o setor, na prática?",
       criteria: LEVELS.disrupcao,
     },
     dor: {
@@ -90,24 +90,24 @@ export function businessQuestions(monthlyTicket: number): QuestionSet {
     wtp: {
       type: "noul",
       instructions:
-        `O dono deste negocio pagaria R$ ${monthlyTicket} por mes por esta ` +
-        "solucao, considerando o valor percebido por ele?",
+        `O dono deste negócio pagaria R$ ${monthlyTicket} por mês por esta ` +
+        "solução, considerando o valor percebido por ele?",
     },
     meta30: {
       type: "noul",
       instructions:
-        "E realista um consultor solo conseguir 30 clientes pagantes com esta solucao em " +
-        "24 meses, comecando nesta regiao?",
+        "É realista um consultor solo conseguir 30 clientes pagantes com esta solução em " +
+        "24 meses, começando nesta região?",
     },
     preco: {
       type: "score",
-      instructions: `R$ ${monthlyTicket} por mes e caro, justo ou barato pelo retorno que ele tera?`,
+      instructions: `R$ ${monthlyTicket} por mês é caro, justo ou barato pelo retorno que ele terá?`,
       criteria: LEVELS.preco,
     },
   };
 }
 
-/** Converte um valor desconhecido em numero, como o `float()` tolerante do baseline. */
+/** Converte um valor desconhecido em número, como o `float()` tolerante do baseline. */
 function toNumber(value: unknown): number | null {
   if (typeof value === "number") return Number.isNaN(value) ? null : value;
   if (typeof value === "string" && value.trim() !== "") {
@@ -169,7 +169,7 @@ export async function evaluateIdea(
 
   const indicatorAnswers = await decider.ask(state, indicatorQuestions());
   const businessAnswers = await decider.ask(
-    `${state}\nPreco proposto: R$ ${cfg.monthlyTicket} por mes.`,
+    `${state}\nPreço proposto: R$ ${cfg.monthlyTicket} por mês.`,
     businessQuestions(cfg.monthlyTicket),
   );
 

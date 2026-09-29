@@ -3,7 +3,7 @@
  * the public API, the web UI and the health routes through a single Hono app.
  *
  * Importing this module has no side effects; `startService()` is only called at the bottom when
- * the file is the process entrypoint, so the CLI (`serve`) and tests can compose it directly.
+ * the file is the process entrypoint, só the CLI (`serve`) and tests can compose it directly.
  */
 import { fileURLToPath } from "node:url";
 
@@ -72,7 +72,7 @@ export function buildService(env: Env = loadEnv()): ServiceBundle {
   const repo = new SqliteStudyRepository(handle.db);
   const cache = new StudyCache(new SqliteCacheStore(handle.db));
   // Estudos interrompidos por um restart ficariam presos em "na fila"/"executando" para sempre:
-  // a execucao vive no processo. No boot, marque-os como falhos com instrucao de reexecutar.
+  // a execução vive no processo. No boot, marque-os como falhos com instrução de reexecutar.
   const staleIds = handle.db
     .select({ id: studies.id })
     .from(studies)
@@ -119,10 +119,10 @@ export function buildService(env: Env = loadEnv()): ServiceBundle {
     }),
   });
   const health = buildHealthApp(handle.db);
-  // Texto curto e sem segredo, para a interface dizer o que sera executado de verdade.
+  // Texto curto e sem segredo, para a interface dizer o que será executado de verdade.
   const providers = {
     llm: mockLlm ? "texto simulado" : `texto real (${env.LLM_API_MODEL})`,
-    decider: mockDecider ? "numeros simulados" : `numeros reais (${env.DECISION_API_MODEL})`,
+    decider: mockDecider ? "números simulados" : `numeros reais (${env.DECISION_API_MODEL})`,
   };
   const ui = buildUiApp({ service, sessionSecret: env.SESSION_SECRET, production, providers });
   const app = buildHttpApp({ api, ui, health, logger, production });
@@ -137,7 +137,7 @@ export interface RunningService {
 
 /**
  * Serve the composed app. The returned `shutdown` drains in-flight requests, closes SQLite and
- * is idempotent; signals install a force-exit timer so a hung drain cannot wedge the process.
+ * is idempotent; signals install a force-exit timer só a hung drain cannot wedge the process.
  */
 export function startService(env: Env = loadEnv()): RunningService {
   const { app, handle, logger } = buildService(env);

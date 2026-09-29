@@ -105,6 +105,12 @@ export function buildApiApp(deps: ApiDeps): Hono {
     return c.json({ ...publicStudy(record), artifacts: await deps.service.artifactPaths(record.id) });
   });
 
+  /** Exclui o estudo: registro, avaliações e artefatos. 409 enquanto o pipeline roda. */
+  api.delete("/studies/:id", async (c) => {
+    await deps.service.delete(c.req.param("id"));
+    return c.body(null, 204);
+  });
+
   api.post("/studies/:id/run", async (c) => {
     const record = await deps.service.run(c.req.param("id"));
     return c.json(publicStudy(record));

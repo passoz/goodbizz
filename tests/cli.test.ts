@@ -255,7 +255,7 @@ describe("goodbizz CLI failures", () => {
     expect(output).toContain("sondas");
     expect(output).toContain("veredito");
     expect(output).toContain("sondas utilizaveis:");
-    expect(output).toContain("referencia: soma afirmacao+negacao de 1.00");
+    expect(output).toContain("referência: soma afirmação+negação de 1.00");
     expect([0, 1]).toContain(code);
   });
 

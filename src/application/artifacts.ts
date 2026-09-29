@@ -1,6 +1,6 @@
 /**
  * Monta a arvore de artefatos de um estudo em memoria (o ArtifactStore grava depois).
- * Conteudo 100% deterministico: nenhum LLM entra aqui.
+ * Conteudo 100% determinístico: nenhum LLM entra aqui.
  */
 import type { ArtifactFile } from "../domain/ports.ts";
 import type { IdeaEvaluation, StudyConfig, StudySummary } from "../domain/types.ts";
@@ -13,9 +13,9 @@ export interface ArtifactPlan {
 }
 
 /**
- * Arquivos do estudo: brief, tabelao (md/csv), indice, dados.json e o README de cada ideia.
+ * Arquivos do estudo: brief, tabelão (md/csv), índice, dados.json e o README de cada ideia.
  * @param folders nome da ideia -> pasta (`01-slug`).
- * @param documents nome da ideia -> markdown ja gerado; ideia sem documento nao vira pasta.
+ * @param documents nome da ideia -> markdown já gerado; ideia sem documento não vira pasta.
  */
 export function buildArtifactFiles(
   cfg: StudyConfig,
@@ -47,8 +47,8 @@ export function buildArtifactFiles(
 }
 
 // ── Empacotamento ───────────────────────────────────────────────────────────
-// ZIP proprio porque nem todo runtime tem um: `Bun.Archive` escreve tar/ustar, nao zip. Sao ~90
-// linhas de formato publico (PKZIP), sem dependencia, e o resultado e verificavel por qualquer
+// ZIP próprio porque nem todo runtime tem um: `Bun.Archive` escreve tar/ustar, não zip. São ~90
+// linhas de formato público (PKZIP), sem dependência, e o resultado é verificável por qualquer
 // extrator do sistema.
 
 const CRC_TABLE = (() => {

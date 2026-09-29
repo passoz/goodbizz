@@ -41,6 +41,8 @@ export interface StudyRepository {
   update(id: string, patch: Partial<StudyRecord> & { progress?: StudyProgress }): Promise<void>;
   get(id: string): Promise<StudyRecord | null>;
   list(): Promise<StudyListItem[]>;
+  /** Remove o estudo e as avaliações dele. Os artefatos em disco sao do chamador. */
+  delete(id: string): Promise<void>;
   saveEvaluations(
     studyId: string,
     evaluations: IdeaEvaluation[],

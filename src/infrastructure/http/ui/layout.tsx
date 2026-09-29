@@ -227,6 +227,93 @@ html[data-theme="light"] .progress-steps li { background: oklch(0 0 0 / 0.1); }
 html[data-theme="light"] .progress-steps li[data-done="1"] { background: var(--r-green); }
 html[data-theme="light"] .progress-steps li[data-live="1"] { background: var(--r-orange); }
 
+/* ── Ideia clicavel no ranking ─────────────────────────────────────────── */
+.idea-link {
+  display: inline-flex; align-items: baseline; gap: 8px; color: var(--paper);
+  border-bottom: 1px solid oklch(1 0 0 / 0.3);
+  transition-property: border-color, color; transition-duration: 150ms;
+}
+.idea-link:hover, .idea-link:focus-visible { color: var(--accent-hover); border-bottom-color: var(--accent); }
+.idea-chip {
+  font: 660 var(--fs-micro)/1 var(--sans); color: var(--accent-ink); background: var(--accent);
+  padding: 4px 9px; border-radius: var(--r-pill); opacity: .5;
+  transition-property: opacity; transition-duration: 150ms;
+}
+.idea-link:hover .idea-chip, .idea-link:focus-visible .idea-chip { opacity: 1; }
+html[data-theme="light"] .idea-link { border-bottom-color: oklch(0 0 0 / 0.3); }
+
+/* ── Modal do plano (dialog nativo: ESC, foco e backdrop vem do navegador) */
+.modal {
+  width: min(920px, 92vw); max-height: 86vh; margin: auto; padding: 0; border: 0;
+  border-radius: var(--r-panel); color: var(--paper);
+  background: rgb(23 17 16 / 0.97);
+  box-shadow:
+    0 0 0 1px oklch(1 0 0 / 0.12),
+    0 44px 84px -32px rgb(0 0 0 / 0.9);
+  overflow: hidden;
+}
+.modal[open] { display: flex; flex-direction: column; }
+.modal-confirm { width: min(520px, 92vw); }
+.modal::backdrop { background: rgb(10 7 7 / 0.66); backdrop-filter: blur(4px); }
+.modal-head {
+  flex: none; display: flex; align-items: center; justify-content: space-between; gap: 18px;
+  padding: 18px 22px; border-bottom: 1px solid oklch(1 0 0 / 0.1);
+}
+.modal-head h3 { margin: 0; }
+.modal-close {
+  appearance: none; cursor: pointer; border: 0; padding: 10px 18px; border-radius: var(--r-pill);
+  font: 620 var(--fs-small)/1 var(--sans); color: var(--paper); background: oklch(1 0 0 / 0.1);
+  box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.14);
+  transition-property: background-color; transition-duration: 150ms;
+}
+.modal-close:hover { background: oklch(1 0 0 / 0.18); }
+.modal-close:active { scale: 0.96; }
+.modal-body { padding: 22px 26px 32px; overflow: auto; overscroll-behavior: contain; }
+.modal-loading { margin: 0; color: var(--muted); }
+
+/* ── Markdown interpretado (mesmo mdToHtml do HTML/PDF exportado) ──────── */
+.plan-body { font-size: var(--fs-body); line-height: 1.65; max-width: 76ch; }
+.plan-body h1 { font-size: 1.5em; margin: 0 0 0.6em; letter-spacing: -0.02em; color: #fff; }
+.plan-body h2 { font-size: 1.24em; margin: 1.7em 0 0.5em; color: #fff; letter-spacing: -0.015em; }
+.plan-body h3 { font-size: 1.08em; margin: 1.4em 0 0.4em; }
+.plan-body p { margin: 0.85em 0; }
+.plan-body ul, .plan-body ol { margin: 0.85em 0; padding-left: 1.5em; }
+.plan-body li { margin: 0.32em 0; }
+.plan-body strong { color: #fff; font-weight: 660; }
+.plan-body code { font: 0.9em var(--mono); background: oklch(1 0 0 / 0.1); padding: 0.14em 0.4em; border-radius: 6px; }
+.plan-body pre {
+  margin: 1em 0; padding: 14px 16px; border-radius: var(--r-control); overflow-x: auto;
+  background: rgb(10 8 8 / 0.5); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.08);
+}
+.plan-body pre code { background: none; padding: 0; }
+.plan-body blockquote {
+  margin: 1.1em 0; padding: 0.7em 1.1em; border-left: 4px solid var(--accent);
+  border-radius: 0 var(--r-control) var(--r-control) 0; background: oklch(1 0 0 / 0.06);
+}
+.plan-body hr { border: 0; border-top: 1px solid oklch(1 0 0 / 0.14); margin: 1.7em 0; }
+.plan-body a { color: var(--accent-hover); text-decoration: underline; }
+.plan-body table { width: 100%; border-collapse: collapse; margin: 1em 0; font-size: var(--fs-small); }
+.plan-body th, .plan-body td {
+  padding: 10px 12px; text-align: left; vertical-align: top;
+  border-bottom: 1px solid oklch(1 0 0 / 0.12);
+}
+.plan-body th { color: var(--muted); font-size: var(--fs-micro); font-weight: 620; }
+
+html[data-theme="light"] .modal { background: rgb(255 253 249 / 0.98); box-shadow: 0 0 0 1px oklch(0 0 0 / 0.1), 0 44px 84px -34px oklch(0.3 0.03 60 / 0.42); }
+html[data-theme="light"] .modal::backdrop { background: rgb(43 32 22 / 0.42); }
+html[data-theme="light"] .modal-head { border-bottom-color: oklch(0 0 0 / 0.1); }
+html[data-theme="light"] .modal-close { background: oklch(0 0 0 / 0.06); box-shadow: inset 0 0 0 1px oklch(0 0 0 / 0.1); }
+html[data-theme="light"] .modal-close:hover { background: oklch(0 0 0 / 0.11); }
+html[data-theme="light"] .plan-body h1,
+html[data-theme="light"] .plan-body h2,
+html[data-theme="light"] .plan-body strong { color: var(--paper); }
+html[data-theme="light"] .plan-body code { background: oklch(0 0 0 / 0.06); }
+html[data-theme="light"] .plan-body pre { background: oklch(0 0 0 / 0.04); box-shadow: inset 0 0 0 1px oklch(0 0 0 / 0.08); }
+html[data-theme="light"] .plan-body blockquote { background: oklch(0 0 0 / 0.04); }
+html[data-theme="light"] .plan-body hr,
+html[data-theme="light"] .plan-body th,
+html[data-theme="light"] .plan-body td { border-color: oklch(0 0 0 / 0.1); }
+
 body {
   margin: 0;
   min-height: 100dvh;
@@ -286,7 +373,6 @@ a { color: inherit; text-decoration: none; }
 }
 .brand { display: flex; align-items: baseline; gap: 12px; }
 .brand h1 { margin: 0; font-size: 25px; letter-spacing: -.025em; color: #fff; font-weight: 680; }
-.brand span { font-size: var(--fs-small); color: var(--muted); }
 .nav { display: flex; align-items: center; gap: 6px; }
 .nav a {
   padding: 9px 16px; border-radius: var(--r-pill); font-size: var(--fs-small); font-weight: 560;
@@ -376,6 +462,15 @@ h3 { font-size: var(--fs-h3); color: var(--paper); font-weight: 620; margin: 28p
 }
 .btn-primary:hover { background: var(--accent-hover); }
 .btn-ghost { background: transparent; box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.22); }
+.btn-danger {
+  background: var(--r-red);
+  color: #2a0d0c;
+  box-shadow:
+    inset 0 0 0 1px oklch(0 0 0 / 0.2),
+    0 14px 30px -14px rgb(221 88 85 / 0.7);
+}
+.btn-danger:hover { background: #e26865; }
+.btn-sm { padding: 9px 16px; font-size: var(--fs-micro); }
 .btn[disabled] { opacity: .6; cursor: progress; }
 
 /* ── Formulario ────────────────────────────────────────────────────────── */
@@ -434,7 +529,7 @@ h3 { font-size: var(--fs-h3); color: var(--paper); font-weight: 620; margin: 28p
 .stretch::after { content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; }
 .stretch:focus-visible { outline: none; }
 .stretch:focus-visible::after { outline: 3px solid var(--r-lime); outline-offset: 3px; }
-.study-card .term, .study-card .badge { position: relative; z-index: 2; }
+.study-card .term, .study-card .badge, .study-card .delete-form { position: relative; z-index: 2; }
 .study-card .open-cta { pointer-events: none; }
 .study-card:hover {
   transform: translateY(-2px);
@@ -468,10 +563,16 @@ h3 { font-size: var(--fs-h3); color: var(--paper); font-weight: 620; margin: 28p
 /* ── Metricas ──────────────────────────────────────────────────────────── */
 .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(196px, 1fr)); gap: 14px; list-style: none; padding: 0; margin: 0; }
 .metric {
-  padding: 16px 18px; border-radius: var(--r-surface); position: relative; overflow: hidden;
+  padding: 16px 18px; border-radius: var(--r-surface); position: relative;
   background: oklch(1 0 0 / 0.08); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.07);
 }
-.metric::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--tone, rgb(255 255 255 / .2)); }
+/* A barra de tom acompanha o raio do canto (era overflow: hidden no card, que recortava o
+   tooltip do glossario — o balao vive ACIMA do elemento). */
+.metric::before {
+  content: ""; position: absolute; inset: 0 auto 0 0; width: 4px;
+  background: var(--tone, rgb(255 255 255 / .2));
+  border-radius: var(--r-surface) 0 0 var(--r-surface);
+}
 .metric-label { display: block; color: var(--paper); font-size: var(--fs-small); }
 .metric .value { display: block; margin-top: 4px; font: 700 30px/1.15 var(--mono); color: #fff; font-variant-numeric: tabular-nums; }
 .metric .hint { display: block; margin-top: 7px; }
@@ -613,46 +714,46 @@ table.rank td:first-child { color: var(--muted); font-family: var(--mono); }
 `;
 
 export const GLOSSARY: Record<string, string> = {
-  "Indice de Acao":
-    "Media entre fit e facilidade de venda. Vai de 0 a 2, e maior e melhor. E o criterio de priorizacao entre as ideias.",
+  "Índice de Ação":
+    "Média entre fit e facilidade de venda. Vai de 0 a 2, e maior é melhor. É o critério de priorização entre as ideias.",
   Tier: "Faixa de prioridade: A a partir de 1.84, B a partir de 1.60, C abaixo disso.",
-  fit: "Aderencia ao balcao. 2 = resolve a correria do dia sem exigir mudanca de habito; 0 = exige escala corporativa.",
+  fit: "Aderência ao balcão. 2 = resolve a correria do dia sem exigir mudança de hábito; 0 = exige escala corporativa.",
   venda:
-    "Facilidade comercial. 2 = ataca perda de dinheiro ou de imagem agora; 0 = beneficio invisivel no curto prazo.",
-  disrupcao:
-    "Grau de inovacao no setor. 2 = muda o modelo de operacao; 0 = apenas automatiza o que ja existe.",
-  WTP: "Willingness to pay, ou disposicao a pagar: probabilidade de 0 a 1 de o dono pagar o ticket mensal informado.",
-  dor: "Natureza da consequencia para o dono: dinheiro direto, reputacao publica ou desorganizacao interna.",
+    "Facilidade comercial. 2 = ataca perda de dinheiro ou de imagem agora; 0 = benefício invisível no curto prazo.",
+  disrupção:
+    "Grau de inovação no setor. 2 = muda o modelo de operação; 0 = apenas automatiza o que já existe.",
+  WTP: "Willingness to pay, ou disposição a pagar: probabilidade de 0 a 1 de o dono pagar o ticket mensal informado.",
+  dor: "Natureza da consequência para o dono: dinheiro direto, reputação pública ou desorganização interna.",
   FORTE:
-    "Dor com dono claro: escore de 0.65 ou mais e dominante sobre a dor interna. E o sinal que interessa.",
+    "Dor com dono claro: escore de 0.65 ou mais é dominante sobre a dor interna. É o sinal que interessa.",
   FRACA:
-    "Dor interna de organizacao: nao tira dinheiro nem imagem, entao o dono nao sente urgencia de pagar.",
+    "Dor interna de organização: não tira dinheiro nem imagem, então o dono não sente urgência de pagar.",
   INSTAVEL:
-    "As parafrases da mesma pergunta divergem (desvio acima de 0.15): a medicao nao e confiavel, revise a mao.",
-  INDETERMINADO: "Zona cinzenta entre dor forte e dor interna. Decida olhando o caso, nao pelo numero.",
+    "As paráfrases da mesma pergunta divergem (desvio acima de 0.15): a medição não é confiável, revise à mão.",
+  INDETERMINADO: "Zona cinzenta entre dor forte e dor interna. Decida olhando o caso, não pelo número.",
   solo: "Suporte solo: probabilidade de um consultor manter 30 clientes sem colapsar no atendimento.",
-  meta30: "Probabilidade de 30 clientes pagantes em 24 meses. O plano assume 10 a 15 como base, nao 30.",
+  meta30: "Probabilidade de 30 clientes pagantes em 24 meses. O plano assume 10 a 15 como base, não 30.",
   desvio:
-    "Discrepancia entre as tres parafrases da mesma pergunta. Menor e melhor; acima de 0.15 a leitura vira instavel.",
+    "Discrepância entre as três paráfrases da mesma pergunta. Menor é melhor; acima de 0.15 a leitura vira instável.",
   ticket:
-    "Valor mensal considerado na medicao da disposicao a pagar. Funciona como teto da precificacao, nunca como piso.",
+    "Valor mensal considerado na medição da disposição a pagar. Funciona como teto da precificação, nunca como piso.",
   "System One":
-    "Decisor probabilistico externo, treinado para medir chance de compra em vez de escrever prosa convincente.",
-  LLM: "Modelo de linguagem. Redige o brief e os planos, mas e proibido de criar numero de mercado.",
+    "Decisor probabilístico externo, treinado para medir chance de compra em vez de escrever prosa convincente.",
+  LLM: "Modelo de linguagem. Redige o brief e os planos, mas é proibido de criar número de mercado.",
   guardrail:
-    "Conferencia automatica que exige os numeros medidos no texto final e marca estimativa como [INFERENCE].",
-  decisor: "Endpoint externo que responde probabilidades por pergunta. Nao ha inferencia local na imagem.",
-  CSRF: "Protecao que exige mesma origem e token assinado em toda acao da interface que muda estado.",
-  parafrases:
-    "A mesma pergunta escrita de tres formas diferentes. A concordancia entre elas mede a estabilidade da medicao.",
-  "escolha forcada":
-    "Metodo de dor em que o decisor escolhe entre tres consequencias concretas, sem a opcao tecnologia.",
+    "Conferência automática que exige os números medidos no texto final e marca estimativa como [INFERENCE].",
+  decisor: "Endpoint externo que responde probabilidades por pergunta. Não há inferência local na imagem.",
+  CSRF: "Proteção que exige mesma origem e token assinado em toda ação da interface que muda estado.",
+  paráfrases:
+    "A mesma pergunta escrita de três formas diferentes. A concordância entre elas mede a estabilidade da medição.",
+  "escolha forçada":
+    "Método de dor em que o decisor escolhe entre três consequências concretas, sem a opção tecnologia.",
   "modo simulado":
-    "Roda com LLM e decisor simulados: sem credenciais e sem custo, mas a saida nao tem valor de mercado.",
+    "Roda com LLM e decisor simulados: sem credenciais e sem custo, mas a saída não tem valor de mercado.",
   "[INFERENCE]":
-    "Marca de estimativa escrita pelo modelo. Nao e dado pesquisado nem numero medido pelo decisor.",
+    "Marca de estimativa escrita pelo modelo. Não é dado pesquisado nem número medido pelo decisor.",
   escala:
-    "Vermelho e laranja apontam sinal quente ou ruim; amarelo e medio; limao e verde apontam sinal bom.",
+    "Vermelho e laranja apontam sinal quente ou ruim; amarelo é médio; limão e verde apontam sinal bom.",
 };
 
 /**
@@ -744,8 +845,7 @@ export const Layout: FC<PropsWithChildren<{ title: string }>> = (props) => (
       <div class="shell">
         <header class="topbar glass">
           <div class="brand">
-            <h1>goodbizz</h1>
-            <span>estudos de nicho com decisor System One</span>
+            <h1>GoodBizz</h1>
           </div>
           <div class="topbar-actions">
             <div class="theme-toggle" role="group" aria-label="Tema da interface">
@@ -771,7 +871,7 @@ export const Layout: FC<PropsWithChildren<{ title: string }>> = (props) => (
         </header>
         <main>{props.children}</main>
         <p class="footer">
-          Numeros medidos por um <Term of="decisor">decisor probabilistico</Term>. Texto redigido por um{" "}
+          Números medidos por um <Term of="decisor">decisor probabilístico</Term>. Texto redigido por um{" "}
           <Term of="LLM">LLM</Term> sob <Term of="guardrail">guardrail</Term>. As cores seguem a{" "}
           <Term of="escala">escala</Term> vermelho (ruim) a verde (bom).
         </p>

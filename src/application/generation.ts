@@ -52,7 +52,7 @@ export function parseIdeas(data: unknown): Idea[] {
 export async function generateBrief(llm: LlmClient, cfg: StudyConfig): Promise<string> {
   const user =
     `Nicho: ${cfg.niche}\n` +
-    `Cidade ou regiao alvo: ${cfg.city || "nao informada"}\n` +
+    `Cidade ou região alvo: ${cfg.city || "não informada"}\n` +
     `Ticket mensal considerado: R$ ${cfg.monthlyTicket}\n`;
   const text = await llm.generateText(BRIEF_SYSTEM_PROMPT, user);
   return text.trim();
@@ -67,7 +67,7 @@ export async function generateIdeas(
 ): Promise<Idea[]> {
   const user =
     `Nicho: ${cfg.niche}\n` +
-    `Cidade ou regiao alvo: ${cfg.city || "nao informada"}\n` +
+    `Cidade ou região alvo: ${cfg.city || "não informada"}\n` +
     `Ticket mensal considerado: R$ ${cfg.monthlyTicket}\n\n` +
     `Brief de mercado:\n${brief}\n\n` +
     `Gere exatamente ${count} ideias em JSON. Retorne apenas o array.`;
@@ -77,7 +77,7 @@ export async function generateIdeas(
     throw new ValidationError(`expected JSON array of ideas, got: ${typeof raw}`);
   }
   // The requested count is authoritative: a provider (or the offline fixture) that returns more
-  // ideas than asked is trimmed, so `--ideas N` always yields N ideas.
+  // ideas than asked is trimmed, só `--ideas N` always yields N ideas.
   const ideas = parseIdeas(raw);
   return count > 0 ? ideas.slice(0, count) : ideas;
 }
@@ -96,31 +96,31 @@ export function dataBlock(evaluation: IdeaEvaluation, cfg: StudyConfig): string 
     .join(", ");
 
   return [
-    `Ideia: ${evaluation.name} (setor: ${evaluation.sector || "nao informado"})`,
-    `Descricao: ${evaluation.description}`,
-    `Nicho: ${cfg.niche}` + (cfg.city ? ` | Cidade/regiao: ${cfg.city}` : ""),
-    `Ticket assumido: R$ ${cfg.monthlyTicket}/mes (R$ ${cfg.monthlyTicket * 12}/ano)`,
+    `Ideia: ${evaluation.name} (setor: ${evaluation.sector || "não informado"})`,
+    `Descrição: ${evaluation.description}`,
+    `Nicho: ${cfg.niche}` + (cfg.city ? ` | Cidade/região: ${cfg.city}` : ""),
+    `Ticket assumido: R$ ${cfg.monthlyTicket}/mês (R$ ${cfg.monthlyTicket * 12}/ano)`,
     "",
-    `INDICE DE ACAO: ${evaluation.index} | TIER: ${evaluation.tier}`,
-    `fit: ${ind.fit}/2.00 (confianca ${ind.fitConf.toFixed(2)})`,
-    `facilidade de venda: ${ind.sale}/2.00 (confianca ${ind.saleConf.toFixed(2)})`,
-    `disrupcao: ${ind.disruption}/2.00 (confianca ${ind.disruptionConf.toFixed(2)})`,
-    `tipo de dor: ${ind.pain} (confianca ${ind.painConf.toFixed(2)}) | distribuicao: ${probs}`,
+    `ÍNDICE DE AÇÃO: ${evaluation.index} | TIER: ${evaluation.tier}`,
+    `fit: ${ind.fit}/2.00 (confiança ${ind.fitConf.toFixed(2)})`,
+    `facilidade de venda: ${ind.sale}/2.00 (confiança ${ind.saleConf.toFixed(2)})`,
+    `disrupção: ${ind.disruption}/2.00 (confiança ${ind.disruptionConf.toFixed(2)})`,
+    `tipo de dor: ${ind.pain} (confiança ${ind.painConf.toFixed(2)}) | distribuição: ${probs}`,
     `suporte solo: ${ind.solo.toFixed(2)}`,
     "",
     `ALGORITMO DA DOR: ${algo.label} | escore de dor ${algo.painScore} | ` +
       `dor interna ${algo.internalScore} | margem ${algo.margin >= 0 ? "+" : "-"}${Math.abs(algo.margin).toFixed(2)} | desvio ${algo.deviation}`,
-    `VALIDACAO: pagaria R$ ${cfg.monthlyTicket}/mes = ${biz.wtp.toFixed(2)} | ` +
+    `VALIDAÇÃO: pagaria R$ ${cfg.monthlyTicket}/mês = ${biz.wtp.toFixed(2)} | ` +
       `30 clientes em 24 meses = ${biz.meta30.toFixed(2)} | ` +
-      `preco vs valor = ${biz.price}/2.00 (confianca ${biz.priceConf.toFixed(2)})`,
+      `preço vs valor = ${biz.price}/2.00 (confiança ${biz.priceConf.toFixed(2)})`,
     "",
     "Escalas: fit 0=exige escala corporativa, 1=exige mudar rotina, 2=resolve o caos sem " +
-      "mudar habito. Venda 0=beneficio invisivel, 2=ataca perda de dinheiro/reputacao " +
-      "imediata. Disrupcao 0=so automatiza o que existe, 2=muda o modelo de operacao. " +
-      "Preco 0=acima do valor percebido, 2=abaixo do valor com folga.",
+      "mudar hábito. Venda 0=benefício invisível, 2=ataca perda de dinheiro/reputação " +
+      "imediata. Disrupção 0=só automatiza o que existe, 2=muda o modelo de operação. " +
+      "Preço 0=acima do valor percebido, 2=abaixo do valor com folga.",
     "",
-    "Regras de negocio para este plano: o ticket e TETO, nao piso; a meta de clientes e de " +
-      "10 a 15 em 24 meses (o 30 medido e upside, nao base); nenhum TAM nacional deve ser " +
+    "Regras de negócio para este plano: o ticket é TETO, não piso; a meta de clientes é de " +
+      "10 a 15 em 24 meses (o 30 medido é upside, não base); nenhum TAM nacional deve ser " +
       "usado como argumento principal.",
   ].join("\n");
 }

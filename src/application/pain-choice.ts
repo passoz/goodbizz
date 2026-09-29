@@ -1,20 +1,20 @@
 /**
- * Mede o tipo de dor por escolha forcada de tres vias, em vez de quatro sondas binarias.
+ * Mede o tipo de dor por escolha forcada de três vias, em vez de quatro sondas binarias.
  *
  * Portado de `goodbizz/pain_choice.py`. As sondas binarias davam falso positivo em
- * "tecnologia"; a escolha forcada entre consequencias diretas (dinheiro, reputacao,
- * backoffice) e estavel e nao oferece "tecnologia" como opcao.
+ * "tecnologia"; a escolha forcada entre consequências diretas (dinheiro, reputação,
+ * backoffice) e estável e não oferece "tecnologia" como opção.
  */
 import { classifyPain, populationMean, populationStdDev, roundTo } from "./pain-algorithm.ts";
 import type { DeciderClient } from "../domain/ports.ts";
 import type { PainResult, Question } from "../domain/types.ts";
 
-/** Consequencias oferecidas ao dono, sem a opcao de tecnologia. */
+/** Consequencias oferecidas ao dono, sem a opção de tecnologia. */
 export const PAIN_OPTIONS: Record<string, string> = {
   dinheiro_direto:
-    "Ele perde dinheiro que entra: venda que nao fecha, cobranca que nao acontece, " + "custo que sobe.",
+    "Ele perde dinheiro que entra: venda que não fecha, cobranca que não acontece, " + "custo que sobe.",
   reputacao:
-    "Ele fica mal falado: avaliacao ruim publicada, cliente reclamando para outros, " + "nota caindo.",
+    "Ele fica mal falado: avaliação ruim publicada, cliente reclamando para outros, " + "nota caindo.",
   backoffice:
     "Nada de grave acontece com dinheiro ou imagem: sobra trabalho manual e " +
     "desorganizacao para a equipe.",
@@ -22,10 +22,10 @@ export const PAIN_OPTIONS: Record<string, string> = {
 
 /** Tres redacoes independentes da mesma pergunta de escolha. */
 export const PAIN_INSTRUCTIONS: string[] = [
-  "Se este problema nao for resolvido, o que acontece de pior com o dono tipico deste " +
-    "nicho? Escolha a consequencia mais direta para ELE.",
-  "Qual e a pior consequencia, para o dono, de deixar este problema como esta?",
-  "Que tipo de dor esta ideia resolve para o dono do negocio?",
+  "Se este problema não for resolvido, o que acontece de pior com o dono tipico deste " +
+    "nicho? Escolha a consequência mais direta para ELE.",
+  "Qual é a pior consequência, para o dono, de deixar este problema como está?",
+  "Que tipo de dor esta ideia resolve para o dono do negócio?",
 ];
 
 /** Opcao escolhida -> nome da sonda que ela representa. */
@@ -48,7 +48,7 @@ export interface ChoiceMeasurement {
   byParaphrase: Record<string, Record<string, number>>;
 }
 
-/** Extrai um mapa de probabilidades de um campo `probabilities`/`probs` util. */
+/** Extrai um mapa de probabilidades de um campo `probabilities`/`probs` útil. */
 function probabilityMap(value: unknown): Record<string, number> | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const entries = Object.entries(value);
@@ -59,8 +59,8 @@ function probabilityMap(value: unknown): Record<string, number> | null {
 }
 
 /**
- * Pergunta a escolha forcada tres vezes e agrega as probabilidades por sonda.
- * "Tecnologia" e fixada em 0: ela capturava qualquer coisa e foi removida das opcoes.
+ * Pergunta a escolha forçada três vezes e agrega as probabilidades por sonda.
+ * "Tecnologia" e fixada em 0: ela capturava qualquer coisa e foi removida das opções.
  */
 export async function measurePainChoice(decider: DeciderClient, state: string): Promise<ChoiceMeasurement> {
   const byParaphrase: Record<string, Record<string, number>> = {};
@@ -101,7 +101,7 @@ export async function measurePainChoice(decider: DeciderClient, state: string): 
   return { probes, byParaphrase };
 }
 
-/** Adapta a medicao de escolha ao formato consumido pelo resto do pipeline. */
+/** Adapta a medição de escolha ao formato consumido pelo resto do pipeline. */
 export function painResultFromChoice(measured: ChoiceMeasurement): PainResult {
   const probes = measured.probes;
   const painScore = Math.max(probes["dinheiro"] ?? 0, probes["reputacao"] ?? 0);

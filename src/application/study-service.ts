@@ -4,7 +4,7 @@
  * Owns the lifecycle of a study (create -> run -> artifacts) and exposes the diagnosis and
  * recalibration use cases. Nothing here talks HTTP or SQL directly: it depends on ports.
  */
-import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 
 import { diagnoseProbes, diagnoseExitCode, type DiagnoseReport } from "./diagnose.ts";
@@ -15,7 +15,7 @@ import { recalibrate, type RecalibrateReport } from "./recalibrate.ts";
 import { slug } from "./reports.ts";
 import { scrub } from "../config/redact.ts";
 import { resolveStudyConfig, studyContext } from "../config/runtime.ts";
-import { NotFoundError } from "../domain/errors.ts";
+import { ConflictError, NotFoundError } from "../domain/errors.ts";
 import type { ArtifactFile, DeciderClient, LlmClient, Logger, StudyRepository } from "../domain/ports.ts";
 import type { Idea, StudyConfig, StudyListItem, StudyRecord } from "../domain/types.ts";
 import type { StudyCache } from "./cache.ts";
@@ -116,8 +116,8 @@ export class StudyService {
         numIdeas: record.numIdeas,
         painMethod: record.painMethod,
         mock: record.mock,
-        // O estudo herda do servico o que estiver simulado: sem isso, um estudo criado sem o
-        // "modo simulado" exigiria credencial de um provedor que o servico ja decidiu simular.
+        // O estudo herda do serviço o que estiver simulado: sem isso, um estudo criado sem o
+        // "modo simulado" exigiria credencial de um provedor que o serviço já decidiu simular.
         mockLlm: record.mock || this.options.mockLlm === true,
         mockDecider: record.mock || this.options.mockDecider === true,
         outputDir: record.artifactDir,
@@ -170,6 +170,19 @@ export class StudyService {
     return record;
   }
 
+  /**
+   * Apaga o estudo: registro, avaliações e a árvore de artefatos no disco.
+   * Recusa (409) enquanto o pipeline está rodando — apagar no meio deixaria escrita órfã.
+   */
+  async delete(id: string): Promise<void> {
+    const record = await this.get(id);
+    if (this.inFlight.has(id)) {
+      throw new ConflictError(`study ${id} is still running`);
+    }
+    rmSync(record.artifactDir, { recursive: true, force: true });
+    await this.options.repo.delete(id);
+  }
+
   /** Relative paths of every artifact already written for the study. */
   async artifactPaths(id: string): Promise<string[]> {
     const record = await this.get(id);
@@ -192,7 +205,7 @@ export class StudyService {
 
   /**
    * ZIP com todos os artefatos do estudo, em uma pasta com nome legivel. Le do disco (o que o
-   * usuario ve na listagem e o que ele baixa) e falha quando ainda nao ha nada gravado.
+   * usuário vê na listagem e o que ele baixa) e falha quando ainda não há nada gravado.
    */
   async archive(id: string): Promise<{ filename: string; bytes: Uint8Array<ArrayBuffer> }> {
     const record = await this.get(id);
@@ -203,8 +216,8 @@ export class StudyService {
     const prefix = `${slug(record.niche) || "estudo"}-${record.id.slice(0, 8)}`;
     const entries = paths.map((relativePath) => ({
       path: `${prefix}/${relativePath}`,
-      // Copia para um ArrayBuffer proprio: `readFileSync` devolve Buffer, e o ZIP precisa de bytes
-      // estaveis (alem de satisfazer o tipo do compressor).
+      // Copia para um ArrayBuffer próprio: `readFileSync` devolve Buffer, e o ZIP precisa de bytes
+      // estáveis (além de satisfazer o tipo do compressor).
       data: new Uint8Array(readFileSync(this.safePath(record.artifactDir, relativePath))),
     }));
     return {

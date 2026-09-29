@@ -38,7 +38,7 @@ export function groupByPain(data: IdeaEvaluation[]): PainGroups {
   return groups;
 }
 
-/** Ordena por indice decrescente e resume medias, tiers, alvos e revisoes. */
+/** Ordena por índice decrescente e resume médias, tiers, alvos e revisoes. */
 export function summarizeStudy(data: IdeaEvaluation[]): StudySummary {
   const ordered = [...data].sort((left, right) => right.index - left.index);
 

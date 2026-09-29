@@ -1,6 +1,6 @@
 /**
  * Geracao de PDF via Chromium headless. Nunca lanca erro por binario ausente:
- * apenas falhas reais de execucao devolvem `ok: false`.
+ * apenas falhas reais de execução devolvem `ok: false`.
  */
 
 import { existsSync, statSync } from "node:fs";
@@ -9,7 +9,7 @@ import { pathToFileURL } from "node:url";
 
 const CHROMIUM_CANDIDATES = ["chromium", "chromium-browser", "google-chrome", "chrome"];
 
-/** Localiza o primeiro executavel de Chromium disponivel no PATH. */
+/** Localiza o primeiro executavel de Chromium disponível no PATH. */
 export function findChromium(): string | null {
   for (const name of CHROMIUM_CANDIDATES) {
     const path = Bun.env.PATH === undefined ? Bun.which(name) : Bun.which(name, { PATH: Bun.env.PATH });

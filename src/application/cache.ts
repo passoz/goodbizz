@@ -4,7 +4,7 @@
 import type { CacheStore } from "../domain/ports.ts";
 import { cacheKey } from "../domain/hash.ts";
 
-/** Re-export of the domain cache key so application code has a single import point. */
+/** Re-export of the domain cache key só application code has a single import point. */
 export const cacheKeyFor = cacheKey;
 
 export class StudyCache {

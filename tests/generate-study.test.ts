@@ -143,10 +143,10 @@ describe("generateStudy", () => {
     handle.sqlite.close();
   });
 
-  test("strips accents from every markdown artifact, not only the per-idea document", async () => {
+  test("keeps accents in every markdown artifact", async () => {
     const { handle, cache } = harness();
-    // O provedor real escreve acentos mesmo instruido a nao usar: o brief e o indice precisam passar
-    // pela normalizacao global (passo 6/6 do baseline).
+    // Português acentuado atravessa o pipeline inteiro: a normalização que removia diacríticos
+    // (convenção do baseline Python) foi revogada.
     const accented: LlmClient = {
       async generateText(system: string) {
         if (system.includes("IDEIAS")) {
@@ -168,11 +168,10 @@ describe("generateStudy", () => {
 
     const markdown = result.files.filter((file) => file.path.endsWith(".md"));
     expect(markdown.length).toBeGreaterThan(1);
-    for (const file of markdown) {
-      const content = typeof file.content === "string" ? file.content : "";
-      expect(content).not.toMatch(/[áàâãäçéèêëíìîïñóòôõöúùûü]/i);
-    }
-    // dados.json e csv seguem o baseline: so o markdown e normalizado.
+    const brief = result.files.find((file) => file.path === "00-brief.md");
+    expect(typeof brief?.content === "string" ? brief.content : "").toContain("praça");
+    const plan = markdown.find((file) => file.path.endsWith("/README.md"));
+    expect(typeof plan?.content === "string" ? plan.content : "").toContain("ação");
     const dados = result.files.find((file) => file.path === "dados.json");
     expect(typeof dados?.content === "string" ? dados.content : "").toContain("praça");
     handle.sqlite.close();
