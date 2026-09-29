@@ -35,6 +35,12 @@ export const GLASS_CSS = `
   --r-control: 12px;
   --r-pill: 999px;
 
+  /* Acento de acao: laranja do operador. A escala vermelho->verde segue exclusiva dos DADOS
+     (indice, tier, dor, desvio, estado); o laranja marca o que e clicavel. */
+  --accent: #d78133;
+  --accent-hover: #e28f47;
+  --accent-ink: #1c1206;
+
   /* Material: superficies grandes sao mais grossas (blur maior) que chips e controles. Receita
      Apple (vibrancy): desfoque + saturacao alta; o anel vem de sombra em vez de borda dura, para
      adaptar a qualquer fundo sem virar contorno branco. */
@@ -138,10 +144,11 @@ a { color: inherit; text-decoration: none; }
 }
 .nav a:hover { background: oklch(1 0 0 / 0.12); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.14); }
 .nav a.nav-cta {
-  background: linear-gradient(120deg, var(--r-lime), var(--r-green));
-  color: #16210c; font-weight: 640;
-  box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.3);
+  background: var(--accent);
+  color: var(--accent-ink); font-weight: 640;
+  box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.26);
 }
+.nav a.nav-cta:hover { background: var(--accent-hover); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.34); }
 
 /* ── Vidro ─────────────────────────────────────────────────────────────── */
 /* Material, nao contorno. Tres decisoes carregam o efeito:
@@ -197,13 +204,13 @@ h3 { font-size: var(--fs-h3); color: var(--paper); font-weight: 620; margin: 28p
 /* Feedback no pressionar, imediato: 0.96 e o valor que da tato sem exagero. */
 .btn:active { scale: 0.96; transition-duration: 100ms; }
 .btn-primary {
-  background: linear-gradient(120deg, var(--r-lime), var(--r-green));
-  color: #16210c;
+  background: var(--accent);
+  color: var(--accent-ink);
   box-shadow:
-    inset 0 0 0 1px oklch(1 0 0 / 0.3),
-    0 14px 30px -14px rgb(114 206 59 / 0.6);
+    inset 0 0 0 1px oklch(1 0 0 / 0.26),
+    0 14px 30px -14px rgb(215 129 51 / 0.7);
 }
-.btn-primary:hover { background: linear-gradient(120deg, #b0e75a, #7fdb49); }
+.btn-primary:hover { background: var(--accent-hover); }
 .btn-ghost { background: transparent; box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.22); }
 .btn[disabled] { opacity: .6; cursor: progress; }
 
@@ -244,9 +251,9 @@ h3 { font-size: var(--fs-h3); color: var(--paper); font-weight: 620; margin: 28p
 .b-lime { color: #eefbd6; background: rgb(159 219 67 / 0.32); box-shadow: inset 0 0 0 1px rgb(159 219 67 / 0.5); }
 .b-green { color: #e4fbdb; background: rgb(114 206 59 / 0.34); box-shadow: inset 0 0 0 1px rgb(114 206 59 / 0.52); }
 .tier { font: 700 var(--fs-small)/1 var(--mono); padding: 6px 13px; border-radius: var(--r-pill); color: #16210c; }
-.tier-A { background: linear-gradient(120deg, var(--r-lime), var(--r-green)); }
-.tier-B { background: linear-gradient(120deg, var(--r-yellow), var(--r-lime)); }
-.tier-C { background: linear-gradient(120deg, var(--r-orange), var(--r-yellow)); color: #241a08; }
+.tier-A { background: var(--r-green); }
+.tier-B { background: var(--r-lime); }
+.tier-C { background: var(--r-yellow); }
 
 /* ── Cartoes de estudo: a entrada e o cartao inteiro ───────────────────── */
 .studies { display: grid; gap: 16px; list-style: none; padding: 0; margin: 0; }
@@ -288,10 +295,11 @@ h3 { font-size: var(--fs-h3); color: var(--paper); font-weight: 620; margin: 28p
 .score-side .hint { max-width: 18ch; }
 .open-cta {
   display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: var(--r-pill);
-  font-size: var(--fs-small); font-weight: 620; color: #16210c;
-  background: linear-gradient(120deg, var(--r-lime), var(--r-green));
+  font-size: var(--fs-small); font-weight: 640; color: var(--accent-ink);
+  background: var(--accent);
+  box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.24);
 }
-.study-card:hover .open-cta { background: linear-gradient(120deg, #b0e75a, #7fdb49); }
+.study-card:hover .open-cta { background: var(--accent-hover); }
 
 /* ── Metricas ──────────────────────────────────────────────────────────── */
 .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(196px, 1fr)); gap: 14px; list-style: none; padding: 0; margin: 0; }
