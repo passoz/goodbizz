@@ -142,4 +142,39 @@ describe("generateStudy", () => {
     expect(result.issues[0]).toContain("section(s) missing");
     handle.sqlite.close();
   });
+
+  test("strips accents from every markdown artifact, not only the per-idea document", async () => {
+    const { handle, cache } = harness();
+    // O provedor real escreve acentos mesmo instruido a nao usar: o brief e o indice precisam passar
+    // pela normalizacao global (passo 6/6 do baseline).
+    const accented: LlmClient = {
+      async generateText(system: string) {
+        if (system.includes("IDEIAS")) {
+          return JSON.stringify([
+            { nome: "Ação de cobrança", setor: "cobrança", descricao: "praça pública" },
+          ]);
+        }
+        if (system.includes("BRIEF")) return "# Brief\n\nPerto de praça e ponto de ônibus.";
+        return "## 1. Resumo executivo\n\nTexto sobre ação e praça.\n";
+      },
+    };
+
+    const result = await generateStudy(config({ numIdeas: 1 }), {
+      llm: accented,
+      decider: new DeciderMock(),
+      cache,
+      logger: silentLogger(),
+    });
+
+    const markdown = result.files.filter((file) => file.path.endsWith(".md"));
+    expect(markdown.length).toBeGreaterThan(1);
+    for (const file of markdown) {
+      const content = typeof file.content === "string" ? file.content : "";
+      expect(content).not.toMatch(/[áàâãäçéèêëíìîïñóòôõöúùûü]/i);
+    }
+    // dados.json e csv seguem o baseline: so o markdown e normalizado.
+    const dados = result.files.find((file) => file.path === "dados.json");
+    expect(typeof dados?.content === "string" ? dados.content : "").toContain("praça");
+    handle.sqlite.close();
+  });
 });

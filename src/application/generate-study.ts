@@ -190,7 +190,15 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
 
   for (const item of written) documents[item.name] = item.text;
 
-  const files = buildArtifactFiles(cfg, brief, summary, evaluations, folders, documents);
+  const produced = buildArtifactFiles(cfg, brief, summary, evaluations, folders, documents);
+  // Passo 6/6 do baseline: normalizar acentos em TODO markdown do estudo. Sem isto, o texto vindo do
+  // LLM (brief, indice, tabelao) escaparia da convencao sem acento, que so era aplicada no documento
+  // de cada ideia. O json/csv ficam como estao, igual ao baseline.
+  const files = produced.map((file) =>
+    file.path.endsWith(".md") && typeof file.content === "string"
+      ? { ...file, content: stripAccents(file.content) }
+      : file,
+  );
   progress(`[6/6] ${files.length} artefatos preparados`);
 
   if (cfg.pdf) {
