@@ -76,7 +76,7 @@ DATABASE_URL=app.db
 PORT=3000
 LOG_LEVEL=info
 APP_ENV=development
-SESSION_SECRET=troque-por-32-bytes-aleatorios-de-verdade
+SESSION_SECRET=<32 bytes aleatorios>
 ```
 
 ```text

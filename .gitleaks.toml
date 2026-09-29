@@ -1,0 +1,13 @@
+# Config do gitleaks para o repositório.
+#
+# Documentação e exemplos citam nomes de variáveis de ambiente com valores de
+# exemplo (`SESSION_SECRET=<...>`, `LLM_API_KEY=sk-substitua-me`). Esses trechos
+# não são credenciais; a allowlist evita que o job `security` falhe por falso
+# positivo, sem afrouxar a regra para o resto do repositório.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Placeholders de documentação (variáveis de ambiente de exemplo)"
+paths = ['''\.md$''']
+regexes = ['''([A-Z_]*?(SECRET|TOKEN|PASSWORD)[A-Z_]*=)(<[^>]*>|troque-por[^\s]*|substitua[^\s]*|[A-Za-z0-9_-]*[-_]?(me|exemplo|placeholder)[A-Za-z0-9_-]*)''']
