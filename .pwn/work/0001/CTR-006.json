@@ -1,0 +1,100 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.6",
+  "work_id": "0001",
+  "title": "Adaptadores mock deterministas",
+  "risk": {
+    "level": "L2",
+    "reasons": [
+      "Task 1.6 (Adaptadores mock deterministas) classificada como L2 pelo plano do port"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.6-01",
+        "given": "Dado o estado do repositorio antes de Adaptadores mock deterministas",
+        "when": "Quando a task 1.6 executar: Os adaptadores mock de LLM e de decisor produzem a mesma saida para a mesma entrada, sem tocar a rede",
+        "then": "Então a mesma entrada produz a mesma resposta nos dois mocks"
+      },
+      {
+        "id": "SCENARIO-1.6-02",
+        "given": "Dado que a mudanca esta restrita a llm, decider, domain",
+        "when": "Quando o Diff Guard comparar os arquivos modificados",
+        "then": "Então nenhum arquivo fora da write_allow foi tocado"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/infrastructure/llm-mock.ts",
+      "src/infrastructure/decider-mock.ts",
+      "src/domain/hash.ts",
+      "tests/mock-determinism.test.ts"
+    ],
+    "affected_components": [
+      "llm",
+      "decider",
+      "domain"
+    ],
+    "strategy": "tdd-strict"
+  },
+  "architecture_contract": {
+    "invariants": [
+      "src/domain nao importa src/infrastructure nem src/application",
+      "Nenhum numero de mercado e inventado: os numeros vem do bloco de dados medidos",
+      "Segredos nunca sao logados nem serializados em resposta"
+    ],
+    "patterns": [
+      "clean architecture",
+      "ports and adapters",
+      "injeção manual de dependencia"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun test tests/mock-determinism.test.ts"
+    ],
+    "required_evidence": [
+      "red-output.txt",
+      "green-output.txt"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/infrastructure/llm-mock.ts",
+      "src/infrastructure/decider-mock.ts",
+      "src/domain/hash.ts",
+      "tests/mock-determinism.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      ".pwn/**",
+      ".specs/**",
+      ".prompts/**",
+      ".sources/**",
+      ".env",
+      ".env.*",
+      "node_modules/**"
+    ],
+    "out_of_scope": [
+      "Mudanca fora dos componentes declarados",
+      "Alteracao de .specs, .prompts ou .pwn"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 60000,
+    "max_cost_usd": 0.75,
+    "max_duration_minutes": 30,
+    "max_agent_attempts": 3,
+    "max_llm_calls": 40,
+    "max_tool_calls": 120,
+    "max_shell_executions": 30
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.2",
+  "work_id": "0001",
+  "title": "Dominio: tipos, portas e erros",
+  "risk": {
+    "level": "L1",
+    "reasons": [
+      "Task 1.2 (Dominio: tipos, portas e erros) classificada como L1 pelo plano do port"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.2-01",
+        "given": "Dado o estado do repositorio antes de Dominio: tipos, portas e erros",
+        "when": "Quando a task 1.2 executar: Existem tipos de dominio, portas de LLM, decisor, repositorio e cache, e erros tipados, todos sem dependencia de infraestrutura",
+        "then": "Então os tipos e o mapeamento de erro se comportam como declarado"
+      },
+      {
+        "id": "SCENARIO-1.2-02",
+        "given": "Dado que a mudanca esta restrita a domain",
+        "when": "Quando o Diff Guard comparar os arquivos modificados",
+        "then": "Então nenhum arquivo fora da write_allow foi tocado"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/domain/types.ts",
+      "src/domain/ports.ts",
+      "src/domain/errors.ts",
+      "tests/domain.test.ts"
+    ],
+    "affected_components": [
+      "domain"
+    ],
+    "strategy": "tdd-strict"
+  },
+  "architecture_contract": {
+    "invariants": [
+      "src/domain nao importa src/infrastructure nem src/application",
+      "Nenhum numero de mercado e inventado: os numeros vem do bloco de dados medidos",
+      "Segredos nunca sao logados nem serializados em resposta"
+    ],
+    "patterns": [
+      "clean architecture",
+      "ports and adapters",
+      "injeção manual de dependencia"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun test tests/domain.test.ts"
+    ],
+    "required_evidence": [
+      "red-output.txt",
+      "green-output.txt"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/domain/types.ts",
+      "src/domain/ports.ts",
+      "src/domain/errors.ts",
+      "tests/domain.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      ".pwn/**",
+      ".specs/**",
+      ".prompts/**",
+      ".sources/**",
+      ".env",
+      ".env.*",
+      "node_modules/**"
+    ],
+    "out_of_scope": [
+      "Mudanca fora dos componentes declarados",
+      "Alteracao de .specs, .prompts ou .pwn"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 20000,
+    "max_cost_usd": 0.2,
+    "max_duration_minutes": 10,
+    "max_agent_attempts": 3,
+    "max_llm_calls": 40,
+    "max_tool_calls": 120,
+    "max_shell_executions": 30
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

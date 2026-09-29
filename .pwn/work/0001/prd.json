@@ -1,0 +1,332 @@
+{
+  "$schema": "../../../schemas/prd.schema.json",
+  "id": "PRD-0001",
+  "meta": {
+    "version": "1.0",
+    "created_at": "2026-09-29T18:30:00.000Z",
+    "updated_at": "2026-09-29T18:30:00.000Z",
+    "author": "operador",
+    "grilling_depth": "deep"
+  },
+  "title": "Port goodbizz para Bun com CLI, API, Web e imagem Docker",
+  "status": "approved",
+  "scenario": "brownfield",
+  "problem": {
+    "statement": "O goodbizz so existe como biblioteca Python com tres scripts de CLI; nao ha servico, persistencia nem interface web, o que impede integracao por HTTP e uso por navegador.",
+    "context": "O baseline nao faz inferencia local: LLM e decisor System One sao endpoints externos. A metodologia (escolha de dor de 3 vias, ensemble de 4 sondas, limiares calibrados, guardrail numerico) esta implementada em Python e precisa sobreviver ao port.",
+    "impact": "Sem servico, cada operador precisa clonar o repositorio e rodar Python; nao ha historico consultavel nem integracao com outros sistemas.",
+    "evidence": [
+      ".sources/0001-goodbizz-port-request.md",
+      "goodbizz/evaluation.py",
+      "goodbizz/algorithm.py",
+      "generate_study.py"
+    ]
+  },
+  "solution": {
+    "statement": "Reescrever o goodbizz em Bun/TypeScript com arquitetura limpa, expondo CLI, API HTTP (Hono) e interface web (hono/jsx) sobre a mesma logica, com persistencia SQLite via Drizzle e empacotamento Docker publicado por GitHub Actions.",
+    "approach": "Portar modulo a modulo preservando formulas, limiares, prompts e formatos de artefato; adicionar persistencia e servico como camada nova; manter o formato do dados.json para preservar a recalibracao.",
+    "alternatives_considered": [
+      {
+        "name": "Manter Python e expor por FastAPI",
+        "description": "Empacotar o codigo atual com um servidor Python",
+        "reason_rejected": "O operador determinou o port para Bun e a stack de bun.md"
+      },
+      {
+        "name": "Reescrever sem preservar formatos de artefato",
+        "description": "Simplificar o modelo de dados e adotar nomes em ingles na saida",
+        "reason_rejected": "Quebraria a recalibracao e a leitura dos estudos anteriores"
+      },
+      {
+        "name": "Usar Postgres como banco do servico",
+        "description": "Persistir em Postgres desde o inicio",
+        "reason_rejected": "SQLite embutido atende o volume e elimina dependencia externa na imagem"
+      }
+    ],
+    "risks": [
+      {
+        "description": "Divergencia numerica entre o port e o baseline",
+        "level": "high",
+        "mitigation": "Testes de caracterizacao por modulo com valores reais do baseline"
+      },
+      {
+        "description": "Chromium ausente na imagem impede PDF",
+        "level": "medium",
+        "mitigation": "PDF opcional; HTML permanece e a mensagem explica a ausencia"
+      },
+      {
+        "description": "Rede exposta sem autenticacao multiusuario",
+        "level": "medium",
+        "mitigation": "Documentar uso em rede confiavel e separar sub-app de UI com CSRF do sub-app de API"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "id": "DEC-001",
+      "statement": "Preservar integralmente as formulas, limiares e prompts do baseline no port.",
+      "rationale": "A calibracao foi obtida sobre casos reais e nao deve regredir por reescrita.",
+      "status": "accepted",
+      "made_at": "2026-09-29T18:30:00.000Z",
+      "made_by": "operador"
+    },
+    {
+      "id": "DEC-002",
+      "statement": "Adotar arquitetura limpa com domain, application e infrastructure conforme a stack.",
+      "rationale": "Isola regra pura de I/O e permite testar sem rede.",
+      "status": "accepted",
+      "made_at": "2026-09-29T18:30:00.000Z",
+      "made_by": "operador"
+    },
+    {
+      "id": "DEC-003",
+      "statement": "Persistir estudos em SQLite com Drizzle e manter os artefatos em disco.",
+      "rationale": "Atende consulta por API e web sem perder o formato de arquivo do baseline.",
+      "status": "accepted",
+      "made_at": "2026-09-29T18:30:00.000Z",
+      "made_by": "operador"
+    },
+    {
+      "id": "DEC-004",
+      "statement": "Renomear o contrato de ambiente para LLM_API_URL, LLM_API_KEY, DECISION_API_URL e DECISION_API_KEY.",
+      "rationale": "Pedido explicito do operador.",
+      "status": "accepted",
+      "made_at": "2026-09-29T18:30:00.000Z",
+      "made_by": "operador"
+    },
+    {
+      "id": "DEC-005",
+      "statement": "Separar sub-app de UI (com CSRF) do sub-app de API (sem CSRF).",
+      "rationale": "Requisito da stack para nao expor endpoints de API ao filtro de formulario.",
+      "status": "accepted",
+      "made_at": "2026-09-29T18:30:00.000Z",
+      "made_by": "operador"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "FR-001",
+      "type": "functional",
+      "statement": "CLI completa: Operador executa generate, diagnose, recalibrate e serve pela CLI com as flags e aliases do baseline.",
+      "priority": "must",
+      "source": ".prompts/0001-change.md"
+    },
+    {
+      "id": "FR-002",
+      "type": "functional",
+      "statement": "Modo mock deterministico: O modo mock produz saida deterministica sem nenhuma chamada de rede.",
+      "priority": "must",
+      "source": ".prompts/0001-change.md"
+    },
+    {
+      "id": "FR-003",
+      "type": "functional",
+      "statement": "Avaliacao via decisor System One: Cada ideia e avaliada no decisor produzindo indicadores, indice de acao e tier.",
+      "priority": "must",
+      "source": ".prompts/0001-change.md"
+    },
+    {
+      "id": "FR-004",
+      "type": "functional",
+      "statement": "API HTTP de estudos: A API expoe criacao, listagem, detalhe e download de artefatos sob /api.",
+      "priority": "must",
+      "source": ".prompts/0001-change.md"
+    },
+    {
+      "id": "FR-005",
+      "type": "functional",
+      "statement": "Interface web: A interface web renderiza lista, formulario e detalhe de estudo consumindo a API.",
+      "priority": "must",
+      "source": ".prompts/0001-change.md"
+    },
+    {
+      "id": "FR-006",
+      "type": "functional",
+      "statement": "Diagnostico de sondas: O diagnostico reporta media, desvio e contradicao por sonda e o exit code reflete as sondas uteis.",
+      "priority": "must",
+      "source": ".prompts/0001-change.md"
+    },
+    {
+      "id": "FR-007",
+      "type": "functional",
+      "statement": "Recalibracao de limiares: A recalibracao recebe um dados.json e devolve a grade ordenada por falso positivo, acerto e escalonamento.",
+      "priority": "must",
+      "source": ".prompts/0001-change.md"
+    },
+    {
+      "id": "FR-008",
+      "type": "functional",
+      "statement": "Guardrail numerico: O guardrail verifica secoes obrigatorias, acentos, alinhamento de tabela e presenca dos numeros medidos.",
+      "priority": "must",
+      "source": ".prompts/0001-change.md"
+    },
+    {
+      "id": "FR-009",
+      "type": "functional",
+      "statement": "Persistencia de estudos: O estudo persiste em SQLite e permanece consultavel apos reinicio do processo.",
+      "priority": "must",
+      "source": ".prompts/0001-change.md"
+    },
+    {
+      "id": "FR-010",
+      "type": "functional",
+      "statement": "Cache de respostas: O cache por chave hash evita repetir chamadas pagas em reexecucao do mesmo estudo.",
+      "priority": "must",
+      "source": ".prompts/0001-change.md"
+    },
+    {
+      "id": "FR-011",
+      "type": "functional",
+      "statement": "Health, readiness e imagem Docker: A imagem executa o servico e expoe liveness e readiness distintos.",
+      "priority": "must",
+      "source": ".prompts/0001-change.md"
+    },
+    {
+      "id": "FR-012",
+      "type": "functional",
+      "statement": "Workflow de imagem: O workflow de GitHub Actions constroi e publica a imagem.",
+      "priority": "must",
+      "source": ".prompts/0001-change.md"
+    },
+    {
+      "id": "FR-013",
+      "type": "functional",
+      "statement": "Prompts e bloco de dados medidos: Os prompts de brief, ideias e documento carregam o bloco de dados medidos e proibem numeros inventados.",
+      "priority": "must",
+      "source": ".prompts/0001-change.md"
+    },
+    {
+      "id": "FR-014",
+      "type": "functional",
+      "statement": "Relatorios deterministas: Indice, tabelao markdown e CSV sao gerados sem chamar LLM e ordenados pelo indice de acao.",
+      "priority": "must",
+      "source": ".prompts/0001-change.md"
+    },
+    {
+      "id": "FR-015",
+      "type": "functional",
+      "statement": "Render de HTML e PDF: O renderizador converte markdown em HTML sanitizado e compila o estudo em HTML unico com PDF opcional.",
+      "priority": "must",
+      "source": ".prompts/0001-change.md"
+    },
+    {
+      "id": "FR-016",
+      "type": "functional",
+      "statement": "Dor por escolha forcada: A natureza da dor e medida por escolha forcada entre dinheiro direto, reputacao e backoffice.",
+      "priority": "must",
+      "source": ".prompts/0001-change.md"
+    },
+    {
+      "id": "FR-017",
+      "type": "functional",
+      "statement": "Classificacao de dor com limiares: Quatro sondas em tres parafrases produzem a classificacao com os limiares calibrados.",
+      "priority": "must",
+      "source": ".prompts/0001-change.md"
+    },
+    {
+      "id": "FR-018",
+      "type": "functional",
+      "statement": "Pipeline completo de estudo: O pipeline executa brief, ideias, avaliacao, documentos, relatorios e PDF opcional, persistindo o estudo.",
+      "priority": "must",
+      "source": ".prompts/0001-change.md"
+    },
+    {
+      "id": "FR-019",
+      "type": "functional",
+      "statement": "Avaliacao com indice e tier: Cada ideia recebe indicadores, bloco de negocio, indice de acao, tier e resumo agregado.",
+      "priority": "must",
+      "source": ".prompts/0001-change.md"
+    },
+    {
+      "id": "FR-020",
+      "type": "functional",
+      "statement": "Artefatos do estudo em disco: Os artefatos sao gravados no formato do baseline, incluindo um dados.json compativel com a recalibracao.",
+      "priority": "must",
+      "source": ".prompts/0001-change.md"
+    }
+  ],
+  "stakeholders": [
+    {
+      "name": "Operador/consultor",
+      "role": "ACT-001"
+    },
+    {
+      "name": "Cliente da API",
+      "role": "ACT-002"
+    },
+    {
+      "name": "Usuario da interface web",
+      "role": "ACT-003"
+    }
+  ],
+  "scope": {
+    "in_scope": [
+      "Port integral da biblioteca e dos tres scripts para TypeScript",
+      "Servico HTTP com persistencia SQLite",
+      "Interface web renderizada no servidor",
+      "Imagem Docker e workflow de build"
+    ],
+    "out_of_scope": [
+      "Inferencia local de modelos",
+      "Autenticacao multiusuario e multitenancy",
+      "Reprocessamento de estudos gerados pelo baseline Python"
+    ]
+  },
+  "assumptions": [
+    {
+      "statement": "Os provedores externos implementam o protocolo System One e chat completions.",
+      "validated": true
+    },
+    {
+      "statement": "O runtime alvo e Bun 1.4 com SQLite embutido.",
+      "validated": true
+    }
+  ],
+  "dependencies": [
+    {
+      "name": "Provedor LLM compativel com OpenAI",
+      "type": "external",
+      "description": "brief, ideias e planos",
+      "status": "pending"
+    },
+    {
+      "name": "Provedor Decisor System One",
+      "type": "external",
+      "description": "indicadores e medicao da dor",
+      "status": "pending"
+    },
+    {
+      "name": "Chromium do sistema",
+      "type": "external",
+      "description": "geracao opcional de PDF",
+      "status": "pending"
+    }
+  ],
+  "accepted_requirements": [
+    "FR-001",
+    "FR-002",
+    "FR-003",
+    "FR-004",
+    "FR-005",
+    "FR-006",
+    "FR-007",
+    "FR-008",
+    "FR-009",
+    "FR-010",
+    "FR-011",
+    "FR-012",
+    "FR-013",
+    "FR-014",
+    "FR-015",
+    "FR-016",
+    "FR-017",
+    "FR-018",
+    "FR-019",
+    "FR-020",
+    "QR-001",
+    "QR-002",
+    "QR-003",
+    "QR-004",
+    "QR-005",
+    "QR-006"
+  ]
+}

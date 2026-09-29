@@ -1,0 +1,6 @@
+[test]
+coverage = true
+coverageThreshold = 0.9
+coverageReporter = ["text", "lcov"]
+coverageSkipTestFiles = true
+coveragePathIgnorePatterns = ["src/index.ts"]

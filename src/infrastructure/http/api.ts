@@ -1,0 +1,161 @@
+/**
+ * Public HTTP API (`/api`). Validated at the edge with Zod; never returns filesystem paths,
+ * provider URLs or credentials.
+ */
+import { Hono } from "hono";
+import { z } from "zod";
+
+import { buildErrorHandler } from "./errors.ts";
+import { resolveStudyConfig } from "../../config/runtime.ts";
+import { ValidationError } from "../../domain/errors.ts";
+import type { Logger } from "../../domain/ports.ts";
+import type { StudyRecord } from "../../domain/types.ts";
+import type { StudyService } from "../../application/study-service.ts";
+
+const StudyInput = z.object({
+  niche: z.string().trim().min(2, "o nicho precisa de pelo menos 2 caracteres"),
+  city: z.string().trim().optional(),
+  monthlyTicket: z.number().int().positive().max(1_000_000).optional(),
+  numIdeas: z.number().int().min(1).max(40).optional(),
+  painMethod: z.enum(["choice", "noul", "escolha"]).optional(),
+  mock: z.boolean().optional(),
+  mockLlm: z.boolean().optional(),
+  mockDecider: z.boolean().optional(),
+  pdf: z.boolean().optional(),
+  concurrency: z.number().int().min(1).max(32).optional(),
+  timeout: z.number().positive().max(600).optional(),
+});
+
+const IdeaInput = z.object({
+  name: z.string().trim().min(1),
+  sector: z.string().trim().optional(),
+  description: z.string().trim().min(1),
+});
+
+const DiagnoseInput = z.object({
+  niche: z.string().trim().min(2),
+  city: z.string().trim().optional(),
+  threshold: z.number().positive().max(3).optional(),
+  ideas: z.array(IdeaInput).min(1).max(50),
+});
+
+const RecalibrateInput = z.object({
+  cutoff: z.number().positive().max(3).optional(),
+  datasets: z.array(z.unknown()).min(1),
+});
+
+function parseOrThrow<T>(schema: z.ZodType<T>, payload: unknown): T {
+  const parsed = schema.safeParse(payload);
+  if (!parsed.success) {
+    throw new ValidationError(
+      `payload invalido: ${parsed.error.issues.map((issue) => `${issue.path.join(".") || "(raiz)"}: ${issue.message}`).join("; ")}`,
+      parsed.error.issues.map((issue) => ({ path: issue.path.join("."), message: issue.message })),
+    );
+  }
+  return parsed.data;
+}
+
+function publicStudy(record: StudyRecord) {
+  return {
+    id: record.id,
+    createdAt: record.createdAt,
+    updatedAt: record.updatedAt,
+    niche: record.niche,
+    city: record.city,
+    monthlyTicket: record.monthlyTicket,
+    numIdeas: record.numIdeas,
+    painMethod: record.painMethod,
+    mock: record.mock,
+    brief: record.brief,
+    state: record.progress.state,
+    step: record.progress.step,
+    error: record.progress.error,
+    evaluations: record.evaluations,
+    summary: record.summary,
+  };
+}
+
+export interface ApiDeps {
+  service: StudyService;
+  /** Providers currently configured; reported as booleans only. */
+  providerStatus: () => { llm: boolean; decider: boolean; mockByDefault: boolean };
+  logger?: Logger;
+}
+
+const QUIET_LOGGER: Logger = { debug: () => {}, info: () => {}, warn: () => {}, error: () => {} };
+
+export function buildApiApp(deps: ApiDeps): Hono {
+  const api = new Hono();
+  api.onError(buildErrorHandler(deps.logger ?? QUIET_LOGGER));
+
+  api.get("/config", (c) => c.json(deps.providerStatus()));
+
+  api.post("/studies", async (c) => {
+    const input = parseOrThrow(StudyInput, await c.req.json());
+    const cfg = resolveStudyConfig(input);
+    const record = await deps.service.create(cfg);
+    deps.service.start(record.id);
+    return c.json(publicStudy(record), 201);
+  });
+
+  api.get("/studies", async (c) => c.json({ studies: await deps.service.list() }));
+
+  api.get("/studies/:id", async (c) => {
+    const record = await deps.service.get(c.req.param("id"));
+    return c.json({ ...publicStudy(record), artifacts: await deps.service.artifactPaths(record.id) });
+  });
+
+  api.post("/studies/:id/run", async (c) => {
+    const record = await deps.service.run(c.req.param("id"));
+    return c.json(publicStudy(record));
+  });
+
+  api.get("/studies/:id/artifacts", async (c) => {
+    const id = c.req.param("id");
+    return c.json({ id, artifacts: await deps.service.artifactPaths(id) });
+  });
+
+  api.get("/studies/:id/artifacts/:file{.+}", async (c) => {
+    const id = c.req.param("id");
+    const relativePath = c.req.param("file");
+    if (!relativePath) throw new ValidationError("informe o caminho do artefato");
+    if (relativePath.endsWith(".pdf")) {
+      const absolute = await deps.service.artifactPath(id, relativePath);
+      return new Response(Bun.file(absolute), {
+        headers: { "Content-Type": "application/pdf" },
+      });
+    }
+    const content = await deps.service.readArtifact(id, relativePath);
+    return c.text(content, 200, { "Content-Type": contentTypeOf(relativePath) });
+  });
+
+  api.post("/diagnose", async (c) => {
+    const input = parseOrThrow(DiagnoseInput, await c.req.json());
+    const { report, exitCode } = await deps.service.diagnose({
+      ideas: input.ideas.map((idea) => ({
+        name: idea.name,
+        sector: idea.sector ?? "",
+        description: idea.description,
+      })),
+      niche: input.niche,
+      city: input.city ?? "",
+      threshold: input.threshold,
+    });
+    return c.json({ ...report, exitCode });
+  });
+
+  api.post("/recalibrate", async (c) => {
+    const input = parseOrThrow(RecalibrateInput, await c.req.json());
+    return c.json(deps.service.recalibrate(input.datasets, input.cutoff));
+  });
+
+  return api;
+}
+
+function contentTypeOf(relativePath: string): string {
+  if (relativePath.endsWith(".md")) return "text/markdown; charset=utf-8";
+  if (relativePath.endsWith(".csv")) return "text/csv; charset=utf-8";
+  if (relativePath.endsWith(".json")) return "application/json; charset=utf-8";
+  if (relativePath.endsWith(".html")) return "text/html; charset=utf-8";
+  return "text/plain; charset=utf-8";
+}

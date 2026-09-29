@@ -1,31 +1,43 @@
 # Segredos e variaveis de ambiente
 .env
 .env.*
-.env*
 .envrc
 .envrc.*
+!.env.example
 
-# Ambientes virtuais
+# Dependencias e build (Bun)
+node_modules/
+dist/
+coverage/
+*.db
+*.db-shm
+*.db-wal
+
+# pwn (runtime do harness)
+.pwn/sandboxes/
+.pwn/metrics.jsonl
+.pwn/RUN-*.jsonl
+.pwn/learnings.json
+.pwn/gate-cache/
+.piwerness
+
+# Ambientes virtuais Python (baseline de referencia)
 .venv/
 venv/
 env/
 ENV/
-
-# Artefatos de execucao e cache Python
 __pycache__/
 *.py[cod]
 *$py.class
 .pytest_cache/
 .mypy_cache/
-**/.cache.json
-*.cache
-*.cache.json
 
 # Saidas de execucao (estudos, coletas e relatorios)
 estudo/
 estudo-*/
 coleta/
 coleta-*/
+/data/
 /estudo-completo.html
 /estudo-completo.pdf
 *.pdf

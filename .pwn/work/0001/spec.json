@@ -1,0 +1,357 @@
+{
+  "work_id": "0001",
+  "title": "Port do goodbizz para Bun",
+  "scenario": "brownfield",
+  "source": ".specs/system.json",
+  "capabilities": [
+    {
+      "id": "CAP-001",
+      "name": "Geracao de estudo de nicho",
+      "description": "transforma uma frase de nicho em estudo completo com ranking, tabelao e planos",
+      "rules": [
+        "BR-001",
+        "BR-002",
+        "BR-010"
+      ],
+      "evidence": "generate_study.py::execute no baseline Python"
+    },
+    {
+      "id": "CAP-002",
+      "name": "Avaliacao probabilistica por ideia",
+      "description": "mede fit, venda, disrupcao, dor, suporte solo, WTP, meta 30 e preco por ideia",
+      "rules": [
+        "BR-003",
+        "BR-004"
+      ],
+      "evidence": "goodbizz/evaluation.py no baseline Python"
+    },
+    {
+      "id": "CAP-003",
+      "name": "Medicao da dor por escolha forcada",
+      "description": "classifica a dor como dinheiro direto, reputacao ou backoffice sem o ima da sonda tecnologia",
+      "rules": [
+        "BR-005"
+      ],
+      "evidence": "goodbizz/pain_choice.py no baseline Python"
+    },
+    {
+      "id": "CAP-004",
+      "name": "Classificacao de dor com limiares",
+      "description": "decide FORTE/FRACA/INDETERMINADO/INSTAVEL com ensemble, variancia e escalonamento",
+      "rules": [
+        "BR-006",
+        "BR-007"
+      ],
+      "evidence": "goodbizz/algorithm.py no baseline Python"
+    },
+    {
+      "id": "CAP-005",
+      "name": "Diagnostico de coerencia das sondas",
+      "description": "detecta sondas contraditorias ou instaveis antes de confiar nos limiares",
+      "rules": [
+        "BR-008"
+      ],
+      "evidence": "diagnose.py no baseline Python"
+    },
+    {
+      "id": "CAP-006",
+      "name": "Recalibracao de limiares",
+      "description": "busca em grade os limiares que zeram falso FORTE em conjunto rotulado",
+      "rules": [
+        "BR-009"
+      ],
+      "evidence": "recalibrate.py no baseline Python"
+    },
+    {
+      "id": "CAP-007",
+      "name": "Redacao de planos com guardrail numerico",
+      "description": "gera prosa executiva usando somente os numeros medidos pelo codigo",
+      "rules": [
+        "BR-011"
+      ],
+      "evidence": "goodbizz/generation.py no baseline Python"
+    },
+    {
+      "id": "CAP-008",
+      "name": "Verificacao estrutural dos documentos",
+      "description": "confere secoes obrigatorias, acentos, alinhamento de tabela e presenca dos numeros medidos",
+      "rules": [
+        "BR-012",
+        "BR-013"
+      ],
+      "evidence": "goodbizz/verification.py no baseline Python"
+    },
+    {
+      "id": "CAP-009",
+      "name": "Relatorios deterministas",
+      "description": "produz indice, tabelao markdown, CSV e dados.json sem chamar LLM",
+      "rules": [
+        "BR-010"
+      ],
+      "evidence": "goodbizz/reports.py no baseline Python"
+    },
+    {
+      "id": "CAP-010",
+      "name": "Renderizacao HTML e PDF",
+      "description": "compila o estudo num documento unico para leitura e impressao",
+      "rules": [
+        "BR-014"
+      ],
+      "evidence": "goodbizz/render.py no baseline Python"
+    },
+    {
+      "id": "CAP-011",
+      "name": "Cache de respostas de API",
+      "description": "evita gastar tokens em reexecucao do mesmo estudo",
+      "rules": [
+        "BR-015"
+      ],
+      "evidence": "generate_study.py::Cache no baseline Python"
+    },
+    {
+      "id": "CAP-012",
+      "name": "CLI unificada",
+      "description": "um unico binario expoe generate, diagnose e recalibrate",
+      "rules": [
+        "BR-016"
+      ],
+      "evidence": "bin/goodbizz no baseline Python"
+    },
+    {
+      "id": "CAP-013",
+      "name": "API HTTP de estudos",
+      "description": "expõe a geracao e a consulta de estudos para integracao",
+      "rules": [
+        "BR-017",
+        "BR-021"
+      ],
+      "evidence": "novo servico do port (Hono)"
+    },
+    {
+      "id": "CAP-014",
+      "name": "Interface web",
+      "description": "permite criar e ler estudos pelo navegador sem instalar nada",
+      "rules": [
+        "BR-018",
+        "BR-022"
+      ],
+      "evidence": "novo servico do port (hono/jsx)"
+    },
+    {
+      "id": "CAP-015",
+      "name": "Persistencia de estudos",
+      "description": "guarda estudos, ideias e avaliacoes para consulta posterior",
+      "rules": [
+        "BR-019"
+      ],
+      "evidence": "novo servico do port (drizzle-orm/bun-sqlite)"
+    },
+    {
+      "id": "CAP-016",
+      "name": "Configuracao por ambiente e segredos",
+      "description": "mantem endpoints e chaves fora do codigo com validacao no startup",
+      "rules": [
+        "BR-020"
+      ],
+      "evidence": "goodbizz/config.py no baseline Python, renomeado para o contrato LLM_/DECISION_"
+    },
+    {
+      "id": "CAP-017",
+      "name": "Empacotamento Docker e imagem",
+      "description": "entrega a aplicacao como imagem executavel com pipeline de build",
+      "rules": [
+        "BR-023"
+      ],
+      "evidence": "novo empacotamento do port"
+    }
+  ],
+  "rules": [
+    {
+      "id": "BR-001",
+      "statement": "A geracao de estudo executa as etapas na ordem brief, ideias, avaliacao, dor, documentos, relatorios e PDF opcional.",
+      "coverage": [
+        "CAP-001"
+      ],
+      "evidence": "generate_study.py::execute"
+    },
+    {
+      "id": "BR-002",
+      "statement": "Configuracao invalida deve abortar antes de qualquer chamada externa.",
+      "coverage": [
+        "CAP-001",
+        "CAP-016"
+      ],
+      "evidence": "Config.__post_init__ levanta ValueError"
+    },
+    {
+      "id": "BR-003",
+      "statement": "O indice de acao e a media aritmetica entre fit e venda, arredondada a 3 casas.",
+      "coverage": [
+        "CAP-002"
+      ],
+      "evidence": "evaluation.action_index"
+    },
+    {
+      "id": "BR-004",
+      "statement": "Tier A exige indice >= 1.84, Tier B >= 1.60 e Tier C abaixo disso.",
+      "coverage": [
+        "CAP-002"
+      ],
+      "evidence": "evaluation.tier"
+    },
+    {
+      "id": "BR-005",
+      "statement": "A natureza da dor usa escolha forcada de 3 consequencias sem a opcao tecnologia.",
+      "coverage": [
+        "CAP-003"
+      ],
+      "evidence": "pain_choice.OPTIONS"
+    },
+    {
+      "id": "BR-006",
+      "statement": "O ensemble exige no minimo 3 parafrases por sonda para produzir veredito.",
+      "coverage": [
+        "CAP-004"
+      ],
+      "evidence": "algorithm.MIN_PARAPHRASES"
+    },
+    {
+      "id": "BR-007",
+      "statement": "Desvio entre parafrases acima de 0.15 classifica INSTAVEL e escala para revisao humana.",
+      "coverage": [
+        "CAP-004"
+      ],
+      "evidence": "algorithm.UNSTABLE_THRESHOLD"
+    },
+    {
+      "id": "BR-008",
+      "statement": "Soma afirmacao+negacao acima do limiar informa sonda contraditoria no diagnostico.",
+      "coverage": [
+        "CAP-005"
+      ],
+      "evidence": "diagnose.py --threshold (1.20 por padrao)"
+    },
+    {
+      "id": "BR-009",
+      "statement": "A recalibracao prioriza zero falso FORTE, depois acerto e depois menos escalonamento.",
+      "coverage": [
+        "CAP-006"
+      ],
+      "evidence": "recalibrate.py rows.sort"
+    },
+    {
+      "id": "BR-010",
+      "statement": "As pastas de ideia sao numeradas pela ordem do ranking, com slug deterministico do nome.",
+      "coverage": [
+        "CAP-001",
+        "CAP-009"
+      ],
+      "evidence": "reports.folder"
+    },
+    {
+      "id": "BR-011",
+      "statement": "O LLM so pode usar numeros do bloco de dados medidos; qualquer outro dado vira [INFERENCE].",
+      "coverage": [
+        "CAP-007"
+      ],
+      "evidence": "generation.DOC_SYSTEM_PROMPT"
+    },
+    {
+      "id": "BR-012",
+      "statement": "Os 10 titulos de secao obrigatorios devem estar presentes no documento gerado.",
+      "coverage": [
+        "CAP-008"
+      ],
+      "evidence": "verification.SECTIONS"
+    },
+    {
+      "id": "BR-013",
+      "statement": "Todo texto gerado deve ser normalizado sem acentos.",
+      "coverage": [
+        "CAP-008"
+      ],
+      "evidence": "verification.strip_accents e reports.normalize_output"
+    },
+    {
+      "id": "BR-014",
+      "statement": "Links no HTML sanitizado nao podem usar esquemas javascript, data ou vbscript.",
+      "coverage": [
+        "CAP-010"
+      ],
+      "evidence": "render._safe_link"
+    },
+    {
+      "id": "BR-015",
+      "statement": "A chave de cache e o hash dos parametros da chamada, por etapa.",
+      "coverage": [
+        "CAP-011"
+      ],
+      "evidence": "generate_study.py::Cache.key"
+    },
+    {
+      "id": "BR-016",
+      "statement": "Subcomando desconhecido na CLI retorna exit code 2 e imprime a ajuda.",
+      "coverage": [
+        "CAP-012"
+      ],
+      "evidence": "bin/goodbizz case *)"
+    },
+    {
+      "id": "BR-017",
+      "statement": "Payload de API invalido retorna 422 com o detalhe da validacao Zod.",
+      "coverage": [
+        "CAP-013"
+      ],
+      "evidence": "novo handler de erro do port"
+    },
+    {
+      "id": "BR-018",
+      "statement": "Toda rota de UI que muda estado exige mesma origem e token CSRF em tempo constante.",
+      "coverage": [
+        "CAP-014"
+      ],
+      "evidence": "infrastructure/http/security.ts do port"
+    },
+    {
+      "id": "BR-019",
+      "statement": "Nenhum acesso a dados escreve SQL cru; tudo passa por Drizzle.",
+      "coverage": [
+        "CAP-015"
+      ],
+      "evidence": "regra da stack (bun.md)"
+    },
+    {
+      "id": "BR-020",
+      "statement": "Segredos vem apenas do ambiente; o app falha no startup se uma chave obrigatoria faltar.",
+      "coverage": [
+        "CAP-016"
+      ],
+      "evidence": "src/config/env.ts do port"
+    },
+    {
+      "id": "BR-021",
+      "statement": "Rotas de API publica nao entram no filtro CSRF e a UI nao compartilha o mesmo sub-app.",
+      "coverage": [
+        "CAP-013",
+        "CAP-014"
+      ],
+      "evidence": "separacao de sub-apps do port"
+    },
+    {
+      "id": "BR-022",
+      "statement": "Cookie de sessao usa httpOnly, sameSite Lax e secure em producao.",
+      "coverage": [
+        "CAP-014"
+      ],
+      "evidence": "security.ts do port"
+    },
+    {
+      "id": "BR-023",
+      "statement": "Liveness nao depende do banco; readiness executa SELECT 1 no SQLite.",
+      "coverage": [
+        "CAP-017"
+      ],
+      "evidence": "infrastructure/http/health.ts do port"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "work_id": "0001",
+  "title": "Port do goodbizz para Bun: CLI, API, Web e imagem Docker",
+  "grilling_depth": "deep",
+  "problem": "O goodbizz existe apenas como biblioteca Python com tres scripts de CLI: nao ha servico, persistencia nem interface web, o que impede uso por HTTP e por navegador.",
+  "actors": [
+    "ACT-001",
+    "ACT-002",
+    "ACT-003",
+    "ACT-004",
+    "ACT-005"
+  ],
+  "objectives": [
+    "Reescrever a metodologia do decisor System One em TypeScript sem perder calibracao nem formatos de artefato",
+    "Expor a geracao de estudos como servico HTTP com persistencia SQLite",
+    "Entregar interface web que consome a propria API",
+    "Empacotar a aplicacao como imagem Docker publicavel por workflow do GitHub Actions"
+  ],
+  "constraints": [
+    "Nenhuma inferencia local de modelo: LLM e decisor permanecem endpoints HTTP externos",
+    "O esquema de chaves do dados.json precisa continuar consumivel pelo recalibrate",
+    "As variaveis de ambiente canonicas passam a ser LLM_API_URL, LLM_API_KEY, DECISION_API_URL e DECISION_API_KEY",
+    "A stack alvo e a de bun.md: Bun 1.4, Hono, Drizzle sobre bun:sqlite, Zod, @t3-oss/env-core e pino",
+    "Manter a suite de testes verde e dentro da write_allow do contrato V4"
+  ],
+  "baseline": {
+    "runtime": "Python 3.10+ com biblioteca padrao",
+    "entrypoints": [
+      "generate_study.py",
+      "diagnose.py",
+      "recalibrate.py",
+      "bin/goodbizz"
+    ],
+    "modules": [
+      "goodbizz/config.py",
+      "goodbizz/llm.py",
+      "goodbizz/decider.py",
+      "goodbizz/algorithm.py",
+      "goodbizz/pain_choice.py",
+      "goodbizz/evaluation.py",
+      "goodbizz/generation.py",
+      "goodbizz/reports.py",
+      "goodbizz/render.py",
+      "goodbizz/verification.py"
+    ],
+    "tests": "sem suite automatizada no baseline; apenas autoteste embutido em goodbizz/algorithm.py"
+  }
+}

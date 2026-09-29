@@ -1,0 +1,96 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.3",
+  "work_id": "0001",
+  "title": "Configuracao de ambiente validada",
+  "risk": {
+    "level": "L3",
+    "reasons": [
+      "Task 1.3 (Configuracao de ambiente validada) classificada como L3 pelo plano do port"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.3-01",
+        "given": "Dado o estado do repositorio antes de Configuracao de ambiente validada",
+        "when": "Quando a task 1.3 executar: As chaves LLM_API_URL, LLM_API_KEY, DECISION_API_URL, DECISION_API_KEY, PORT, DATABASE_URL, LOG_LEVEL, APP_ENV e SESSION_SECRET sao validadas no startup e a CLI pode sobrepor o ambiente",
+        "then": "Então chave obrigatoria ausente aborta com mensagem que nao expoe o segredo"
+      },
+      {
+        "id": "SCENARIO-1.3-02",
+        "given": "Dado que a mudanca esta restrita a config",
+        "when": "Quando o Diff Guard comparar os arquivos modificados",
+        "then": "Então nenhum arquivo fora da write_allow foi tocado"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/config/env.ts",
+      "src/config/runtime.ts",
+      "tests/env.test.ts"
+    ],
+    "affected_components": [
+      "config"
+    ],
+    "strategy": "tdd-strict"
+  },
+  "architecture_contract": {
+    "invariants": [
+      "src/domain nao importa src/infrastructure nem src/application",
+      "Nenhum numero de mercado e inventado: os numeros vem do bloco de dados medidos",
+      "Segredos nunca sao logados nem serializados em resposta"
+    ],
+    "patterns": [
+      "clean architecture",
+      "ports and adapters",
+      "injeção manual de dependencia"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun test tests/env.test.ts"
+    ],
+    "required_evidence": [
+      "red-output.txt",
+      "green-output.txt"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/config/env.ts",
+      "src/config/runtime.ts",
+      "tests/env.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      ".pwn/**",
+      ".specs/**",
+      ".prompts/**",
+      ".sources/**",
+      ".env",
+      ".env.*",
+      "node_modules/**"
+    ],
+    "out_of_scope": [
+      "Mudanca fora dos componentes declarados",
+      "Alteracao de .specs, .prompts ou .pwn"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 120000,
+    "max_cost_usd": 1.5,
+    "max_duration_minutes": 60,
+    "max_agent_attempts": 3,
+    "max_llm_calls": 40,
+    "max_tool_calls": 120,
+    "max_shell_executions": 30
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

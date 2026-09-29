@@ -1,0 +1,172 @@
+/**
+ * Domain types. Pure data and enums — no framework, no I/O.
+ *
+ * The artifact-facing field names mirror the Python baseline so that the files written to disk
+ * (markdown, csv, dados.json) keep the same key scheme and remain consumable by `recalibrate`.
+ */
+
+export interface Idea {
+  name: string;
+  sector: string;
+  description: string;
+}
+
+export type StrongProbe = "dinheiro" | "reputacao";
+export type InternalProbe = "processo" | "tecnologia";
+export type ProbeKey = StrongProbe | InternalProbe;
+export type PainLabel = "FORTE" | "FRACA" | "INDETERMINADO" | "INSTAVEL";
+export type Tier = "A" | "B" | "C";
+export type ScoreKey = "fit" | "venda" | "disrupcao" | "preco";
+export type ChoiceKey = "dinheiro_direto" | "reputacao" | "backoffice";
+export type PainMethod = "choice" | "noul";
+
+/** Question envelope sent to a System One decider. */
+export type Question =
+  | { type: "noul"; instructions: string }
+  | { type: "score"; instructions: string; criteria: string[] }
+  | { type: "choice"; instructions: string; criteria: Record<string, string> };
+
+export type QuestionSet = Record<string, Question>;
+export type DeciderAnswer = Record<string, unknown>;
+export type DeciderAnswers = Record<string, DeciderAnswer>;
+
+export interface PainResult {
+  label: PainLabel;
+  painScore: number;
+  internalScore: number;
+  margin: number;
+  deviation: number;
+  escalate: boolean;
+  reason: string;
+  /** Mean per probe across paraphrases. */
+  detail: Record<string, number>;
+  /** Raw probability per paraphrase, then per probe. */
+  byParaphrase: Record<string, Record<string, number>>;
+}
+
+export interface Indicators {
+  fit: number;
+  fitConf: number;
+  sale: number;
+  saleConf: number;
+  disruption: number;
+  disruptionConf: number;
+  pain: string;
+  painProbs: Record<string, number>;
+  painConf: number;
+  solo: number;
+}
+
+export interface BusinessBlock {
+  wtp: number;
+  meta30: number;
+  price: number;
+  priceConf: number;
+}
+
+export interface PainBlock {
+  label: string;
+  painScore: number;
+  internalScore: number;
+  margin: number;
+  deviation: number;
+  probes: Record<string, number>;
+  byParaphrase: Record<string, Record<string, number>>;
+}
+
+export interface IdeaEvaluation {
+  name: string;
+  sector: string;
+  description: string;
+  indicators: Indicators;
+  business: BusinessBlock;
+  algorithm: PainBlock;
+  index: number;
+  tier: Tier;
+}
+
+export interface PainGroups {
+  forte: string[];
+  mista: string[];
+  fraca: string[];
+}
+
+export interface StudyMeans {
+  fit: number;
+  sale: number;
+  disruption: number;
+  solo: number;
+  wtp: number;
+  meta30: number;
+}
+
+export interface StudySummary {
+  ordered: IdeaEvaluation[];
+  painGroups: PainGroups;
+  means: StudyMeans;
+  tiers: Record<Tier, string[]>;
+  attack: string[];
+  review: string[];
+}
+
+export interface StudyConfig {
+  niche: string;
+  city: string;
+  monthlyTicket: number;
+  numIdeas: number;
+  outputDir: string;
+  ideasFile: string;
+  evaluateOnly: boolean;
+  painMethod: PainMethod;
+  mock: boolean;
+  mockLlm: boolean;
+  mockDecider: boolean;
+  pdf: boolean;
+  paraphrases: number;
+  concurrency: number;
+  timeout: number;
+  llmBaseUrl: string;
+  llmModel: string;
+  llmKey: string;
+  deciderUrl: string;
+  deciderModel: string;
+  deciderKey: string;
+}
+
+export type StudyState = "pending" | "running" | "done" | "failed";
+
+export interface StudyProgress {
+  state: StudyState;
+  step: string;
+  error: string | null;
+}
+
+export interface StudyRecord {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  niche: string;
+  city: string;
+  monthlyTicket: number;
+  numIdeas: number;
+  painMethod: PainMethod;
+  mock: boolean;
+  artifactDir: string;
+  brief: string;
+  progress: StudyProgress;
+  evaluations: IdeaEvaluation[];
+  summary: StudySummary | null;
+}
+
+export interface StudyListItem {
+  id: string;
+  createdAt: string;
+  niche: string;
+  city: string;
+  monthlyTicket: number;
+  state: StudyState;
+  step: string;
+  ideaCount: number;
+  topIdea: string | null;
+  topIndex: number | null;
+}

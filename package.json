@@ -1,0 +1,42 @@
+{
+  "name": "goodbizz",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Niche business study generator: CLI, HTTP API and web UI over a System One decider",
+  "license": "MIT",
+  "bin": {
+    "goodbizz": "./bin/goodbizz"
+  },
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun --watch src/index.ts",
+    "cli": "bun run src/cli.ts",
+    "build": "bun build src/index.ts --outdir dist --target bun",
+    "check": "bunx tsc --noEmit",
+    "test": "bun test",
+    "test:coverage": "bun test --coverage",
+    "lint": "bunx eslint .",
+    "format": "bunx prettier --write .",
+    "format:check": "bunx prettier --check .",
+    "bench": "bun run benches/render.bench.ts",
+    "db:generate": "bunx drizzle-kit generate",
+    "db:migrate": "bun run src/infrastructure/db.ts migrate"
+  },
+  "dependencies": {
+    "@t3-oss/env-core": "^0.13.8",
+    "drizzle-orm": "^0.44.2",
+    "hono": "^4.6.14",
+    "pino": "^9.5.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.14",
+    "drizzle-kit": "^0.31.11",
+    "eslint": "^9.17.0",
+    "prettier": "^3.4.2",
+    "tinybench": "^2.9.0",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.1"
+  }
+}

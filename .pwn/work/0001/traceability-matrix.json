@@ -1,0 +1,295 @@
+{
+  "work_id": "0001",
+  "matrix": [
+    {
+      "origin": "DISC-001",
+      "requirement_id": "QR-006",
+      "decision_id": "DEC-002",
+      "spec_section": "CAP-017",
+      "task_id": "1.1",
+      "contract_id": "CTR-001",
+      "evidence_id": "EVD-001",
+      "status": "planned"
+    },
+    {
+      "origin": "DISC-001",
+      "requirement_id": "QR-005",
+      "decision_id": "DEC-002",
+      "spec_section": "CAP-001",
+      "task_id": "1.2",
+      "contract_id": "CTR-002",
+      "evidence_id": "EVD-002",
+      "status": "planned"
+    },
+    {
+      "origin": "DISC-001",
+      "requirement_id": "QR-001",
+      "decision_id": "DEC-002",
+      "spec_section": "CAP-016",
+      "task_id": "1.3",
+      "contract_id": "CTR-003",
+      "evidence_id": "EVD-003",
+      "status": "planned"
+    },
+    {
+      "origin": "DISC-001",
+      "requirement_id": "QR-002",
+      "decision_id": "DEC-002",
+      "spec_section": "CAP-016",
+      "task_id": "1.4",
+      "contract_id": "CTR-004",
+      "evidence_id": "EVD-004",
+      "status": "planned"
+    },
+    {
+      "origin": "DISC-001",
+      "requirement_id": "EC-002",
+      "decision_id": "DEC-001",
+      "spec_section": "CAP-007",
+      "task_id": "1.5",
+      "contract_id": "CTR-005",
+      "evidence_id": "EVD-005",
+      "status": "planned"
+    },
+    {
+      "origin": "DISC-001",
+      "requirement_id": "FR-002",
+      "decision_id": "DEC-001",
+      "spec_section": "CAP-001",
+      "task_id": "1.6",
+      "contract_id": "CTR-006",
+      "evidence_id": "EVD-006",
+      "status": "planned"
+    },
+    {
+      "origin": "DISC-001",
+      "requirement_id": "FR-003",
+      "decision_id": "DEC-001",
+      "spec_section": "CAP-002",
+      "task_id": "1.7",
+      "contract_id": "CTR-007",
+      "evidence_id": "EVD-007",
+      "status": "planned"
+    },
+    {
+      "origin": "DISC-001",
+      "requirement_id": "FR-017",
+      "decision_id": "DEC-001",
+      "spec_section": "CAP-004",
+      "task_id": "1.8",
+      "contract_id": "CTR-008",
+      "evidence_id": "EVD-008",
+      "status": "planned"
+    },
+    {
+      "origin": "DISC-001",
+      "requirement_id": "FR-016",
+      "decision_id": "DEC-001",
+      "spec_section": "CAP-003",
+      "task_id": "1.9",
+      "contract_id": "CTR-009",
+      "evidence_id": "EVD-009",
+      "status": "planned"
+    },
+    {
+      "origin": "DISC-001",
+      "requirement_id": "FR-019",
+      "decision_id": "DEC-001",
+      "spec_section": "CAP-002",
+      "task_id": "1.10",
+      "contract_id": "CTR-010",
+      "evidence_id": "EVD-010",
+      "status": "planned"
+    },
+    {
+      "origin": "DISC-001",
+      "requirement_id": "FR-013",
+      "decision_id": "DEC-001",
+      "spec_section": "CAP-007",
+      "task_id": "1.11",
+      "contract_id": "CTR-011",
+      "evidence_id": "EVD-011",
+      "status": "planned"
+    },
+    {
+      "origin": "DISC-001",
+      "requirement_id": "FR-014",
+      "decision_id": "DEC-001",
+      "spec_section": "CAP-009",
+      "task_id": "1.12",
+      "contract_id": "CTR-012",
+      "evidence_id": "EVD-012",
+      "status": "planned"
+    },
+    {
+      "origin": "DISC-001",
+      "requirement_id": "FR-020",
+      "decision_id": "DEC-001",
+      "spec_section": "CAP-001",
+      "task_id": "1.13",
+      "contract_id": "CTR-013",
+      "evidence_id": "EVD-013",
+      "status": "planned"
+    },
+    {
+      "origin": "DISC-001",
+      "requirement_id": "FR-015",
+      "decision_id": "DEC-001",
+      "spec_section": "CAP-010",
+      "task_id": "1.14",
+      "contract_id": "CTR-014",
+      "evidence_id": "EVD-014",
+      "status": "planned"
+    },
+    {
+      "origin": "DISC-001",
+      "requirement_id": "EC-005",
+      "decision_id": "DEC-001",
+      "spec_section": "CAP-010",
+      "task_id": "1.15",
+      "contract_id": "CTR-015",
+      "evidence_id": "EVD-015",
+      "status": "planned"
+    },
+    {
+      "origin": "DISC-001",
+      "requirement_id": "FR-008",
+      "decision_id": "DEC-001",
+      "spec_section": "CAP-008",
+      "task_id": "1.16",
+      "contract_id": "CTR-016",
+      "evidence_id": "EVD-016",
+      "status": "planned"
+    },
+    {
+      "origin": "DISC-001",
+      "requirement_id": "EC-003",
+      "decision_id": "DEC-001",
+      "spec_section": "CAP-008",
+      "task_id": "1.17",
+      "contract_id": "CTR-017",
+      "evidence_id": "EVD-017",
+      "status": "planned"
+    },
+    {
+      "origin": "DISC-001",
+      "requirement_id": "FR-009",
+      "decision_id": "DEC-001",
+      "spec_section": "CAP-015",
+      "task_id": "1.18",
+      "contract_id": "CTR-018",
+      "evidence_id": "EVD-018",
+      "status": "planned"
+    },
+    {
+      "origin": "DISC-001",
+      "requirement_id": "FR-010",
+      "decision_id": "DEC-001",
+      "spec_section": "CAP-011",
+      "task_id": "1.19",
+      "contract_id": "CTR-019",
+      "evidence_id": "EVD-019",
+      "status": "planned"
+    },
+    {
+      "origin": "DISC-001",
+      "requirement_id": "FR-018",
+      "decision_id": "DEC-001",
+      "spec_section": "CAP-001",
+      "task_id": "1.20",
+      "contract_id": "CTR-020",
+      "evidence_id": "EVD-020",
+      "status": "planned"
+    },
+    {
+      "origin": "DISC-001",
+      "requirement_id": "FR-006",
+      "decision_id": "DEC-001",
+      "spec_section": "CAP-005",
+      "task_id": "1.21",
+      "contract_id": "CTR-021",
+      "evidence_id": "EVD-021",
+      "status": "planned"
+    },
+    {
+      "origin": "DISC-001",
+      "requirement_id": "FR-007",
+      "decision_id": "DEC-001",
+      "spec_section": "CAP-006",
+      "task_id": "1.22",
+      "contract_id": "CTR-022",
+      "evidence_id": "EVD-022",
+      "status": "planned"
+    },
+    {
+      "origin": "DISC-001",
+      "requirement_id": "FR-004",
+      "decision_id": "DEC-001",
+      "spec_section": "CAP-013",
+      "task_id": "1.23",
+      "contract_id": "CTR-023",
+      "evidence_id": "EVD-023",
+      "status": "planned"
+    },
+    {
+      "origin": "DISC-001",
+      "requirement_id": "FR-005",
+      "decision_id": "DEC-001",
+      "spec_section": "CAP-014",
+      "task_id": "1.24",
+      "contract_id": "CTR-024",
+      "evidence_id": "EVD-024",
+      "status": "planned"
+    },
+    {
+      "origin": "DISC-001",
+      "requirement_id": "QR-003",
+      "decision_id": "DEC-002",
+      "spec_section": "CAP-014",
+      "task_id": "1.25",
+      "contract_id": "CTR-025",
+      "evidence_id": "EVD-025",
+      "status": "planned"
+    },
+    {
+      "origin": "DISC-001",
+      "requirement_id": "FR-011",
+      "decision_id": "DEC-001",
+      "spec_section": "CAP-017",
+      "task_id": "1.26",
+      "contract_id": "CTR-026",
+      "evidence_id": "EVD-026",
+      "status": "planned"
+    },
+    {
+      "origin": "DISC-001",
+      "requirement_id": "FR-012",
+      "decision_id": "DEC-001",
+      "spec_section": "CAP-017",
+      "task_id": "1.27",
+      "contract_id": "CTR-027",
+      "evidence_id": "EVD-027",
+      "status": "planned"
+    },
+    {
+      "origin": "DISC-001",
+      "requirement_id": "FR-001",
+      "decision_id": "DEC-001",
+      "spec_section": "CAP-012",
+      "task_id": "1.28",
+      "contract_id": "CTR-028",
+      "evidence_id": "EVD-028",
+      "status": "planned"
+    },
+    {
+      "origin": "DISC-001",
+      "requirement_id": "SC-001",
+      "decision_id": "DEC-001",
+      "spec_section": "CAP-001",
+      "task_id": "1.29",
+      "contract_id": "CTR-029",
+      "evidence_id": "EVD-029",
+      "status": "planned"
+    }
+  ]
+}

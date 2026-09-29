@@ -1,0 +1,228 @@
+/**
+ * Study service: the application facade shared by the CLI, the HTTP API and the web UI.
+ *
+ * Owns the lifecycle of a study (create -> run -> artifacts) and exposes the diagnosis and
+ * recalibration use cases. Nothing here talks HTTP or SQL directly: it depends on ports.
+ */
+import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
+import { join, relative, resolve, sep } from "node:path";
+
+import { diagnoseProbes, diagnoseExitCode, type DiagnoseReport } from "./diagnose.ts";
+import { generateStudy } from "./generate-study.ts";
+import { htmlToPdf } from "./pdf.ts";
+import { recalibrate, type RecalibrateReport } from "./recalibrate.ts";
+import { scrub } from "../config/redact.ts";
+import { resolveStudyConfig, studyContext } from "../config/runtime.ts";
+import { NotFoundError } from "../domain/errors.ts";
+import type { ArtifactFile, DeciderClient, LlmClient, Logger, StudyRepository } from "../domain/ports.ts";
+import type { Idea, StudyConfig, StudyListItem, StudyRecord } from "../domain/types.ts";
+import type { StudyCache } from "./cache.ts";
+
+export interface StudyServiceOptions {
+  repo: StudyRepository;
+  cache: StudyCache;
+  llm: LlmClient;
+  decider: DeciderClient;
+  logger: Logger;
+  /** Root directory that holds one subdirectory per study. */
+  artifactsRoot: string;
+  pdf?: boolean;
+  concurrency?: number;
+  paraphrases?: number;
+  timeout?: number;
+}
+
+export interface DiagnoseInput {
+  ideas: readonly Idea[];
+  niche: string;
+  city?: string;
+  threshold?: number;
+}
+
+export class StudyService {
+  /** One in-flight run per study: a concurrent request awaits the same execution. */
+  private readonly inFlight = new Map<string, Promise<StudyRecord>>();
+
+  constructor(private readonly options: StudyServiceOptions) {}
+
+  /** Persist a pending study. The caller decides when to run it. */
+  async create(cfg: StudyConfig): Promise<StudyRecord> {
+    const id = Bun.randomUUIDv7();
+    const now = new Date().toISOString();
+    const artifactDir = join(this.options.artifactsRoot, id);
+    mkdirSync(artifactDir, { recursive: true });
+    const record: StudyRecord = {
+      id,
+      createdAt: now,
+      updatedAt: now,
+      niche: cfg.niche,
+      city: cfg.city,
+      monthlyTicket: cfg.monthlyTicket,
+      numIdeas: cfg.numIdeas,
+      painMethod: cfg.painMethod,
+      mock: cfg.mock,
+      artifactDir,
+      brief: "",
+      progress: { state: "pending", step: "na fila", error: null },
+      evaluations: [],
+      summary: null,
+    };
+    await this.options.repo.save(record);
+    this.options.logger.info("study created", { id, niche: cfg.niche });
+    return record;
+  }
+
+  /** Start the pipeline without awaiting it; failures land in the persisted progress. */
+  start(id: string): void {
+    void this.run(id).catch((error: unknown) => {
+      this.options.logger.error("study run failed", { id, error: scrub(String(error)) });
+    });
+  }
+
+  /** Execute the pipeline for an existing study; concurrent callers share the same execution. */
+  async run(id: string): Promise<StudyRecord> {
+    const existing = this.inFlight.get(id);
+    if (existing) return existing;
+    const execution = this.executeRun(id).finally(() => {
+      this.inFlight.delete(id);
+    });
+    this.inFlight.set(id, execution);
+    return execution;
+  }
+
+  private async executeRun(id: string): Promise<StudyRecord> {
+    const record = await this.options.repo.get(id);
+    if (!record) throw new NotFoundError(`study ${id} not found`);
+
+    const setProgress = async (
+      state: StudyRecord["progress"]["state"],
+      step: string,
+      error: string | null,
+    ) => {
+      await this.options.repo.update(id, { progress: { state, step, error } });
+    };
+
+    await setProgress("running", "iniciando", null);
+    try {
+      const cfg = resolveStudyConfig({
+        niche: record.niche,
+        city: record.city,
+        monthlyTicket: record.monthlyTicket,
+        numIdeas: record.numIdeas,
+        painMethod: record.painMethod,
+        mock: record.mock,
+        outputDir: record.artifactDir,
+        pdf: this.options.pdf ?? false,
+        concurrency: this.options.concurrency ?? 8,
+        paraphrases: this.options.paraphrases ?? 3,
+        timeout: this.options.timeout ?? 60,
+      });
+
+      const result = await generateStudy(cfg, {
+        llm: this.options.llm,
+        decider: this.options.decider,
+        cache: this.options.cache,
+        logger: this.options.logger,
+        onProgress: (step) => {
+          void setProgress("running", step, null);
+        },
+      });
+
+      this.writeFiles(record.artifactDir, result.files);
+
+      if (cfg.pdf) {
+        const htmlPath = join(record.artifactDir, "estudo-completo.html");
+        const pdfPath = join(record.artifactDir, "estudo-completo.pdf");
+        const pdfResult = await htmlToPdf(htmlPath, pdfPath);
+        this.options.logger.info("pdf compilation", { id, message: pdfResult.message, ok: pdfResult.ok });
+      }
+
+      await this.options.repo.update(id, { brief: result.brief });
+      await this.options.repo.saveEvaluations(id, result.evaluations, result.summary);
+      await setProgress("done", "concluido", null);
+
+      const updated = await this.options.repo.get(id);
+      if (!updated) throw new NotFoundError(`study ${id} disappeared during the run`);
+      return updated;
+    } catch (error) {
+      const message = scrub(error instanceof Error ? error.message : String(error));
+      await setProgress("failed", "erro", message);
+      throw error;
+    }
+  }
+
+  async list(): Promise<StudyListItem[]> {
+    return this.options.repo.list();
+  }
+
+  async get(id: string): Promise<StudyRecord> {
+    const record = await this.options.repo.get(id);
+    if (!record) throw new NotFoundError(`study ${id} not found`);
+    return record;
+  }
+
+  /** Relative paths of every artifact already written for the study. */
+  async artifactPaths(id: string): Promise<string[]> {
+    const record = await this.get(id);
+    return this.listFiles(record.artifactDir);
+  }
+
+  async readArtifact(id: string, relativePath: string): Promise<string> {
+    const target = await this.artifactPath(id, relativePath);
+    if (!existsSync(target) || !statSync(target).isFile()) {
+      throw new NotFoundError(`artifact ${relativePath} not found for study ${id}`);
+    }
+    return readFileSync(target, "utf8");
+  }
+
+  /** Absolute path of an artifact, validated against directory traversal. */
+  async artifactPath(id: string, relativePath: string): Promise<string> {
+    const record = await this.get(id);
+    return this.safePath(record.artifactDir, relativePath);
+  }
+
+  async diagnose(input: DiagnoseInput): Promise<{ report: DiagnoseReport; exitCode: number }> {
+    const report = await diagnoseProbes(
+      input.ideas,
+      this.options.decider,
+      studyContext({ niche: input.niche, city: input.city ?? "" }),
+      input.threshold,
+    );
+    return { report, exitCode: diagnoseExitCode(report) };
+  }
+
+  recalibrate(payloads: readonly unknown[], cutoff?: number): RecalibrateReport {
+    return recalibrate(payloads, cutoff);
+  }
+
+  private listFiles(root: string, base = root): string[] {
+    if (!existsSync(root)) return [];
+    const files: string[] = [];
+    for (const entry of readdirSync(root).sort()) {
+      const path = join(root, entry);
+      if (statSync(path).isDirectory()) files.push(...this.listFiles(path, base));
+      else files.push(relative(base, path).split(sep).join("/"));
+    }
+    return files;
+  }
+
+  private writeFiles(root: string, files: readonly ArtifactFile[]): void {
+    for (const file of files) {
+      const target = this.safePath(root, file.path);
+      mkdirSync(resolve(target, ".."), { recursive: true });
+      if (typeof file.content === "string") writeFileSync(target, file.content, "utf8");
+      else writeFileSync(target, file.content);
+    }
+  }
+
+  private safePath(root: string, relativePath: string): string {
+    const rootPath = resolve(root);
+    const target = resolve(rootPath, relativePath);
+    if (target !== rootPath && !target.startsWith(rootPath + sep)) {
+      // A path that escapes the study directory is a client error, but reporting "not found" keeps
+      // the response uniform and never confirms what exists outside the root.
+      throw new NotFoundError(`artifact ${relativePath} not found`);
+    }
+    return target;
+  }
+}

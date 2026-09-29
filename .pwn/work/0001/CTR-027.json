@@ -1,0 +1,96 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.27",
+  "work_id": "0001",
+  "title": "Workflow de imagem no GitHub Actions",
+  "risk": {
+    "level": "L3",
+    "reasons": [
+      "Task 1.27 (Workflow de imagem no GitHub Actions) classificada como L3 pelo plano do port"
+    ]
+  },
+  "validation_strategy": "regression-guarded",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.27-01",
+        "given": "Dado o estado do repositorio antes de Workflow de imagem no GitHub Actions",
+        "when": "Quando a task 1.27 executar: O workflow cobre qualidade, teste, seguranca e build e constroi e publica a imagem em push para a branch principal e em tags",
+        "then": "Então os workflows declaram os jobs exigidos e o push para o registry"
+      },
+      {
+        "id": "SCENARIO-1.27-02",
+        "given": "Dado que a mudanca esta restrita a ops",
+        "when": "Quando o Diff Guard comparar os arquivos modificados",
+        "then": "Então nenhum arquivo fora da write_allow foi tocado"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      ".github/workflows/ci.yml",
+      ".github/workflows/image.yml",
+      "tests/workflows.test.ts"
+    ],
+    "affected_components": [
+      "ops"
+    ],
+    "strategy": "regression-guarded"
+  },
+  "architecture_contract": {
+    "invariants": [
+      "src/domain nao importa src/infrastructure nem src/application",
+      "Nenhum numero de mercado e inventado: os numeros vem do bloco de dados medidos",
+      "Segredos nunca sao logados nem serializados em resposta"
+    ],
+    "patterns": [
+      "clean architecture",
+      "ports and adapters",
+      "injeção manual de dependencia"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun test tests/workflows.test.ts"
+    ],
+    "required_evidence": [
+      "red-output.txt",
+      "green-output.txt"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      ".github/workflows/ci.yml",
+      ".github/workflows/image.yml",
+      "tests/workflows.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      ".pwn/**",
+      ".specs/**",
+      ".prompts/**",
+      ".sources/**",
+      ".env",
+      ".env.*",
+      "node_modules/**"
+    ],
+    "out_of_scope": [
+      "Mudanca fora dos componentes declarados",
+      "Alteracao de .specs, .prompts ou .pwn"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 120000,
+    "max_cost_usd": 1.5,
+    "max_duration_minutes": 60,
+    "max_agent_attempts": 3,
+    "max_llm_calls": 40,
+    "max_tool_calls": 120,
+    "max_shell_executions": 30
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

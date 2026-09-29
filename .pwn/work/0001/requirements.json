@@ -1,0 +1,241 @@
+{
+  "work_id": "0001",
+  "requirements": [
+    {
+      "id": "FR-001",
+      "title": "CLI completa",
+      "statement": "Operador executa generate, diagnose, recalibrate e serve pela CLI com as flags e aliases do baseline.",
+      "user_story": "Como operador, quero cli completa para preservar a capacidade do baseline Python no runtime Bun",
+      "acceptance_criteria": [
+        "bun run cli generate --niche demo --mock --ideas 3 sai com exit 0 e gera a arvore de artefatos"
+      ]
+    },
+    {
+      "id": "FR-002",
+      "title": "Modo mock deterministico",
+      "statement": "O modo mock produz saida deterministica sem nenhuma chamada de rede.",
+      "user_story": "Como operador, quero modo mock deterministico para preservar a capacidade do baseline Python no runtime Bun",
+      "acceptance_criteria": [
+        "duas execucoes mock consecutivas produzem dados.json identicos",
+        "nenhum fetch e executado quando mock esta ativo"
+      ]
+    },
+    {
+      "id": "FR-003",
+      "title": "Avaliacao via decisor System One",
+      "statement": "Cada ideia e avaliada no decisor produzindo indicadores, indice de acao e tier.",
+      "user_story": "Como operador, quero avaliacao via decisor system one para preservar a capacidade do baseline Python no runtime Bun",
+      "acceptance_criteria": [
+        "avaliacao contra decisor stub devolve indicadores completos e tier coerente com o indice"
+      ]
+    },
+    {
+      "id": "FR-004",
+      "title": "API HTTP de estudos",
+      "statement": "A API expoe criacao, listagem, detalhe e download de artefatos sob /api.",
+      "user_story": "Como operador, quero api http de estudos para preservar a capacidade do baseline Python no runtime Bun",
+      "acceptance_criteria": [
+        "POST /api/studies responde 201 com id e GET /api/studies/:id responde 200 com as avaliacoes ordenadas"
+      ]
+    },
+    {
+      "id": "FR-005",
+      "title": "Interface web",
+      "statement": "A interface web renderiza lista, formulario e detalhe de estudo consumindo a API.",
+      "user_story": "Como operador, quero interface web para preservar a capacidade do baseline Python no runtime Bun",
+      "acceptance_criteria": [
+        "GET / responde 200 com o formulario e o detalhe do estudo mostra a tabela de ranking"
+      ]
+    },
+    {
+      "id": "FR-006",
+      "title": "Diagnostico de sondas",
+      "statement": "O diagnostico reporta media, desvio e contradicao por sonda e o exit code reflete as sondas uteis.",
+      "user_story": "Como operador, quero diagnostico de sondas para preservar a capacidade do baseline Python no runtime Bun",
+      "acceptance_criteria": [
+        "diagnostico com backend stub devolve quatro vereditos e exit code esperado"
+      ]
+    },
+    {
+      "id": "FR-007",
+      "title": "Recalibracao de limiares",
+      "statement": "A recalibracao recebe um dados.json e devolve a grade ordenada por falso positivo, acerto e escalonamento.",
+      "user_story": "Como operador, quero recalibracao de limiares para preservar a capacidade do baseline Python no runtime Bun",
+      "acceptance_criteria": [
+        "recalibracao sobre dados sinteticos rotulados devolve o melhor trio de limiares"
+      ]
+    },
+    {
+      "id": "FR-008",
+      "title": "Guardrail numerico",
+      "statement": "O guardrail verifica secoes obrigatorias, acentos, alinhamento de tabela e presenca dos numeros medidos.",
+      "user_story": "Como operador, quero guardrail numerico para preservar a capacidade do baseline Python no runtime Bun",
+      "acceptance_criteria": [
+        "documento com acento e tabela desalinhada gera achados; documento conforme nao gera achados"
+      ]
+    },
+    {
+      "id": "FR-009",
+      "title": "Persistencia de estudos",
+      "statement": "O estudo persiste em SQLite e permanece consultavel apos reinicio do processo.",
+      "user_story": "Como operador, quero persistencia de estudos para preservar a capacidade do baseline Python no runtime Bun",
+      "acceptance_criteria": [
+        "repositorio SQLite em memoria faz ida e volta de estudo e avaliacoes"
+      ]
+    },
+    {
+      "id": "FR-010",
+      "title": "Cache de respostas",
+      "statement": "O cache por chave hash evita repetir chamadas pagas em reexecucao do mesmo estudo.",
+      "user_story": "Como operador, quero cache de respostas para preservar a capacidade do baseline Python no runtime Bun",
+      "acceptance_criteria": [
+        "reexecucao com cache reaproveita todas as chaves gravadas"
+      ]
+    },
+    {
+      "id": "FR-011",
+      "title": "Health, readiness e imagem Docker",
+      "statement": "A imagem executa o servico e expoe liveness e readiness distintos.",
+      "user_story": "Como operador, quero health, readiness e imagem docker para preservar a capacidade do baseline Python no runtime Bun",
+      "acceptance_criteria": [
+        "docker build conclui e healthz responde ok; readyz responde 503 quando o banco falha"
+      ]
+    },
+    {
+      "id": "FR-012",
+      "title": "Workflow de imagem",
+      "statement": "O workflow de GitHub Actions constroi e publica a imagem.",
+      "user_story": "Como operador, quero workflow de imagem para preservar a capacidade do baseline Python no runtime Bun",
+      "acceptance_criteria": [
+        "workflow declara os jobs de qualidade, teste, seguranca e build com push para o registry"
+      ]
+    },
+    {
+      "id": "FR-013",
+      "title": "Prompts e bloco de dados medidos",
+      "statement": "Os prompts de brief, ideias e documento carregam o bloco de dados medidos e proibem numeros inventados.",
+      "user_story": "Como operador, quero prompts e bloco de dados medidos para preservar a capacidade do baseline Python no runtime Bun",
+      "acceptance_criteria": [
+        "o bloco de dados contem todos os numeros medidos e o mock gera documento com as dez secoes"
+      ]
+    },
+    {
+      "id": "FR-014",
+      "title": "Relatorios deterministas",
+      "statement": "Indice, tabelao markdown e CSV sao gerados sem chamar LLM e ordenados pelo indice de acao.",
+      "user_story": "Como operador, quero relatorios deterministas para preservar a capacidade do baseline Python no runtime Bun",
+      "acceptance_criteria": [
+        "duas geracoes produzem o mesmo indice e o mesmo CSV"
+      ]
+    },
+    {
+      "id": "FR-015",
+      "title": "Render de HTML e PDF",
+      "statement": "O renderizador converte markdown em HTML sanitizado e compila o estudo em HTML unico com PDF opcional.",
+      "user_story": "Como operador, quero render de html e pdf para preservar a capacidade do baseline Python no runtime Bun",
+      "acceptance_criteria": [
+        "link com esquema javascript e neutralizado no HTML gerado"
+      ]
+    },
+    {
+      "id": "FR-016",
+      "title": "Dor por escolha forcada",
+      "statement": "A natureza da dor e medida por escolha forcada entre dinheiro direto, reputacao e backoffice.",
+      "user_story": "Como operador, quero dor por escolha forcada para preservar a capacidade do baseline Python no runtime Bun",
+      "acceptance_criteria": [
+        "agregacao por opcao soma uma unidade por opcao escolhida"
+      ]
+    },
+    {
+      "id": "FR-017",
+      "title": "Classificacao de dor com limiares",
+      "statement": "Quatro sondas em tres parafrases produzem a classificacao com os limiares calibrados.",
+      "user_story": "Como operador, quero classificacao de dor com limiares para preservar a capacidade do baseline Python no runtime Bun",
+      "acceptance_criteria": [
+        "autoteste classifica forte, fraca, cinzenta e ruidosa corretamente"
+      ]
+    },
+    {
+      "id": "FR-018",
+      "title": "Pipeline completo de estudo",
+      "statement": "O pipeline executa brief, ideias, avaliacao, documentos, relatorios e PDF opcional, persistindo o estudo.",
+      "user_story": "Como operador, quero pipeline completo de estudo para preservar a capacidade do baseline Python no runtime Bun",
+      "acceptance_criteria": [
+        "duas execucoes mock produzem artefatos identicos e as avaliacoes ordenadas"
+      ]
+    },
+    {
+      "id": "FR-019",
+      "title": "Avaliacao com indice e tier",
+      "statement": "Cada ideia recebe indicadores, bloco de negocio, indice de acao, tier e resumo agregado.",
+      "user_story": "Como operador, quero avaliacao com indice e tier para preservar a capacidade do baseline Python no runtime Bun",
+      "acceptance_criteria": [
+        "indice e tier batem com a media de fit e venda e com os cortes 1.84 e 1.60"
+      ]
+    },
+    {
+      "id": "FR-020",
+      "title": "Artefatos do estudo em disco",
+      "statement": "Os artefatos sao gravados no formato do baseline, incluindo um dados.json compativel com a recalibracao.",
+      "user_story": "Como operador, quero artefatos do estudo em disco para preservar a capacidade do baseline Python no runtime Bun",
+      "acceptance_criteria": [
+        "dados.json traz as chaves ideias, algoritmo, sondas, negocio e indicadores"
+      ]
+    },
+    {
+      "id": "QR-001",
+      "title": "Validacao de configuracao",
+      "statement": "O servico valida a configuracao no startup e aborta quando uma chave obrigatoria falta.",
+      "user_story": "Como operador, quero validacao de configuracao para preservar a capacidade do baseline Python no runtime Bun",
+      "acceptance_criteria": [
+        "startup sem LLM_API_KEY em modo real aborta com mensagem clara"
+      ]
+    },
+    {
+      "id": "QR-002",
+      "title": "Nenhum segredo exposto",
+      "statement": "Nenhum segredo, chave ou token aparece em log, resposta HTTP ou artefato.",
+      "user_story": "Como operador, quero nenhum segredo exposto para preservar a capacidade do baseline Python no runtime Bun",
+      "acceptance_criteria": [
+        "resposta de erro 401 do decisor nao contem a chave usada"
+      ]
+    },
+    {
+      "id": "QR-003",
+      "title": "CSRF na interface",
+      "statement": "Toda rota de interface que muda estado exige mesma origem e token CSRF em tempo constante.",
+      "user_story": "Como operador, quero csrf na interface para preservar a capacidade do baseline Python no runtime Bun",
+      "acceptance_criteria": [
+        "POST de UI sem token valido responde 403"
+      ]
+    },
+    {
+      "id": "QR-004",
+      "title": "Compatibilidade do dados.json",
+      "statement": "O esquema de chaves do dados.json permanece compativel com o consumo pela recalibracao.",
+      "user_story": "Como operador, quero compatibilidade do dados.json para preservar a capacidade do baseline Python no runtime Bun",
+      "acceptance_criteria": [
+        "recalibrate le o dados.json produzido pelo pipeline mock sem erro"
+      ]
+    },
+    {
+      "id": "QR-005",
+      "title": "Arquitetura limpa e tipos",
+      "statement": "O codigo segue a arquitetura limpa com domain sem importar infraestrutura, e o typecheck estrito passa.",
+      "user_story": "Como operador, quero arquitetura limpa e tipos para preservar a capacidade do baseline Python no runtime Bun",
+      "acceptance_criteria": [
+        "bunx tsc --noEmit sai com 0",
+        "nenhum arquivo em src/domain importa src/infrastructure"
+      ]
+    },
+    {
+      "id": "QR-006",
+      "title": "Toolchain e gates locais",
+      "statement": "A toolchain fica instalada com typecheck estrito, lint, format e execucao de testes em comandos unicos.",
+      "user_story": "Como operador, quero toolchain e gates locais para preservar a capacidade do baseline Python no runtime Bun",
+      "acceptance_criteria": [
+        "bun run check e bunx eslint . saem com 0"
+      ]
+    }
+  ]
+}

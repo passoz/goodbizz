@@ -1,0 +1,94 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.7",
+  "work_id": "0001",
+  "title": "Cliente do decisor System One",
+  "risk": {
+    "level": "L2",
+    "reasons": [
+      "Task 1.7 (Cliente do decisor System One) classificada como L2 pelo plano do port"
+    ]
+  },
+  "validation_strategy": "regression-guarded",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.7-01",
+        "given": "Dado o estado do repositorio antes de Cliente do decisor System One",
+        "when": "Quando a task 1.7 executar: O cliente do decisor normaliza a URL, envia state e questions tipadas, tolera envelopes variados e extrai probabilidade de noul, choice, score e numero",
+        "then": "Então normalizacao, extracao e aborto em erro de autorizacao se comportam como declarado"
+      },
+      {
+        "id": "SCENARIO-1.7-02",
+        "given": "Dado que a mudanca esta restrita a decider",
+        "when": "Quando o Diff Guard comparar os arquivos modificados",
+        "then": "Então nenhum arquivo fora da write_allow foi tocado"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/infrastructure/decider.ts",
+      "tests/decider.test.ts"
+    ],
+    "affected_components": [
+      "decider"
+    ],
+    "strategy": "regression-guarded"
+  },
+  "architecture_contract": {
+    "invariants": [
+      "src/domain nao importa src/infrastructure nem src/application",
+      "Nenhum numero de mercado e inventado: os numeros vem do bloco de dados medidos",
+      "Segredos nunca sao logados nem serializados em resposta"
+    ],
+    "patterns": [
+      "clean architecture",
+      "ports and adapters",
+      "injeção manual de dependencia"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun test tests/decider.test.ts"
+    ],
+    "required_evidence": [
+      "red-output.txt",
+      "green-output.txt"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/infrastructure/decider.ts",
+      "tests/decider.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      ".pwn/**",
+      ".specs/**",
+      ".prompts/**",
+      ".sources/**",
+      ".env",
+      ".env.*",
+      "node_modules/**"
+    ],
+    "out_of_scope": [
+      "Mudanca fora dos componentes declarados",
+      "Alteracao de .specs, .prompts ou .pwn"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 60000,
+    "max_cost_usd": 0.75,
+    "max_duration_minutes": 30,
+    "max_agent_attempts": 3,
+    "max_llm_calls": 40,
+    "max_tool_calls": 120,
+    "max_shell_executions": 30
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

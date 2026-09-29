@@ -1,0 +1,1382 @@
+{
+  "$schema": "../../../schemas/plan.schema.json",
+  "work_id": "0001",
+  "title": "Port do goodbizz para Bun: CLI, API, Web e imagem Docker",
+  "status": "approved",
+  "components": [
+    {
+      "name": "ops",
+      "purpose": "Toolchain, empacotamento, pipeline e ambiente"
+    },
+    {
+      "name": "config",
+      "purpose": "Configuracao validada e redacao de segredos"
+    },
+    {
+      "name": "domain",
+      "purpose": "Tipos, portas, erros e regras puras de dor"
+    },
+    {
+      "name": "llm",
+      "purpose": "Adapter do provedor LLM e extracao de JSON"
+    },
+    {
+      "name": "decider",
+      "purpose": "Adapter do decisor System One"
+    },
+    {
+      "name": "application",
+      "purpose": "Casos de uso que orquestram dominio e portas"
+    },
+    {
+      "name": "reports",
+      "purpose": "Relatorios deterministas e render"
+    },
+    {
+      "name": "verification",
+      "purpose": "Guardrail estrutural e normalizacao"
+    },
+    {
+      "name": "persistence",
+      "purpose": "Esquema Drizzle, repositorios e cache"
+    },
+    {
+      "name": "http",
+      "purpose": "API Hono, interface web e seguranca de sessao"
+    },
+    {
+      "name": "cli",
+      "purpose": "Interface de linha de comando"
+    }
+  ],
+  "global_gates": [
+    "`bun test` — a suite completa passa com exit 0.",
+    "`bun run check` — o typecheck estrito passa com exit 0.",
+    "`bunx eslint .` — o lint passa sem erro.",
+    "`bunx prettier --check .` — a formatacao esta conforme."
+  ],
+  "tasks": [
+    {
+      "id": "1.1",
+      "title": "Toolchain, tipo estrito e gates locais",
+      "requirement_id": "QR-006",
+      "spec_reference": "CAP-017",
+      "contract_id": "CTR-001",
+      "complexity": "low",
+      "depends_on": [],
+      "behavior": "O projeto passa a ter scripts unicos de check, lint, format e teste sobre a stack fixada, com tsconfig estrito e JSX do Hono",
+      "components": [
+        "ops"
+      ],
+      "files": [
+        "package.json",
+        "tsconfig.json",
+        "bunfig.toml",
+        "tests/toolchain.test.ts",
+        "eslint.config.js",
+        ".prettierrc.json",
+        ".editorconfig",
+        ".env.example",
+        ".gitignore",
+        ".dockerignore"
+      ],
+      "implementation_files": [
+        "package.json",
+        "tsconfig.json",
+        "bunfig.toml"
+      ],
+      "test_files": [
+        "tests/toolchain.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/toolchain.test.ts",
+        "description": "o teste que exige as quatro chaves canonicas no .env.example acusa a ausencia"
+      },
+      "implementation_steps": [
+        "Instalar as dependencias da stack e fixar os scripts de check, lint, format e teste",
+        "Fixar o tsconfig estrito com jsxImportSource hono/jsx"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun run check",
+          "description": "o typecheck estrito passa"
+        },
+        {
+          "command": "bunx eslint .",
+          "description": "o lint passa sem erro"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    },
+    {
+      "id": "1.2",
+      "title": "Dominio: tipos, portas e erros",
+      "requirement_id": "QR-005",
+      "spec_reference": "CAP-001",
+      "contract_id": "CTR-002",
+      "complexity": "standard",
+      "depends_on": [
+        "1.1"
+      ],
+      "behavior": "Existem tipos de dominio, portas de LLM, decisor, repositorio e cache, e erros tipados, todos sem dependencia de infraestrutura",
+      "components": [
+        "domain"
+      ],
+      "files": [
+        "src/domain/types.ts",
+        "src/domain/ports.ts",
+        "src/domain/errors.ts",
+        "tests/domain.test.ts"
+      ],
+      "implementation_files": [
+        "src/domain/types.ts",
+        "src/domain/ports.ts",
+        "src/domain/errors.ts"
+      ],
+      "test_files": [
+        "tests/domain.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/domain.test.ts",
+        "description": "o teste que importa os tipos de dominio acusa a falta dos modulos"
+      },
+      "implementation_steps": [
+        "Modelar os tipos de dominio e o mapeamento de erro para HTTP",
+        "Declarar as portas de LLM, decisor, repositorio e cache"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test tests/domain.test.ts",
+          "description": "os tipos e o mapeamento de erro se comportam como declarado"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    },
+    {
+      "id": "1.3",
+      "title": "Configuracao de ambiente validada",
+      "requirement_id": "QR-001",
+      "spec_reference": "CAP-016",
+      "contract_id": "CTR-003",
+      "complexity": "standard",
+      "depends_on": [
+        "1.2"
+      ],
+      "behavior": "As chaves LLM_API_URL, LLM_API_KEY, DECISION_API_URL, DECISION_API_KEY, PORT, DATABASE_URL, LOG_LEVEL, APP_ENV e SESSION_SECRET sao validadas no startup e a CLI pode sobrepor o ambiente",
+      "components": [
+        "config"
+      ],
+      "files": [
+        "src/config/env.ts",
+        "src/config/runtime.ts",
+        "tests/env.test.ts"
+      ],
+      "implementation_files": [
+        "src/config/env.ts",
+        "src/config/runtime.ts"
+      ],
+      "test_files": [
+        "tests/env.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/env.test.ts",
+        "description": "o teste de validacao de ambiente acusa a falta do modulo de configuracao"
+      },
+      "implementation_steps": [
+        "Validar o ambiente com Zod e resolver a configuracao da CLI",
+        "Abortar no startup quando uma chave obrigatoria do modo real falta"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test tests/env.test.ts",
+          "description": "chave obrigatoria ausente aborta com mensagem que nao expoe o segredo"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    },
+    {
+      "id": "1.4",
+      "title": "Redacao de segredos em erro e log",
+      "requirement_id": "QR-002",
+      "spec_reference": "CAP-016",
+      "contract_id": "CTR-004",
+      "complexity": "low",
+      "depends_on": [
+        "1.3"
+      ],
+      "behavior": "Chaves e tokens sao redigidos de qualquer mensagem de erro ou linha de log antes de sairem do processo",
+      "components": [
+        "config"
+      ],
+      "files": [
+        "src/config/redact.ts",
+        "tests/redaction.test.ts"
+      ],
+      "implementation_files": [
+        "src/config/redact.ts"
+      ],
+      "test_files": [
+        "tests/redaction.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/redaction.test.ts",
+        "description": "o teste que exige a chave redigida na mensagem acusa a falta do redator"
+      },
+      "implementation_steps": [
+        "Implementar a redacao por lista de segredos conhecidos",
+        "Aplicar a redacao nas mensagens de erro de provedor"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test tests/redaction.test.ts",
+          "description": "a chave usada na requisicao nao aparece na mensagem resultante"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    },
+    {
+      "id": "1.5",
+      "title": "Cliente LLM e extracao de JSON tolerante",
+      "requirement_id": "EC-002",
+      "spec_reference": "CAP-007",
+      "contract_id": "CTR-005",
+      "complexity": "standard",
+      "depends_on": [
+        "1.2"
+      ],
+      "behavior": "O cliente LLM fala chat completions compativel com OpenAI, repete com backoff e extrai JSON de respostas cercadas por texto ou cerca de codigo",
+      "components": [
+        "llm"
+      ],
+      "files": [
+        "src/infrastructure/llm.ts",
+        "src/infrastructure/json.ts",
+        "tests/llm.test.ts"
+      ],
+      "implementation_files": [
+        "src/infrastructure/llm.ts",
+        "src/infrastructure/json.ts"
+      ],
+      "test_files": [
+        "tests/llm.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/llm.test.ts",
+        "description": "o teste de extracao de array cercado por texto acusa a falta da extracao"
+      },
+      "implementation_steps": [
+        "Implementar a chamada HTTP com backoff e a mensagem de erro redigida",
+        "Implementar a extracao tolerante de JSON"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test tests/llm.test.ts",
+          "description": "a extracao recupera array cercado por texto e por cerca de codigo"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    },
+    {
+      "id": "1.6",
+      "title": "Adaptadores mock deterministas",
+      "requirement_id": "FR-002",
+      "spec_reference": "CAP-001",
+      "contract_id": "CTR-006",
+      "complexity": "standard",
+      "depends_on": [
+        "1.5"
+      ],
+      "behavior": "Os adaptadores mock de LLM e de decisor produzem a mesma saida para a mesma entrada, sem tocar a rede",
+      "components": [
+        "llm",
+        "decider",
+        "domain"
+      ],
+      "files": [
+        "src/infrastructure/llm-mock.ts",
+        "src/infrastructure/decider-mock.ts",
+        "src/domain/hash.ts",
+        "tests/mock-determinism.test.ts"
+      ],
+      "implementation_files": [
+        "src/infrastructure/llm-mock.ts",
+        "src/infrastructure/decider-mock.ts",
+        "src/domain/hash.ts"
+      ],
+      "test_files": [
+        "tests/mock-determinism.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/mock-determinism.test.ts",
+        "description": "o teste que compara duas respostas do mock acusa a falta dos adaptadores"
+      },
+      "implementation_steps": [
+        "Implementar o hash deterministico compartilhado",
+        "Implementar os fixtures de LLM e o decisor hash-based"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test tests/mock-determinism.test.ts",
+          "description": "a mesma entrada produz a mesma resposta nos dois mocks"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    },
+    {
+      "id": "1.7",
+      "title": "Cliente do decisor System One",
+      "requirement_id": "FR-003",
+      "spec_reference": "CAP-002",
+      "contract_id": "CTR-007",
+      "complexity": "standard",
+      "depends_on": [
+        "1.2"
+      ],
+      "behavior": "O cliente do decisor normaliza a URL, envia state e questions tipadas, tolera envelopes variados e extrai probabilidade de noul, choice, score e numero",
+      "components": [
+        "decider"
+      ],
+      "files": [
+        "src/infrastructure/decider.ts",
+        "tests/decider.test.ts"
+      ],
+      "implementation_files": [
+        "src/infrastructure/decider.ts"
+      ],
+      "test_files": [
+        "tests/decider.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/decider.test.ts",
+        "description": "o teste de normalizacao de URL do decisor acusa a falta do cliente"
+      },
+      "implementation_steps": [
+        "Normalizar a URL para o endpoint System One",
+        "Extrair respostas e probabilidades tolerantes a envelopes"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test tests/decider.test.ts",
+          "description": "normalizacao, extracao e aborto em erro de autorizacao se comportam como declarado"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    },
+    {
+      "id": "1.8",
+      "title": "Classificacao de dor com limiares",
+      "requirement_id": "FR-017",
+      "spec_reference": "CAP-004",
+      "contract_id": "CTR-008",
+      "complexity": "standard",
+      "depends_on": [
+        "1.2"
+      ],
+      "behavior": "Quatro sondas em tres parafrases produzem classificacao forte, fraca, indeterminada ou instavel com os limiares calibrados e exigem ao menos tres parafrases",
+      "components": [
+        "domain",
+        "application"
+      ],
+      "files": [
+        "src/domain/pain.ts",
+        "src/application/pain-algorithm.ts",
+        "tests/pain-algorithm.test.ts"
+      ],
+      "implementation_files": [
+        "src/domain/pain.ts",
+        "src/application/pain-algorithm.ts"
+      ],
+      "test_files": [
+        "tests/pain-algorithm.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/pain-algorithm.test.ts",
+        "description": "o autoteste de dor acusa a falta do classificador"
+      },
+      "implementation_steps": [
+        "Portar as sondas e os limiares calibrados",
+        "Portar a media, o desvio e o autoteste deterministico"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test tests/pain-algorithm.test.ts",
+          "description": "o autoteste classifica forte, fraca, cinzenta e ruidosa como esperado"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    },
+    {
+      "id": "1.9",
+      "title": "Medicao da dor por escolha forcada",
+      "requirement_id": "FR-016",
+      "spec_reference": "CAP-003",
+      "contract_id": "CTR-009",
+      "complexity": "standard",
+      "depends_on": [
+        "1.7",
+        "1.8"
+      ],
+      "behavior": "Tres redacoes independentes de escolha forcada entre dinheiro direto, reputacao e backoffice produzem probabilidades por opcao e um resultado com escore e rotulo",
+      "components": [
+        "application",
+        "decider"
+      ],
+      "files": [
+        "src/application/pain-choice.ts",
+        "tests/pain-choice.test.ts"
+      ],
+      "implementation_files": [
+        "src/application/pain-choice.ts"
+      ],
+      "test_files": [
+        "tests/pain-choice.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/pain-choice.test.ts",
+        "description": "o teste de agregacao por opcao acusa a falta do medidor"
+      },
+      "implementation_steps": [
+        "Portar as tres instrucoes e as opcoes de consequencia",
+        "Agregar as probabilidades por opcao e derivar o rotulo"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test tests/pain-choice.test.ts",
+          "description": "a agregacao por opcao soma uma unidade por opcao escolhida"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    },
+    {
+      "id": "1.10",
+      "title": "Avaliacao de ideias, indice e tier",
+      "requirement_id": "FR-019",
+      "spec_reference": "CAP-002",
+      "contract_id": "CTR-010",
+      "complexity": "standard",
+      "depends_on": [
+        "1.8",
+        "1.9"
+      ],
+      "behavior": "Cada ideia e avaliada em indicadores e negocio com confiancas, produzindo indice de acao, tier, agrupamento por natureza da dor e resumo com medias",
+      "components": [
+        "application"
+      ],
+      "files": [
+        "src/application/evaluate.ts",
+        "src/application/summary.ts",
+        "tests/evaluate.test.ts"
+      ],
+      "implementation_files": [
+        "src/application/evaluate.ts",
+        "src/application/summary.ts"
+      ],
+      "test_files": [
+        "tests/evaluate.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/evaluate.test.ts",
+        "description": "o teste do indice de acao acusa a falta do modulo de avaliacao"
+      },
+      "implementation_steps": [
+        "Portar as perguntas de indicador e de negocio e os extratores",
+        "Portar indice, tier, agrupamento e medias"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test tests/evaluate.test.ts",
+          "description": "indice, tier, grupos de dor e medias batem com os valores esperados"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    },
+    {
+      "id": "1.11",
+      "title": "Prompts e bloco de dados medidos",
+      "requirement_id": "FR-013",
+      "spec_reference": "CAP-007",
+      "contract_id": "CTR-011",
+      "complexity": "standard",
+      "depends_on": [
+        "1.5",
+        "1.10"
+      ],
+      "behavior": "Os prompts de brief, ideias e documento carregam o bloco de dados medidos com todos os numeros e proibem o modelo de criar numeros de mercado",
+      "components": [
+        "application",
+        "llm"
+      ],
+      "files": [
+        "src/application/prompts.ts",
+        "src/application/generation.ts",
+        "tests/generation.test.ts"
+      ],
+      "implementation_files": [
+        "src/application/prompts.ts",
+        "src/application/generation.ts"
+      ],
+      "test_files": [
+        "tests/generation.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/generation.test.ts",
+        "description": "o teste que exige todos os numeros no bloco acusa a falta da geracao"
+      },
+      "implementation_steps": [
+        "Portar os tres prompts e as escalas",
+        "Portar o bloco de dados medidos e as chamadas de geracao"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test tests/generation.test.ts",
+          "description": "o bloco contem todos os numeros e o mock gera documento com as dez secoes"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    },
+    {
+      "id": "1.12",
+      "title": "Relatorios deterministas",
+      "requirement_id": "FR-014",
+      "spec_reference": "CAP-009",
+      "contract_id": "CTR-012",
+      "complexity": "standard",
+      "depends_on": [
+        "1.10"
+      ],
+      "behavior": "Indice, tabelao markdown e CSV sao deterministicos, ordenados pelo indice de acao, e os nomes de pasta seguem o ranking com slug estavel",
+      "components": [
+        "reports"
+      ],
+      "files": [
+        "src/application/reports.ts",
+        "tests/reports.test.ts"
+      ],
+      "implementation_files": [
+        "src/application/reports.ts"
+      ],
+      "test_files": [
+        "tests/reports.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/reports.test.ts",
+        "description": "o teste de alinhamento do tabelao acusa a falta dos relatorios"
+      },
+      "implementation_steps": [
+        "Portar slug, pasta e aviso de escopo",
+        "Portar o indice, o tabelao markdown e o CSV"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test tests/reports.test.ts",
+          "description": "o tabelao tem colunas alinhadas e o CSV e estavel entre execucoes"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    },
+    {
+      "id": "1.13",
+      "title": "Artefatos do estudo em disco",
+      "requirement_id": "FR-020",
+      "spec_reference": "CAP-001",
+      "contract_id": "CTR-013",
+      "complexity": "standard",
+      "depends_on": [
+        "1.12"
+      ],
+      "behavior": "A arvore de artefatos do estudo e o dados.json com as chaves do baseline sao gravados de forma deterministica",
+      "components": [
+        "reports",
+        "application"
+      ],
+      "files": [
+        "src/application/artifacts.ts",
+        "src/application/dados.ts",
+        "tests/artifacts.test.ts"
+      ],
+      "implementation_files": [
+        "src/application/artifacts.ts",
+        "src/application/dados.ts"
+      ],
+      "test_files": [
+        "tests/artifacts.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/artifacts.test.ts",
+        "description": "o teste da arvore de artefatos acusa a falta do gravador"
+      },
+      "implementation_steps": [
+        "Gravar brief, tabelao, CSV e pastas por ideia",
+        "Serializar e ler o dados.json no esquema do baseline"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test tests/artifacts.test.ts",
+          "description": "a arvore esperada e as chaves do dados.json sao gravadas"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    },
+    {
+      "id": "1.14",
+      "title": "Render de Markdown para HTML",
+      "requirement_id": "FR-015",
+      "spec_reference": "CAP-010",
+      "contract_id": "CTR-014",
+      "complexity": "standard",
+      "depends_on": [
+        "1.2"
+      ],
+      "behavior": "O renderizador converte markdown em HTML com titulos, listas, tabelas, citacao e sanitizacao de links perigosos",
+      "components": [
+        "reports"
+      ],
+      "files": [
+        "src/application/render.ts",
+        "tests/render.test.ts"
+      ],
+      "implementation_files": [
+        "src/application/render.ts"
+      ],
+      "test_files": [
+        "tests/render.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/render.test.ts",
+        "description": "o teste de sanitizacao de link acusa a falta do renderizador"
+      },
+      "implementation_steps": [
+        "Portar o conversor de blocos e inline",
+        "Portar a sanitizacao de links e o documento HTML completo"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test tests/render.test.ts",
+          "description": "link com esquema javascript e neutralizado e a tabela vira elemento HTML"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    },
+    {
+      "id": "1.15",
+      "title": "PDF opcional via Chromium",
+      "requirement_id": "EC-005",
+      "spec_reference": "CAP-010",
+      "contract_id": "CTR-015",
+      "complexity": "standard",
+      "depends_on": [
+        "1.14"
+      ],
+      "behavior": "O PDF e gerado por Chromium headless quando disponivel; a ausencia do binario mantem o HTML e devolve mensagem explicativa",
+      "components": [
+        "reports"
+      ],
+      "files": [
+        "src/application/pdf.ts",
+        "tests/pdf.test.ts"
+      ],
+      "implementation_files": [
+        "src/application/pdf.ts"
+      ],
+      "test_files": [
+        "tests/pdf.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/pdf.test.ts",
+        "description": "o teste da mensagem de ausencia do Chromium acusa a falta do modulo de PDF"
+      },
+      "implementation_steps": [
+        "Detectar o binario do Chromium no sistema",
+        "Executar a impressao para PDF com timeout e mensagem de falha"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test tests/pdf.test.ts",
+          "description": "sem Chromium a mensagem explica a ausencia e o HTML permanece"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    },
+    {
+      "id": "1.16",
+      "title": "Guardrail numerico dos documentos",
+      "requirement_id": "FR-008",
+      "spec_reference": "CAP-008",
+      "contract_id": "CTR-016",
+      "complexity": "standard",
+      "depends_on": [
+        "1.2"
+      ],
+      "behavior": "O guardrail confere os dez titulos obrigatorios, acentos, alinhamento de tabela, presenca dos numeros medidos e das frases exigidas",
+      "components": [
+        "verification"
+      ],
+      "files": [
+        "src/application/verification.ts",
+        "tests/verification.test.ts"
+      ],
+      "implementation_files": [
+        "src/application/verification.ts"
+      ],
+      "test_files": [
+        "tests/verification.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/verification.test.ts",
+        "description": "o teste de secao obrigatoria faltante acusa a falta do guardrail"
+      },
+      "implementation_steps": [
+        "Portar a lista de secoes e as variantes de numero",
+        "Portar a checagem de tabela, acento e frases"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test tests/verification.test.ts",
+          "description": "documento conforme passa e documento com defeitos acumula achados"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    },
+    {
+      "id": "1.17",
+      "title": "Normalizacao de acentos",
+      "requirement_id": "EC-003",
+      "spec_reference": "CAP-008",
+      "contract_id": "CTR-017",
+      "complexity": "low",
+      "depends_on": [
+        "1.16"
+      ],
+      "behavior": "A normalizacao remove diacriticos de cada texto e de cada arquivo markdown de uma arvore de saida",
+      "components": [
+        "verification"
+      ],
+      "files": [
+        "src/application/normalize.ts",
+        "tests/normalize.test.ts"
+      ],
+      "implementation_files": [
+        "src/application/normalize.ts"
+      ],
+      "test_files": [
+        "tests/normalize.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/normalize.test.ts",
+        "description": "o teste que exige texto sem diacriticos acusa a falta da normalizacao"
+      },
+      "implementation_steps": [
+        "Implementar a remocao de diacriticos",
+        "Aplicar a normalizacao aos arquivos markdown da arvore"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test tests/normalize.test.ts",
+          "description": "o texto normalizado nao contem diacriticos e os arquivos alterados sao listados"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    },
+    {
+      "id": "1.18",
+      "title": "Esquema, cliente SQLite e migracoes",
+      "requirement_id": "FR-009",
+      "spec_reference": "CAP-015",
+      "contract_id": "CTR-018",
+      "complexity": "standard",
+      "depends_on": [
+        "1.2"
+      ],
+      "behavior": "O esquema Drizzle cobre estudos, ideias avaliadas e cache, e o cliente SQLite aplica as migracoes geradas sem SQL cru",
+      "components": [
+        "persistence"
+      ],
+      "files": [
+        "src/infrastructure/schema.ts",
+        "src/infrastructure/db.ts",
+        "drizzle.config.ts",
+        "tests/repository.test.ts"
+      ],
+      "implementation_files": [
+        "src/infrastructure/schema.ts",
+        "src/infrastructure/db.ts",
+        "drizzle.config.ts"
+      ],
+      "test_files": [
+        "tests/repository.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/repository.test.ts",
+        "description": "o teste de ida e volta do estudo acusa a falta do repositorio"
+      },
+      "implementation_steps": [
+        "Modelar o esquema e abrir o cliente SQLite",
+        "Aplicar as migracoes geradas de forma aditiva"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test tests/repository.test.ts",
+          "description": "as tres tabelas existem e as migracoes aplicam sem erro"
+        },
+        {
+          "command": "bunx drizzle-kit generate",
+          "description": "a migracao e gerada sem erro"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    },
+    {
+      "id": "1.19",
+      "title": "Repositorios de estudo e de cache",
+      "requirement_id": "FR-010",
+      "spec_reference": "CAP-011",
+      "contract_id": "CTR-019",
+      "complexity": "standard",
+      "depends_on": [
+        "1.18"
+      ],
+      "behavior": "O repositorio de estudos grava e le estudo com avaliacoes, e o cache deriva a chave do hash dos parametros, grava e reaproveita respostas tolerando cache corrompido",
+      "components": [
+        "persistence",
+        "application"
+      ],
+      "files": [
+        "src/infrastructure/repositories.ts",
+        "src/infrastructure/cache-repository.ts",
+        "src/application/cache.ts",
+        "tests/cache.test.ts"
+      ],
+      "implementation_files": [
+        "src/infrastructure/repositories.ts",
+        "src/infrastructure/cache-repository.ts",
+        "src/application/cache.ts"
+      ],
+      "test_files": [
+        "tests/cache.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/cache.test.ts",
+        "description": "o teste de reaproveitamento de chave acusa a falta do repositorio e do cache"
+      },
+      "implementation_steps": [
+        "Implementar o repositorio de estudos e o cache por chave hash",
+        "Tolerar cache ausente ou corrompido tratando como vazio"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test tests/cache.test.ts",
+          "description": "estudo e avaliacoes voltam do SQLite e a reexecucao reaproveita chaves gravadas"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    },
+    {
+      "id": "1.20",
+      "title": "Pipeline completo de estudo",
+      "requirement_id": "FR-018",
+      "spec_reference": "CAP-001",
+      "contract_id": "CTR-020",
+      "complexity": "architectural",
+      "depends_on": [
+        "1.11",
+        "1.13",
+        "1.15",
+        "1.17",
+        "1.19"
+      ],
+      "behavior": "O pipeline executa brief, ideias, avaliacao concorrente, documentos, relatorios e PDF opcional, gravando artefatos e persistindo o estudo com opcao de parar apos avaliar",
+      "components": [
+        "application",
+        "persistence"
+      ],
+      "files": [
+        "src/application/generate-study.ts",
+        "src/application/study-service.ts",
+        "tests/generate-study.test.ts"
+      ],
+      "implementation_files": [
+        "src/application/generate-study.ts",
+        "src/application/study-service.ts"
+      ],
+      "test_files": [
+        "tests/generate-study.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/generate-study.test.ts",
+        "description": "o teste que exige a arvore de artefatos acusa a falta do pipeline"
+      },
+      "implementation_steps": [
+        "Orquestrar as etapas com limite de concorrencia e cache",
+        "Persistir o estudo e gravar os artefatos"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test tests/generate-study.test.ts",
+          "description": "modo mock gera os seis artefatos e persiste as avaliacoes ordenadas"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    },
+    {
+      "id": "1.21",
+      "title": "Diagnostico de sondas",
+      "requirement_id": "FR-006",
+      "spec_reference": "CAP-005",
+      "contract_id": "CTR-021",
+      "complexity": "standard",
+      "depends_on": [
+        "1.7",
+        "1.8"
+      ],
+      "behavior": "O diagnostico mede afirmacao e negacao por sonda e parafrase, calcula media, desvio e contradicao e deriva o codigo de saida das sondas uteis",
+      "components": [
+        "application",
+        "decider"
+      ],
+      "files": [
+        "src/application/diagnose.ts",
+        "tests/diagnose.test.ts"
+      ],
+      "implementation_files": [
+        "src/application/diagnose.ts"
+      ],
+      "test_files": [
+        "tests/diagnose.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/diagnose.test.ts",
+        "description": "o teste de veredito por sonda acusa a falta do diagnostico"
+      },
+      "implementation_steps": [
+        "Portar as negacoes e o calculo de contradicao",
+        "Emitir o relatorio por sonda e o codigo de saida"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test tests/diagnose.test.ts",
+          "description": "sondas uteis, contraditorias e instaveis sao classificadas corretamente"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    },
+    {
+      "id": "1.22",
+      "title": "Recalibracao de limiares",
+      "requirement_id": "FR-007",
+      "spec_reference": "CAP-006",
+      "contract_id": "CTR-022",
+      "complexity": "standard",
+      "depends_on": [
+        "1.8",
+        "1.13"
+      ],
+      "behavior": "A recalibracao carrega dados.json rotulados com zona morta, avalia a grade de limiares e ordena por falso forte, acerto e escalonamento",
+      "components": [
+        "application",
+        "reports"
+      ],
+      "files": [
+        "src/application/recalibrate.ts",
+        "tests/recalibrate.test.ts"
+      ],
+      "implementation_files": [
+        "src/application/recalibrate.ts"
+      ],
+      "test_files": [
+        "tests/recalibrate.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/recalibrate.test.ts",
+        "description": "o teste da melhor combinacao de limiares acusa a falta da recalibracao"
+      },
+      "implementation_steps": [
+        "Portar o caso rotulado e a carga com zona morta",
+        "Implementar a busca em grade e a ordenacao"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test tests/recalibrate.test.ts",
+          "description": "a grade devolve o trio esperado e conta falso forte corretamente"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    },
+    {
+      "id": "1.23",
+      "title": "API HTTP de estudos",
+      "requirement_id": "FR-004",
+      "spec_reference": "CAP-013",
+      "contract_id": "CTR-023",
+      "complexity": "architectural",
+      "depends_on": [
+        "1.20",
+        "1.21",
+        "1.22",
+        "1.18"
+      ],
+      "behavior": "A API cria, lista, detalha e serve artefatos de estudos, executa diagnostico e recalibracao e converte erros de dominio em respostas sem stack trace",
+      "components": [
+        "http",
+        "persistence"
+      ],
+      "files": [
+        "src/infrastructure/http/api.ts",
+        "src/infrastructure/http/app.ts",
+        "src/infrastructure/http/errors.ts",
+        "tests/api.test.ts"
+      ],
+      "implementation_files": [
+        "src/infrastructure/http/api.ts",
+        "src/infrastructure/http/app.ts",
+        "src/infrastructure/http/errors.ts"
+      ],
+      "test_files": [
+        "tests/api.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/api.test.ts",
+        "description": "o teste de criacao de estudo pela API acusa a falta das rotas"
+      },
+      "implementation_steps": [
+        "Montar o sub-app de API com validacao Zod na borda",
+        "Mapear erros de dominio e redigir detalhes internos"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test tests/api.test.ts",
+          "description": "criacao responde 201, detalhe 200 e payload invalido 422"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    },
+    {
+      "id": "1.24",
+      "title": "Interface web",
+      "requirement_id": "FR-005",
+      "spec_reference": "CAP-014",
+      "contract_id": "CTR-024",
+      "complexity": "standard",
+      "depends_on": [
+        "1.23"
+      ],
+      "behavior": "A interface renderiza lista, formulario e detalhe de estudo consumindo a propria API na mesma origem",
+      "components": [
+        "http"
+      ],
+      "files": [
+        "src/infrastructure/http/ui/routes.tsx",
+        "src/infrastructure/http/ui/pages.tsx",
+        "src/infrastructure/http/ui/layout.tsx",
+        "tests/ui.test.ts"
+      ],
+      "implementation_files": [
+        "src/infrastructure/http/ui/routes.tsx",
+        "src/infrastructure/http/ui/pages.tsx",
+        "src/infrastructure/http/ui/layout.tsx"
+      ],
+      "test_files": [
+        "tests/ui.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/ui.test.ts",
+        "description": "o teste da pagina inicial acusa a falta das rotas de interface"
+      },
+      "implementation_steps": [
+        "Montar o layout e as paginas de lista, formulario e detalhe",
+        "Consumir a API por fetch na mesma origem"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test tests/ui.test.ts",
+          "description": "a pagina inicial responde 200 com o formulario e o detalhe mostra o ranking"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    },
+    {
+      "id": "1.25",
+      "title": "CSRF e sessao na interface",
+      "requirement_id": "QR-003",
+      "spec_reference": "CAP-014",
+      "contract_id": "CTR-025",
+      "complexity": "standard",
+      "depends_on": [
+        "1.24"
+      ],
+      "behavior": "Toda rota de interface que muda estado exige mesma origem e token CSRF double-submit assinado, comparado em tempo constante",
+      "components": [
+        "http"
+      ],
+      "files": [
+        "src/infrastructure/http/ui/security.ts",
+        "src/infrastructure/http/ui/context.d.ts",
+        "tests/csrf.test.ts"
+      ],
+      "implementation_files": [
+        "src/infrastructure/http/ui/security.ts",
+        "src/infrastructure/http/ui/context.d.ts"
+      ],
+      "test_files": [
+        "tests/csrf.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/csrf.test.ts",
+        "description": "o teste de origem invalida acusa a falta dos middlewares de seguranca"
+      },
+      "implementation_steps": [
+        "Emitir o cookie assinado e comparar o token em tempo constante",
+        "Recusar origem ou token invalido com 403"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test tests/csrf.test.ts",
+          "description": "POST sem mesma origem ou sem token valido responde 403"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    },
+    {
+      "id": "1.26",
+      "title": "Health, readiness e imagem Docker",
+      "requirement_id": "FR-011",
+      "spec_reference": "CAP-017",
+      "contract_id": "CTR-026",
+      "complexity": "standard",
+      "depends_on": [
+        "1.23",
+        "1.24"
+      ],
+      "behavior": "O servico sobe com liveness que ignora o banco e readiness que executa select 1, e a imagem Docker multi-stage o executa com usuario nao-root e healthcheck",
+      "components": [
+        "http",
+        "ops"
+      ],
+      "files": [
+        "src/infrastructure/http/health.ts",
+        "src/index.ts",
+        "Dockerfile",
+        "tests/health.test.ts",
+        "docker-compose.yml"
+      ],
+      "implementation_files": [
+        "src/infrastructure/http/health.ts",
+        "src/index.ts",
+        "Dockerfile"
+      ],
+      "test_files": [
+        "tests/health.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/health.test.ts",
+        "description": "o teste de readiness com banco indisponivel acusa a falta das rotas de saude"
+      },
+      "implementation_steps": [
+        "Implementar liveness, readiness e o shutdown gracioso",
+        "Escrever o Dockerfile multi-stage com healthcheck"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test tests/health.test.ts",
+          "description": "liveness responde ok e readiness responde 503 quando o banco falha"
+        },
+        {
+          "command": "docker build -t goodbizz:test .",
+          "description": "a imagem constroi sem erro"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    },
+    {
+      "id": "1.27",
+      "title": "Workflow de imagem no GitHub Actions",
+      "requirement_id": "FR-012",
+      "spec_reference": "CAP-017",
+      "contract_id": "CTR-027",
+      "complexity": "standard",
+      "depends_on": [
+        "1.26"
+      ],
+      "behavior": "O workflow cobre qualidade, teste, seguranca e build e constroi e publica a imagem em push para a branch principal e em tags",
+      "components": [
+        "ops"
+      ],
+      "files": [
+        ".github/workflows/ci.yml",
+        ".github/workflows/image.yml",
+        "tests/workflows.test.ts"
+      ],
+      "implementation_files": [
+        ".github/workflows/ci.yml",
+        ".github/workflows/image.yml"
+      ],
+      "test_files": [
+        "tests/workflows.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/workflows.test.ts",
+        "description": "o teste que exige os jobs do workflow acusa a falta dos arquivos de pipeline"
+      },
+      "implementation_steps": [
+        "Escrever o workflow de CI com os jobs de qualidade, teste e seguranca",
+        "Escrever o workflow de imagem com buildx e push condicional"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test tests/workflows.test.ts",
+          "description": "os workflows declaram os jobs exigidos e o push para o registry"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    },
+    {
+      "id": "1.28",
+      "title": "CLI unificada",
+      "requirement_id": "FR-001",
+      "spec_reference": "CAP-012",
+      "contract_id": "CTR-028",
+      "complexity": "standard",
+      "depends_on": [
+        "1.20",
+        "1.21",
+        "1.22"
+      ],
+      "behavior": "A CLI expoe generate, diagnose, recalibrate, serve e help com as flags e aliases do baseline e retorna 0, 1, 2 ou 130 conforme o caso",
+      "components": [
+        "cli"
+      ],
+      "files": [
+        "src/cli.ts",
+        "bin/goodbizz",
+        "tests/cli.test.ts"
+      ],
+      "implementation_files": [
+        "src/cli.ts",
+        "bin/goodbizz"
+      ],
+      "test_files": [
+        "tests/cli.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/cli.test.ts",
+        "description": "o teste de subcomando desconhecido acusa a falta da CLI"
+      },
+      "implementation_steps": [
+        "Implementar o parser de subcomandos, flags e aliases",
+        "Mapear os codigos de saida e a ajuda"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test tests/cli.test.ts",
+          "description": "generate mock grava artefatos e subcomando desconhecido retorna 2"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    },
+    {
+      "id": "1.29",
+      "title": "Suite e smoke end-to-end",
+      "requirement_id": "SC-001",
+      "spec_reference": "CAP-001",
+      "contract_id": "CTR-029",
+      "complexity": "standard",
+      "depends_on": [
+        "1.20",
+        "1.23",
+        "1.24",
+        "1.28"
+      ],
+      "behavior": "A suite cobre dominio, adapters, casos de uso, persistencia, API e interface, incluindo um smoke em modo mock que gera o estudo e o consulta pela API",
+      "components": [
+        "application",
+        "http"
+      ],
+      "files": [
+        "tests/helpers.ts",
+        "tests/smoke.test.ts"
+      ],
+      "implementation_files": [
+        "tests/helpers.ts"
+      ],
+      "test_files": [
+        "tests/smoke.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/smoke.test.ts",
+        "description": "o smoke end-to-end acusa a falta dos helpers de teste"
+      },
+      "implementation_steps": [
+        "Criar os helpers de teste isolados por arquivo",
+        "Escrever o smoke end-to-end em modo mock"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test",
+          "description": "a suite completa passa com exit 0 sem rede"
+        },
+        {
+          "command": "bun run check",
+          "description": "o typecheck estrito passa"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "status": "pending"
+    }
+  ]
+}
