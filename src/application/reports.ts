@@ -25,7 +25,7 @@ export function folderName(rank: number, name: string): string {
 export function scopeNotice(cfg: StudyConfig): string {
   const location = cfg.city ? `${cfg.niche} em ${cfg.city}` : cfg.niche;
   return (
-    "> **Escopo e metodo:** este material foi gerado por `generate_study.py` a partir do " +
+    "> **Escopo e metodo:** este material foi gerado pelo goodbizz a partir do " +
     `nicho **${location}**. Os indicadores vem de um decisor (System One) e o texto, de um ` +
     `LLM. O ticket assumido e de R$ ${cfg.monthlyTicket}/mes e a meta de clientes e de 10 a ` +
     "15 em 24 meses. **Confira os numeros de mercado antes de usar isto com cliente:** " +
