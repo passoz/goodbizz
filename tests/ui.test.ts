@@ -55,17 +55,28 @@ afterEach(() => {
 });
 
 describe("paginas da interface", () => {
-  test("a pagina inicial responde HTML com o formulario e o estado vazio", async () => {
+  test("a pagina inicial mostra o estado vazio com uma acao clara", async () => {
     const response = await harness.app.request("/");
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("text/html");
     const body = await response.text();
-    expect(body).toContain('id="study-form"');
-    expect(body).toContain('name="_csrf"');
     expect(body).toContain("Nenhum estudo ainda");
+    expect(body).toContain('href="/new"');
+    expect(body).not.toContain('id="study-form"');
   });
 
-  test("a pagina inicial lista o estudo criado pelo servico", async () => {
+  test("o formulario de novo estudo vive em pagina propria", async () => {
+    const response = await harness.app.request("/new");
+    expect(response.status).toBe(200);
+    const body = await response.text();
+    expect(body).toContain('id="study-form"');
+    expect(body).toContain('name="_csrf"');
+    expect(body).toContain('name="niche"');
+    expect(body).toContain('name="mock"');
+    expect(body).toContain("Voltar para os estudos");
+  });
+
+  test("a lista abre o estudo pelo cartao inteiro, nao por um id minusculo", async () => {
     const study = await harness.service.create(resolveStudyConfig({ niche: "oficinas", mock: true }));
 
     const body = await (await harness.app.request("/")).text();
@@ -74,6 +85,9 @@ describe("paginas da interface", () => {
     expect(body).toContain(`href="/studies/${study.id}"`);
     expect(body).toContain("oficinas");
     expect(body).not.toContain("Nenhum estudo ainda");
+    // O titulo carrega o link esticado e a acao fica visivel no cartao.
+    expect(body).toContain('class="stretch"');
+    expect(body).toContain("Abrir estudo");
   });
 
   test("estudo desconhecido responde 404 com corpo JSON", async () => {

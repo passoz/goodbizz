@@ -61,14 +61,14 @@ export function buildUiApp(deps: UiDeps): Hono {
 
   ui.get("/", async (c) => {
     const studies = await deps.service.list();
-    return c.render(
-      <>
-        <StudiesList studies={studies} />
-        <StudyForm token={c.get("csrfToken")} defaults={{ monthlyTicket: 300, numIdeas: 8 }} />
-      </>,
-      { title: "goodbizz — estudos" },
-    );
+    return c.render(<StudiesList studies={studies} />, { title: "goodbizz — estudos" });
   });
+
+  ui.get("/new", (c) =>
+    c.render(<StudyForm token={c.get("csrfToken")} defaults={{ monthlyTicket: 300, numIdeas: 8 }} />, {
+      title: "goodbizz — novo estudo",
+    }),
+  );
 
   ui.get("/studies/:id", async (c) => {
     const id = c.req.param("id");

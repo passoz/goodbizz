@@ -1,7 +1,10 @@
 /**
- * Paginas da interface. Regra de leitura: todo dado apresentado vem acompanhado do seu helper,
- * no formato "dado 0.89 (maior e melhor)" ou com a escala explicita. O leitor nao precisa
- * conhecer a metodologia para interpretar um numero.
+ * Paginas da interface.
+ *
+ * Duas regras de leitura:
+ * 1. todo dado apresentado vem com o seu helper, no formato "dado 0.89 (maior e melhor)";
+ * 2. as cores nao sao decoracao: elas seguem a escala do operador, do vermelho (sinal ruim ou
+ *    quente) ao verde (sinal bom), conforme os limiares da metodologia.
  */
 import type { FC } from "hono/jsx";
 import { html } from "hono/html";
@@ -16,18 +19,19 @@ const STATE_LABEL: Record<StudyState, string> = {
   failed: "falhou",
 };
 
+/** Tom de cor por estado: verde so quando terminou bem. */
 const STATE_TONE: Record<StudyState, string> = {
-  pending: "badge",
-  running: "badge badge-running",
-  done: "badge badge-done",
-  failed: "badge badge-failed",
+  pending: "b-yellow",
+  running: "b-orange",
+  done: "b-green",
+  failed: "b-red",
 };
 
-const PAIN_TONE: Record<string, string> = {
-  FORTE: "badge badge-strong",
-  FRACA: "badge badge-weak",
-  INSTAVEL: "badge badge-unstable",
-  INDETERMINADO: "badge",
+const STATE_TIP: Record<StudyState, string> = {
+  pending: "Criado agora, aguardando o inicio do pipeline.",
+  running: "Em andamento: brief, ideias, avaliacao, documentos e relatorios.",
+  done: "Terminou bem. Ranking, medias, artefatos e plano estao disponiveis.",
+  failed: "Terminou com erro. A mensagem aparece no topo desta pagina.",
 };
 
 const TIER_NOTE: Record<Tier, string> = {
@@ -36,7 +40,45 @@ const TIER_NOTE: Record<Tier, string> = {
   C: "venda dificil ou mudanca de habito",
 };
 
-/** O que cada artefato responde, por padrao de caminho. */
+/** Dor: vermelho e o sinal que interessa (consequencia imediata), amarelo e dor interna. */
+const PAIN_TONE: Record<string, string> = {
+  FORTE: "b-red",
+  INSTAVEL: "b-orange",
+  INDETERMINADO: "b-orange",
+  FRACA: "b-yellow",
+};
+
+export const PAIN_MEANING: Record<string, string> = {
+  FORTE: "o dono perde dinheiro hoje ou queima a imagem publica",
+  FRACA: "ganho interno de organizacao; o dono nao paga por urgencia",
+  INDETERMINADO: "zona cinzenta; precisa de revisao manual",
+  INSTAVEL: "as parafrases divergem; a medicao nao e confiavel",
+};
+
+/** Escala de cor aplicada ao indice de acao (0 a 2, maior e melhor). */
+function indexTone(index: number): string {
+  if (index >= 1.84) return "green";
+  if (index >= 1.6) return "lime";
+  if (index >= 1.2) return "yellow";
+  return "orange";
+}
+
+/** Desvio entre parafrases (menor e melhor). */
+function deviationTone(deviation: number): string {
+  if (deviation < 0.15) return "green";
+  if (deviation < 0.3) return "yellow";
+  return "red";
+}
+
+/** Probabilidade de 0 a 1 (maior e melhor). */
+function probabilityTone(value: number): string {
+  if (value >= 0.66) return "green";
+  if (value >= 0.5) return "lime";
+  if (value >= 0.33) return "yellow";
+  if (value >= 0.15) return "orange";
+  return "red";
+}
+
 const ARTIFACT_HINTS: Array<[RegExp, string]> = [
   [/^00-brief\.md$/, "leitura de mercado que orientou as ideias"],
   [/^00-tabelao\.md$/, "todos os indicadores lado a lado"],
@@ -56,18 +98,15 @@ function artifactExt(path: string): string {
   return match?.[1]?.toLowerCase() ?? "arquivo";
 }
 
+function formatDate(iso: string): string {
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? "-" : date.toLocaleDateString("pt-BR");
+}
+
 const Hint: FC<{ children: string }> = (props) => <span class="hint">({props.children})</span>;
 
-/** Dica de cada estado. Nao repete o rotulo visivel, para nao confundir leitura em texto puro. */
-const STATE_TIP: Record<StudyState, string> = {
-  pending: "Criado agora, aguardando o inicio do pipeline.",
-  running: "Em andamento: brief, ideias, avaliacao, documentos e relatorios.",
-  done: "Terminou bem. Ranking, medias, artefatos e plano estao disponiveis.",
-  failed: "Terminou com erro. A mensagem aparece no topo desta pagina.",
-};
-
 const StateBadge: FC<{ state: StudyState }> = (props) => (
-  <span class={`${STATE_TONE[props.state]} has-tip`} tabindex="0">
+  <span class={`badge ${STATE_TONE[props.state]} has-tip`} tabindex="0">
     {STATE_LABEL[props.state]}
     <span class="tip" role="tooltip">
       {STATE_TIP[props.state]}
@@ -85,7 +124,7 @@ const TierBadge: FC<{ tier: Tier }> = (props) => (
 );
 
 const PainBadge: FC<{ label: string }> = (props) => (
-  <span class={`${PAIN_TONE[props.label] ?? "badge"} has-tip`} tabindex="0">
+  <span class={`badge ${PAIN_TONE[props.label] ?? "b-yellow"} has-tip`} tabindex="0">
     {props.label}
     <span class="tip" role="tooltip">
       {GLOSSARY[props.label] ?? PAIN_MEANING[props.label] ?? ""}
@@ -93,17 +132,16 @@ const PainBadge: FC<{ label: string }> = (props) => (
   </span>
 );
 
-/** Significado de cada rotulo de dor, usado no title e na legenda. */
-export const PAIN_MEANING: Record<string, string> = {
-  FORTE: "o dono perde dinheiro hoje ou queima a imagem publica",
-  FRACA: "ganho interno de organizacao; o dono nao paga por urgencia",
-  INDETERMINADO: "zona cinzenta; precisa de revisao manual",
-  INSTAVEL: "as parafrases divergem; a medicao nao e confiavel",
-};
-
-/** Bloco de metrica: rotulo, valor em monospace e o helper de leitura. */
-const Metric: FC<{ term: string; label: string; value: string; hint: string; note?: string }> = (props) => (
-  <li class="metric">
+/** Bloco de metrica: rotulo, valor em monospace, tom da escala e o helper de leitura. */
+const Metric: FC<{
+  term: string;
+  label: string;
+  value: string;
+  hint: string;
+  note?: string;
+  tone: string;
+}> = (props) => (
+  <li class={`metric tone-${props.tone}`}>
     <span class="metric-label">
       <Term of={props.term}>{props.label}</Term>
     </span>
@@ -113,7 +151,7 @@ const Metric: FC<{ term: string; label: string; value: string; hint: string; not
   </li>
 );
 
-/** Como ler: as regras da metodologia, para o numero fazer sentido sem consultar o codigo. */
+/** Como ler: as regras da metodologia, mais a leitura da escala de cor. */
 export const Legend: FC = () => (
   <section class="panel glass">
     <h3>Como ler estes numeros</h3>
@@ -126,6 +164,27 @@ export const Legend: FC = () => (
         <dd>
           Tier A a partir de 1.84, Tier B a partir de 1.60, Tier C abaixo disso. E o criterio de priorizacao,
           nao uma previsao de faturamento.
+        </dd>
+      </div>
+      <div>
+        <dt>
+          <Term of="escala">Escala de cor</Term>
+        </dt>
+        <dd>
+          Vermelho aponta sinal ruim ou quente, laranja pede atencao, amarelo e medio, limao e verde apontam
+          sinal bom. A mesma escala colore indice, tier, dor, desvio e estado.
+          <span class="scale">
+            <i />
+            <i />
+            <i />
+            <i />
+            <i />
+          </span>
+          <span class="scale-labels">
+            <span>ruim</span>
+            <span>medio</span>
+            <span>bom</span>
+          </span>
         </dd>
       </div>
       <div>
@@ -195,78 +254,93 @@ export const Legend: FC = () => (
   </section>
 );
 
-/** Lista de estudos: uma linha por estudo, com a leitura de cada coluna. */
+/**
+ * Lista de estudos como cartoes. O cartao INTEIRO e a entrada: o titulo carrega um link esticado
+ * (`.stretch`) que cobre a area toda, e o selo "Abrir estudo" mostra a acao sem esconder o alvo.
+ */
 export const StudiesList: FC<{ studies: StudyListItem[] }> = (props) => (
-  <section class="panel glass">
-    <h2>Estudos</h2>
-    <p class="sub">
-      Cada estudo e uma rodada de medicao: ideias geradas, avaliadas por um decisor probabilistico e
-      ranqueadas pelo Indice de Acao.
-    </p>
-    {props.studies.length === 0 ? (
-      <p id="studies-empty" class="empty">
-        Nenhum estudo ainda. Crie o primeiro no formulario abaixo: basta uma frase de nicho e o modo simulado
-        roda sem credenciais.
-      </p>
-    ) : (
-      <div class="table-wrap">
-        <table id="studies">
-          <thead>
-            <tr>
-              <th>Estudo</th>
-              <th>Nicho</th>
-              <th>Cidade</th>
-              <th class="num">
-                <Term of="ticket">Ticket</Term> <Hint>R$ por mes; teto da precificacao</Hint>
-              </th>
-              <th>
-                Estado <Hint>situacao da execucao</Hint>
-              </th>
-              <th>
-                Ideias <Hint>quantas foram avaliadas</Hint>
-              </th>
-              <th>
-                Melhor ideia <Hint>maior Indice de Acao</Hint>
-              </th>
-              <th class="num">
-                <Term of="Indice de Acao">Indice</Term> <Hint>0 a 2; maior e melhor</Hint>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {props.studies.map((study) => (
-              <tr>
-                <td>
-                  <a href={`/studies/${study.id}`}>{study.id.slice(0, 8)}</a>
-                </td>
-                <td>{study.niche}</td>
-                <td>{study.city !== "" ? study.city : "-"}</td>
-                <td class="num">{study.monthlyTicket}</td>
-                <td>
-                  <StateBadge state={study.state} />
-                </td>
-                <td class="num">{study.ideaCount}</td>
-                <td>{study.topIdea !== null ? study.topIdea : "-"}</td>
-                <td class="num">{study.topIndex !== null ? study.topIndex.toFixed(3) : "-"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+  <section>
+    <div class="page-head">
+      <div>
+        <h2>Estudos</h2>
+        <p class="sub">
+          Cada estudo e uma rodada de medicao: ideias geradas, avaliadas por um decisor probabilistico e
+          ranqueadas pelo Indice de Acao. Clique em qualquer ponto do cartao para abrir.
+        </p>
       </div>
+    </div>
+
+    {props.studies.length === 0 ? (
+      <div class="panel glass">
+        <div class="empty">
+          <p id="studies-empty">
+            Nenhum estudo ainda. Descreva um nicho em uma frase e o modo simulado roda sem credenciais, sem
+            custo e em menos de um segundo.
+          </p>
+          <a class="btn btn-primary" href="/new">
+            Criar o primeiro estudo
+          </a>
+        </div>
+      </div>
+    ) : (
+      <ul class="studies">
+        {props.studies.map((study) => (
+          <li class="study-card glass">
+            <div>
+              <h3>
+                <a class="stretch" href={`/studies/${study.id}`}>
+                  {study.niche}
+                </a>
+              </h3>
+              <p class="study-meta">
+                <span class="chip">Cidade: {study.city !== "" ? study.city : "nao informada"}</span>
+                <span class="chip">
+                  <Term of="ticket">Ticket</Term>: R$ {study.monthlyTicket}/mes
+                </span>
+                <span class="chip">{study.ideaCount} ideias avaliadas</span>
+                <span class="chip">criado em {formatDate(study.createdAt)}</span>
+              </p>
+              <p class="study-top">
+                Melhor ideia <b>{study.topIdea !== null ? study.topIdea : "ainda nao avaliada"}</b>
+                {study.topIndex !== null ? (
+                  <>
+                    <span class={`badge b-${indexTone(study.topIndex)}`}>{study.topIndex.toFixed(3)}</span>
+                    <Hint>0 a 2; maior e melhor</Hint>
+                  </>
+                ) : null}
+              </p>
+              <p class="study-id">id {study.id.slice(0, 8)} (usado nas chamadas de API)</p>
+            </div>
+            <div class="study-side">
+              <StateBadge state={study.state} />
+              <span class="open-cta">Abrir estudo</span>
+            </div>
+          </li>
+        ))}
+      </ul>
     )}
   </section>
 );
 
-/** Formulario de criacao. Os helpers explicam o efeito de cada campo no estudo. */
+/** Formulario de criacao, em pagina propria. Os helpers explicam o efeito de cada campo. */
 export const StudyForm: FC<{ token: string; defaults: { monthlyTicket: number; numIdeas: number } }> = (
   props,
 ) => (
-  <section class="panel glass">
-    <h2>Novo estudo</h2>
-    <p class="sub">
-      Descreva o nicho em uma frase. O restante influencia a medicao de preco e o volume de hipoteses.
-    </p>
-    <form id="study-form" method="post" action="/ui/studies">
+  <section>
+    <div class="page-head">
+      <div>
+        <h2>Novo estudo</h2>
+        <p class="sub">
+          Uma frase de nicho basta. O ticket influencia a medicao de preco e o numero de ideias define quantas
+          hipoteses serao avaliadas e ranqueadas.
+        </p>
+      </div>
+      <a class="btn btn-ghost" href="/">
+        Voltar para os estudos
+      </a>
+    </div>
+
+    <form id="study-form" method="post" action="/ui/studies" class="panel glass">
       <input type="hidden" name="_csrf" value={props.token} />
       <div class="form-grid">
         <div class="field">
@@ -312,13 +386,13 @@ export const StudyForm: FC<{ token: string; defaults: { monthlyTicket: number; n
         </div>
       </div>
       <div class="form-actions">
+        <button class="btn btn-primary" type="submit">
+          Criar estudo
+        </button>
         <label class="check">
           <input type="checkbox" name="mock" value="1" checked />
           <Term of="modo simulado">modo simulado</Term> <Hint>sem provedores reais e sem custo</Hint>
         </label>
-        <button class="btn btn-primary" type="submit">
-          Criar estudo
-        </button>
         <p id="study-error" role="alert" />
       </div>
     </form>
@@ -376,6 +450,9 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; plan: st
   return (
     <>
       <section class="panel glass">
+        <p class="sub">
+          <a href="/">Estudos</a> / {study.niche}
+        </p>
         <h2>{study.niche}</h2>
         <p id="study-meta" class="sub">
           <StateBadge state={study.progress.state} />
@@ -439,19 +516,23 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; plan: st
                     <td title={idea.description}>{idea.name}</td>
                     <td>{idea.sector !== "" ? idea.sector : "-"}</td>
                     <td
-                      class="num"
+                      class={`num tone-${indexTone(idea.index)} tone-text`}
                       title={`Indice de Acao: media entre fit e venda, maior e melhor. Tier ${idea.tier}: ${TIER_NOTE[idea.tier]}`}
                     >
                       {idea.index.toFixed(3)}
+                      <span class={`rank-bar tone-${indexTone(idea.index)}`} />
                     </td>
                     <td>
                       <TierBadge tier={idea.tier} />
                     </td>
-                    <td class="num" title="Probabilidade de o dono pagar o ticket, de 0 a 1">
+                    <td
+                      class={`num tone-${probabilityTone(idea.business.wtp)} tone-text`}
+                      title="Probabilidade de o dono pagar o ticket, de 0 a 1"
+                    >
                       {idea.business.wtp.toFixed(2)}
                     </td>
                     <td
-                      class="num"
+                      class={`num tone-${deviationTone(idea.algorithm.deviation)} tone-text`}
                       title="Desvio entre as parafrases das sondas: menor e melhor. Acima de 0.15 a medicao e considerada instavel"
                     >
                       {idea.algorithm.deviation.toFixed(3)}
@@ -479,6 +560,7 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; plan: st
               value={summary.means.fit.toFixed(2)}
               hint="0 a 2; maior e melhor"
               note="2 = resolve o caos do balcao sem exigir mudanca de habito"
+              tone={probabilityTone(summary.means.fit / 2)}
             />
             <Metric
               term="venda"
@@ -486,6 +568,7 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; plan: st
               value={summary.means.sale.toFixed(2)}
               hint="0 a 2; maior e melhor"
               note="2 = ataca perda de dinheiro ou de imagem agora"
+              tone={probabilityTone(summary.means.sale / 2)}
             />
             <Metric
               term="disrupcao"
@@ -493,6 +576,7 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; plan: st
               value={summary.means.disruption.toFixed(2)}
               hint="0 a 2; maior e melhor"
               note="2 = muda o modelo de operacao"
+              tone={probabilityTone(summary.means.disruption / 2)}
             />
             <Metric
               term="solo"
@@ -500,6 +584,7 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; plan: st
               value={summary.means.solo.toFixed(2)}
               hint="0 a 1; maior e melhor"
               note="um consultor mantendo 30 clientes sem colapsar"
+              tone={probabilityTone(summary.means.solo)}
             />
             <Metric
               term="WTP"
@@ -507,6 +592,7 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; plan: st
               value={summary.means.wtp.toFixed(2)}
               hint="0 a 1; maior e melhor"
               note={`probabilidade media de pagar R$ ${study.monthlyTicket}/mes`}
+              tone={probabilityTone(summary.means.wtp)}
             />
             <Metric
               term="meta30"
@@ -514,6 +600,7 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; plan: st
               value={summary.means.meta30.toFixed(2)}
               hint="0 a 1; maior e melhor"
               note="a base do plano e 10 a 15 clientes"
+              tone={probabilityTone(summary.means.meta30)}
             />
           </ul>
 
@@ -521,14 +608,14 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; plan: st
             Grupos por natureza da dor <Hint>o preditor mais forte de compra</Hint>
           </h3>
           <ul id="pain-groups" class="groups">
-            <li class="pain-row pain-row-forte">
+            <li class="pain-row pain-forte">
               forte: {summary.painGroups.forte.join(", ") || "nenhuma"}{" "}
               <Hint>perde dinheiro hoje ou queima a imagem</Hint>
             </li>
-            <li class="pain-row pain-row-mista">
+            <li class="pain-row pain-mista">
               mista: {summary.painGroups.mista.join(", ") || "nenhuma"} <Hint>consequencias divididas</Hint>
             </li>
-            <li class="pain-row pain-row-fraca">
+            <li class="pain-row pain-fraca">
               fraca: {summary.painGroups.fraca.join(", ") || "nenhuma"}{" "}
               <Hint>sobra trabalho manual; sem urgencia de compra</Hint>
             </li>
