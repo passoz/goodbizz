@@ -206,6 +206,10 @@ html[data-theme="light"] .theme-btn[aria-pressed="true"] { color: var(--accent-i
 /* ── Progresso do estudo em execucao ───────────────────────────────────── */
 .progress-head { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
 .progress-phase { font: 700 var(--fs-small)/1 var(--mono); color: var(--paper); font-variant-numeric: tabular-nums; }
+.progress-elapsed {
+  font: 560 var(--fs-micro)/1 var(--sans); color: var(--muted); letter-spacing: 0.01em;
+}
+.progress-elapsed.progress-stalled { color: var(--r-orange); }
 .progress-steps { display: flex; gap: 6px; margin: 14px 0 0; padding: 0; list-style: none; }
 .progress-steps li {
   flex: 1; height: 6px; border-radius: var(--r-pill); background: oklch(1 0 0 / 0.14);

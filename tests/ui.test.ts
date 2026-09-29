@@ -204,6 +204,7 @@ describe("paginas da interface", () => {
     expect(body).toContain('id="progress-panel"');
     expect(body).toContain('aria-live="polite"');
     expect(body).toContain('id="progress-steps"');
+    expect(body).toContain('id="progress-elapsed"');
     // A legenda saiu do detalhe para a pagina /como-ler.
     expect(body).not.toContain("Indicadores, limiares e escala");
     // Tema claro/escuro: os tres estados e o guarda aplicado antes do primeiro paint.

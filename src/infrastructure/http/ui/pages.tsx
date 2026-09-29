@@ -471,9 +471,27 @@ function progressScript(id: string): string {
   var id = ${JSON.stringify(id)};
   var phase = document.getElementById("progress-phase");
   var line = document.getElementById("progress-step");
+  var elapsed = document.getElementById("progress-elapsed");
   var steps = Array.prototype.slice.call(document.querySelectorAll("#progress-steps li"));
+  var lastChange = Date.now();
+  var previous = "";
+  // Uma fase leva minutos (cada documento tem ~23 KB de prosa): sem um contador visivel, um passo
+  // parado parece travamento. Acima de 2 min o contador muda de tom.
+  function tick() {
+    if (!elapsed) return;
+    var seconds = Math.round((Date.now() - lastChange) / 1000);
+    elapsed.textContent = seconds < 2 ? "agora" : "ha " + seconds + "s";
+    if (seconds > 120) elapsed.classList.add("progress-stalled");
+    else elapsed.classList.remove("progress-stalled");
+  }
+  setInterval(tick, 1000);
   function paint(data) {
     var text = typeof data.step === "string" ? data.step : "";
+    if (text !== previous) {
+      previous = text;
+      lastChange = Date.now();
+    }
+    tick();
     var match = /\\[(\\d)\\/6\\]\\s*([\\s\\S]*)/.exec(text);
     var current = match ? Number(match[1]) : 0;
     if (phase) phase.textContent = current ? current + "/6" : "iniciando";
@@ -570,8 +588,13 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[] }> = (pro
         <section class="panel glass" id="progress-panel" aria-live="polite" aria-busy="true">
           <div class="progress-head">
             <h3>Estudo em execucao</h3>
-            <span class="progress-phase" id="progress-phase">
-              {current.phase > 0 ? `${current.phase}/${PHASE_COUNT}` : "iniciando"}
+            <span class="progress-phase">
+              <span id="progress-elapsed" class="progress-elapsed">
+                agora
+              </span>{" "}
+              <span id="progress-phase">
+                {current.phase > 0 ? `${current.phase}/${PHASE_COUNT}` : "iniciando"}
+              </span>
             </span>
           </div>
           <ol class="progress-steps" id="progress-steps">
