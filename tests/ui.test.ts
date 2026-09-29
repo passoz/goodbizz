@@ -116,7 +116,7 @@ describe("paginas da interface", () => {
     });
   });
 
-  test("a pagina de detalhe mostra ranking, medias, grupos, artefatos e o plano", async () => {
+  test("a pagina de detalhe mostra ranking, medias, grupos, artefatos e o progresso ao vivo", async () => {
     const study = await harness.service.create(
       resolveStudyConfig({ niche: "padarias", city: "recife", mock: true }),
     );
@@ -189,11 +189,38 @@ describe("paginas da interface", () => {
     expect(means.match(/class="hint"/g)?.length).toBe(6);
     expect(means).toContain("maior e melhor");
     expect(body).toContain("forte: Triagem de WhatsApp");
-    expect(body).toContain(`href="/api/studies/${study.id}/artifacts/01-triagem-de-whatsapp/README.md"`);
-    expect(body).toContain("conteudo do plano");
-    // Atalho para baixar a arvore inteira de artefatos.
+    // Os markdown ficam disponiveis para download direto na lista de artefatos.
+    expect(body).toContain(
+      `href="/api/studies/${study.id}/artifacts/01-triagem-de-whatsapp/README.md" download`,
+    );
+    // O plano nao e mais renderizado dentro da pagina: o arquivo basta.
+    expect(body).not.toContain('id="plan"');
+    expect(body).not.toContain("conteudo do plano");
+    // O zip e uma acao do cabecalho: aparece antes da lista de arquivos.
     expect(body).toContain(`href="/api/studies/${study.id}/artifacts.zip"`);
     expect(body).toContain("Baixar .zip");
+    expect(body.indexOf("artifacts.zip")).toBeLessThan(body.indexOf('id="artefatos"'));
+    // Estudo em fila/execucao mostra o painel de progresso com regiao viva.
+    expect(body).toContain('id="progress-panel"');
+    expect(body).toContain('aria-live="polite"');
+    expect(body).toContain('id="progress-steps"');
+    // A legenda saiu do detalhe para a pagina /como-ler.
+    expect(body).not.toContain("Indicadores, limiares e escala");
+    // Tema claro/escuro: os tres estados e o guarda aplicado antes do primeiro paint.
+    expect(body).toContain('data-theme-set="auto"');
+    expect(body).toContain('data-theme-set="light"');
+    expect(body).toContain('data-theme-set="dark"');
+    expect(body).toContain("goodbizz-theme");
+  });
+
+  test("a pagina como ler reune a legenda e a escala", async () => {
+    const response = await harness.app.request("/como-ler");
+    expect(response.status).toBe(200);
+    const body = await response.text();
+    expect(body).toContain("Como ler estes numeros");
+    expect(body).toContain("Indicadores, limiares e escala");
+    expect(body).toContain("Tier A a partir de 1.84");
+    expect(body).toContain('class="scale"');
   });
 
   test("a pagina sobre a API descreve os endpoints publicos", async () => {

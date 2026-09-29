@@ -173,16 +173,29 @@ Erros: `422` payload invalido (com detalhes de validacao), `404` estudo ou artef
 
 ## Interface web
 
-Duas rotas: `GET /` lista os estudos como cartoes e `GET /new` traz o formulario de criacao.
-`GET /studies/:id` mostra o cabecalho, a legenda de leitura, o ranking, as medias, os grupos de dor,
-os artefatos e o plano completo. O cartao inteiro abre o estudo: o titulo carrega um link esticado
-que cobre a area e o selo "Abrir estudo" mostra a acao. O identificador aparece so como nota de
-rodape, para chamadas de API.
+Quatro rotas: `GET /` lista os estudos como cartoes, `GET /new` traz o formulario de criacao,
+`GET /studies/:id` abre um estudo e `GET /como-ler` reune as regras de leitura. O cartao inteiro abre
+o estudo: o titulo carrega um link esticado que cobre a area e o selo "Abrir estudo" mostra a acao. O
+identificador aparece so como nota de rodape, para chamadas de API.
 
-Na secao de artefatos, **"Baixar .zip"** entrega a arvore inteira em um unico arquivo, dentro de uma
-pasta com o slug do nicho. O ZIP e escrito pelo proprio runtime (`buildZip` em
-`src/application/artifacts.ts`, PKZIP com deflate e fallback para store): `Bun.Archive` escreve tar,
-nao zip, e assim a imagem nao depende de binario externo.
+No estudo, **"Baixar .zip"** e a acao do cabecalho (ao lado do titulo) e entrega a arvore inteira em
+um unico arquivo, dentro de uma pasta com o slug do nicho. O ZIP e escrito pelo proprio runtime
+(`buildZip` em `src/application/artifacts.ts`, PKZIP com deflate e fallback para store): `Bun.Archive`
+escreve tar, nao zip, e assim a imagem nao depende de binario externo. Cada artefato tambem baixa
+direto (`download` no link), sem renderizar markdown dentro da pagina.
+
+**Progresso ao vivo.** Enquanto o pipeline roda, a pagina do estudo mostra o painel de progresso — o
+passo atual gravado pelo servico (`[3/6] ...`), a barra de seis fases e o selo do estado — e consulta
+`GET /api/studies/:id` a cada 2 s, recarregando sozinha quando o estudo termina. Sem JavaScript o
+texto do passo continua no HTML renderizado (recarregue a mao); a regiao usa `aria-live="polite"`.
+
+**Tema claro e escuro.** O cabecalho traz tres estados — `Auto` (segue `prefers-color-scheme`), `Claro`
+e `Escuro` — persistidos em `localStorage` e aplicados antes do primeiro paint por um guarda inline em
+`<head>`, sem piscar. O tema escuro e o padrao; o claro reescreve superficie, linha, texto forte e
+selos em `src/infrastructure/http/ui/layout.tsx`.
+
+**Como ler.** A legenda da metodologia (indicadores, limiares de tier e de dor, escala de cor) vive em
+`/como-ler`, alcancavel pela navegacao, em vez de ocupar o meio do estudo.
 
 **Paleta com significado.** As cores `#DD5855` `#D78133` `#BFC115` `#9FDB43` `#72CE3B` formam a
 escala do sistema: vermelho aponta sinal ruim ou quente, laranja pede atencao, amarelo e medio,

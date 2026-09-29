@@ -58,13 +58,13 @@ export const GLASS_CSS = `
     0 36px 68px -30px oklch(0 0 0 / 0.82);
   --shadow-chrome: var(--ring), 0 18px 40px -22px oklch(0 0 0 / 0.7);
 
-  --fs-micro: 11.5px;
-  --fs-small: 13px;
-  --fs-body: 15px;
-  --fs-lead: 17.5px;
-  --fs-h3: 16px;
-  --fs-h2: 28px;
-  --fs-h1: 42px;
+  --fs-micro: 13px;
+  --fs-small: 15px;
+  --fs-body: 17px;
+  --fs-lead: 20px;
+  --fs-h3: 19px;
+  --fs-h2: 33px;
+  --fs-h1: 47px;
 
   --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
   --sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -73,13 +73,162 @@ export const GLASS_CSS = `
 * { box-sizing: border-box; }
 
 html { color-scheme: dark; }
+html[data-theme="light"] { color-scheme: light; }
+
+/* ── Tema claro ────────────────────────────────────────────────────────── */
+/* O tema padrao (escuro) fica intacto: este bloco so reescreve superficie, linha, texto forte e os
+   selos quando o atributo data-theme vale "light". O fundo quente e saturado continua sendo a fonte
+   de cor do vidro — no claro ele entra com metade da forca, senao a pagina vira um adesivo colorido. */
+html[data-theme="light"] {
+  --ink: #f2ece3;
+  --ink-2: #fbf8f3;
+  --paper: #1c1613;
+  --muted: #57493f;
+  --faint: #7c6e63;
+  --accent-ink: #2a1704;
+  --ring: 0 0 0 1px oklch(0 0 0 / 0.08);
+  --ring-strong: 0 0 0 1px oklch(0 0 0 / 0.14);
+  --shadow-panel:
+    var(--ring),
+    0 1px 2px -1px oklch(0.3 0.03 60 / 0.22),
+    0 26px 50px -28px oklch(0.3 0.03 60 / 0.34);
+  --shadow-panel-hover:
+    var(--ring-strong),
+    0 2px 5px -2px oklch(0.3 0.03 60 / 0.26),
+    0 34px 62px -30px oklch(0.3 0.03 60 / 0.4);
+  --shadow-chrome: var(--ring), 0 16px 36px -22px oklch(0.3 0.03 60 / 0.3);
+}
+html[data-theme="light"] body::before {
+  background:
+    radial-gradient(54% 46% at 4% 2%, rgb(221 88 85 / .3), transparent 68%),
+    radial-gradient(50% 44% at 98% 4%, rgb(215 129 51 / .28), transparent 68%),
+    radial-gradient(52% 46% at 90% 92%, rgb(114 206 59 / .26), transparent 70%),
+    radial-gradient(46% 40% at 4% 96%, rgb(191 193 21 / .24), transparent 72%),
+    radial-gradient(78% 62% at 46% 48%, rgb(159 219 67 / .16), transparent 74%);
+}
+html[data-theme="light"] body::after {
+  background: linear-gradient(180deg, rgb(255 252 247 / .42), rgb(255 252 247 / .72));
+}
+html[data-theme="light"] .glass {
+  background:
+    linear-gradient(140deg, oklch(1 0 0 / 0.72), oklch(1 0 0 / 0.44) 46%, oklch(1 0 0 / 0.6)),
+    rgb(255 253 249 / 0.62);
+  box-shadow:
+    var(--shadow-panel),
+    inset 0 1px 0 oklch(1 0 0 / 0.85);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html[data-theme="light"] .glass { background: rgb(255 253 249 / 0.96); }
+}
+html[data-theme="light"] .topbar.glass {
+  background: rgb(255 253 249 / 0.72);
+  box-shadow:
+    var(--shadow-chrome),
+    inset 0 1px 0 oklch(1 0 0 / 0.9);
+}
+html[data-theme="light"] .nav a:hover,
+html[data-theme="light"] .btn,
+html[data-theme="light"] .chip,
+html[data-theme="light"] .badge,
+html[data-theme="light"] .metric,
+html[data-theme="light"] .file,
+html[data-theme="light"] .pain-row {
+  background: oklch(0 0 0 / 0.045);
+  box-shadow: inset 0 0 0 1px oklch(0 0 0 / 0.07);
+}
+html[data-theme="light"] .btn:hover,
+html[data-theme="light"] .file:hover {
+  background: oklch(0 0 0 / 0.08);
+  box-shadow: inset 0 0 0 1px oklch(0 0 0 / 0.12);
+}
+html[data-theme="light"] .btn-primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow:
+    inset 0 0 0 1px oklch(0 0 0 / 0.12),
+    0 12px 26px -14px rgb(215 129 51 / 0.75);
+}
+html[data-theme="light"] .btn-ghost { background: transparent; box-shadow: inset 0 0 0 1px oklch(0 0 0 / 0.16); }
+html[data-theme="light"] .field input[type="text"],
+html[data-theme="light"] .field input[type="number"] {
+  background: rgb(255 255 255 / 0.8);
+  border-color: oklch(0 0 0 / 0.14);
+  color: var(--paper);
+}
+html[data-theme="light"] .field input:focus { background: #fff; }
+html[data-theme="light"] .file-ext { background: oklch(0 0 0 / 0.09); }
+html[data-theme="light"] th,
+html[data-theme="light"] td { border-bottom-color: oklch(0 0 0 / 0.1); }
+html[data-theme="light"] tbody tr:hover { background: oklch(0 0 0 / 0.035); }
+html[data-theme="light"] .brand h1,
+html[data-theme="light"] h2,
+html[data-theme="light"] .study-card h3,
+html[data-theme="light"] .metric .value,
+html[data-theme="light"] .score,
+html[data-theme="light"] td.num,
+html[data-theme="light"] .file-ext,
+html[data-theme="light"] .legend dt,
+html[data-theme="light"] .study-top b,
+html[data-theme="light"] .term:hover { color: var(--paper); }
+html[data-theme="light"] .tip { background: rgb(255 253 249 / 0.98); color: var(--paper); }
+html[data-theme="light"] .tip::after { border-top-color: rgb(255 253 249 / 0.98); }
+html[data-theme="light"] .b-red { color: #7d1d1a; background: rgb(221 88 85 / 0.16); box-shadow: inset 0 0 0 1px rgb(221 88 85 / 0.36); }
+html[data-theme="light"] .b-orange { color: #7a4410; background: rgb(215 129 51 / 0.16); box-shadow: inset 0 0 0 1px rgb(215 129 51 / 0.36); }
+html[data-theme="light"] .b-yellow { color: #5d5c0a; background: rgb(191 193 21 / 0.18); box-shadow: inset 0 0 0 1px rgb(191 193 21 / 0.4); }
+html[data-theme="light"] .b-lime { color: #3f5c0d; background: rgb(159 219 67 / 0.2); box-shadow: inset 0 0 0 1px rgb(159 219 67 / 0.42); }
+html[data-theme="light"] .b-green { color: #235710; background: rgb(114 206 59 / 0.2); box-shadow: inset 0 0 0 1px rgb(114 206 59 / 0.44); }
+html[data-theme="light"] .alert { background: rgb(221 88 85 / 0.12); box-shadow: inset 0 0 0 1px rgb(221 88 85 / 0.4); color: #7d1d1a; }
+html[data-theme="light"] #study-error { color: #8c2320; }
+html[data-theme="light"] .term { border-bottom-color: oklch(0 0 0 / 0.4); }
+
+/* ── Botao de tema (3 estados: auto, claro, escuro) ─────────────────────── */
+.topbar-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.theme-toggle {
+  display: inline-flex; align-items: center; gap: 2px; padding: 3px; border-radius: var(--r-pill);
+  background: oklch(1 0 0 / 0.08); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.1);
+}
+.theme-btn {
+  appearance: none; border: 0; cursor: pointer; padding: 7px 13px; border-radius: var(--r-pill);
+  font: 570 var(--fs-micro)/1 var(--sans); letter-spacing: 0.01em;
+  color: var(--muted); background: transparent;
+  transition-property: background-color, color, box-shadow; transition-duration: 150ms;
+}
+.theme-btn:hover { color: var(--paper); background: oklch(1 0 0 / 0.1); }
+.theme-btn[aria-pressed="true"] {
+  color: var(--accent-ink); background: var(--accent); font-weight: 700;
+  box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.24);
+}
+html[data-theme="light"] .theme-toggle { background: oklch(0 0 0 / 0.05); box-shadow: inset 0 0 0 1px oklch(0 0 0 / 0.08); }
+html[data-theme="light"] .theme-btn { color: var(--muted); }
+html[data-theme="light"] .theme-btn:hover { color: var(--paper); background: oklch(0 0 0 / 0.07); }
+html[data-theme="light"] .theme-btn[aria-pressed="true"] { color: var(--accent-ink); }
+
+/* ── Progresso do estudo em execucao ───────────────────────────────────── */
+.progress-head { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+.progress-phase { font: 700 var(--fs-small)/1 var(--mono); color: var(--paper); font-variant-numeric: tabular-nums; }
+.progress-steps { display: flex; gap: 6px; margin: 14px 0 0; padding: 0; list-style: none; }
+.progress-steps li {
+  flex: 1; height: 6px; border-radius: var(--r-pill); background: oklch(1 0 0 / 0.14);
+  transition-property: background-color; transition-duration: 200ms;
+}
+.progress-steps li[data-done="1"] { background: var(--r-lime); }
+.progress-steps li[data-live="1"] { background: var(--r-orange); }
+.progress-step-line {
+  margin: 14px 0 0; font: var(--fs-small)/1.5 var(--mono); color: var(--paper);
+  overflow-wrap: anywhere; min-height: 1.5em;
+}
+.progress-note { margin: 8px 0 0; font-size: var(--fs-micro); color: var(--muted); }
+.progress-stalled { color: var(--r-orange); }
+html[data-theme="light"] .progress-steps li { background: oklch(0 0 0 / 0.1); }
+html[data-theme="light"] .progress-steps li[data-done="1"] { background: var(--r-green); }
+html[data-theme="light"] .progress-steps li[data-live="1"] { background: var(--r-orange); }
 
 body {
   margin: 0;
   min-height: 100dvh;
   background: var(--ink);
   color: var(--paper);
-  font: var(--fs-body)/1.6 var(--sans);
+  font: var(--fs-body)/1.65 var(--sans);
   /* Vibrancy: sobre material translucido o texto precisa de contraste alto e um leve tracking,
      em vez de cinza chapado. */
   letter-spacing: 0.002em;
@@ -132,7 +281,7 @@ a { color: inherit; text-decoration: none; }
   -webkit-backdrop-filter: var(--blur-chrome);
 }
 .brand { display: flex; align-items: baseline; gap: 12px; }
-.brand h1 { margin: 0; font-size: 23px; letter-spacing: -.025em; color: #fff; font-weight: 680; }
+.brand h1 { margin: 0; font-size: 25px; letter-spacing: -.025em; color: #fff; font-weight: 680; }
 .brand span { font-size: var(--fs-small); color: var(--muted); }
 .nav { display: flex; align-items: center; gap: 6px; }
 .nav a {
@@ -191,6 +340,14 @@ h3 { font-size: var(--fs-h3); color: var(--paper); font-weight: 620; margin: 28p
 /* ── Cabecalho de pagina ───────────────────────────────────────────────── */
 .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 22px; }
 .page-head h2 { margin: 0; }
+
+/* ── Cabecalho do estudo: titulo a esquerda, acoes a direita ───────────── */
+/* O download do estudo inteiro e uma acao de nivel de pagina, nao um detalhe da lista de
+   arquivos: ele vive aqui, alinhado ao titulo. */
+.study-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 26px; }
+.study-head-main { min-width: 0; }
+.study-head .sub { margin-top: 10px; }
+.study-head-actions { display: flex; align-items: center; gap: 10px; flex: none; flex-wrap: wrap; }
 
 /* ── Acoes ─────────────────────────────────────────────────────────────── */
 .btn {
@@ -281,7 +438,7 @@ h3 { font-size: var(--fs-h3); color: var(--paper); font-weight: 620; margin: 28p
     var(--shadow-panel-hover),
     inset 0 1px 0 oklch(1 0 0 / 0.2);
 }
-.study-card h3 { margin: 0; font-size: 21px; color: #fff; letter-spacing: -.02em; }
+.study-card h3 { margin: 0; font-size: 24px; color: #fff; letter-spacing: -.02em; }
 .study-meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; }
 .chip {
   font-size: var(--fs-micro); color: var(--paper); padding: 5px 11px; border-radius: var(--r-pill);
@@ -293,7 +450,7 @@ h3 { font-size: var(--fs-h3); color: var(--paper); font-weight: 620; margin: 28p
 .study-id { font: var(--fs-micro)/1 var(--mono); color: var(--faint); margin: 10px 0 0; }
 .study-side { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; flex: none; }
 .study-score { display: flex; align-items: center; gap: 12px; }
-.score { font: 700 32px/1 var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.score { font: 700 37px/1 var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
 .score-side { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
 .score-side .hint { max-width: 18ch; }
 .open-cta {
@@ -312,7 +469,7 @@ h3 { font-size: var(--fs-h3); color: var(--paper); font-weight: 620; margin: 28p
 }
 .metric::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--tone, rgb(255 255 255 / .2)); }
 .metric-label { display: block; color: var(--paper); font-size: var(--fs-small); }
-.metric .value { display: block; margin-top: 3px; font: 700 26px/1.15 var(--mono); color: #fff; font-variant-numeric: tabular-nums; }
+.metric .value { display: block; margin-top: 4px; font: 700 30px/1.15 var(--mono); color: #fff; font-variant-numeric: tabular-nums; }
 .metric .hint { display: block; margin-top: 7px; }
 .metric-note { display: block; margin-top: 4px; font-size: var(--fs-micro); color: var(--faint); }
 .tone-red { --tone: var(--r-red); }
@@ -329,8 +486,8 @@ h3 { font-size: var(--fs-h3); color: var(--paper); font-weight: 620; margin: 28p
   .table-wrap { overflow-x: auto; }
 }
 table { width: 100%; border-collapse: collapse; font-size: var(--fs-small); }
-th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid rgb(255 255 255 / .12); vertical-align: top; }
-th { color: var(--muted); font-weight: 580; font-size: var(--fs-micro); letter-spacing: .02em; }
+th, td { padding: 14px 16px; text-align: left; border-bottom: 1px solid rgb(255 255 255 / .12); vertical-align: top; }
+th { color: var(--muted); font-weight: 620; font-size: var(--fs-micro); letter-spacing: .02em; }
 tbody tr:hover { background: rgb(255 255 255 / .06); }
 tbody tr:last-child td { border-bottom: none; }
 td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
@@ -368,14 +525,8 @@ table.rank td:first-child { color: var(--muted); font-family: var(--mono); }
 }
 
 /* ── Leitor do plano ───────────────────────────────────────────────────── */
-pre#plan {
-  margin: 0; padding: 22px; max-height: 62vh; overflow: auto;
-  background: rgb(10 7 7 / 0.5);
-  box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.08);
-  border: 0;
-  border-radius: var(--r-panel); color: var(--paper);
-  font: var(--fs-small)/1.7 var(--mono); white-space: pre-wrap; overflow-wrap: anywhere;
-}
+/* Removido: o plano da melhor ideia deixou de ser renderizado na pagina. Os mesmos markdown
+   continuam baixaveis na secao de artefatos (e no .zip). */
 
 /* ── Legenda ───────────────────────────────────────────────────────────── */
 .legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(268px, 1fr)); gap: 18px 26px; margin: 0; }
@@ -447,12 +598,13 @@ pre#plan {
 }
 
 @media (max-width: 760px) {
-  :root { --fs-h1: 32px; --fs-h2: 23px; }
+  :root { --fs-h1: 34px; --fs-h2: 26px; }
   .panel { padding: 20px 18px; }
   .topbar { flex-direction: column; align-items: flex-start; gap: 12px; }
   .study-card { flex-direction: column; align-items: flex-start; gap: 18px; }
   .study-side { align-items: flex-start; }
   .page-head { flex-direction: column; align-items: flex-start; }
+  .study-head { flex-direction: column; gap: 18px; }
 }
 `;
 
@@ -512,14 +664,76 @@ export const Term: FC<{ of: string; children?: string; end?: boolean }> = (props
   </span>
 );
 
+/**
+ * Aplica o tema escolhido ANTES do primeiro paint (senao a pagina pisca no tema errado ao
+ * carregar). "auto" nao escreve atributo: o CSS cai no tema escuro padrao e o sistema decide
+ * quando o usuario nunca escolheu.
+ */
+const THEME_BOOT = `
+(function () {
+  try {
+    var saved = localStorage.getItem("goodbizz-theme");
+    if (saved === "light" || saved === "dark") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  } catch (error) {
+    /* modo privado sem storage: segue o padrao */
+  }
+})();`;
+
+/** Liga os tres botoes, persiste a escolha e acompanha o sistema enquanto estiver em "auto". */
+const THEME_WIRE = `
+(function () {
+  var KEY = "goodbizz-theme";
+  var buttons = Array.prototype.slice.call(document.querySelectorAll(".theme-btn"));
+  function stored() {
+    try {
+      var value = localStorage.getItem(KEY);
+      return value === "light" || value === "dark" ? value : "auto";
+    } catch (error) {
+      return "auto";
+    }
+  }
+  function apply(mode) {
+    var root = document.documentElement;
+    if (mode === "auto") root.removeAttribute("data-theme");
+    else root.setAttribute("data-theme", mode);
+    buttons.forEach(function (button) {
+      button.setAttribute("aria-pressed", button.dataset.themeSet === mode ? "true" : "false");
+    });
+  }
+  apply(stored());
+  buttons.forEach(function (button) {
+    button.addEventListener("click", function () {
+      var mode = button.dataset.themeSet;
+      try {
+        if (mode === "auto") localStorage.removeItem(KEY);
+        else localStorage.setItem(KEY, mode);
+      } catch (error) {
+        /* sem storage a escolha vale so nesta pagina */
+      }
+      apply(mode);
+    });
+  });
+  if (window.matchMedia) {
+    var query = window.matchMedia("(prefers-color-scheme: light)");
+    var onChange = function () {
+      if (stored() === "auto") apply("auto");
+    };
+    if (query.addEventListener) query.addEventListener("change", onChange);
+    else if (query.addListener) query.addListener(onChange);
+  }
+})();`;
+
 export const Layout: FC<PropsWithChildren<{ title: string }>> = (props) => (
   <html lang="pt-BR">
     <head>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>{props.title}</title>
-      {/* `raw` e obrigatorio: dentro de <style> o JSX escaparia `>` e `"`, quebrando
+      {/* `raw` e obrigatorio: dentro de <style>/<script> o JSX escaparia `>` e `"`, quebrando
           combinadores filho e valores com aspas (ex.: content). */}
+      <script>{raw(THEME_BOOT)}</script>
       <style>{raw(GLASS_CSS)}</style>
     </head>
     <body>
@@ -529,13 +743,27 @@ export const Layout: FC<PropsWithChildren<{ title: string }>> = (props) => (
             <h1>goodbizz</h1>
             <span>estudos de nicho com decisor System One</span>
           </div>
-          <nav class="nav">
-            <a href="/">Estudos</a>
-            <a href="/about">API</a>
-            <a class="nav-cta" href="/new">
-              Novo estudo
-            </a>
-          </nav>
+          <div class="topbar-actions">
+            <div class="theme-toggle" role="group" aria-label="Tema da interface">
+              <button type="button" class="theme-btn" data-theme-set="auto" aria-pressed="false">
+                Auto
+              </button>
+              <button type="button" class="theme-btn" data-theme-set="light" aria-pressed="false">
+                Claro
+              </button>
+              <button type="button" class="theme-btn" data-theme-set="dark" aria-pressed="false">
+                Escuro
+              </button>
+            </div>
+            <nav class="nav">
+              <a href="/">Estudos</a>
+              <a href="/como-ler">Como ler</a>
+              <a href="/about">API</a>
+              <a class="nav-cta" href="/new">
+                Novo estudo
+              </a>
+            </nav>
+          </div>
         </header>
         <main>{props.children}</main>
         <p class="footer">
@@ -544,6 +772,7 @@ export const Layout: FC<PropsWithChildren<{ title: string }>> = (props) => (
           <Term of="escala">escala</Term> vermelho (ruim) a verde (bom).
         </p>
       </div>
+      <script>{raw(THEME_WIRE)}</script>
     </body>
   </html>
 );

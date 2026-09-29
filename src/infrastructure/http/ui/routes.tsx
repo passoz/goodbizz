@@ -14,7 +14,7 @@ import type { StudyService } from "../../../application/study-service.ts";
 import { NotFoundError } from "../../../domain/errors.ts";
 import type { StudyRecord } from "../../../domain/types.ts";
 import { Layout, Term } from "./layout.tsx";
-import { StudiesList, StudyDetail, StudyForm } from "./pages.tsx";
+import { HelpPage, StudiesList, StudyDetail, StudyForm } from "./pages.tsx";
 import { createCsrf, type UiEnv } from "./security.ts";
 
 export interface UiDeps {
@@ -38,17 +38,6 @@ const ABOUT_ROWS: Array<{ method: string; path: string; description: string }> =
   { method: "GET", path: "/healthz", description: "liveness" },
   { method: "GET", path: "/readyz", description: "readiness" },
 ];
-
-/** Primeiro README de ideia gravado no estudo (`01-.../README.md`), lido como plano. */
-async function readPlan(service: StudyService, id: string, artifacts: string[]): Promise<string | null> {
-  const planPath = artifacts.find((path) => path !== "README.md" && path.endsWith("/README.md"));
-  if (planPath === undefined) return null;
-  try {
-    return await service.readArtifact(id, planPath);
-  } catch {
-    return null;
-  }
-}
 
 export function buildUiApp(deps: UiDeps): Hono {
   const ui = new Hono<UiEnv>();
@@ -77,6 +66,8 @@ export function buildUiApp(deps: UiDeps): Hono {
     ),
   );
 
+  ui.get("/como-ler", (c) => c.render(<HelpPage />, { title: "goodbizz — como ler" }));
+
   ui.get("/studies/:id", async (c) => {
     const id = c.req.param("id");
     let study: StudyRecord;
@@ -89,8 +80,7 @@ export function buildUiApp(deps: UiDeps): Hono {
       throw error;
     }
     const artifacts = await deps.service.artifactPaths(id);
-    const plan = await readPlan(deps.service, id, artifacts);
-    return c.render(<StudyDetail study={study} artifacts={artifacts} plan={plan} />, {
+    return c.render(<StudyDetail study={study} artifacts={artifacts} />, {
       title: `goodbizz — ${study.niche}`,
     });
   });

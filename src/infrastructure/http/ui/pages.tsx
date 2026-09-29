@@ -7,7 +7,7 @@
  *    quente) ao verde (sinal bom), conforme os limiares da metodologia.
  */
 import type { FC } from "hono/jsx";
-import { html } from "hono/html";
+import { html, raw } from "hono/html";
 
 import { tierOf } from "../../../application/evaluate.ts";
 import type { IdeaEvaluation, StudyListItem, StudyRecord, StudyState, Tier } from "../../../domain/types.ts";
@@ -152,10 +152,10 @@ const Metric: FC<{
   </li>
 );
 
-/** Como ler: as regras da metodologia, mais a leitura da escala de cor. */
+/** Como ler: as regras da metodologia, mais a leitura da escala de cor. Vive na pagina /como-ler. */
 export const Legend: FC = () => (
   <section class="panel glass">
-    <h3>Como ler estes numeros</h3>
+    <h3>Indicadores, limiares e escala</h3>
     <dl class="legend">
       <div>
         <dt>
@@ -454,44 +454,144 @@ export const StudyForm: FC<{
   </section>
 );
 
-/** Detalhe: cabecalho, legenda, ranking, medias, grupos de dor, artefatos e o plano. */
-export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; plan: string | null }> = (props) => {
+/** Fase atual do pipeline a partir do passo gravado (`[3/6] ...`). */
+const PHASE_COUNT = 6;
+
+function parsePhase(step: string): { phase: number; text: string } {
+  const match = /\[(\d)\/(\d)\]\s*([\s\S]*)/.exec(step);
+  if (match === null) return { phase: 0, text: step.trim() };
+  const phase = Number(match[1] ?? "0");
+  return { phase: Number.isFinite(phase) ? phase : 0, text: (match[3] ?? "").trim() };
+}
+
+/** Enquanto o pipeline roda, a pagina se atualiza sozinha com o passo atual da API. */
+function progressScript(id: string): string {
+  return `
+(function () {
+  var id = ${JSON.stringify(id)};
+  var phase = document.getElementById("progress-phase");
+  var line = document.getElementById("progress-step");
+  var steps = Array.prototype.slice.call(document.querySelectorAll("#progress-steps li"));
+  function paint(data) {
+    var text = typeof data.step === "string" ? data.step : "";
+    var match = /\\[(\\d)\\/6\\]\\s*([\\s\\S]*)/.exec(text);
+    var current = match ? Number(match[1]) : 0;
+    if (phase) phase.textContent = current ? current + "/6" : "iniciando";
+    if (line) line.textContent = match ? match[2].trim() : text;
+    steps.forEach(function (item, index) {
+      item.setAttribute("data-done", index + 1 < current ? "1" : "0");
+      item.setAttribute("data-live", index + 1 === current ? "1" : "0");
+    });
+  }
+  function poll() {
+    fetch("/api/studies/" + id, { cache: "no-store" })
+      .then(function (response) { return response.ok ? response.json() : null; })
+      .then(function (data) {
+        if (!data) return;
+        paint(data);
+        if (data.state === "pending" || data.state === "running") { setTimeout(poll, 2000); return; }
+        window.location.reload();
+      })
+      .catch(function () { setTimeout(poll, 4000); });
+  }
+  setTimeout(poll, 1200);
+})();`;
+}
+
+/** Pagina propria do "como ler": sai do detalhe do estudo para nao competir com os numeros. */
+export const HelpPage: FC = () => (
+  <>
+    <section class="panel glass">
+      <p class="sub">
+        <a href="/">Estudos</a> / como ler
+      </p>
+      <h2>Como ler estes numeros</h2>
+      <p class="lead">
+        Todo dado da interface vem com direcao, escala e um helper curto (
+        <code>dado 0.89 (maior e melhor)</code>
+        ). Esta pagina reune as regras da metodologia: o que cada indicador mede, onde ficam os limiares de
+        tier e de dor e o que a escala de cor aponta.
+      </p>
+    </section>
+    <Legend />
+  </>
+);
+
+/** Detalhe: cabecalho com as acoes, progresso ao vivo, ranking, medias, grupos e artefatos. */
+export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[] }> = (props) => {
   const { study } = props;
   const ranked: IdeaEvaluation[] = study.summary
     ? study.summary.ordered
     : [...study.evaluations].sort((left, right) => right.index - left.index);
   const summary = study.summary;
-  const showStep = study.progress.step !== "" && study.progress.step !== STATE_LABEL[study.progress.state];
+  const running = study.progress.state === "pending" || study.progress.state === "running";
+  const current = parsePhase(study.progress.step);
   return (
     <>
-      <section class="panel glass">
-        <p class="sub">
-          <a href="/">Estudos</a> / {study.niche}
-        </p>
-        <h2>{study.niche}</h2>
-        <p id="study-meta" class="sub">
-          <StateBadge state={study.progress.state} />
-          {showStep ? <span> {study.progress.step}</span> : null}
-          <span>
-            {" "}
-            Cidade: {study.city !== "" ? study.city : "nao informada"} |{" "}
-            <Term of="ticket">Ticket considerado</Term>: R$ {study.monthlyTicket}/mes | Ideias avaliadas:{" "}
-            {study.evaluations.length} | Metodo de dor:{" "}
-            {study.painMethod === "choice" ? (
-              <Term of="escolha forcada">escolha forcada (3 consequencias)</Term>
-            ) : (
-              <Term of="parafrases">sondas com 3 parafrases</Term>
-            )}
-          </span>
-        </p>
-        {study.progress.error !== null ? (
-          <p id="study-failure" class="alert" role="alert">
-            {study.progress.error}
+      <section class="panel glass study-head">
+        <div class="study-head-main">
+          <p class="sub">
+            <a href="/">Estudos</a> / {study.niche}
           </p>
+          <h2>{study.niche}</h2>
+          <p id="study-meta" class="sub">
+            <StateBadge state={study.progress.state} />
+            <span>
+              {" "}
+              Cidade: {study.city !== "" ? study.city : "nao informada"} |{" "}
+              <Term of="ticket">Ticket considerado</Term>: R$ {study.monthlyTicket}/mes | Ideias avaliadas:{" "}
+              {study.evaluations.length} | Metodo de dor:{" "}
+              {study.painMethod === "choice" ? (
+                <Term of="escolha forcada">escolha forcada (3 consequencias)</Term>
+              ) : (
+                <Term of="parafrases">sondas com 3 parafrases</Term>
+              )}
+            </span>
+          </p>
+          {study.progress.error !== null ? (
+            <p id="study-failure" class="alert" role="alert">
+              {study.progress.error}
+            </p>
+          ) : null}
+        </div>
+        {props.artifacts.length > 0 ? (
+          <div class="study-head-actions">
+            <a class="btn btn-primary" href={`/api/studies/${study.id}/artifacts.zip`}>
+              Baixar .zip <Hint>{`${props.artifacts.length} arquivos em uma pasta`}</Hint>
+            </a>
+            <a class="btn btn-ghost" href="#artefatos">
+              Ver arquivos
+            </a>
+          </div>
         ) : null}
       </section>
 
-      <Legend />
+      {running ? (
+        <section class="panel glass" id="progress-panel" aria-live="polite" aria-busy="true">
+          <div class="progress-head">
+            <h3>Estudo em execucao</h3>
+            <span class="progress-phase" id="progress-phase">
+              {current.phase > 0 ? `${current.phase}/${PHASE_COUNT}` : "iniciando"}
+            </span>
+          </div>
+          <ol class="progress-steps" id="progress-steps">
+            {Array.from({ length: PHASE_COUNT }, (_unused, index) => (
+              <li
+                data-done={index + 1 < current.phase ? "1" : "0"}
+                data-live={index + 1 === current.phase ? "1" : "0"}
+              />
+            ))}
+          </ol>
+          <p class="progress-step-line" id="progress-step">
+            {current.text}
+          </p>
+          <p class="progress-note">
+            A pagina acompanha o pipeline e recarrega quando terminar. Sem JavaScript, recarregue para ver o
+            passo atual.
+          </p>
+          <script>{raw(progressScript(study.id))}</script>
+        </section>
+      ) : null}
 
       <section class="panel glass">
         <h3>Ranking</h3>
@@ -638,17 +738,10 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; plan: st
         </section>
       ) : null}
 
-      <section class="panel glass">
-        <div class="panel-head">
-          <h3>
-            Artefatos <Hint>arquivos do estudo no disco, servidos pela API</Hint>
-          </h3>
-          {props.artifacts.length > 0 ? (
-            <a class="btn btn-primary" href={`/api/studies/${study.id}/artifacts.zip`}>
-              Baixar .zip <Hint>{`${props.artifacts.length} arquivos em uma pasta`}</Hint>
-            </a>
-          ) : null}
-        </div>
+      <section class="panel glass" id="artefatos">
+        <h3>
+          Artefatos <Hint>arquivos do estudo no disco, servidos pela API</Hint>
+        </h3>
         {props.artifacts.length === 0 ? (
           <p id="artifacts-empty" class="empty">
             Nenhum artefato gravado ainda. Eles aparecem quando o pipeline termina.
@@ -657,7 +750,7 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; plan: st
           <ul id="artifacts" class="files">
             {props.artifacts.map((path) => (
               <li>
-                <a class="file" href={`/api/studies/${study.id}/artifacts/${path}`}>
+                <a class="file" href={`/api/studies/${study.id}/artifacts/${path}`} download>
                   <span class="file-ext">{artifactExt(path)}</span>
                   <span class="file-path">
                     {path}
@@ -670,15 +763,6 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; plan: st
           </ul>
         )}
       </section>
-
-      {props.plan !== null ? (
-        <section class="panel glass">
-          <h3>
-            Plano da melhor ideia <Hint>texto do LLM sobre os numeros medidos</Hint>
-          </h3>
-          <pre id="plan">{props.plan}</pre>
-        </section>
-      ) : null}
     </>
   );
 };
