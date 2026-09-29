@@ -87,7 +87,10 @@ export interface ZipEntry {
  * Empacota entradas em um ZIP (deflate, com fallback para "store" quando comprimir piora).
  * Puro: mesma entrada e mesma data -> mesmos bytes.
  */
-export function buildZip(entries: readonly ZipEntry[], modifiedAt: Date = new Date()): Uint8Array<ArrayBuffer> {
+export function buildZip(
+  entries: readonly ZipEntry[],
+  modifiedAt: Date = new Date(),
+): Uint8Array<ArrayBuffer> {
   const { time, date } = dosDateTime(modifiedAt);
   const chunks: Uint8Array[] = [];
   const central: Uint8Array[] = [];
@@ -152,7 +155,16 @@ export function buildZip(entries: readonly ZipEntry[], modifiedAt: Date = new Da
   }
 
   const centralSize = central.reduce((total, part) => total + part.length, 0);
-  const trailer: Uint8Array[] = [u32(0x06054b50), u16(0), u16(0), u16(entries.length), u16(entries.length), u32(centralSize), u32(offset), u16(0)];
+  const trailer: Uint8Array[] = [
+    u32(0x06054b50),
+    u16(0),
+    u16(0),
+    u16(entries.length),
+    u16(entries.length),
+    u32(centralSize),
+    u32(offset),
+    u16(0),
+  ];
 
   const all = [...chunks, ...central, ...trailer];
   const total = all.reduce((sum, part) => sum + part.length, 0);

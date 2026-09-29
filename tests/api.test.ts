@@ -1,4 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
 
 import { buildApiApp } from "../src/infrastructure/http/api.ts";
 import { makeHarness, type TestHarness } from "./helpers.ts";
@@ -132,5 +134,48 @@ describe("study API", () => {
       body: JSON.stringify({ datasets: [] }),
     });
     expect(bad.status).toBe(422);
+  });
+
+  test("lista, baixa em zip e serve o pdf dos artefatos", async () => {
+    const created = await api().request("/studies", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ niche: "barbearias de bairro", numIdeas: 1, mock: true }),
+    });
+    const { id } = (await created.json()) as { id: string };
+
+    // Sem execucao ainda nao ha artefato: a lista vem vazia e o zip responde 404.
+    const emptyList = await api().request(`/studies/${id}/artifacts`);
+    expect(emptyList.status).toBe(200);
+    expect(((await emptyList.json()) as { artifacts: string[] }).artifacts).toEqual([]);
+    expect((await api().request(`/studies/${id}/artifacts.zip`)).status).toBe(404);
+
+    await api().request(`/studies/${id}/run`, { method: "POST" });
+
+    const list = (await (await api().request(`/studies/${id}/artifacts`)).json()) as {
+      artifacts: string[];
+    };
+    expect(list.artifacts).toContain("dados.json");
+
+    const zip = await api().request(`/studies/${id}/artifacts.zip`);
+    expect(zip.status).toBe(200);
+    expect(zip.headers.get("content-type")).toBe("application/zip");
+    expect(zip.headers.get("content-disposition")).toContain(
+      'attachment; filename="estudo-barbearias-de-bairro-',
+    );
+    const bytes = new Uint8Array(await zip.arrayBuffer());
+    expect(bytes[0]).toBe(0x50);
+    expect(bytes[1]).toBe(0x4b);
+    // Os nomes das entradas ficam em texto claro no ZIP.
+    const names = new TextDecoder("latin1").decode(bytes);
+    for (const expected of ["dados.json", "00-brief.md", "README.md"]) {
+      expect(names).toContain(expected);
+    }
+
+    // Artefato binario (pdf) e servido como arquivo, nao como texto.
+    writeFileSync(join(harness.artifactsRoot, id, "estudo-completo.pdf"), "%PDF-1.4 fake");
+    const pdf = await api().request(`/studies/${id}/artifacts/estudo-completo.pdf`);
+    expect(pdf.status).toBe(200);
+    expect(pdf.headers.get("content-type")).toBe("application/pdf");
   });
 });
