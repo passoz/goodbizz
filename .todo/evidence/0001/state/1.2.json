@@ -1,0 +1,23 @@
+{
+  "baseline_implementation": {
+    "src/domain/errors.ts": {
+      "exists": true,
+      "sha256": "3797ae439f1c7a3f95f71cacb734f6cdf8d9a603cad6312e921cc2112261e27d"
+    }
+  },
+  "baseline_tests": {
+    "tests/domain.test.ts": {
+      "exists": true,
+      "sha256": "96e75b84fa9b31ff769037727b95929e7b79054d7723ed81bcfcaf8e93cbfd70"
+    }
+  },
+  "created_at": "2026-09-29T18:51:29.554Z",
+  "implementation_files": [
+    "src/domain/errors.ts"
+  ],
+  "red_tests": null,
+  "task": "1.2",
+  "test_files": [
+    "tests/domain.test.ts"
+  ]
+}
