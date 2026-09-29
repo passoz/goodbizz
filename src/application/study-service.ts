@@ -148,7 +148,7 @@ export class StudyService {
 
       await this.options.repo.update(id, { brief: result.brief });
       await this.options.repo.saveEvaluations(id, result.evaluations, result.summary);
-      await setProgress("done", "concluido", null);
+      await setProgress("done", "concluído", null);
 
       const updated = await this.options.repo.get(id);
       if (!updated) throw new NotFoundError(`study ${id} disappeared during the run`);
