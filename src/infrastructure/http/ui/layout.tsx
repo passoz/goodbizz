@@ -26,13 +26,31 @@ export const GLASS_CSS = `
 
   --ink: #14100f;
   --ink-2: #1d1717;
-  --paper: #f6f1ea;
-  --muted: #c9bcb3;
-  --faint: #a2948a;
+  --paper: #f7f3ed;
+  --muted: #d9cfc6;
+  --faint: #b5a89d;
 
   --r-panel: 26px;
-  --r-control: 14px;
+  --r-surface: 18px;
+  --r-control: 12px;
   --r-pill: 999px;
+
+  /* Material: superficies grandes sao mais grossas (blur maior) que chips e controles. Receita
+     Apple (vibrancy): desfoque + saturacao alta; o anel vem de sombra em vez de borda dura, para
+     adaptar a qualquer fundo sem virar contorno branco. */
+  --blur-panel: blur(28px) saturate(180%);
+  --blur-chrome: blur(20px) saturate(180%);
+  --ring: 0 0 0 1px oklch(1 0 0 / 0.09);
+  --ring-strong: 0 0 0 1px oklch(1 0 0 / 0.16);
+  --shadow-panel:
+    var(--ring),
+    0 1px 2px -1px oklch(0 0 0 / 0.55),
+    0 28px 56px -28px oklch(0 0 0 / 0.75);
+  --shadow-panel-hover:
+    var(--ring-strong),
+    0 2px 4px -2px oklch(0 0 0 / 0.6),
+    0 36px 68px -30px oklch(0 0 0 / 0.82);
+  --shadow-chrome: var(--ring), 0 18px 40px -22px oklch(0 0 0 / 0.7);
 
   --fs-micro: 11.5px;
   --fs-small: 13px;
@@ -56,7 +74,12 @@ body {
   background: var(--ink);
   color: var(--paper);
   font: var(--fs-body)/1.6 var(--sans);
+  /* Vibrancy: sobre material translucido o texto precisa de contraste alto e um leve tracking,
+     em vez de cinza chapado. */
+  letter-spacing: 0.002em;
+  font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 /* Fundo quente e saturado: e ele que da corpo ao vidro. Sem cor atras, vidro nao existe. */
@@ -67,12 +90,11 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(42% 38% at 6% 2%, rgb(221 88 85 / .62), transparent 66%),
-    radial-gradient(38% 34% at 94% 6%, rgb(215 129 51 / .56), transparent 66%),
-    radial-gradient(36% 32% at 86% 94%, rgb(114 206 59 / .5), transparent 68%),
-    radial-gradient(32% 30% at 8% 96%, rgb(191 193 21 / .46), transparent 70%),
-    radial-gradient(34% 30% at 28% 40%, rgb(215 129 51 / .24), transparent 70%),
-    radial-gradient(48% 42% at 52% 52%, rgb(159 219 67 / .26), transparent 72%);
+    radial-gradient(54% 46% at 4% 2%, rgb(221 88 85 / .6), transparent 68%),
+    radial-gradient(50% 44% at 98% 4%, rgb(215 129 51 / .54), transparent 68%),
+    radial-gradient(52% 46% at 90% 92%, rgb(114 206 59 / .5), transparent 70%),
+    radial-gradient(46% 40% at 4% 96%, rgb(191 193 21 / .46), transparent 72%),
+    radial-gradient(78% 62% at 46% 48%, rgb(159 219 67 / .3), transparent 74%);
 }
 body::after {
   content: "";
@@ -80,7 +102,7 @@ body::after {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: linear-gradient(180deg, rgb(20 16 15 / .26), rgb(20 16 15 / .6));
+  background: linear-gradient(180deg, rgb(20 16 15 / .12), rgb(20 16 15 / .38));
 }
 
 a { color: inherit; text-decoration: none; }
@@ -91,41 +113,63 @@ a { color: inherit; text-decoration: none; }
 /* ── Cabecalho ─────────────────────────────────────────────────────────── */
 .topbar {
   display: flex; align-items: center; justify-content: space-between; gap: 18px;
-  padding: 14px 20px; margin-bottom: 30px;
+  padding: 12px 18px; margin-bottom: 30px;
+}
+/* Chrome estrutural: material mais pesado (base mais escura, desfoque menor) que os paineis de
+   conteudo. Peso de material comunica hierarquia. */
+.topbar.glass {
+  background: rgb(18 13 12 / 0.62);
+  box-shadow:
+    var(--shadow-chrome),
+    inset 0 1px 0 oklch(1 0 0 / 0.14);
+  backdrop-filter: var(--blur-chrome);
+  -webkit-backdrop-filter: var(--blur-chrome);
 }
 .brand { display: flex; align-items: baseline; gap: 12px; }
 .brand h1 { margin: 0; font-size: 23px; letter-spacing: -.025em; color: #fff; font-weight: 680; }
 .brand span { font-size: var(--fs-small); color: var(--muted); }
-.nav { display: flex; align-items: center; gap: 8px; }
+.nav { display: flex; align-items: center; gap: 6px; }
 .nav a {
-  padding: 9px 16px; border-radius: var(--r-pill); font-size: var(--fs-small); font-weight: 550;
-  border: 1px solid transparent; color: var(--paper);
+  padding: 9px 16px; border-radius: var(--r-pill); font-size: var(--fs-small); font-weight: 560;
+  color: var(--paper); letter-spacing: 0.006em;
+  transition-property: background-color, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
 }
-.nav a:hover { background: rgb(255 255 255 / .1); border-color: rgb(255 255 255 / .22); }
+.nav a:hover { background: oklch(1 0 0 / 0.12); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.14); }
 .nav a.nav-cta {
   background: linear-gradient(120deg, var(--r-lime), var(--r-green));
-  color: #16210c; border-color: rgb(255 255 255 / .3);
+  color: #16210c; font-weight: 640;
+  box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.3);
 }
 
 /* ── Vidro ─────────────────────────────────────────────────────────────── */
-/* Filme translucido claro + borda luminosa + brilho especular no topo + sombra profunda, sobre um
-   fundo saturado. O desfoque ao vivo entra quando o navegador suporta; sem ele o vidro continua
-   legivel porque o filme, a borda e o brilho carregam o efeito. */
+/* Material, nao contorno. Tres decisoes carregam o efeito:
+   1. o filme branco e fraco e o material e escuro o bastante para o texto manter contraste;
+   2. o desfoque e alto e saturado, entao a cor do fundo atravessa e o vidro ganha vida;
+   3. o anel e uma sombra de 1px (alpha 0.09), nao uma borda branca solida, que era o que deixava
+      a superficie com cara de adesivo. */
 .glass {
   background:
-    linear-gradient(140deg, rgb(255 255 255 / .17), rgb(255 255 255 / .06) 44%, rgb(255 255 255 / .11)),
-    rgb(255 255 255 / .05);
-  border: 1px solid rgb(255 255 255 / .3);
+    linear-gradient(140deg, oklch(1 0 0 / 0.1), oklch(1 0 0 / 0.02) 46%, oklch(1 0 0 / 0.06)),
+    rgb(26 18 16 / 0.3);
+  border: 0;
   border-radius: var(--r-panel);
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / .5),
-    inset 0 0 0 1px rgb(255 255 255 / .07),
-    0 32px 70px -34px rgb(0 0 0 / .9);
+    var(--shadow-panel),
+    inset 0 1px 0 oklch(1 0 0 / 0.16);
 }
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .glass {
-    backdrop-filter: blur(16px) saturate(160%);
-    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    backdrop-filter: var(--blur-panel);
+    -webkit-backdrop-filter: var(--blur-panel);
+  }
+}
+/* Sem desfoque, o filme branco teria de carregar tudo sozinho: sobe a opacidade e para de
+   fingir transparencia. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background: rgb(29 23 23 / 0.94);
   }
 }
 .panel { padding: 24px 26px; margin-bottom: 22px; }
@@ -142,19 +186,25 @@ h3 { font-size: var(--fs-h3); color: var(--paper); font-weight: 620; margin: 28p
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 9px; white-space: nowrap;
   padding: 13px 24px; border-radius: var(--r-pill); cursor: pointer;
-  font: 620 var(--fs-body)/1 var(--sans); color: var(--paper);
-  border: 1px solid rgb(255 255 255 / .26); background: rgb(255 255 255 / .1);
-  transition: transform .12s ease, background .15s ease, border-color .15s ease;
+  font: 640 var(--fs-body)/1 var(--sans); color: var(--paper); letter-spacing: 0.004em;
+  background: oklch(1 0 0 / 0.1); border: 0;
+  box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.12);
+  transition-property: background-color, box-shadow, scale;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
 }
-.btn:hover { background: rgb(255 255 255 / .17); }
-.btn:active { transform: translateY(1px); }
+.btn:hover { background: oklch(1 0 0 / 0.16); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.2); }
+/* Feedback no pressionar, imediato: 0.96 e o valor que da tato sem exagero. */
+.btn:active { scale: 0.96; transition-duration: 100ms; }
 .btn-primary {
   background: linear-gradient(120deg, var(--r-lime), var(--r-green));
-  color: #16210c; border-color: rgb(255 255 255 / .34);
-  box-shadow: 0 16px 34px -16px rgb(114 206 59 / .75);
+  color: #16210c;
+  box-shadow:
+    inset 0 0 0 1px oklch(1 0 0 / 0.3),
+    0 14px 30px -14px rgb(114 206 59 / 0.6);
 }
 .btn-primary:hover { background: linear-gradient(120deg, #b0e75a, #7fdb49); }
-.btn-ghost { background: transparent; border-color: rgb(255 255 255 / .3); }
+.btn-ghost { background: transparent; box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.22); }
 .btn[disabled] { opacity: .6; cursor: progress; }
 
 /* ── Formulario ────────────────────────────────────────────────────────── */
@@ -163,11 +213,16 @@ h3 { font-size: var(--fs-h3); color: var(--paper); font-weight: 620; margin: 28p
 .field label { font-size: var(--fs-small); color: var(--paper); font-weight: 580; }
 .field input[type="text"], .field input[type="number"] {
   width: 100%; padding: 13px 15px; color: var(--paper); font: var(--fs-body)/1.4 var(--sans);
-  background: rgb(10 8 8 / .42); border: 1px solid rgb(255 255 255 / .26);
+  background: rgb(10 8 8 / 0.42); border: 1px solid oklch(1 0 0 / 0.16);
   border-radius: var(--r-control);
 }
 .field input::placeholder { color: var(--faint); }
-.field input:focus { border-color: rgb(159 219 67 / .8); background: rgb(10 8 8 / .6); }
+.field input:hover { border-color: oklch(1 0 0 / 0.24); }
+.field input:focus {
+  border-color: rgb(159 219 67 / 0.85);
+  background: rgb(10 8 8 / 0.6);
+  box-shadow: 0 0 0 3px rgb(159 219 67 / 0.22);
+}
 .field .hint { color: var(--muted); }
 .check { display: flex; align-items: center; gap: 10px; font-size: var(--fs-small); color: var(--paper); }
 .check input { width: 17px; height: 17px; accent-color: var(--r-lime); }
@@ -176,17 +231,18 @@ h3 { font-size: var(--fs-h3); color: var(--paper); font-weight: 620; margin: 28p
 #study-error:empty { display: none; }
 
 /* ── Hints e selos ─────────────────────────────────────────────────────── */
-.hint { font-size: var(--fs-micro); color: var(--muted); font-weight: 450; letter-spacing: .01em; }
+.hint { font-size: var(--fs-micro); color: var(--muted); font-weight: 480; letter-spacing: 0.012em; }
 .badge {
   display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px;
-  border-radius: var(--r-pill); font-size: var(--fs-micro); font-weight: 650;
-  border: 1px solid rgb(255 255 255 / .24); background: rgb(255 255 255 / .1); color: var(--paper);
+  border-radius: var(--r-pill); font-size: var(--fs-micro); font-weight: 660; letter-spacing: 0.012em;
+  color: var(--paper); background: oklch(1 0 0 / 0.1);
+  box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.12);
 }
-.b-red { color: #ffdbd9; background: rgb(221 88 85 / .3); border-color: rgb(221 88 85 / .6); }
-.b-orange { color: #ffe6cd; background: rgb(215 129 51 / .3); border-color: rgb(215 129 51 / .6); }
-.b-yellow { color: #f8f7c4; background: rgb(191 193 21 / .28); border-color: rgb(191 193 21 / .58); }
-.b-lime { color: #eefbd6; background: rgb(159 219 67 / .28); border-color: rgb(159 219 67 / .6); }
-.b-green { color: #e4fbdb; background: rgb(114 206 59 / .3); border-color: rgb(114 206 59 / .62); }
+.b-red { color: #ffdbd9; background: rgb(221 88 85 / 0.34); box-shadow: inset 0 0 0 1px rgb(221 88 85 / 0.5); }
+.b-orange { color: #ffe6cd; background: rgb(215 129 51 / 0.34); box-shadow: inset 0 0 0 1px rgb(215 129 51 / 0.5); }
+.b-yellow { color: #f8f7c4; background: rgb(191 193 21 / 0.32); box-shadow: inset 0 0 0 1px rgb(191 193 21 / 0.48); }
+.b-lime { color: #eefbd6; background: rgb(159 219 67 / 0.32); box-shadow: inset 0 0 0 1px rgb(159 219 67 / 0.5); }
+.b-green { color: #e4fbdb; background: rgb(114 206 59 / 0.34); box-shadow: inset 0 0 0 1px rgb(114 206 59 / 0.52); }
 .tier { font: 700 var(--fs-small)/1 var(--mono); padding: 6px 13px; border-radius: var(--r-pill); color: #16210c; }
 .tier-A { background: linear-gradient(120deg, var(--r-lime), var(--r-green)); }
 .tier-B { background: linear-gradient(120deg, var(--r-yellow), var(--r-lime)); }
@@ -198,7 +254,9 @@ h3 { font-size: var(--fs-h3); color: var(--paper); font-weight: 620; margin: 28p
   position: relative;
   display: flex; align-items: center; justify-content: space-between; gap: 26px;
   padding: 22px 26px; border-radius: var(--r-panel);
-  transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+  transition-property: transform, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
 }
 /* Link esticado: o titulo carrega o href e o ::after cobre o cartao inteiro, entao qualquer
    clique abre o estudo sem perder o alvo real para leitor de tela e teclado. */
@@ -209,19 +267,25 @@ h3 { font-size: var(--fs-h3); color: var(--paper); font-weight: 620; margin: 28p
 .study-card .open-cta { pointer-events: none; }
 .study-card:hover {
   transform: translateY(-2px);
-  border-color: rgb(255 255 255 / .5);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / .55), 0 40px 80px -36px rgb(0 0 0 / .95);
+  box-shadow:
+    var(--shadow-panel-hover),
+    inset 0 1px 0 oklch(1 0 0 / 0.2);
 }
 .study-card h3 { margin: 0; font-size: 21px; color: #fff; letter-spacing: -.02em; }
 .study-meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; }
 .chip {
   font-size: var(--fs-micro); color: var(--paper); padding: 5px 11px; border-radius: var(--r-pill);
-  background: rgb(255 255 255 / .12); border: 1px solid rgb(255 255 255 / .2);
+  background: oklch(1 0 0 / 0.09); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.08);
+  letter-spacing: 0.012em;
 }
 .study-top { margin: 12px 0 0; font-size: var(--fs-small); color: var(--muted); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .study-top b { color: #fff; font-weight: 620; }
 .study-id { font: var(--fs-micro)/1 var(--mono); color: var(--faint); margin: 10px 0 0; }
 .study-side { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; flex: none; }
+.study-score { display: flex; align-items: center; gap: 12px; }
+.score { font: 700 32px/1 var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.score-side { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
+.score-side .hint { max-width: 18ch; }
 .open-cta {
   display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: var(--r-pill);
   font-size: var(--fs-small); font-weight: 620; color: #16210c;
@@ -232,8 +296,8 @@ h3 { font-size: var(--fs-h3); color: var(--paper); font-weight: 620; margin: 28p
 /* ── Metricas ──────────────────────────────────────────────────────────── */
 .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(196px, 1fr)); gap: 14px; list-style: none; padding: 0; margin: 0; }
 .metric {
-  padding: 16px 18px; border-radius: 20px; position: relative; overflow: hidden;
-  background: rgb(255 255 255 / .09); border: 1px solid rgb(255 255 255 / .2);
+  padding: 16px 18px; border-radius: var(--r-surface); position: relative; overflow: hidden;
+  background: oklch(1 0 0 / 0.08); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.07);
 }
 .metric::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--tone, rgb(255 255 255 / .2)); }
 .metric-label { display: block; color: var(--paper); font-size: var(--fs-small); }
@@ -278,11 +342,14 @@ table.rank td:first-child { color: var(--muted); font-family: var(--mono); }
 /* ── Artefatos ─────────────────────────────────────────────────────────── */
 .files { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; list-style: none; padding: 0; margin: 0; }
 .file {
-  display: flex; align-items: flex-start; gap: 12px; padding: 13px 16px; border-radius: var(--r-control);
-  background: rgb(255 255 255 / .08); border: 1px solid rgb(255 255 255 / .18);
-  font-size: var(--fs-small); transition: background .15s ease, border-color .15s ease;
+  display: flex; align-items: flex-start; gap: 12px; padding: 13px 16px; border-radius: var(--r-surface);
+  background: oklch(1 0 0 / 0.07); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.07);
+  font-size: var(--fs-small);
+  transition-property: background-color, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
 }
-.file:hover { background: rgb(255 255 255 / .15); border-color: rgb(255 255 255 / .34); }
+.file:hover { background: oklch(1 0 0 / 0.14); box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.16); }
 .file-path { overflow-wrap: anywhere; }
 .file-ext {
   flex: none; font: 700 var(--fs-micro)/1 var(--mono); padding: 5px 8px; border-radius: 7px;
@@ -292,7 +359,9 @@ table.rank td:first-child { color: var(--muted); font-family: var(--mono); }
 /* ── Leitor do plano ───────────────────────────────────────────────────── */
 pre#plan {
   margin: 0; padding: 22px; max-height: 62vh; overflow: auto;
-  background: rgb(8 6 6 / .55); border: 1px solid rgb(255 255 255 / .2);
+  background: rgb(10 7 7 / 0.5);
+  box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.08);
+  border: 0;
   border-radius: var(--r-panel); color: var(--paper);
   font: var(--fs-small)/1.7 var(--mono); white-space: pre-wrap; overflow-wrap: anywhere;
 }
@@ -313,7 +382,13 @@ pre#plan {
 /* ── Estados vazios ────────────────────────────────────────────────────── */
 .empty { padding: 34px 26px; text-align: center; color: var(--paper); }
 .empty p { margin: 0 auto 18px; max-width: 46ch; color: var(--muted); }
-.alert { padding: 15px 18px; border-radius: var(--r-control); border: 1px solid rgb(221 88 85 / .6); background: rgb(221 88 85 / .16); color: #ffdbd9; }
+.alert {
+  padding: 15px 18px; border-radius: var(--r-surface);
+  background: rgb(221 88 85 / 0.2);
+  box-shadow: inset 0 0 0 1px rgb(221 88 85 / 0.5);
+  border: 0;
+  color: #ffdbd9;
+}
 .footer { margin-top: 36px; color: var(--muted); font-size: var(--fs-micro); text-align: center; }
 
 /* ── Glossario: caixa de explicacao ao passar o mouse ou focar um termo ── */
@@ -324,9 +399,11 @@ pre#plan {
   position: absolute; left: 0; bottom: calc(100% + 10px); z-index: 40;
   width: max-content; min-width: 190px; max-width: min(310px, 78vw);
   padding: 10px 13px; border-radius: var(--r-control);
-  background: rgb(18 14 13 / .97); color: var(--paper);
-  border: 1px solid rgb(255 255 255 / .24);
-  box-shadow: 0 24px 48px -22px rgb(0 0 0 / .95);
+  background: rgb(18 14 13 / 0.97); color: var(--paper);
+  box-shadow:
+    0 0 0 1px oklch(1 0 0 / 0.14),
+    0 24px 48px -22px rgb(0 0 0 / 0.95);
+  border: 0;
   font: 400 var(--fs-small)/1.55 var(--sans); letter-spacing: 0; text-align: left; white-space: normal;
   opacity: 0; visibility: hidden; transform: translateY(4px); pointer-events: none;
 }
@@ -347,10 +424,15 @@ pre#plan {
   * { transition: none !important; }
 }
 
-/* Preferencia do usuario por menos transparencia: vidro vira preenchimento solido. */
+/* Preferencia do usuario por menos transparencia: sobe a opacidade e larga o desfoque, sem perder
+   o anel que separa as superficies. */
 @media (prefers-reduced-transparency: reduce) {
-  .glass { background: var(--ink-2); backdrop-filter: none; -webkit-backdrop-filter: none; }
-  .metric, .file, .chip { background: var(--ink-2); }
+  .glass, .topbar.glass {
+    background: var(--ink-2);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .metric, .file, .chip, .badge { background: rgb(29 23 23 / 0.92); }
 }
 
 @media (max-width: 760px) {

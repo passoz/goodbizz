@@ -9,6 +9,7 @@
 import type { FC } from "hono/jsx";
 import { html } from "hono/html";
 
+import { tierOf } from "../../../application/evaluate.ts";
 import type { IdeaEvaluation, StudyListItem, StudyRecord, StudyState, Tier } from "../../../domain/types.ts";
 import { GLOSSARY, Term } from "./layout.tsx";
 
@@ -302,16 +303,21 @@ export const StudiesList: FC<{ studies: StudyListItem[] }> = (props) => (
               </p>
               <p class="study-top">
                 Melhor ideia <b>{study.topIdea !== null ? study.topIdea : "ainda nao avaliada"}</b>
-                {study.topIndex !== null ? (
-                  <>
-                    <span class={`badge b-${indexTone(study.topIndex)}`}>{study.topIndex.toFixed(3)}</span>
-                    <Hint>0 a 2; maior e melhor</Hint>
-                  </>
-                ) : null}
               </p>
               <p class="study-id">id {study.id.slice(0, 8)} (usado nas chamadas de API)</p>
             </div>
             <div class="study-side">
+              {study.topIndex !== null ? (
+                <span class="study-score">
+                  <span class={`score tone-${indexTone(study.topIndex)} tone-text`}>
+                    {study.topIndex.toFixed(3)}
+                  </span>
+                  <span class="score-side">
+                    <TierBadge tier={tierOf(study.topIndex)} />
+                    <Hint>maior e melhor</Hint>
+                  </span>
+                </span>
+              ) : null}
               <StateBadge state={study.state} />
               <span class="open-cta">Abrir estudo</span>
             </div>
