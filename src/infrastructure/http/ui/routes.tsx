@@ -13,7 +13,7 @@ import { resolveStudyConfig } from "../../../config/runtime.ts";
 import type { StudyService } from "../../../application/study-service.ts";
 import { NotFoundError } from "../../../domain/errors.ts";
 import type { StudyRecord } from "../../../domain/types.ts";
-import { Layout } from "./layout.tsx";
+import { Layout, Term } from "./layout.tsx";
 import { StudiesList, StudyDetail, StudyForm } from "./pages.tsx";
 import { createCsrf, type UiEnv } from "./security.ts";
 
@@ -111,32 +111,40 @@ export function buildUiApp(deps: UiDeps): Hono {
 
   ui.get("/about", (c) =>
     c.render(
-      <section>
+      <section class="panel glass">
         <h2>Sobre a API</h2>
-        <p>
-          Esta interface le e escreve os mesmos estudos da API publica abaixo, na mesma origem. Os formularios
-          usam o endpoint de criacao; o restante da API fica disponivel para scripts.
+        <p class="lead">
+          Esta interface le e escreve os mesmos estudos da API publica, na mesma origem. O formulario usa o
+          endpoint de criacao; o restante fica disponivel para scripts e integracao.
         </p>
-        <table id="endpoints">
-          <thead>
-            <tr>
-              <th>Metodo</th>
-              <th>Caminho</th>
-              <th>Descricao</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ABOUT_ROWS.map((row) => (
+        <p class="sub">
+          A <Term of="CSRF">CSRF</Term> nao existe na API (ela tem autenticacao propria, se houver). A
+          interface sim: toda rota que muda estado exige mesma origem e token assinado.
+        </p>
+        <div class="table-wrap">
+          <table id="endpoints">
+            <thead>
               <tr>
-                <td>{row.method}</td>
-                <td>
-                  <code>{row.path}</code>
-                </td>
-                <td>{row.description}</td>
+                <th>Metodo</th>
+                <th>Caminho</th>
+                <th>O que faz</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {ABOUT_ROWS.map((row) => (
+                <tr>
+                  <td>
+                    <span class="badge">{row.method}</span>
+                  </td>
+                  <td>
+                    <code>{row.path}</code>
+                  </td>
+                  <td>{row.description}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>,
       { title: "goodbizz — sobre a API" },
     ),

@@ -9,6 +9,8 @@ import { Hono } from "hono";
 
 import { StudyCache } from "../src/application/cache.ts";
 import { StudyService } from "../src/application/study-service.ts";
+import { buildService } from "../src/index.ts";
+import { loadEnv } from "../src/config/env.ts";
 import { resolveStudyConfig } from "../src/config/runtime.ts";
 import { NotFoundError } from "../src/domain/errors.ts";
 import { DeciderMock } from "../src/infrastructure/decider-mock.ts";
@@ -229,5 +231,37 @@ describe("migrations", () => {
     const first = migrateFromEnvironment({ url });
     expect(first.length).toBeGreaterThan(0);
     expect(migrateFromEnvironment({ url })).toEqual([]);
+  });
+
+  test("boot marks studies left queued by a restart as failed", async () => {
+    const url = join(tempDir("goodbizz-boot-"), "app.db");
+    const handle = openMigratedDatabase(url);
+    const repo = new SqliteStudyRepository(handle.db);
+    const cache = new StudyCache(new SqliteCacheStore(handle.db));
+    const service = new StudyService({
+      repo,
+      cache,
+      llm: new LlmMock(),
+      decider: new DeciderMock(),
+      logger: silentLogger(),
+      artifactsRoot: tempDir("goodbizz-boot-artifacts-"),
+    });
+    const created = await service.create(resolveStudyConfig({ niche: "orfao", mock: true }));
+    expect(created.progress.state).toBe("pending");
+    handle.sqlite.close();
+
+    const bundle = buildService({
+      ...loadEnv(),
+      DATABASE_URL: url,
+      GOODBIZZ_MOCK: true,
+      GOODBIZZ_STUDIES_DIR: tempDir("goodbizz-boot-estudos-"),
+    });
+    const studies = await bundle.service.list();
+    expect(studies).toHaveLength(1);
+    expect(studies[0]?.state).toBe("failed");
+    const recovered = await bundle.service.get(created.id);
+    expect(recovered.progress.step).toBe("interrompido");
+    expect(recovered.progress.error).toContain("execute de novo");
+    bundle.handle.sqlite.close();
   });
 });

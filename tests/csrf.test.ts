@@ -131,4 +131,41 @@ describe("protecao CSRF da interface", () => {
     expect(await response.json()).toEqual({ error: "CSRF_TOKEN_INVALID" });
     expect(await harness.service.list()).toHaveLength(0);
   });
+
+  test("mantem o mesmo token entre respostas (nao rotaciona a cada request)", async () => {
+    // Regressao: rotacionar o token a cada resposta invalidava qualquer formulario ja aberto
+    // (segunda aba, botao voltar) com 403 no envio. O cookie so e emitido quando nao existe.
+    const first = await pageCookieToken();
+    const second = await harness.app.request("/", { headers: { Cookie: first.cookiePair } });
+    const third = await harness.app.request("/about", { headers: { Cookie: first.cookiePair } });
+
+    expect(second.headers.get("set-cookie")).toBeNull();
+    expect(third.headers.get("set-cookie")).toBeNull();
+
+    const response = await harness.app.request("/ui/studies", {
+      method: "POST",
+      headers: { ...FORM, Origin: "http://localhost", Cookie: first.cookiePair },
+      body: `niche=formulario antigo&mock=1&_csrf=${first.token}`,
+    });
+    expect(response.status).toBe(303);
+    expect((await harness.service.list()).map((study) => study.niche)).toEqual(["formulario antigo"]);
+  });
+
+  test("nao duplica estado e etapa no cabecalho do detalhe", async () => {
+    const { cookiePair, token } = await pageCookieToken();
+    const created = await harness.app.request("/ui/studies", {
+      method: "POST",
+      headers: { ...FORM, Origin: "http://localhost", Cookie: cookiePair, [CSRF_HEADER]: token },
+      body: "niche=oficinas&mock=1&numIdeas=1",
+    });
+    const location = created.headers.get("location") ?? "";
+    await harness.service.run(location.replace("/studies/", ""));
+
+    const page = await harness.app.request(location, { headers: { Cookie: cookiePair } });
+    const html = await page.text();
+    const meta = html.match(/id="study-meta"[^>]*>([\s\S]*?)<\/p>/)?.[1] ?? "";
+    expect(meta).toContain("concluido");
+    // Regressao: o cabecalho repetia estado e etapa ("concluido · concluido").
+    expect(meta.match(/concluido/gi)?.length).toBe(1);
+  });
 });

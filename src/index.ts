@@ -8,6 +8,7 @@
 import { fileURLToPath } from "node:url";
 
 import type { Hono } from "hono";
+import { inArray } from "drizzle-orm";
 
 import { StudyCache } from "./application/cache.ts";
 import { StudyService } from "./application/study-service.ts";
@@ -15,7 +16,7 @@ import { createLogger } from "./config/runtime.ts";
 import { loadEnv, type Env } from "./config/env.ts";
 import { ConfigError } from "./domain/errors.ts";
 import { SqliteCacheStore } from "./infrastructure/cache-repository.ts";
-import { openDatabase, runMigrations, type DatabaseHandle } from "./infrastructure/db.ts";
+import { openDatabase, runMigrations, studies, type DatabaseHandle } from "./infrastructure/db.ts";
 import { DeciderHttp } from "./infrastructure/decider.ts";
 import { DeciderMock } from "./infrastructure/decider-mock.ts";
 import { buildApiApp } from "./infrastructure/http/api.ts";
@@ -69,6 +70,32 @@ export function buildService(env: Env = loadEnv()): ServiceBundle {
 
   const repo = new SqliteStudyRepository(handle.db);
   const cache = new StudyCache(new SqliteCacheStore(handle.db));
+  // Estudos interrompidos por um restart ficariam presos em "na fila"/"executando" para sempre:
+  // a execucao vive no processo. No boot, marque-os como falhos com instrucao de reexecutar.
+  const staleIds = handle.db
+    .select({ id: studies.id })
+    .from(studies)
+    .where(inArray(studies.state, ["pending", "running"]))
+    .all();
+  if (staleIds.length > 0) {
+    handle.db
+      .update(studies)
+      .set({
+        state: "failed",
+        step: "interrompido",
+        error: "o processo foi encerrado antes do fim deste estudo; execute de novo para retomar",
+        updatedAt: new Date().toISOString(),
+      })
+      .where(
+        inArray(
+          studies.id,
+          staleIds.map((row) => row.id),
+        ),
+      )
+      .run();
+    logger.warn("stale studies marked as failed on boot", { count: staleIds.length });
+  }
+
   const service = new StudyService({
     repo,
     cache,

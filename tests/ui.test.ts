@@ -141,7 +141,23 @@ describe("paginas da interface", () => {
     expect(body).toContain("Triagem de WhatsApp");
     expect(body).toContain("0.720");
     expect(body).toContain("FORTE");
-    expect(body).toContain("pagaria o ticket 0.70");
+    expect(body).toContain("pagaria o ticket");
+    const meansStart = body.indexOf('id="means"');
+    const means = body.slice(meansStart, body.indexOf("</ul>", meansStart));
+    expect(means).toContain("0.70");
+    for (const label of [
+      "fit",
+      "venda",
+      "disrupcao",
+      "suporte solo",
+      "pagaria o ticket",
+      "30 clientes em 24 meses",
+    ]) {
+      expect(means).toContain(label);
+    }
+    // Todo dado apresentado carrega o seu helper de leitura.
+    expect(means.match(/class="hint"/g)?.length).toBe(6);
+    expect(means).toContain("maior e melhor");
     expect(body).toContain("forte: Triagem de WhatsApp");
     expect(body).toContain(`href="/api/studies/${study.id}/artifacts/01-triagem-de-whatsapp/README.md"`);
     expect(body).toContain("conteudo do plano");

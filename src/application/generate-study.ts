@@ -124,7 +124,8 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
   for (const evaluation of [...evaluations].sort((a, b) => b.index - a.index)) {
     progress(
       `[3/6] ${evaluation.name.slice(0, 38).padEnd(38)} indice ${evaluation.index.toFixed(3)} ` +
-        `tier ${evaluation.tier} dor ${evaluation.algorithm.label}`,
+        `(0 a 2; maior e melhor) tier ${evaluation.tier} (A >= 1.84) dor ${evaluation.algorithm.label} ` +
+        `(escore ${evaluation.algorithm.painScore.toFixed(2)}; FORTE >= 0.65)`,
     );
   }
 

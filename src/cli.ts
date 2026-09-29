@@ -297,6 +297,11 @@ function printSummary(cfg: StudyConfig, result: GenerateStudyResult): void {
   console.log(`\nPronto. Saida em ${cfg.outputDir}/`);
   for (const file of result.files) console.log(`  ${file.path}`);
   console.log(`  cache: ${result.cacheCount} respostas guardadas (${result.cacheHits} reaproveitadas)`);
+  console.log(
+    "\nComo ler: indice de acao 0 a 2 (maior e melhor; Tier A >= 1.84, B >= 1.60) | " +
+      "dor FORTE >= 0.65 e dominante | desvio entre parafrases menor e melhor (< 0.15) | " +
+      "WTP e meta30 sao probabilidades de 0 a 1 (maior e melhor) | ticket e teto, nao piso.",
+  );
   if (result.issues.length > 0) {
     console.log(`\n${result.issues.length} documento(s) com aviso:`);
     for (const issue of result.issues) console.log(`  - ${issue}`);

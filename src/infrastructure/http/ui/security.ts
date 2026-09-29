@@ -54,13 +54,18 @@ export function createCsrf(options: CsrfOptions): CsrfMiddleware {
   const { sessionSecret, production = false } = options;
 
   const issueCsrfToken: MiddlewareHandler<UiEnv> = async (c, next) => {
-    const token = randomToken();
-    await setSignedCookie(c, CSRF_COOKIE, token, sessionSecret, {
-      httpOnly: false,
-      sameSite: "Lax",
-      path: "/",
-      secure: production,
-    });
+    // Emit the cookie only when it does not exist yet: rotating the token on every response would
+    // invalidate every form already open (second tab, back button) with a 403 on submit.
+    let token = await getSignedCookie(c, sessionSecret, CSRF_COOKIE);
+    if (typeof token !== "string" || token.length === 0) {
+      token = randomToken();
+      await setSignedCookie(c, CSRF_COOKIE, token, sessionSecret, {
+        httpOnly: false,
+        sameSite: "Lax",
+        path: "/",
+        secure: production,
+      });
+    }
     c.set("csrfToken", token);
     await next();
   };
