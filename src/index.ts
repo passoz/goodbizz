@@ -47,22 +47,23 @@ export interface ServiceBundle {
  */
 export function buildService(env: Env = loadEnv()): ServiceBundle {
   const logger = createLogger(env.LOG_LEVEL);
-  const mock = env.GOODBIZZ_MOCK;
+  const mockAll = env.GOODBIZZ_MOCK;
+  // Modo misto, igual a CLI: da para rodar texto simulado com decisor real (e vice-versa), o que
+  // e o caminho para validar um dos provedores sem gastar no outro.
+  const mockLlm = mockAll || env.GOODBIZZ_MOCK_LLM;
+  const mockDecider = mockAll || env.GOODBIZZ_MOCK_DECIDER;
 
-  if (!mock) {
-    if (env.LLM_API_KEY === "") {
-      throw new ConfigError("LLM_API_KEY is required unless GOODBIZZ_MOCK is set");
-    }
-    if (env.DECISION_API_URL === "") {
-      throw new ConfigError("DECISION_API_URL is required unless GOODBIZZ_MOCK is set");
-    }
+  if (!mockLlm && env.LLM_API_KEY === "") {
+    throw new ConfigError("LLM_API_KEY is required unless the LLM is mocked");
+  }
+  if (!mockDecider && env.DECISION_API_URL === "") {
+    throw new ConfigError("DECISION_API_URL is required unless the decider is mocked");
   }
 
-  const llm = mock ? new LlmMock() : new LlmHttp(env.LLM_API_URL, env.LLM_API_MODEL, env.LLM_API_KEY, 60);
-  const decider =
-    mock || env.DECISION_API_URL === ""
-      ? new DeciderMock()
-      : new DeciderHttp(env.DECISION_API_URL, env.DECISION_API_MODEL, env.DECISION_API_KEY, 60);
+  const llm = mockLlm ? new LlmMock() : new LlmHttp(env.LLM_API_URL, env.LLM_API_MODEL, env.LLM_API_KEY, 60);
+  const decider = mockDecider
+    ? new DeciderMock()
+    : new DeciderHttp(env.DECISION_API_URL, env.DECISION_API_MODEL, env.DECISION_API_KEY, 60);
 
   const handle = openDatabase(env.DATABASE_URL);
   const applied = runMigrations(handle, MIGRATIONS_DIR);
@@ -104,22 +105,29 @@ export function buildService(env: Env = loadEnv()): ServiceBundle {
     logger,
     artifactsRoot: env.GOODBIZZ_STUDIES_DIR,
     pdf: false,
+    mockLlm,
+    mockDecider,
   });
 
   const production = env.APP_ENV === "production";
   const api = buildApiApp({
     service,
     providerStatus: () => ({
-      llm: !mock,
-      decider: !mock && env.DECISION_API_URL !== "",
-      mockByDefault: mock,
+      llm: !mockLlm,
+      decider: !mockDecider,
+      mockByDefault: mockAll,
     }),
   });
   const health = buildHealthApp(handle.db);
-  const ui = buildUiApp({ service, sessionSecret: env.SESSION_SECRET, production });
+  // Texto curto e sem segredo, para a interface dizer o que sera executado de verdade.
+  const providers = {
+    llm: mockLlm ? "texto simulado" : `texto real (${env.LLM_API_MODEL})`,
+    decider: mockDecider ? "numeros simulados" : `numeros reais (${env.DECISION_API_MODEL})`,
+  };
+  const ui = buildUiApp({ service, sessionSecret: env.SESSION_SECRET, production, providers });
   const app = buildHttpApp({ api, ui, health, logger, production });
 
-  return { app, handle, service, logger, env, mock };
+  return { app, handle, service, logger, env, mock: mockAll };
 }
 
 export interface RunningService {

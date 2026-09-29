@@ -329,9 +329,11 @@ export const StudiesList: FC<{ studies: StudyListItem[] }> = (props) => (
 );
 
 /** Formulario de criacao, em pagina propria. Os helpers explicam o efeito de cada campo. */
-export const StudyForm: FC<{ token: string; defaults: { monthlyTicket: number; numIdeas: number } }> = (
-  props,
-) => (
+export const StudyForm: FC<{
+  token: string;
+  defaults: { monthlyTicket: number; numIdeas: number };
+  providers?: { llm: string; decider: string };
+}> = (props) => (
   <section>
     <div class="page-head">
       <div>
@@ -340,6 +342,12 @@ export const StudyForm: FC<{ token: string; defaults: { monthlyTicket: number; n
           Uma frase de nicho basta. O ticket influencia a medicao de preco e o numero de ideias define quantas
           hipoteses serao avaliadas e ranqueadas.
         </p>
+        {props.providers ? (
+          <p id="providers" class="sub">
+            Neste servico: <Term of="LLM">texto</Term> {props.providers.llm} ·{" "}
+            <Term of="decisor">numeros</Term> {props.providers.decider}.
+          </p>
+        ) : null}
       </div>
       <a class="btn btn-ghost" href="/">
         Voltar para os estudos
@@ -396,8 +404,9 @@ export const StudyForm: FC<{ token: string; defaults: { monthlyTicket: number; n
           Criar estudo
         </button>
         <label class="check">
-          <input type="checkbox" name="mock" value="1" checked />
-          <Term of="modo simulado">modo simulado</Term> <Hint>sem provedores reais e sem custo</Hint>
+          <input type="checkbox" name="mock" value="1" />
+          <Term of="modo simulado">forcar modo simulado</Term>{" "}
+          <Hint>ignora os provedores configurados; sem custo, sem valor de mercado</Hint>
         </label>
         <p id="study-error" role="alert" />
       </div>

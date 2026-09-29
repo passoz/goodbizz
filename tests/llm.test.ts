@@ -156,6 +156,8 @@ describe("LlmHttp over loopback", () => {
       expect(seen.auth).toBe("Bearer sk-abc123");
       expect(seen.body["model"]).toBe("gpt-test");
       expect(seen.body["temperature"]).toBe(0.4);
+      // Gateways que fazem streaming por padrao so respondem JSON unico se o cliente declarar.
+      expect(seen.body["stream"]).toBe(false);
       const messages = seen.body["messages"] as Array<{ role: string; content: string }>;
       expect(messages.map((message) => message.role)).toEqual(["system", "user"]);
     } finally {

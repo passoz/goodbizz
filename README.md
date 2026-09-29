@@ -71,21 +71,28 @@ bun test             # suite offline
 
 Segredos vivem **apenas** no ambiente. O contrato das chaves esta versionado em `.env.example`.
 
-| Variavel               | Padrao                      | Descricao                                             |
-| ---------------------- | --------------------------- | ----------------------------------------------------- |
-| `LLM_API_URL`          | `https://api.openai.com/v1` | base URL compativel com `/chat/completions`           |
-| `LLM_API_KEY`          | —                           | chave do provedor LLM (obrigatoria fora do modo mock) |
-| `LLM_API_MODEL`        | `gpt-4o-mini`               | modelo do LLM                                         |
-| `DECISION_API_URL`     | —                           | endpoint System One (Jev, Laya, runtime local)        |
-| `DECISION_API_KEY`     | —                           | chave do decisor (Bearer e `x-api-key`)               |
-| `DECISION_API_MODEL`   | `systemone-latest`          | modelo do decisor                                     |
-| `PORT`                 | `3000`                      | porta do servico HTTP                                 |
-| `DATABASE_URL`         | `app.db`                    | SQLite (`:memory:` aceito)                            |
-| `LOG_LEVEL`            | `info`                      | `debug` \| `info` \| `warn` \| `error`                |
-| `APP_ENV`              | `development`               | `production` liga HTTPS/HSTS e cookies `secure`       |
-| `SESSION_SECRET`       | placeholder de dev          | >= 32 caracteres, assina o cookie de CSRF             |
-| `GOODBIZZ_STUDIES_DIR` | `estudo`                    | raiz dos artefatos por estudo                         |
-| `GOODBIZZ_MOCK`        | `0`                         | `1` sobe o servico com LLM e decisor simulados        |
+| Variavel                | Padrao                      | Descricao                                             |
+| ----------------------- | --------------------------- | ----------------------------------------------------- |
+| `LLM_API_URL`           | `https://api.openai.com/v1` | base URL compativel com `/chat/completions`           |
+| `LLM_API_KEY`           | —                           | chave do provedor LLM (obrigatoria fora do modo mock) |
+| `LLM_API_MODEL`         | `gpt-4o-mini`               | modelo do LLM                                         |
+| `DECISION_API_URL`      | —                           | endpoint System One (Jev, Laya, runtime local)        |
+| `DECISION_API_KEY`      | —                           | chave do decisor (Bearer e `x-api-key`)               |
+| `DECISION_API_MODEL`    | `systemone-latest`          | modelo do decisor                                     |
+| `PORT`                  | `3000`                      | porta do servico HTTP                                 |
+| `DATABASE_URL`          | `app.db`                    | SQLite (`:memory:` aceito)                            |
+| `LOG_LEVEL`             | `info`                      | `debug` \| `info` \| `warn` \| `error`                |
+| `APP_ENV`               | `development`               | `production` liga HTTPS/HSTS e cookies `secure`       |
+| `SESSION_SECRET`        | placeholder de dev          | >= 32 caracteres, assina o cookie de CSRF             |
+| `GOODBIZZ_STUDIES_DIR`  | `estudo`                    | raiz dos artefatos por estudo                         |
+| `GOODBIZZ_MOCK`         | `0`                         | `1` simula LLM e decisor                              |
+| `GOODBIZZ_MOCK_LLM`     | `0`                         | `1` simula apenas o texto, mantendo o decisor real    |
+| `GOODBIZZ_MOCK_DECIDER` | `0`                         | `1` simula apenas os numeros, mantendo o LLM real     |
+
+Modo misto: o servico aceita simular um provedor e usar o outro de verdade, igual a CLI
+(`--mock-llm`, `--mock-decider`). A pagina `/new` mostra o que esta ativo. Provedores reais
+impoem fail-fast no startup: sem `LLM_API_KEY` (ou `DECISION_API_URL`) o processo nao sobe, a
+menos que aquele provedor esteja marcado como simulado.
 
 O processo falha no startup quando uma chave obrigatoria do modo real esta ausente, e nenhuma chave
 aparece em log, resposta HTTP ou artefato (redacao por `src/config/redact.ts`).

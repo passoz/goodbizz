@@ -11,6 +11,8 @@ const TOUCHED = [
   "DECISION_API_URL",
   "SESSION_SECRET",
   "GOODBIZZ_MOCK",
+  "GOODBIZZ_MOCK_LLM",
+  "GOODBIZZ_MOCK_DECIDER",
 ] as const;
 
 const saved = new Map<string, string | undefined>();
@@ -50,6 +52,21 @@ describe("environment validation", () => {
     expect(env.PORT).toBe(4321);
     expect(env.LOG_LEVEL).toBe("debug");
     expect(env.GOODBIZZ_MOCK).toBe(true);
+  });
+
+  test("supports mock per provider, so one provider can stay real", () => {
+    remember();
+    resetEnv();
+    const defaults = loadEnv();
+    expect(defaults.GOODBIZZ_MOCK_LLM).toBe(false);
+    expect(defaults.GOODBIZZ_MOCK_DECIDER).toBe(false);
+
+    Bun.env.GOODBIZZ_MOCK_DECIDER = "1";
+    resetEnv();
+    const mixed = loadEnv();
+    expect(mixed.GOODBIZZ_MOCK_DECIDER).toBe(true);
+    expect(mixed.GOODBIZZ_MOCK_LLM).toBe(false);
+    expect(mixed.GOODBIZZ_MOCK).toBe(false);
   });
 
   test("fails fast with a ConfigError on an invalid value", () => {

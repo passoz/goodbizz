@@ -33,6 +33,10 @@ export class LlmHttp implements LlmClient {
         { role: "user", content: user },
       ],
       temperature: 0.4,
+      // Explicito de proposito: a API da OpenAI assume `false`, mas gateways compativeis (LiteLLM e
+      // afins) fazem streaming por padrao, e ai a resposta vem em text/event-stream e nao e um JSON
+      // unico. Declarar o comportamento esperado e o certo do lado do cliente.
+      stream: false,
     });
     let lastError: unknown;
     for (let attempt = 0; attempt < this.retries; attempt++) {

@@ -21,6 +21,8 @@ export interface UiDeps {
   service: StudyService;
   sessionSecret: string;
   production: boolean;
+  /** Como este servico esta configurado, em texto curto e sem segredo. */
+  providers?: { llm: string; decider: string };
 }
 
 const ABOUT_ROWS: Array<{ method: string; path: string; description: string }> = [
@@ -65,9 +67,14 @@ export function buildUiApp(deps: UiDeps): Hono {
   });
 
   ui.get("/new", (c) =>
-    c.render(<StudyForm token={c.get("csrfToken")} defaults={{ monthlyTicket: 300, numIdeas: 8 }} />, {
-      title: "goodbizz — novo estudo",
-    }),
+    c.render(
+      <StudyForm
+        token={c.get("csrfToken")}
+        defaults={{ monthlyTicket: 300, numIdeas: 8 }}
+        providers={deps.providers}
+      />,
+      { title: "goodbizz — novo estudo" },
+    ),
   );
 
   ui.get("/studies/:id", async (c) => {

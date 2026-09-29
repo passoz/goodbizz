@@ -76,6 +76,22 @@ describe("paginas da interface", () => {
     expect(body).toContain("Voltar para os estudos");
   });
 
+  test("o formulario declara quais provedores estao ativos neste servico", async () => {
+    const app = buildUiApp({
+      service: harness.service,
+      sessionSecret: loadEnv().SESSION_SECRET,
+      production: false,
+      providers: { llm: "texto real (deepseek-flash)", decider: "numeros simulados" },
+    });
+    const body = await (await app.request("/new")).text();
+    expect(body).toContain('id="providers"');
+    expect(body).toContain("texto real (deepseek-flash)");
+    expect(body).toContain("numeros simulados");
+    // Nenhuma chave ou URL pode aparecer na pagina.
+    expect(body).not.toContain("sk-");
+    expect(body).not.toContain("vps.");
+  });
+
   test("a lista abre o estudo pelo cartao inteiro, nao por um id minusculo", async () => {
     const study = await harness.service.create(resolveStudyConfig({ niche: "oficinas", mock: true }));
 

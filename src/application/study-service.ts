@@ -30,6 +30,9 @@ export interface StudyServiceOptions {
   concurrency?: number;
   paraphrases?: number;
   timeout?: number;
+  /** Providers configured as simulated at the service level; a study inherits them. */
+  mockLlm?: boolean;
+  mockDecider?: boolean;
 }
 
 export interface DiagnoseInput {
@@ -111,6 +114,10 @@ export class StudyService {
         numIdeas: record.numIdeas,
         painMethod: record.painMethod,
         mock: record.mock,
+        // O estudo herda do servico o que estiver simulado: sem isso, um estudo criado sem o
+        // "modo simulado" exigiria credencial de um provedor que o servico ja decidiu simular.
+        mockLlm: record.mock || this.options.mockLlm === true,
+        mockDecider: record.mock || this.options.mockDecider === true,
         outputDir: record.artifactDir,
         pdf: this.options.pdf ?? false,
         concurrency: this.options.concurrency ?? 8,
