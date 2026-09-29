@@ -115,6 +115,18 @@ export function buildApiApp(deps: ApiDeps): Hono {
     return c.json({ id, artifacts: await deps.service.artifactPaths(id) });
   });
 
+  /** Download de tudo: um ZIP com a arvore de artefatos do estudo. */
+  api.get("/studies/:id/artifacts.zip", async (c) => {
+    const { filename, bytes } = await deps.service.archive(c.req.param("id"));
+    return new Response(bytes, {
+      headers: {
+        "Content-Type": "application/zip",
+        "Content-Disposition": `attachment; filename="${filename}"`,
+        "Content-Length": String(bytes.length),
+      },
+    });
+  });
+
   api.get("/studies/:id/artifacts/:file{.+}", async (c) => {
     const id = c.req.param("id");
     const relativePath = c.req.param("file");

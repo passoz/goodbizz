@@ -8,9 +8,11 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSy
 import { join, relative, resolve, sep } from "node:path";
 
 import { diagnoseProbes, diagnoseExitCode, type DiagnoseReport } from "./diagnose.ts";
+import { buildZip } from "./artifacts.ts";
 import { generateStudy } from "./generate-study.ts";
 import { htmlToPdf } from "./pdf.ts";
 import { recalibrate, type RecalibrateReport } from "./recalibrate.ts";
+import { slug } from "./reports.ts";
 import { scrub } from "../config/redact.ts";
 import { resolveStudyConfig, studyContext } from "../config/runtime.ts";
 import { NotFoundError } from "../domain/errors.ts";
@@ -186,6 +188,29 @@ export class StudyService {
   async artifactPath(id: string, relativePath: string): Promise<string> {
     const record = await this.get(id);
     return this.safePath(record.artifactDir, relativePath);
+  }
+
+  /**
+   * ZIP com todos os artefatos do estudo, em uma pasta com nome legivel. Le do disco (o que o
+   * usuario ve na listagem e o que ele baixa) e falha quando ainda nao ha nada gravado.
+   */
+  async archive(id: string): Promise<{ filename: string; bytes: Uint8Array<ArrayBuffer> }> {
+    const record = await this.get(id);
+    const paths = this.listFiles(record.artifactDir);
+    if (paths.length === 0) {
+      throw new NotFoundError(`study ${id} has no artifacts to download yet`);
+    }
+    const prefix = `${slug(record.niche) || "estudo"}-${record.id.slice(0, 8)}`;
+    const entries = paths.map((relativePath) => ({
+      path: `${prefix}/${relativePath}`,
+      // Copia para um ArrayBuffer proprio: `readFileSync` devolve Buffer, e o ZIP precisa de bytes
+      // estaveis (alem de satisfazer o tipo do compressor).
+      data: new Uint8Array(readFileSync(this.safePath(record.artifactDir, relativePath))),
+    }));
+    return {
+      filename: `estudo-${prefix}.zip`,
+      bytes: buildZip(entries),
+    };
   }
 
   async diagnose(input: DiagnoseInput): Promise<{ report: DiagnoseReport; exitCode: number }> {

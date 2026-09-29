@@ -180,6 +180,9 @@ a { color: inherit; text-decoration: none; }
   }
 }
 .panel { padding: 24px 26px; margin-bottom: 22px; }
+.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+.panel-head h3 { margin: 0; }
+.panel-head .btn { padding: 10px 18px; font-size: var(--fs-small); }
 h2 { font-size: var(--fs-h2); letter-spacing: -.025em; color: #fff; font-weight: 650; margin: 0 0 8px; }
 h3 { font-size: var(--fs-h3); color: var(--paper); font-weight: 620; margin: 28px 0 14px; }
 .lead { font-size: var(--fs-lead); color: var(--paper); max-width: 62ch; margin: 0; }

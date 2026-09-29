@@ -1,4 +1,6 @@
 import { describe, expect, test } from "bun:test";
+
+import { buildZip } from "../src/application/artifacts.ts";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -299,5 +301,68 @@ describe("loadIdeas", () => {
   test("recusa arquivo sem ideias", () => {
     const path = writeIdeas({ ideias: [] });
     expect(() => loadIdeas(path)).toThrow("does not contain usable ideas");
+  });
+});
+
+/** Le um ZIP pelo diretorio central: verifica a estrutura de verdade, nao so o gerador. */
+function readZip(
+  bytes: Uint8Array<ArrayBuffer>,
+): Array<{ name: string; size: number; method: number; text: string }> {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const eocd = bytes.length - 22;
+  expect(view.getUint32(eocd, true)).toBe(0x06054b50);
+  const count = view.getUint16(eocd + 10, true);
+  let cursor = view.getUint32(eocd + 16, true);
+  const entries: Array<{ name: string; size: number; method: number; text: string }> = [];
+  for (let index = 0; index < count; index++) {
+    expect(view.getUint32(cursor, true)).toBe(0x02014b50);
+    const method = view.getUint16(cursor + 10, true);
+    const compressedSize = view.getUint32(cursor + 20, true);
+    const size = view.getUint32(cursor + 24, true);
+    const nameLength = view.getUint16(cursor + 28, true);
+    const extraLength = view.getUint16(cursor + 30, true);
+    const commentLength = view.getUint16(cursor + 32, true);
+    const localOffset = view.getUint32(cursor + 42, true);
+    const name = new TextDecoder().decode(bytes.subarray(cursor + 46, cursor + 46 + nameLength));
+    const localNameLength = view.getUint16(localOffset + 26, true);
+    const localExtraLength = view.getUint16(localOffset + 28, true);
+    const start = localOffset + 30 + localNameLength + localExtraLength;
+    const raw = bytes.subarray(start, start + compressedSize);
+    const payload = method === 8 ? Bun.inflateSync(raw) : raw;
+    entries.push({ name, size, method, text: new TextDecoder().decode(payload) });
+    cursor += 46 + nameLength + extraLength + commentLength;
+  }
+  return entries;
+}
+
+describe("buildZip", () => {
+  const encoder = new TextEncoder();
+
+  test("produz um ZIP legivel pelo diretorio central, com deflate e store", () => {
+    const zip = buildZip(
+      [
+        { path: "a.txt", data: new Uint8Array(encoder.encode("ola")) },
+        { path: "pasta/b.md", data: new Uint8Array(encoder.encode("# titulo\n".repeat(40))) },
+      ],
+      new Date("2026-01-02T03:04:06Z"),
+    );
+
+    expect(zip[0]).toBe(0x50);
+    expect(zip[1]).toBe(0x4b);
+    const entries = readZip(zip);
+    expect(entries.map((entry) => entry.name)).toEqual(["a.txt", "pasta/b.md"]);
+    expect(entries[0]?.text).toBe("ola");
+    expect(entries[1]?.text).toBe("# titulo\n".repeat(40));
+    expect(entries[0]?.size).toBe(3);
+    // Texto repetitivo comprime; arquivo minusculo fica em store para nao crescer.
+    expect(entries[1]?.method).toBe(8);
+    expect(entries[0]?.method).toBe(0);
+  });
+
+  test("e deterministico para a mesma entrada e data", () => {
+    const at = new Date("2026-01-02T03:04:06Z");
+    const once = buildZip([{ path: "x.md", data: new Uint8Array(encoder.encode("conteudo")) }], at);
+    const twice = buildZip([{ path: "x.md", data: new Uint8Array(encoder.encode("conteudo")) }], at);
+    expect(Array.from(once)).toEqual(Array.from(twice));
   });
 });

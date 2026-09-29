@@ -144,19 +144,20 @@ estudo/
 
 Prefixo `/api`. Sem CSRF (autentique no proxy, se necessario).
 
-| Metodo | Rota                           | Efeito                                                |
-| ------ | ------------------------------ | ----------------------------------------------------- |
-| `GET`  | `/api/config`                  | quais provedores estao configurados (booleanos)       |
-| `POST` | `/api/studies`                 | cria um estudo e inicia a execucao (201)              |
-| `GET`  | `/api/studies`                 | lista os estudos com estado e topo do ranking         |
-| `GET`  | `/api/studies/:id`             | detalhe: avaliações ordenadas, resumo, artefatos      |
-| `POST` | `/api/studies/:id/run`         | reexecuta o pipeline do estudo                        |
-| `GET`  | `/api/studies/:id/artifacts`   | lista os caminhos relativos dos artefatos             |
-| `GET`  | `/api/studies/:id/artifacts/*` | conteudo do artefato (markdown, csv, json, html, pdf) |
-| `POST` | `/api/diagnose`                | coerencia e estabilidade das sondas                   |
-| `POST` | `/api/recalibrate`             | busca em grade de limiares sobre `dados.json`         |
-| `GET`  | `/healthz`                     | liveness (nao toca o banco)                           |
-| `GET`  | `/readyz`                      | readiness (`select 1` no SQLite)                      |
+| Metodo | Rota                             | Efeito                                                |
+| ------ | -------------------------------- | ----------------------------------------------------- |
+| `GET`  | `/api/config`                    | quais provedores estao configurados (booleanos)       |
+| `POST` | `/api/studies`                   | cria um estudo e inicia a execucao (201)              |
+| `GET`  | `/api/studies`                   | lista os estudos com estado e topo do ranking         |
+| `GET`  | `/api/studies/:id`               | detalhe: avaliações ordenadas, resumo, artefatos      |
+| `POST` | `/api/studies/:id/run`           | reexecuta o pipeline do estudo                        |
+| `GET`  | `/api/studies/:id/artifacts`     | lista os caminhos relativos dos artefatos             |
+| `GET`  | `/api/studies/:id/artifacts.zip` | baixa tudo em um ZIP (pasta com o slug do nicho)      |
+| `GET`  | `/api/studies/:id/artifacts/*`   | conteudo do artefato (markdown, csv, json, html, pdf) |
+| `POST` | `/api/diagnose`                  | coerencia e estabilidade das sondas                   |
+| `POST` | `/api/recalibrate`               | busca em grade de limiares sobre `dados.json`         |
+| `GET`  | `/healthz`                       | liveness (nao toca o banco)                           |
+| `GET`  | `/readyz`                        | readiness (`select 1` no SQLite)                      |
 
 ```bash
 curl -s localhost:3000/api/studies \
@@ -177,6 +178,11 @@ Duas rotas: `GET /` lista os estudos como cartoes e `GET /new` traz o formulario
 os artefatos e o plano completo. O cartao inteiro abre o estudo: o titulo carrega um link esticado
 que cobre a area e o selo "Abrir estudo" mostra a acao. O identificador aparece so como nota de
 rodape, para chamadas de API.
+
+Na secao de artefatos, **"Baixar .zip"** entrega a arvore inteira em um unico arquivo, dentro de uma
+pasta com o slug do nicho. O ZIP e escrito pelo proprio runtime (`buildZip` em
+`src/application/artifacts.ts`, PKZIP com deflate e fallback para store): `Bun.Archive` escreve tar,
+nao zip, e assim a imagem nao depende de binario externo.
 
 **Paleta com significado.** As cores `#DD5855` `#D78133` `#BFC115` `#9FDB43` `#72CE3B` formam a
 escala do sistema: vermelho aponta sinal ruim ou quente, laranja pede atencao, amarelo e medio,

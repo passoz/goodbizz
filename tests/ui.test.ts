@@ -191,6 +191,9 @@ describe("paginas da interface", () => {
     expect(body).toContain("forte: Triagem de WhatsApp");
     expect(body).toContain(`href="/api/studies/${study.id}/artifacts/01-triagem-de-whatsapp/README.md"`);
     expect(body).toContain("conteudo do plano");
+    // Atalho para baixar a arvore inteira de artefatos.
+    expect(body).toContain(`href="/api/studies/${study.id}/artifacts.zip"`);
+    expect(body).toContain("Baixar .zip");
   });
 
   test("a pagina sobre a API descreve os endpoints publicos", async () => {

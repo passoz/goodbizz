@@ -639,9 +639,16 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; plan: st
       ) : null}
 
       <section class="panel glass">
-        <h3>
-          Artefatos <Hint>arquivos do estudo no disco, servidos pela API</Hint>
-        </h3>
+        <div class="panel-head">
+          <h3>
+            Artefatos <Hint>arquivos do estudo no disco, servidos pela API</Hint>
+          </h3>
+          {props.artifacts.length > 0 ? (
+            <a class="btn btn-primary" href={`/api/studies/${study.id}/artifacts.zip`}>
+              Baixar .zip <Hint>{`${props.artifacts.length} arquivos em uma pasta`}</Hint>
+            </a>
+          ) : null}
+        </div>
         {props.artifacts.length === 0 ? (
           <p id="artifacts-empty" class="empty">
             Nenhum artefato gravado ainda. Eles aparecem quando o pipeline termina.
