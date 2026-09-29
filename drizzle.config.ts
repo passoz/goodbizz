@@ -4,5 +4,5 @@ export default defineConfig({
   schema: "./src/infrastructure/schema.ts",
   out: "./drizzle",
   dialect: "sqlite",
-  dbCredentials: { url: "app.db" },
+  dbCredentials: { url: Bun.env.DATABASE_URL ?? "app.db" },
 });

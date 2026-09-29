@@ -50,13 +50,3 @@ export function makeHarness(): TestHarness {
     close: () => db.sqlite.close(),
   };
 }
-
-/** Wait until `predicate` holds or the budget expires; used only for background runs in tests. */
-export async function waitFor(predicate: () => boolean, timeoutMs = 5_000): Promise<void> {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    if (predicate()) return;
-    await Bun.sleep(20);
-  }
-  throw new Error("condition not met within the test budget");
-}

@@ -21,7 +21,7 @@
     "format:check": "bunx prettier --check .",
     "bench": "bun run benches/render.bench.ts",
     "db:generate": "bunx drizzle-kit generate",
-    "db:migrate": "bun run src/infrastructure/db.ts migrate"
+    "db:migrate": "bunx drizzle-kit migrate"
   },
   "dependencies": {
     "@t3-oss/env-core": "^0.13.8",

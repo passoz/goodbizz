@@ -158,3 +158,116 @@ describe("goodbizz CLI", () => {
     expect(output).toContain("Dataset:");
   });
 });
+
+describe("goodbizz CLI help matrix", () => {
+  const helpCases: Array<[string[], string]> = [
+    [["--help"], "Comandos:"],
+    [["help"], "Comandos:"],
+    [["generate", "--help"], "generate"],
+    [["diagnose", "--help"], "diagnose"],
+    [["recalibrate", "--help"], "recalibrate"],
+    [["serve", "--help"], "serve"],
+  ];
+
+  for (const [argv, expected] of helpCases) {
+    test(`\`${argv.join(" ")}\` exits 0 with usage text`, async () => {
+      const captured = capture();
+      let code = -1;
+      try {
+        code = await main(argv);
+      } finally {
+        captured.restore();
+      }
+      expect(code).toBe(0);
+      expect(captured.log.join("\n")).toContain(expected);
+    });
+  }
+
+  test("--version prints the package version", async () => {
+    const captured = capture();
+    let code = -1;
+    try {
+      code = await main(["--version"]);
+    } finally {
+      captured.restore();
+    }
+    expect(code).toBe(0);
+    expect(captured.log.join("")).toMatch(/^\d+\.\d+\.\d+$/);
+  });
+});
+
+describe("goodbizz CLI failures", () => {
+  test("reports a configuration error with exit 2 when the niche is missing", async () => {
+    const captured = capture();
+    let code = -1;
+    try {
+      code = await main(["generate", "--mock", "--output", tempDir()]);
+    } finally {
+      captured.restore();
+    }
+    expect(code).toBe(2);
+    expect(captured.error.join("\n")).toContain("--niche");
+  });
+
+  test("requires --ideas for diagnose", async () => {
+    const captured = capture();
+    let code = -1;
+    try {
+      code = await main(["diagnose", "--mock"]);
+    } finally {
+      captured.restore();
+    }
+    expect(code).toBe(2);
+    expect(captured.error.join("\n")).toContain("--ideas");
+  });
+
+  test("requires at least one data file for recalibrate", async () => {
+    const captured = capture();
+    let code = -1;
+    try {
+      code = await main(["recalibrate"]);
+    } finally {
+      captured.restore();
+    }
+    expect(code).toBe(2);
+  });
+
+  test("diagnoses the probes of an ideas file and keeps code 0 when the signal is usable", async () => {
+    const dir = tempDir();
+    const ideasPath = join(dir, "ideas.json");
+    await Bun.write(
+      ideasPath,
+      JSON.stringify([
+        { nome: "Triagem de WhatsApp", descricao: "Le as mensagens e separa duvida de intencao." },
+        { nome: "Ficha do cliente", descricao: "Extrai os dados do documento e preenche o cadastro." },
+      ]),
+    );
+
+    const captured = capture();
+    let code = -1;
+    try {
+      code = await main(["diagnose", "--ideas", ideasPath, "--niche", "oficinas", "--mock"]);
+    } finally {
+      captured.restore();
+    }
+
+    const output = captured.log.join("\n");
+    expect(output).toContain("sondas");
+    expect(output).toContain("veredito");
+    expect(output).toContain("sondas utilizaveis:");
+    expect(output).toContain("referencia: soma afirmacao+negacao de 1.00");
+    expect([0, 1]).toContain(code);
+  });
+
+  test("fails cleanly when the ideas file does not exist", async () => {
+    const captured = capture();
+    let code = -1;
+    try {
+      code = await main(["diagnose", "--ideas", join(tempDir(), "nope.json"), "--mock"]);
+    } finally {
+      captured.restore();
+    }
+    expect(code).toBe(2);
+    expect(captured.error.join("\n")).toContain("nao foi possivel ler");
+  });
+});

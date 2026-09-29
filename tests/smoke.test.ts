@@ -5,12 +5,14 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, test } from "bun:test";
+import { Hono } from "hono";
 
 import { StudyCache } from "../src/application/cache.ts";
 import { StudyService } from "../src/application/study-service.ts";
 import { resolveStudyConfig } from "../src/config/runtime.ts";
+import { NotFoundError } from "../src/domain/errors.ts";
 import { DeciderMock } from "../src/infrastructure/decider-mock.ts";
-import { openMigratedDatabase } from "../src/infrastructure/db.ts";
+import { migrateFromEnvironment, openMigratedDatabase } from "../src/infrastructure/db.ts";
 import { buildApiApp } from "../src/infrastructure/http/api.ts";
 import { buildHttpApp } from "../src/infrastructure/http/app.ts";
 import { buildHealthApp } from "../src/infrastructure/http/health.ts";
@@ -166,5 +168,66 @@ describe("end-to-end smoke (mock mode)", () => {
     expect(missing.status).toBe(404);
 
     db.sqlite.close();
+  });
+});
+
+describe("HTTP composition", () => {
+  function composedApp(production: boolean) {
+    const logger = silentLogger();
+    const api = new Hono()
+      .get("/missing", () => {
+        throw new NotFoundError("estudo inexistente");
+      })
+      .get("/boom", () => {
+        throw new Error("detalhe interno que nao pode vazar");
+      });
+    const health = new Hono().get("/healthz", (c) => c.json({ status: "ok" }));
+    const ui = new Hono().get("/", (c) => c.html("<!doctype html><html></html>"));
+    return buildHttpApp({ api, ui, health, logger, production });
+  }
+
+  test("maps a domain error to its status code", async () => {
+    const response = await composedApp(false).request("/api/missing");
+    expect(response.status).toBe(404);
+    const body = (await response.json()) as { error: string; message: string };
+    expect(body.error).toBe("NOT_FOUND");
+    expect(body.message).toBe("estudo inexistente");
+  });
+
+  test("hides internal details behind a generic 500", async () => {
+    const response = await composedApp(false).request("/api/boom");
+    expect(response.status).toBe(500);
+    const body = (await response.json()) as { error: string; message: string };
+    expect(body.error).toBe("INTERNAL_SERVER_ERROR");
+    expect(JSON.stringify(body)).not.toContain("detalhe interno");
+  });
+
+  test("answers an unknown route with a JSON 404", async () => {
+    const response = await composedApp(false).request("/nao-existe");
+    expect(response.status).toBe(404);
+    const body = (await response.json()) as { error: string };
+    expect(body.error).toBe("NOT_FOUND");
+  });
+
+  test("redirects to HTTPS only when a proxy reports plaintext, never for health", async () => {
+    const app = composedApp(true);
+    const redirected = await app.request("/", { headers: { "x-forwarded-proto": "http" } });
+    expect(redirected.status).toBe(308);
+    expect(redirected.headers.get("location")).toStartWith("https://");
+
+    const direct = await app.request("/");
+    expect(direct.status).toBe(200);
+
+    const health = await app.request("/healthz", { headers: { "x-forwarded-proto": "http" } });
+    expect(health.status).toBe(200);
+  });
+});
+
+describe("migrations", () => {
+  test("apply once and are a no-op afterwards", () => {
+    const url = join(tempDir("goodbizz-migrate-"), "app.db");
+    const first = migrateFromEnvironment({ url });
+    expect(first.length).toBeGreaterThan(0);
+    expect(migrateFromEnvironment({ url })).toEqual([]);
   });
 });

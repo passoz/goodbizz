@@ -203,3 +203,22 @@ describe("LlmHttp over loopback", () => {
     }
   });
 });
+
+describe("LlmMock document markers", () => {
+  test("accepts the english data markers as well as the portuguese ones", async () => {
+    const mock = new LlmMock();
+    const english = [
+      "MEASURED DATA",
+      "Ideia: Teste",
+      "INDICE DE ACAO: 1.5 | TIER: B",
+      "VALIDATION: pagaria R$ 350 por mes = 0.60 | 30 clientes em 24 meses = 0.40",
+      "END OF DATA",
+      "",
+      "Escreva o documento.",
+    ].join("\n");
+    const document = await mock.generateText("voce e consultor", english);
+    expect(document).toContain("Teste");
+    expect(document).toContain("## 1. Resumo executivo");
+    expect(document).toContain("ticket de R$ 350 por mes");
+  });
+});

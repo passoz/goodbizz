@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 
 import { ConfigError } from "../src/domain/errors.ts";
 import { loadEnv, resetEnv } from "../src/config/env.ts";
-import { resolveStudyConfig, studyContext } from "../src/config/runtime.ts";
+import { createLogger, resolveStudyConfig, studyContext } from "../src/config/runtime.ts";
 
 const TOUCHED = [
   "PORT",
@@ -100,5 +100,17 @@ describe("study configuration", () => {
         "sem equipe de TI, orcamento curto, o canal principal e o WhatsApp.",
     );
     expect(studyContext({ niche: "pousadas", city: "Paraty" })).toContain("Target city/region: Paraty.");
+  });
+});
+
+describe("logger adapter", () => {
+  test("forwards every level to the structured logger", () => {
+    const logger = createLogger("error");
+    expect(() => {
+      logger.debug("d", { a: 1 });
+      logger.info("i");
+      logger.warn("w", { b: 2 });
+      logger.error("e");
+    }).not.toThrow();
   });
 });

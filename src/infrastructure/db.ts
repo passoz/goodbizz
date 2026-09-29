@@ -72,10 +72,13 @@ export function openMigratedDatabase(url: string, dir = "drizzle"): DatabaseHand
   return handle;
 }
 
-if (import.meta.main) {
-  const url = Bun.env.DATABASE_URL ?? "app.db";
+/** Apply the migrations to the database named by the environment; returns the applied files. */
+export function migrateFromEnvironment(options: { url?: string; dir?: string } = {}): string[] {
+  const url = options.url ?? Bun.env.DATABASE_URL ?? "app.db";
   const handle = openDatabase(url);
-  const applied = runMigrations(handle);
-  console.log(`migrations applied to ${url}: ${applied.length ? applied.join(", ") : "none"}`);
-  handle.sqlite.close();
+  try {
+    return runMigrations(handle, options.dir ?? "drizzle");
+  } finally {
+    handle.sqlite.close();
+  }
 }
