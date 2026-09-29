@@ -52,6 +52,8 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
+          # O cluster roda em ARM64 (Oracle Ampere); a imagem precisa ser multi-arquitetura.
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
