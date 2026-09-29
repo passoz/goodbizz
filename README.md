@@ -165,13 +165,20 @@ Erros: `422` payload invalido (com detalhes de validacao), `404` estudo ou artef
 
 ## Interface web
 
-`GET /` lista os estudos e traz o formulario. `GET /studies/:id` mostra o cabecalho do estudo, a
-legenda de leitura, o ranking, as medias, os grupos de dor, os artefatos e o plano completo.
+Duas rotas: `GET /` lista os estudos como cartoes e `GET /new` traz o formulario de criacao.
+`GET /studies/:id` mostra o cabecalho, a legenda de leitura, o ranking, as medias, os grupos de dor,
+os artefatos e o plano completo. O cartao inteiro abre o estudo: o titulo carrega um link esticado
+que cobre a area e o selo "Abrir estudo" mostra a acao. O identificador aparece so como nota de
+rodape, para chamadas de API.
+
+**Paleta com significado.** As cores `#DD5855` `#D78133` `#BFC115` `#9FDB43` `#72CE3B` formam a
+escala do sistema: vermelho aponta sinal ruim ou quente, laranja pede atencao, amarelo e medio,
+limao e verde apontam sinal bom. A mesma escala colore o fundo, o indice de acao, o tier, a dor, o
+desvio, o estado do estudo e a disposicao a pagar, sempre com o limiar explicado na legenda.
 
 **Leitura guiada.** Todo dado apresentado vem com o seu helper, no formato `dado 0.89 (maior e
 melhor)`: direcao, escala e o que o numero significa. Cada coluna de tabela, bloco de metrica,
-selo e card de artefato carrega essa leitura, entao nao e preciso conhecer a metodologia para
-interpretar o resultado.
+selo e card de artefato carrega essa leitura.
 
 **Glossario no hover.** Passar o mouse (ou focar pelo teclado) em uma sigla ou nome abre uma caixa
 com a explicacao curta: `WTP`, `Tier`, `fit`, `venda`, `disrupcao`, `desvio`, `FORTE`, `FRACA`,
@@ -179,12 +186,11 @@ com a explicacao curta: `WTP`, `Tier`, `fit`, `venda`, `disrupcao`, `desvio`, `F
 explicacoes vivem em uma fonte unica (`GLOSSARY` em `src/infrastructure/http/ui/layout.tsx`) e o
 texto fica no DOM, portanto e alcancavel por leitor de tela.
 
-**Estilo.** Glassmorphism em CSS nativo sobre uma aurora fixa de tres gradientes: filmes
-translucidos, borda clara, brilho interno e sombra difusa, com um unico acento (honey) reservado
-para acao e para o sinal de dor forte. Sem `backdrop-filter` de proposito (custo de composicao sem
-ganho visual sobre um fundo ja suave), sem animacao de entrada (conteudo nunca depende de um frame
-para aparecer) e com fallback solido para `prefers-reduced-transparency`, alem de desligar
-transicoes em `prefers-reduced-motion`.
+**Estilo.** Glassmorphism em CSS nativo: fundo saturado com cinco blobs, paineis com filme
+translucido, borda luminosa, brilho especular e sombra profunda, com `backdrop-filter` (blur ao
+vivo) habilitado quando o navegador suporta e fallback solido para
+`prefers-reduced-transparency`. Sem animacao de entrada (conteudo nunca depende de um frame para
+aparecer) e transicoes desligadas em `prefers-reduced-motion`.
 
 A interface consome a **mesma API** (`POST /api/studies` via `fetch`) e mantem um caminho sem
 JavaScript (`POST /ui/studies`) protegido por CSRF: mesma origem (`Origin`/`Referer`, fail-closed)
