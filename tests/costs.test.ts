@@ -84,6 +84,11 @@ describe("explainFailure", () => {
     );
   });
 
+  test("texto já humanizado volta intacto (exibição de erro antigo)", () => {
+    const once = explainFailure(new Error("[429]: Rate limit exceeded"));
+    expect(explainFailure(new Error(once))).toBe(once);
+  });
+
   test("motivo desconhecido preserva a mensagem original", () => {
     expect(explainFailure(new Error("algo muito específico quebrou"))).toContain(
       "algo muito específico quebrou",

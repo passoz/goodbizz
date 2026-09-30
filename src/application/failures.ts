@@ -9,6 +9,15 @@ import { scrub } from "../config/redact.ts";
 /** Frase humana + ação; `detail` mantém o erro original para depuração. */
 export function explainFailure(error: unknown): string {
   const raw = scrub(error instanceof Error ? error.message : String(error));
+  // Idempotente: o texto já humanizado (gravado por esta mesma função, ou exibido de novo) volta
+  // intacto — senão a explicação seria embrulhada nela mesma.
+  if (
+    /^(O provedor de IA|Não foi possível falar|O modelo escolhido|O texto devolvido|O estudo falhou:)/.test(
+      raw,
+    )
+  ) {
+    return raw;
+  }
   const detail = raw.length > 0 ? ` (detalhe: ${raw.slice(0, 300)})` : "";
 
   if (/\b429\b|rate.?limit|too many requests|quota/i.test(raw)) {

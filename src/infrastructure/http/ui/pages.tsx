@@ -11,6 +11,7 @@ import { html, raw } from "hono/html";
 
 import { estimateCost } from "../../../application/costs.ts";
 import { tierOf } from "../../../application/evaluate.ts";
+import { explainFailure } from "../../../application/failures.ts";
 import { folderName } from "../../../application/reports.ts";
 import type { ProviderSettingRow, ProviderSource } from "../../../config/providers.ts";
 import type {
@@ -1160,7 +1161,7 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; token: s
         <section class="panel glass" id="failure-panel">
           <h3>O estudo falhou</h3>
           <p id="study-failure" class="alert" role="alert">
-            {study.progress.error}
+            {study.progress.error === null ? "" : explainFailure(study.progress.error)}
           </p>
           <p class="sub">
             O que já foi gerado continua em disco: os artefatos listados abaixo seguem baixáveis. Executar de

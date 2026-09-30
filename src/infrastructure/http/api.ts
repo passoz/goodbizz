@@ -10,6 +10,7 @@ import { resolveStudyConfig } from "../../config/runtime.ts";
 import { loadEnv } from "../../config/env.ts";
 import { providerSettingsView } from "../../config/providers.ts";
 import { estimateCost } from "../../application/costs.ts";
+import { explainFailure } from "../../application/failures.ts";
 import { ValidationError } from "../../domain/errors.ts";
 import type { Logger } from "../../domain/ports.ts";
 import type { StudyRecord } from "../../domain/types.ts";
@@ -92,7 +93,9 @@ function publicStudy(record: StudyRecord) {
     brief: record.brief,
     state: record.progress.state,
     step: record.progress.step,
-    error: record.progress.error,
+    // Estudos antigos guardaram o erro cru do provedor: a leitura passa pelo tradutor de falhas
+    // (idempotente para o que já está humanizado).
+    error: record.progress.error === null ? null : explainFailure(record.progress.error),
     evaluations: record.evaluations,
     summary: record.summary,
     usage: record.usage,
