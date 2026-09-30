@@ -122,7 +122,7 @@ bun run cli help
 Flags de `generate` (com aliases do baseline): `--niche/--nicho`, `--city/--cidade`, `--ticket`,
 `--ideas/--ideias`, `--output/--saida`, `--ideas-file/--ideias-arquivo`,
 `--pain-method/--método-dor`, `--eval-only/--so-avaliar`, `--mock`, `--mock-llm`,
-`--mock-decider/--mock-decisor`, `--pdf`, `--concurrency/--paralelo`, `--timeout`, `--llm-url`,
+`--mock-decider/--mock-decisor`, `--pdf`, `--concurrency/--paralelo`, `--timeout` (padrão: `GOODBIZZ_LLM_TIMEOUT`, 300 s), `--llm-url`,
 `--llm-model`, `--llm-key`, `--decider-url/--decisor-url`, `--decider-model/--decisor-model`,
 `--decider-key/--decisor-key`.
 

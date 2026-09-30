@@ -225,7 +225,7 @@ Opcoes:
   --mock-decider, --mock-decisor     simula apenas o decisor (usa o LLM real)
   --pdf                              compila um PDF único do estudo
   --concurrency, --paralelo <inteiro>  chamadas concorrentes (padrão: 8)
-  --timeout <segundos>               timeout por chamada (padrão: 60)
+  --timeout <segundos>               timeout por chamada (padrão: GOODBIZZ_LLM_TIMEOUT, 300)
   --llm-url <url>                    URL base compatível com OpenAI
   --llm-model <modelo>               modelo do LLM
   --llm-key <chave>                  chave da API do LLM
