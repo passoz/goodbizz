@@ -72,8 +72,16 @@ export async function buildService(env: Env = loadEnv()): Promise<ServiceBundle>
 
   // Clientes que releem a configuração a cada chamada: salvar na aba /settings vale na hora.
   const resolveProviders = () => effectiveProviders(env, settingsStore.current());
-  const llm = new RoutingLlmClient({ resolve: resolveProviders, mock: mockLlm, timeout: 60 });
-  const decider = new RoutingDeciderClient({ resolve: resolveProviders, mock: mockDecider, timeout: 60 });
+  const llm = new RoutingLlmClient({
+    resolve: resolveProviders,
+    mock: mockLlm,
+    timeout: env.GOODBIZZ_LLM_TIMEOUT,
+  });
+  const decider = new RoutingDeciderClient({
+    resolve: resolveProviders,
+    mock: mockDecider,
+    timeout: env.GOODBIZZ_LLM_TIMEOUT,
+  });
 
   const repo = new SqliteStudyRepository(handle.db);
   const cache = new StudyCache(new SqliteCacheStore(handle.db));
@@ -109,6 +117,16 @@ export async function buildService(env: Env = loadEnv()): Promise<ServiceBundle>
     llm,
     decider,
     logger,
+    // Um estudo pode pedir timeout próprio (`POST /api/studies {"timeout":N}`): os clientes daquele
+    // estudo saem daqui com o valor resolvido da configuração; sem isso, o campo era aceito e ignorado.
+    clientsFor: (cfg) => ({
+      llm: new RoutingLlmClient({ resolve: resolveProviders, mock: mockLlm, timeout: cfg.timeout }),
+      decider: new RoutingDeciderClient({
+        resolve: resolveProviders,
+        mock: mockDecider,
+        timeout: cfg.timeout,
+      }),
+    }),
     artifactsRoot: env.GOODBIZZ_STUDIES_DIR,
     pdf: false,
     mockLlm,

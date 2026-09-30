@@ -40,6 +40,15 @@ describe("environment validation", () => {
     expect(env.LLM_API_MODEL).toBe("gpt-4o-mini");
     expect(env.DECISION_API_MODEL).toBe("systemone-latest");
     expect(env.GOODBIZZ_MOCK).toBe(false);
+    // 60 s cortava as gerações longas de `deepseek-flash` (um plano passa de 20 mil tokens de saída).
+    expect(env.GOODBIZZ_LLM_TIMEOUT).toBe(300);
+  });
+
+  test("o limite por chamada de IA é configurável", () => {
+    remember();
+    Bun.env.GOODBIZZ_LLM_TIMEOUT = "45";
+    resetEnv();
+    expect(loadEnv().GOODBIZZ_LLM_TIMEOUT).toBe(45);
   });
 
   test("reads overrides from the process environment", () => {

@@ -77,7 +77,7 @@ export function resolveStudyConfig(overrides: StudyConfigOverrides): StudyConfig
     pdf: overrides.pdf ?? false,
     paraphrases: overrides.paraphrases ?? 3,
     concurrency: overrides.concurrency ?? 8,
-    timeout: overrides.timeout ?? 60,
+    timeout: overrides.timeout ?? env.GOODBIZZ_LLM_TIMEOUT,
     llmBaseUrl: overrides.llmBaseUrl ?? env.LLM_API_URL,
     llmModel: overrides.llmModel ?? env.LLM_API_MODEL,
     llmKey: overrides.llmKey ?? env.LLM_API_KEY,

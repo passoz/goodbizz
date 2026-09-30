@@ -34,14 +34,25 @@ export function explainFailure(error: unknown): string {
       detail
     );
   }
+  // Timeout primeiro: é o caso das gerações longas, e não dá para afirmar que nada foi cobrado — o
+  // provedor pode ter faturado o que chegou a gerar antes do corte do cliente.
+  if (/timed? ?out|timeout/i.test(raw)) {
+    return (
+      "O provedor de IA não respondeu dentro do limite por chamada (o tempo esgotou). Isso acontece " +
+      "nas gerações longas: execute o estudo de novo — o que já saiu fica em disco. Atenção: os " +
+      "tokens gerados antes do corte podem ter sido cobrados, mesmo sem resposta." +
+      detail
+    );
+  }
   if (
-    /EAI_AGAIN|ENOTFOUND|ECONNREFUSED|ECONNRESET|fetch failed|unable to connect|connection refused|socket hang up|timed? ?out|timeout/i.test(
+    /EAI_AGAIN|ENOTFOUND|ECONNREFUSED|ECONNRESET|fetch failed|unable to connect|connection refused|socket hang up/i.test(
       raw,
     )
   ) {
     return (
-      "Não foi possível falar com o provedor de IA (rede ou DNS). Nada foi cobrado por esta " +
-      "tentativa; verifique se o serviço está no ar e execute o estudo de novo." +
+      "Não foi possível falar com o provedor de IA (rede ou DNS): a requisição não chegou lá, então " +
+      "não há cobrança por esta tentativa. Verifique se o serviço está no ar e execute o estudo " +
+      "de novo." +
       detail
     );
   }

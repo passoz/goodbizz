@@ -77,6 +77,15 @@ describe("explainFailure", () => {
     );
   });
 
+  test("timeout fala de limite por chamada sem prometer que nada foi cobrado", () => {
+    const text = explainFailure(
+      new Error("LLM failed after 3 attempts: TimeoutError: The operation timed out."),
+    );
+    expect(text).toContain("limite por chamada");
+    expect(text).toContain("podem ter sido cobrados");
+    expect(text).not.toContain("Nada foi cobrado");
+  });
+
   test("5xx e credencial ausente no roteador têm texto próprio", () => {
     expect(explainFailure(new Error("HTTP 503 Service Unavailable"))).toContain("erro interno (5xx)");
     expect(explainFailure(new Error("No active credentials for provider: openai"))).toContain(

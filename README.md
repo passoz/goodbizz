@@ -88,6 +88,7 @@ Segredos vivem **apenas** no ambiente. O contrato das chaves esta versionado em 
 | `GOODBIZZ_MOCK`                            | `0`                         | `1` simula LLM e decisor                                                 |
 | `GOODBIZZ_MOCK_LLM`                        | `0`                         | `1` simula apenas o texto, mantendo o decisor real                       |
 | `GOODBIZZ_MOCK_DECIDER`                    | `0`                         | `1` simula apenas os numeros, mantendo o LLM real                        |
+| `GOODBIZZ_LLM_TIMEOUT` | `300` | segundos por chamada de IA (5–3600); o default antigo (60) cortava os documentos longos |
 | `GOODBIZZ_PRICE_LLM_INPUT_PER_MTOK`        | `0.15`                      | US$/1M de tokens de entrada, tabela oficial off-peak do `deepseek-flash` |
 | `GOODBIZZ_PRICE_LLM_CACHED_INPUT_PER_MTOK` | `0.0028`                    | US$/1M de tokens de entrada servidos do cache                            |
 | `GOODBIZZ_PRICE_LLM_OUTPUT_PER_MTOK`       | `0.28`                      | US$/1M de tokens de saída                                                |

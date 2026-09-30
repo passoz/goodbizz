@@ -28,6 +28,8 @@ export interface StudyServiceOptions {
   cache: StudyCache;
   llm: LlmClient;
   decider: DeciderClient;
+  /** Clientes por estudo (permite um timeout diferente por configuração); sem isso valem `llm`/`decider`. */
+  clientsFor?: (cfg: StudyConfig) => { llm: LlmClient; decider: DeciderClient };
   logger: Logger;
   /** Root directory that holds one subdirectory per study. */
   artifactsRoot: string;
@@ -133,9 +135,13 @@ export class StudyService {
         timeout: this.options.timeout ?? 60,
       });
 
-      const result = await generateStudy(cfg, {
+      const clients = this.options.clientsFor?.(cfg) ?? {
         llm: this.options.llm,
         decider: this.options.decider,
+      };
+      const result = await generateStudy(cfg, {
+        llm: clients.llm,
+        decider: clients.decider,
         cache: this.options.cache,
         logger: this.options.logger,
         onProgress: (step) => {

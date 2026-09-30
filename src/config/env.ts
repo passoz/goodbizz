@@ -31,6 +31,8 @@ export interface Env {
   GOODBIZZ_STUDIES_DIR: string;
   GOODBIZZ_MOCK: boolean;
   GOODBIZZ_MOCK_LLM: boolean;
+  /** Limite, em segundos, de cada chamada ao provedor de IA. */
+  GOODBIZZ_LLM_TIMEOUT: number;
   GOODBIZZ_MOCK_DECIDER: boolean;
   GOODBIZZ_PRICE_LLM_INPUT_PER_MTOK: number;
   GOODBIZZ_PRICE_LLM_CACHED_INPUT_PER_MTOK: number;
@@ -61,6 +63,10 @@ function buildEnv() {
       GOODBIZZ_MOCK: booleanFlag("0"),
       /** Simula apenas o LLM (texto sintético) mantendo o decisor real. */
       GOODBIZZ_MOCK_LLM: booleanFlag("0"),
+      // Limite por chamada de IA. O padrão antigo (60 s) cortava as gerações longas: o
+      // `deepseek-flash` produz ~8 mil tokens de saída em ~37 s, e um plano executivo passa de 20 mil
+      // tokens — ou seja, o documento era abortado no meio e o estudo falhava por timeout.
+      GOODBIZZ_LLM_TIMEOUT: z.coerce.number().int().min(5).max(3600).default(300),
       /** Simula apenas o decisor (números deterministicos) mantendo o LLM real. */
       GOODBIZZ_MOCK_DECIDER: booleanFlag("0"),
 
