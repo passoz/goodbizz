@@ -16,7 +16,14 @@ import { folderName } from "./reports.ts";
 import { summarizeStudy } from "./summary.ts";
 import { checkDocument } from "./verification.ts";
 import type { Logger, LlmClient, DeciderClient, ArtifactFile } from "../domain/ports.ts";
-import type { Idea, IdeaEvaluation, StudyConfig, StudySummary } from "../domain/types.ts";
+import type {
+  Idea,
+  IdeaEvaluation,
+  ProviderUsage,
+  StudyConfig,
+  StudySummary,
+  StudyUsage,
+} from "../domain/types.ts";
 
 export interface ArtifactBundle {
   files: ArtifactFile[];
@@ -35,6 +42,8 @@ export interface GenerateStudyResult {
   issues: string[];
   cacheHits: number;
   cacheCount: number;
+  /** Consumo desta execução (diferença antes/depois nos clientes de longo prazo). */
+  usage: StudyUsage;
 }
 
 export interface GenerateStudyDeps {
@@ -70,8 +79,23 @@ async function mapLimit<T, R>(
 /** Read an ideas JSON file (object wrapper, object list or string list). */
 export { loadIdeas as loadIdeasFile } from "./dados.ts";
 
+const ZERO_USAGE: ProviderUsage = { calls: 0, inputTokens: 0, cachedInputTokens: 0, outputTokens: 0 };
+
+/** Diferença de consumo entre dois snapshots do mesmo cliente (os clientes vivem no processo todo). */
+function usageDelta(before: ProviderUsage | undefined, after: ProviderUsage | undefined): ProviderUsage {
+  const start = before ?? ZERO_USAGE;
+  const end = after ?? ZERO_USAGE;
+  return {
+    calls: Math.max(0, end.calls - start.calls),
+    inputTokens: Math.max(0, end.inputTokens - start.inputTokens),
+    cachedInputTokens: Math.max(0, end.cachedInputTokens - start.cachedInputTokens),
+    outputTokens: Math.max(0, end.outputTokens - start.outputTokens),
+  };
+}
+
 export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): Promise<GenerateStudyResult> {
   const { llm, decider, cache } = deps;
+  const usageBefore = { llm: llm.usage?.(), decider: decider.usage?.() };
   const progress = deps.onProgress ?? (() => {});
   deps.logger.debug("study pipeline starting", {
     niche: cfg.niche,
@@ -86,12 +110,12 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
     brief = await generateBrief(llm, cfg);
     await cache.put(briefKey, brief);
   }
-  progress(`[1/6] brief de contexto (${brief.length} caracteres)`);
+  progress(`[1/6] Lendo o nicho e escrevendo o brief de mercado (${brief.length} caracteres)`);
 
   let ideas: Idea[];
   if (cfg.ideasFile) {
     ideas = loadIdeas(cfg.ideasFile);
-    progress(`[2/6] ${ideas.length} ideias carregadas de ${cfg.ideasFile}`);
+    progress(`[2/6] ${ideas.length} ideias carregadas do arquivo ${cfg.ideasFile}`);
   } else {
     const ideasKey = cacheKeyFor("ideias", cfg.niche, cfg.city, String(cfg.numIdeas));
     const cached = await cache.get<Idea[]>(ideasKey);
@@ -101,7 +125,7 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
     } else {
       ideas = cached;
     }
-    progress(`[2/6] ${ideas.length} ideias geradas`);
+    progress(`[2/6] ${ideas.length} ideias de produto geradas para o nicho`);
   }
 
   const evaluations = await mapLimit(ideas, cfg.concurrency, async (idea) => {
@@ -122,9 +146,9 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
 
   for (const evaluation of [...evaluations].sort((a, b) => b.index - a.index)) {
     progress(
-      `[3/6] ${evaluation.name.slice(0, 38).padEnd(38)} indice ${evaluation.index.toFixed(3)} ` +
-        `(0 a 2; maior e melhor) tier ${evaluation.tier} (A >= 1.84) dor ${evaluation.algorithm.label} ` +
-        `(escore ${evaluation.algorithm.painScore.toFixed(2)}; FORTE >= 0.65)`,
+      `[3/6] Avaliei "${evaluation.name.slice(0, 38)}" com o decisor: índice ${evaluation.index.toFixed(3)} ` +
+        `de 2 (maior é melhor), tier ${evaluation.tier}, dor ${evaluation.algorithm.label} ` +
+        `(escore ${evaluation.algorithm.painScore.toFixed(2)}; forte a partir de 0.65)`,
     );
   }
 
@@ -134,13 +158,19 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
     folders[evaluation.name] = folderName(position + 1, evaluation.name);
   });
 
+  const usageNow = (): StudyUsage => ({
+    llm: usageDelta(usageBefore.llm, llm.usage?.()),
+    decider: usageDelta(usageBefore.decider, decider.usage?.()),
+  });
+
   if (cfg.evaluateOnly) {
-    progress("[4/6] modo --so-avaliar: parou depois da avaliação");
+    progress("[4/6] Modo --so-avaliar: o estudo parou depois de medir as ideias, sem escrever os documentos");
     return {
       brief,
       ideas,
       evaluations,
       summary,
+      usage: usageNow(),
       folders: {},
       documents: {},
       files: [],
@@ -151,8 +181,9 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
   }
 
   progress(
-    `[4/6] grupos de dor: forte=${summary.painGroups.forte.length} ` +
-      `mista=${summary.painGroups.mista.length} fraca=${summary.painGroups.fraca.length}`,
+    `[4/6] Natureza da dor medida: ${summary.painGroups.forte.length} com dor forte ` +
+      `(dinheiro ou imagem), ${summary.painGroups.mista.length} mista, ${summary.painGroups.fraca.length} fraca ` +
+      `(só trabalho manual)`,
   );
 
   const byName = new Map(evaluations.map((evaluation) => [evaluation.name, evaluation]));
@@ -182,7 +213,7 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
     const findings = checkDocument(text, numbers, DOC_LITERALS);
     const folder = folders[ordered.name] as string;
     const status = findings.length === 0 ? "ok" : `ATENCAO: ${findings.join("; ")}`;
-    progress(`[5/6] ${folder.padEnd(34)} ${Math.floor(text.length / 1024)} KB  ${status}`);
+    progress(`[5/6] Escrevendo o plano de "${folder}" (${Math.floor(text.length / 1024)} KB) — ${status}`);
     if (findings.length > 0) issues.push(`${folder}: ${findings.join("; ")}`);
     return { name: ordered.name, folder, text };
   });
@@ -193,7 +224,7 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
   // O markdown vai como o LLM escreveu, em português acentuado: a normalização que removia
   // diacríticos (convenção do baseline Python) foi revogada.
   const files = produced;
-  progress(`[6/6] ${files.length} artefatos preparados`);
+  progress(`[6/6] Montando os artefatos do estudo (índice, tabelão, CSV e JSON): ${files.length} arquivos`);
 
   if (cfg.pdf) {
     const html = fullHtml(
@@ -211,9 +242,10 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
         .join('\n<hr style="page-break-after: always">\n'),
     );
     files.push({ path: "estudo-completo.html", content: html });
-    progress(`[6/6] html do estudo compilado (${Math.floor(html.length / 1024)} caracteres)`);
+    progress(`[6/6] Gerando o HTML do estudo completo (${Math.floor(html.length / 1024)} KB)`);
   }
 
+  const usage: StudyUsage = usageNow();
   const result = {
     brief,
     ideas,
@@ -225,6 +257,7 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
     issues,
     cacheHits: cache.hits,
     cacheCount: await cache.count(),
+    usage,
   };
   deps.logger.info("study pipeline finished", {
     niche: cfg.niche,

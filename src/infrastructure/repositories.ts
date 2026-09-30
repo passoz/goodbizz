@@ -17,6 +17,7 @@ import type {
   StudyRecord,
   StudyState,
   StudySummary,
+  StudyUsage,
   Tier,
 } from "../domain/types.ts";
 
@@ -156,6 +157,7 @@ export class SqliteStudyRepository implements StudyRepository {
       step: record.progress.step,
       error: record.progress.error,
       summaryJson: record.summary ? JSON.stringify(record.summary) : null,
+      usageJson: record.usage ? JSON.stringify(record.usage) : null,
     };
     this.db
       .insert(studies)
@@ -177,6 +179,7 @@ export class SqliteStudyRepository implements StudyRepository {
           step: values.step,
           error: values.error,
           summaryJson: values.summaryJson,
+          usageJson: values.usageJson,
         },
       })
       .run();
@@ -196,6 +199,9 @@ export class SqliteStudyRepository implements StudyRepository {
     if (patch.brief !== undefined) set.brief = patch.brief;
     if (patch.summary !== undefined) {
       set.summaryJson = patch.summary ? JSON.stringify(patch.summary) : null;
+    }
+    if (patch.usage !== undefined) {
+      set.usageJson = patch.usage ? JSON.stringify(patch.usage) : null;
     }
     if (patch.progress !== undefined) {
       set.state = patch.progress.state;
@@ -233,6 +239,7 @@ export class SqliteStudyRepository implements StudyRepository {
       },
       evaluations: evalRows.map((r) => ideaJsonToEvaluation(JSON.parse(r.payloadJson) as IdeaJson)),
       summary: row.summaryJson ? (JSON.parse(row.summaryJson) as StudySummary) : null,
+      usage: row.usageJson ? (JSON.parse(row.usageJson) as StudyUsage) : null,
     };
   }
 
@@ -252,6 +259,7 @@ export class SqliteStudyRepository implements StudyRepository {
         ideaCount: summary ? summary.ordered.length : 0,
         topIdea: top ? top.name : null,
         topIndex: top ? top.index : null,
+        usage: row.usageJson ? (JSON.parse(row.usageJson) as StudyUsage) : null,
       };
     });
   }

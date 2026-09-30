@@ -7,6 +7,7 @@ import { z } from "zod";
 
 import { buildErrorHandler } from "./errors.ts";
 import { resolveStudyConfig } from "../../config/runtime.ts";
+import { estimateCost } from "../../application/costs.ts";
 import { ValidationError } from "../../domain/errors.ts";
 import type { Logger } from "../../domain/ports.ts";
 import type { StudyRecord } from "../../domain/types.ts";
@@ -24,6 +25,11 @@ const StudyInput = z.object({
   pdf: z.boolean().optional(),
   concurrency: z.number().int().min(1).max(32).optional(),
   timeout: z.number().positive().max(600).optional(),
+});
+
+/** Renomear: só o título exibido (o nicho). */
+const RenameInput = z.object({
+  niche: z.string().trim().min(2, "o nicho precisa de pelo menos 2 caracteres"),
 });
 
 const IdeaInput = z.object({
@@ -72,6 +78,9 @@ function publicStudy(record: StudyRecord) {
     error: record.progress.error,
     evaluations: record.evaluations,
     summary: record.summary,
+    usage: record.usage,
+    /** Estimativa com os preços do ambiente (`GOODBIZZ_PRICE_*`); `null` sem consumo medido. */
+    cost: estimateCost(record.usage),
   };
 }
 
@@ -98,11 +107,24 @@ export function buildApiApp(deps: ApiDeps): Hono {
     return c.json(publicStudy(record), 201);
   });
 
-  api.get("/studies", async (c) => c.json({ studies: await deps.service.list() }));
+  api.get("/studies", async (c) => {
+    const studies = (await deps.service.list()).map((item) => ({
+      ...item,
+      cost: estimateCost(item.usage),
+    }));
+    return c.json({ studies });
+  });
 
   api.get("/studies/:id", async (c) => {
     const record = await deps.service.get(c.req.param("id"));
     return c.json({ ...publicStudy(record), artifacts: await deps.service.artifactPaths(record.id) });
+  });
+
+  /** Renomeia o estudo: muda só o título exibido (nicho). */
+  api.patch("/studies/:id", async (c) => {
+    const input = parseOrThrow(RenameInput, await c.req.json());
+    const record = await deps.service.rename(c.req.param("id"), input.niche);
+    return c.json(publicStudy(record));
   });
 
   /** Exclui o estudo: registro, avaliações e artefatos. 409 enquanto o pipeline roda. */

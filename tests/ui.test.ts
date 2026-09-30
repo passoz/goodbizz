@@ -348,3 +348,144 @@ describe("paginas da interface", () => {
     expect(await (await harness.app.request("/")).text()).not.toContain("oficinas");
   });
 });
+
+describe("marca, renomear, progresso humano, falha e consumo", () => {
+  test("a marca no cabecalho leva de volta para a lista", async () => {
+    const body = await (await harness.app.request("/")).text();
+    expect(body).toContain('<h1><a href="/">GoodBizz</a></h1>');
+  });
+
+  test("o detalhe oferece o dialogo de renomear e a rota sem JS com CSRF", async () => {
+    const study = await harness.service.create(resolveStudyConfig({ niche: "oficinas", mock: true }));
+    const body = await (await harness.app.request(`/studies/${study.id}`)).text();
+
+    expect(body).toContain('id="rename-modal"');
+    expect(body).toContain('id="rename-input"');
+    expect(body).toContain("Salvar");
+    expect(body).toContain("Cancelar");
+    expect(body).toContain(`action="/ui/studies/${study.id}/rename"`);
+    expect(body).toContain(`data-rename-api="/api/studies/${study.id}"`);
+    // O campo do fallback sem JS vem pre-preenchido com o titulo atual.
+    expect(body).toContain(`value="oficinas"`);
+  });
+
+  test("renomear sem JS troca o titulo e volta para o estudo", async () => {
+    const study = await harness.service.create(resolveStudyConfig({ niche: "oficinas", mock: true }));
+    const { cookiePair, token } = await csrfToken();
+    const response = await harness.app.request(`/ui/studies/${study.id}/rename`, {
+      method: "POST",
+      headers: { ...FORM, Origin: "http://localhost", Cookie: cookiePair },
+      body: `niche=padarias+do+bairro&_csrf=${token}`,
+    });
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe(`/studies/${study.id}`);
+    expect((await harness.service.get(study.id)).niche).toBe("padarias do bairro");
+  });
+
+  test("renomear sem JS recusa titulo curto com 422", async () => {
+    const study = await harness.service.create(resolveStudyConfig({ niche: "oficinas", mock: true }));
+    const { cookiePair, token } = await csrfToken();
+    const response = await harness.app.request(`/ui/studies/${study.id}/rename`, {
+      method: "POST",
+      headers: { ...FORM, Origin: "http://localhost", Cookie: cookiePair },
+      body: `niche=a&_csrf=${token}`,
+    });
+    expect(response.status).toBe(422);
+    expect((await harness.service.get(study.id)).niche).toBe("oficinas");
+  });
+
+  test("o progresso mostra a fase em linguagem humana acima do passo tecnico", async () => {
+    const study = await harness.service.create(resolveStudyConfig({ niche: "oficinas", mock: true }));
+    await harness.repo.update(study.id, {
+      progress: { state: "running", step: "[3/6] avaliando as ideias", error: null },
+    });
+    const body = await (await harness.app.request(`/studies/${study.id}`)).text();
+
+    expect(body).toContain('id="progress-label"');
+    expect(body).toContain("Fase 3 de 6 — Avaliando cada ideia com o decisor System One");
+    expect(body).toContain('id="progress-step"');
+    expect(body).toContain("avaliando as ideias");
+    // O contador de tempo e a barra de 6 fases seguem no lugar.
+    expect(body).toContain('id="progress-elapsed"');
+    expect(body).toContain('id="progress-steps"');
+  });
+
+  test("a falha mostra o alerta, a acao de executar de novo e preserva os artefatos", async () => {
+    const study = await harness.service.create(resolveStudyConfig({ niche: "oficinas", mock: true }));
+    await harness.repo.update(study.id, {
+      progress: {
+        state: "failed",
+        step: "[4/6] medindo a dor",
+        error: "Limite do provedor (429). Tente de novo em alguns minutos.",
+      },
+    });
+    const body = await (await harness.app.request(`/studies/${study.id}`)).text();
+
+    expect(body).toContain('id="failure-panel"');
+    expect(body).toContain("O estudo falhou");
+    expect(body).toContain("Limite do provedor (429). Tente de novo em alguns minutos.");
+    expect(body).toContain("Executar de novo");
+    expect(body).toContain(`action="/ui/studies/${study.id}/run"`);
+    expect(body).toContain(`data-run-api="/api/studies/${study.id}/run"`);
+    expect(body).toContain("os artefatos listados abaixo seguem baixáveis");
+  });
+
+  test("executar de novo sem JS reinicia o pipeline e volta para o estudo", async () => {
+    const study = await harness.service.create(resolveStudyConfig({ niche: "oficinas", mock: true }));
+    const { cookiePair, token } = await csrfToken();
+    const response = await harness.app.request(`/ui/studies/${study.id}/run`, {
+      method: "POST",
+      headers: { ...FORM, Origin: "http://localhost", Cookie: cookiePair },
+      body: `_csrf=${token}`,
+    });
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe(`/studies/${study.id}`);
+  });
+
+  test("o painel de consumo mostra tokens, chamadas e custo estimado", async () => {
+    const study = await harness.service.create(resolveStudyConfig({ niche: "oficinas", mock: true }));
+    await harness.repo.update(study.id, {
+      usage: {
+        llm: { calls: 3, inputTokens: 12480, cachedInputTokens: 2000, outputTokens: 5000 },
+        decider: { calls: 42, inputTokens: 900, cachedInputTokens: 0, outputTokens: 300 },
+      },
+    });
+    const body = await (await harness.app.request(`/studies/${study.id}`)).text();
+
+    expect(body).toContain("Consumo e custo estimado");
+    expect(body).toContain("chamadas ao LLM");
+    expect(body).toContain("chamadas ao decisor");
+    expect(body).toContain("tokens de entrada");
+    expect(body).toContain("tokens de entrada em cache");
+    expect(body).toContain("tokens de saída");
+    expect(body).toContain("13.380");
+    expect(body).toContain("US$");
+    // O `note` do helper vira a legenda em `hint`.
+    expect(body).toContain("preços de tabela");
+  });
+
+  test("estudo sem medicao de consumo mostra o aviso, sem inventar numero", async () => {
+    const study = await harness.service.create(resolveStudyConfig({ niche: "oficinas", mock: true }));
+    const body = await (await harness.app.request(`/studies/${study.id}`)).text();
+    expect(body).toContain("Sem medição de consumo (estudo gerado antes desta versão).");
+    expect(body).not.toContain("chamadas ao LLM");
+  });
+
+  test("o cartao da lista traz um chip de custo so quando ha consumo medido", async () => {
+    const withUsage = await harness.service.create(resolveStudyConfig({ niche: "oficinas", mock: true }));
+    await harness.repo.update(withUsage.id, {
+      usage: {
+        llm: { calls: 2, inputTokens: 200000, cachedInputTokens: 0, outputTokens: 100000 },
+        decider: { calls: 5, inputTokens: 0, cachedInputTokens: 0, outputTokens: 0 },
+      },
+    });
+    const noUsage = await harness.service.create(resolveStudyConfig({ niche: "padarias", mock: true }));
+    expect(noUsage.usage).toBeNull();
+
+    const body = await (await harness.app.request("/")).text();
+    expect(body).toContain("~US$ 0,0");
+    // Dois cartoes na lista, mas so o estudo com consumo medido ganha o chip.
+    expect(body.match(/class="study-card/g)?.length).toBe(2);
+    expect(body.match(/custo estimado do consumo medido/g)?.length).toBe(1);
+  });
+});

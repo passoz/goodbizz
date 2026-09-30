@@ -9,9 +9,17 @@
 import type { FC } from "hono/jsx";
 import { html, raw } from "hono/html";
 
+import { estimateCost } from "../../../application/costs.ts";
 import { tierOf } from "../../../application/evaluate.ts";
 import { folderName } from "../../../application/reports.ts";
-import type { IdeaEvaluation, StudyListItem, StudyRecord, StudyState, Tier } from "../../../domain/types.ts";
+import type {
+  IdeaEvaluation,
+  StudyListItem,
+  StudyRecord,
+  StudyState,
+  StudyUsage,
+  Tier,
+} from "../../../domain/types.ts";
 import { GLOSSARY, Term } from "./layout.tsx";
 
 const STATE_LABEL: Record<StudyState, string> = {
@@ -33,7 +41,7 @@ const STATE_TIP: Record<StudyState, string> = {
   pending: "Criado agora, aguardando o início do pipeline.",
   running: "Em andamento: brief, ideias, avaliação, documentos e relatórios.",
   done: "Terminou bem. Ranking, médias, artefatos e plano estão disponíveis.",
-  failed: "Terminou com erro. A mensagem aparece no topo desta página.",
+  failed: "Terminou com erro. O motivo e a ação de executar de novo aparecem no painel de alerta.",
 };
 
 const TIER_NOTE: Record<Tier, string> = {
@@ -160,6 +168,83 @@ const Metric: FC<{
     {props.note !== undefined ? <span class="metric-note">{props.note}</span> : null}
   </li>
 );
+
+/**
+ * Consumo medido e custo estimado do estudo. Sem `usage` (estudo antigo) nao ha o que mostrar alem
+ * do aviso; com `usage`, o custo vem do helper `estimateCost`, que le os precos do ambiente.
+ */
+const UsagePanel: FC<{ usage: StudyUsage | null }> = (props) => {
+  const cost = estimateCost(props.usage);
+  if (props.usage === null || cost === null) {
+    return (
+      <section class="panel glass" id="usage">
+        <h3>
+          Consumo e custo estimado <Hint>tokens medidos no pipeline</Hint>
+        </h3>
+        <p id="usage-empty" class="sub">
+          Sem medição de consumo (estudo gerado antes desta versão).
+        </p>
+      </section>
+    );
+  }
+  const totals = totalTokens(props.usage);
+  return (
+    <section class="panel glass" id="usage">
+      <h3>
+        Consumo e custo estimado <Hint>tokens medidos no pipeline e preço de tabela</Hint>
+      </h3>
+      <ul id="usage-metrics" class="metrics">
+        <Metric
+          term="LLM"
+          label="chamadas ao LLM"
+          value={props.usage.llm.calls.toLocaleString("pt-BR")}
+          hint="requisições de texto feitas ao modelo"
+          tone="neutral"
+        />
+        <Metric
+          term="decisor"
+          label="chamadas ao decisor"
+          value={props.usage.decider.calls.toLocaleString("pt-BR")}
+          hint="perguntas levadas ao System One"
+          tone="neutral"
+        />
+        <Metric
+          term="tokens"
+          label="tokens de entrada"
+          value={totals.input.toLocaleString("pt-BR")}
+          hint="texto enviado aos provedores"
+          tone="neutral"
+        />
+        {totals.cached > 0 ? (
+          <Metric
+            term="tokens"
+            label="tokens de entrada em cache"
+            value={totals.cached.toLocaleString("pt-BR")}
+            hint="entrada reaproveitada, cobrada mais barata"
+            tone="neutral"
+          />
+        ) : null}
+        <Metric
+          term="tokens"
+          label="tokens de saída"
+          value={totals.output.toLocaleString("pt-BR")}
+          hint="texto gerado pelos provedores"
+          tone="neutral"
+        />
+        <Metric
+          term="custo"
+          label="custo estimado"
+          value={
+            formatMoney("US$", cost.usd, 4) +
+            (cost.brl !== null ? ` · ${formatMoney("R$", cost.brl, 2)}` : "")
+          }
+          hint={cost.note}
+          tone="neutral"
+        />
+      </ul>
+    </section>
+  );
+};
 
 /** Como ler: as regras da metodologia, mais a leitura da escala de cor. Vive na pagina /como-ler. */
 export const Legend: FC = () => (
@@ -356,7 +441,169 @@ const DeleteDialog: FC = () => (
 );
 
 /**
- * Lista de estudos como cartoes. O cartao INTEIRO e a entrada: o titulo carrega um link esticado
+ * Renomear: com JS intercepta o `submit`, abre o dialogo e envia um `PATCH`; sem JS o form posta
+ * direto em `/ui/studies/:id/rename` (mesma origem + CSRF), que responde 303 para a pagina do estudo.
+ */
+const RENAME_MODAL_SCRIPT = `
+(function () {
+  var modal = document.getElementById("rename-modal");
+  if (!modal || typeof modal.showModal !== "function") return;
+  var input = document.getElementById("rename-input");
+  var error = document.getElementById("rename-error");
+  var saveButton = document.getElementById("rename-save");
+  var cancelButton = document.getElementById("rename-cancel");
+  var current = null;
+  function close() { modal.close(); }
+  Array.prototype.slice.call(document.querySelectorAll(".rename-form")).forEach(function (form) {
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+      current = form;
+      if (input) input.value = form.dataset.renameCurrent || "";
+      if (error) error.textContent = "";
+      if (saveButton) saveButton.disabled = false;
+      modal.showModal();
+      if (input) input.focus();
+    });
+  });
+  if (cancelButton) cancelButton.addEventListener("click", close);
+  modal.addEventListener("click", function (event) {
+    if (event.target === modal) close();
+  });
+  if (saveButton) {
+    saveButton.addEventListener("click", function () {
+      if (!current || !input) return;
+      var niche = input.value.trim();
+      if (!niche) {
+        if (error) error.textContent = "o título não pode ficar vazio";
+        return;
+      }
+      saveButton.disabled = true;
+      fetch(current.dataset.renameApi, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ niche: niche }),
+      })
+        .then(function (response) {
+          if (response.ok) { window.location.reload(); return null; }
+          return response.json().then(
+            function (body) { throw new Error(body.message || "não foi possível renomear o estudo"); },
+            function () { throw new Error("não foi possível renomear o estudo"); },
+          );
+        })
+        .catch(function (failure) {
+          // 422 (nicho curto) e outros erros ficam no diálogo; ele não fecha.
+          if (error) error.textContent = failure.message || "não foi possível renomear o estudo";
+          saveButton.disabled = false;
+        });
+    });
+  }
+})();`;
+
+/** Form de renomear: o campo inline e o fallback sem JS; com JS ele some e sobra o gatilho. */
+const RenameForm: FC<{ id: string; token: string; niche: string }> = (props) => (
+  <form
+    class="rename-form"
+    method="post"
+    action={`/ui/studies/${props.id}/rename`}
+    data-rename-api={`/api/studies/${props.id}`}
+    data-rename-current={props.niche}
+  >
+    <input type="hidden" name="_csrf" value={props.token} />
+    <input
+      class="rename-inline"
+      name="niche"
+      type="text"
+      value={props.niche}
+      aria-label="Novo título do estudo"
+    />
+    <button type="submit" class="btn btn-ghost btn-sm">
+      Renomear
+    </button>
+  </form>
+);
+
+/** Dialogo de renomear: campo pre-preenchido, erro inline e os botoes Salvar/Cancelar. */
+const RenameDialog: FC = () => (
+  <>
+    <dialog id="rename-modal" class="modal modal-confirm" aria-labelledby="rename-modal-title">
+      <div class="modal-head">
+        <h3 id="rename-modal-title">Renomear estudo</h3>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label for="rename-input">Título do estudo</label>
+          <input id="rename-input" type="text" />
+          <p id="rename-error" class="alert" role="alert" />
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" id="rename-cancel">
+            Cancelar
+          </button>
+          <button type="button" class="btn btn-primary" id="rename-save">
+            Salvar
+          </button>
+        </div>
+      </div>
+    </dialog>
+    <script>{raw(RENAME_MODAL_SCRIPT)}</script>
+  </>
+);
+
+/**
+ * Executar de novo: com JS chama `POST /api/studies/:id/run` e recarrega; sem JS posta em
+ * `/ui/studies/:id/run` (mesma origem + CSRF), que reinicia o pipeline e responde 303.
+ */
+const RUN_SCRIPT = `
+(function () {
+  var error = document.getElementById("run-error");
+  Array.prototype.slice.call(document.querySelectorAll(".run-form")).forEach(function (form) {
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+      var button = form.querySelector("button[type=submit]");
+      if (error) error.textContent = "";
+      if (button) { button.disabled = true; button.textContent = "Executando..."; }
+      fetch(form.dataset.runApi, { method: "POST" })
+        .then(function (response) {
+          if (response.ok) { window.location.reload(); return null; }
+          return response.json().then(
+            function (body) { throw new Error(body.message || "não foi possível executar o estudo"); },
+            function () { throw new Error("não foi possível executar o estudo"); },
+          );
+        })
+        .catch(function (failure) {
+          if (error) error.textContent = failure.message || "não foi possível executar o estudo";
+          if (button) { button.disabled = false; button.textContent = "Executar de novo"; }
+        });
+    });
+  });
+})();`;
+
+const RunForm: FC<{ id: string; token: string }> = (props) => (
+  <form
+    class="run-form"
+    method="post"
+    action={`/ui/studies/${props.id}/run`}
+    data-run-api={`/api/studies/${props.id}/run`}
+  >
+    <input type="hidden" name="_csrf" value={props.token} />
+    <button type="submit" class="btn btn-primary">
+      Executar de novo
+    </button>
+  </form>
+);
+
+/** Chip discreto de custo no cartao da lista: some quando nao ha consumo medido ou o custo e zero. */
+const CostChip: FC<{ usage: StudyUsage | null }> = (props) => {
+  const cost = estimateCost(props.usage);
+  if (cost === null || cost.usd <= 0) return null;
+  return (
+    <span class="chip" title="custo estimado do consumo medido">
+      ~{formatMoney("US$", cost.usd, 3)}
+    </span>
+  );
+};
+
+/** Lista de estudos como cartoes. O cartao INTEIRO e a entrada: o titulo carrega um link esticado
  * (`.stretch`) que cobre a area toda, e o selo "Abrir estudo" mostra a acao sem esconder o alvo.
  */
 export const StudiesList: FC<{ studies: StudyListItem[]; token: string }> = (props) => (
@@ -399,6 +646,7 @@ export const StudiesList: FC<{ studies: StudyListItem[]; token: string }> = (pro
                   <Term of="ticket">Ticket</Term>: R$ {study.monthlyTicket}/mês
                 </span>
                 <span class="chip">{study.ideaCount} ideias avaliadas</span>
+                <CostChip usage={study.usage} />
                 <span class="chip">criado em {formatDate(study.createdAt)}</span>
               </p>
               <p class="study-top">
@@ -559,6 +807,30 @@ export const StudyForm: FC<{
 /** Fase atual do pipeline a partir do passo gravado (`[3/6] ...`). */
 const PHASE_COUNT = 6;
 
+/** Rotulo humano de cada fase do pipeline; a chave e o numero que vem no passo `[n/6]`. */
+const PHASE_LABEL: Record<number, string> = {
+  1: "Lendo o nicho e escrevendo o brief de mercado",
+  2: "Gerando as ideias de produto",
+  3: "Avaliando cada ideia com o decisor System One",
+  4: "Medindo a natureza da dor de cada ideia",
+  5: "Escrevendo o plano de cada ideia",
+  6: "Montando os artefatos (índice, tabelão, CSV, JSON)",
+};
+
+/** Casas decimais e separador de milhar em pt-BR: `US$ 0,0142` em vez de `US$ 0.0142`. */
+function formatMoney(prefix: string, value: number, digits: number): string {
+  return `${prefix} ${value.toFixed(digits).replace(".", ",")}`;
+}
+
+/** Soma o consumo dos dois provedores num unico total por tipo de token. */
+function totalTokens(usage: StudyUsage): { input: number; cached: number; output: number } {
+  return {
+    input: usage.llm.inputTokens + usage.decider.inputTokens,
+    cached: usage.llm.cachedInputTokens + usage.decider.cachedInputTokens,
+    output: usage.llm.outputTokens + usage.decider.outputTokens,
+  };
+}
+
 function parsePhase(step: string): { phase: number; text: string } {
   const match = /\[(\d)\/(\d)\]\s*([\s\S]*)/.exec(step);
   if (match === null) return { phase: 0, text: step.trim() };
@@ -571,7 +843,9 @@ function progressScript(id: string): string {
   return `
 (function () {
   var id = ${JSON.stringify(id)};
+  var LABELS = ${JSON.stringify(PHASE_LABEL)};
   var phase = document.getElementById("progress-phase");
+  var label = document.getElementById("progress-label");
   var line = document.getElementById("progress-step");
   var elapsed = document.getElementById("progress-elapsed");
   var steps = Array.prototype.slice.call(document.querySelectorAll("#progress-steps li"));
@@ -597,6 +871,10 @@ function progressScript(id: string): string {
     var match = /\\[(\\d)\\/6\\]\\s*([\\s\\S]*)/.exec(text);
     var current = match ? Number(match[1]) : 0;
     if (phase) phase.textContent = current ? current + "/6" : "iniciando";
+    if (label)
+      label.textContent = current
+        ? "Fase " + current + " de 6 — " + (LABELS[current] || "")
+        : "Iniciando o estudo";
     if (line) line.textContent = match ? match[2].trim() : text;
     steps.forEach(function (item, index) {
       item.setAttribute("data-done", index + 1 < current ? "1" : "0");
@@ -706,11 +984,6 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; token: s
               )}
             </span>
           </p>
-          {study.progress.error !== null ? (
-            <p id="study-failure" class="alert" role="alert">
-              {study.progress.error}
-            </p>
-          ) : null}
         </div>
         <div class="study-head-actions">
           {props.artifacts.length > 0 ? (
@@ -723,6 +996,7 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; token: s
               </a>
             </>
           ) : null}
+          <RenameForm id={study.id} token={props.token} niche={study.niche} />
           <DeleteForm id={study.id} token={props.token} name={study.niche} />
         </div>
       </section>
@@ -748,6 +1022,11 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; token: s
               />
             ))}
           </ol>
+          <p class="progress-label" id="progress-label">
+            {current.phase > 0
+              ? `Fase ${current.phase} de ${PHASE_COUNT} — ${PHASE_LABEL[current.phase] ?? ""}`
+              : "Iniciando o estudo"}
+          </p>
           <p class="progress-step-line" id="progress-step">
             {current.text}
           </p>
@@ -756,6 +1035,24 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; token: s
             passo atual.
           </p>
           <script>{raw(progressScript(study.id))}</script>
+        </section>
+      ) : null}
+
+      {study.progress.state === "failed" ? (
+        <section class="panel glass" id="failure-panel">
+          <h3>O estudo falhou</h3>
+          <p id="study-failure" class="alert" role="alert">
+            {study.progress.error}
+          </p>
+          <p class="sub">
+            O que já foi gerado continua em disco: os artefatos listados abaixo seguem baixáveis. Executar de
+            novo refaz o pipeline do começo.
+          </p>
+          <div class="form-actions">
+            <RunForm id={study.id} token={props.token} />
+            <p id="run-error" role="alert" />
+          </div>
+          <script>{raw(RUN_SCRIPT)}</script>
         </section>
       ) : null}
 
@@ -924,6 +1221,8 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; token: s
         </section>
       ) : null}
 
+      <UsagePanel usage={study.usage} />
+
       <section class="panel glass" id="artefatos">
         <h3>
           Artefatos <Hint>arquivos do estudo no disco, servidos pela API</Hint>
@@ -970,6 +1269,7 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; token: s
       ) : null}
 
       <DeleteDialog />
+      <RenameDialog />
     </>
   );
 };

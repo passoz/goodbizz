@@ -3,7 +3,7 @@
  * Nao simula a qualidade de um LLM; apenas prova que o fluxo completa e gera documentos.
  */
 import type { LlmClient } from "../domain/ports.ts";
-import type { Idea } from "../domain/types.ts";
+import type { Idea, ProviderUsage } from "../domain/types.ts";
 
 export const MOCK_IDEAS: Idea[] = [
   {
@@ -254,7 +254,17 @@ Métricas de uso, de conversão e de churn.
 }
 
 export class LlmMock implements LlmClient {
+  private calls = 0;
+
+  /** Consumo do modo simulado: só as chamadas (o mock não usa provedor nem tokens). */
+  usage(): ProviderUsage {
+    return { calls: this.calls, inputTokens: 0, cachedInputTokens: 0, outputTokens: 0 };
+  }
+
   generateText(system: string, user: string): Promise<string> {
+    this.calls += 1;
+    void system;
+    void user;
     if (system.includes("PALAVRA-CHAVE: IDEIAS") || system.includes("KEYWORD: IDEAS")) {
       return Promise.resolve(JSON.stringify(MOCK_IDEAS));
     }

@@ -5,15 +5,35 @@
 import type { LlmClient } from "../domain/ports.ts";
 import type { StudyConfig } from "../domain/types.ts";
 import { LlmError } from "../domain/errors.ts";
+import type { ProviderUsage } from "../domain/types.ts";
 import { scrub } from "../config/redact.ts";
 import { LlmMock } from "./llm-mock.ts";
 
 interface ChatCompletion {
   choices?: Array<{ message?: { content?: string } }>;
+  usage?: {
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    prompt_tokens_details?: { cached_tokens?: number };
+  };
+}
+
+/** Soma consumo informado pelo provedor no formato OpenAI (`usage`). */
+function addUsage(target: ProviderUsage, usage: ChatCompletion["usage"]): void {
+  target.calls += 1;
+  target.inputTokens += usage?.prompt_tokens ?? 0;
+  target.cachedInputTokens += usage?.prompt_tokens_details?.cached_tokens ?? 0;
+  target.outputTokens += usage?.completion_tokens ?? 0;
 }
 
 export class LlmHttp implements LlmClient {
   private readonly url: string;
+  private readonly consumed: ProviderUsage = {
+    calls: 0,
+    inputTokens: 0,
+    cachedInputTokens: 0,
+    outputTokens: 0,
+  };
 
   constructor(
     baseUrl: string,
@@ -51,6 +71,7 @@ export class LlmHttp implements LlmClient {
           signal: AbortSignal.timeout(this.timeout * 1000),
         });
         const data = (await response.json()) as ChatCompletion;
+        addUsage(this.consumed, data.usage);
         const content = data.choices?.[0]?.message?.content;
         if (typeof content !== "string") throw new Error("response missing choices[0].message.content");
         return content;
@@ -62,6 +83,11 @@ export class LlmHttp implements LlmClient {
       }
     }
     throw new LlmError(`LLM failed after ${this.retries} attempts: ${scrub(String(lastError))}`);
+  }
+
+  /** Consumo acumulado desde o início do processo (tokens vêm do `usage` do provedor). */
+  usage(): ProviderUsage {
+    return { ...this.consumed };
   }
 }
 

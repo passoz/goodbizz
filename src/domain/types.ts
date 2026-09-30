@@ -141,6 +141,20 @@ export interface StudyProgress {
   error: string | null;
 }
 
+/** Consumo acumulado de um provedor. Tokens só quando o provedor informa. */
+export interface ProviderUsage {
+  calls: number;
+  inputTokens: number;
+  cachedInputTokens: number;
+  outputTokens: number;
+}
+
+/** Consumo de um estudo: LLM (texto) + decisor (System One). */
+export interface StudyUsage {
+  llm: ProviderUsage;
+  decider: ProviderUsage;
+}
+
 export interface StudyRecord {
   id: string;
   createdAt: string;
@@ -156,6 +170,8 @@ export interface StudyRecord {
   progress: StudyProgress;
   evaluations: IdeaEvaluation[];
   summary: StudySummary | null;
+  /** Consumo medido no pipeline; `null` em estudos gerados antes desta versão. */
+  usage: StudyUsage | null;
 }
 
 export interface StudyListItem {
@@ -169,4 +185,5 @@ export interface StudyListItem {
   ideaCount: number;
   topIdea: string | null;
   topIndex: number | null;
+  usage: StudyUsage | null;
 }

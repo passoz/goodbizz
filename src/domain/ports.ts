@@ -4,6 +4,7 @@
 import type {
   DeciderAnswers,
   IdeaEvaluation,
+  ProviderUsage,
   QuestionSet,
   StudyListItem,
   StudyProgress,
@@ -13,12 +14,19 @@ import type {
 /** Text generation provider (any OpenAI-compatible chat completions endpoint). */
 export interface LlmClient {
   generateText(system: string, user: string): Promise<string>;
+  /**
+   * Consumo acumulado desde o início do processo. Opcional: quem não mede simplesmente não expõe —
+   * o pipeline tira a diferença antes/depois para atribuir o consumo ao estudo.
+   */
+  usage?(): ProviderUsage;
 }
 
 /** Probabilistic decision provider (System One protocol). */
 export interface DeciderClient {
   ask(state: string, questions: QuestionSet): Promise<DeciderAnswers>;
   queryProbes(state: string, probes: Record<string, string>): Promise<Record<string, number>>;
+  /** Consumo acumulado desde o início do processo (chamadas sempre; tokens quando informados). */
+  usage?(): ProviderUsage;
 }
 
 export interface Logger {

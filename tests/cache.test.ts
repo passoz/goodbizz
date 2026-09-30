@@ -57,6 +57,7 @@ function makeRecord(): StudyRecord {
     progress: { state: "running", step: "avaliando", error: null },
     evaluations: [],
     summary: null,
+    usage: null,
   };
 }
 

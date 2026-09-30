@@ -71,23 +71,29 @@ bun test             # suite offline
 
 Segredos vivem **apenas** no ambiente. O contrato das chaves esta versionado em `.env.example`.
 
-| Variavel                | Padrao                      | Descrição                                             |
-| ----------------------- | --------------------------- | ----------------------------------------------------- |
-| `LLM_API_URL`           | `https://api.openai.com/v1` | base URL compativel com `/chat/completions`           |
-| `LLM_API_KEY`           | —                           | chave do provedor LLM (obrigatoria fora do modo mock) |
-| `LLM_API_MODEL`         | `gpt-4o-mini`               | modelo do LLM                                         |
-| `DECISION_API_URL`      | —                           | endpoint System One (Jev, Laya, runtime local)        |
-| `DECISION_API_KEY`      | —                           | chave do decisor (Bearer e `x-api-key`)               |
-| `DECISION_API_MODEL`    | `systemone-latest`          | modelo do decisor                                     |
-| `PORT`                  | `3000`                      | porta do servico HTTP                                 |
-| `DATABASE_URL`          | `app.db`                    | SQLite (`:memory:` aceito)                            |
-| `LOG_LEVEL`             | `info`                      | `debug` \| `info` \| `warn` \| `error`                |
-| `APP_ENV`               | `development`               | `production` liga HTTPS/HSTS e cookies `secure`       |
-| `SESSION_SECRET`        | placeholder de dev          | >= 32 caracteres, assina o cookie de CSRF             |
-| `GOODBIZZ_STUDIES_DIR`  | `estudo`                    | raiz dos artefatos por estudo                         |
-| `GOODBIZZ_MOCK`         | `0`                         | `1` simula LLM e decisor                              |
-| `GOODBIZZ_MOCK_LLM`     | `0`                         | `1` simula apenas o texto, mantendo o decisor real    |
-| `GOODBIZZ_MOCK_DECIDER` | `0`                         | `1` simula apenas os numeros, mantendo o LLM real     |
+| Variavel                                   | Padrao                      | Descrição                                                 |
+| ------------------------------------------ | --------------------------- | --------------------------------------------------------- |
+| `LLM_API_URL`                              | `https://api.openai.com/v1` | base URL compativel com `/chat/completions`               |
+| `LLM_API_KEY`                              | —                           | chave do provedor LLM (obrigatoria fora do modo mock)     |
+| `LLM_API_MODEL`                            | `gpt-4o-mini`               | modelo do LLM                                             |
+| `DECISION_API_URL`                         | —                           | endpoint System One (Jev, Laya, runtime local)            |
+| `DECISION_API_KEY`                         | —                           | chave do decisor (Bearer e `x-api-key`)                   |
+| `DECISION_API_MODEL`                       | `systemone-latest`          | modelo do decisor                                         |
+| `PORT`                                     | `3000`                      | porta do servico HTTP                                     |
+| `DATABASE_URL`                             | `app.db`                    | SQLite (`:memory:` aceito)                                |
+| `LOG_LEVEL`                                | `info`                      | `debug` \| `info` \| `warn` \| `error`                    |
+| `APP_ENV`                                  | `development`               | `production` liga HTTPS/HSTS e cookies `secure`           |
+| `SESSION_SECRET`                           | placeholder de dev          | >= 32 caracteres, assina o cookie de CSRF                 |
+| `GOODBIZZ_STUDIES_DIR`                     | `estudo`                    | raiz dos artefatos por estudo                             |
+| `GOODBIZZ_MOCK`                            | `0`                         | `1` simula LLM e decisor                                  |
+| `GOODBIZZ_MOCK_LLM`                        | `0`                         | `1` simula apenas o texto, mantendo o decisor real        |
+| `GOODBIZZ_MOCK_DECIDER`                    | `0`                         | `1` simula apenas os numeros, mantendo o LLM real         |
+| `GOODBIZZ_PRICE_LLM_INPUT_PER_MTOK`        | `0.14`                      | US$/1M de tokens de entrada (base da estimativa de custo) |
+| `GOODBIZZ_PRICE_LLM_CACHED_INPUT_PER_MTOK` | `0.0028`                    | US$/1M de tokens de entrada servidos do cache             |
+| `GOODBIZZ_PRICE_LLM_OUTPUT_PER_MTOK`       | `0.28`                      | US$/1M de tokens de saída                                 |
+| `GOODBIZZ_PRICE_DECIDER_INPUT_PER_MTOK`    | `0`                         | US$/1M de tokens de entrada do decisor (0 = grátis)       |
+| `GOODBIZZ_PRICE_DECIDER_OUTPUT_PER_MTOK`   | `0`                         | US$/1M de tokens de saída do decisor                      |
+| `GOODBIZZ_USD_BRL`                         | `0`                         | Cotação só para exibir o custo também em R$ (0 desliga)   |
 
 Modo misto: o serviço aceita simular um provedor e usar o outro de verdade, igual a CLI
 (`--mock-llm`, `--mock-decider`). A pagina `/new` mostra o que esta ativo. Provedores reais
@@ -149,7 +155,8 @@ Prefixo `/api`. Sem CSRF (autentique no proxy, se necessário).
 | `GET`    | `/api/config`                    | quais provedores estao configurados (booleanos)                                |
 | `POST`   | `/api/studies`                   | cria um estudo e inicia a execucao (201)                                       |
 | `GET`    | `/api/studies`                   | lista os estudos com estado e topo do ranking                                  |
-| `GET`    | `/api/studies/:id`               | detalhe: avaliações ordenadas, resumo, artefatos                               |
+| `GET`    | `/api/studies/:id`               | detalhe: avaliações ordenadas, resumo, artefatos, **consumo e custo estimado** |
+| `PATCH`  | `/api/studies/:id`               | renomeia o estudo (`{"niche":"..."}`); `422` inválido, `404` inexistente       |
 | `POST`   | `/api/studies/:id/run`           | reexecuta o pipeline do estudo                                                 |
 | `DELETE` | `/api/studies/:id`               | apaga o estudo, as avaliações e os artefatos (`204`; `409` se estiver rodando) |
 | `GET`    | `/api/studies/:id/artifacts`     | lista os caminhos relativos dos artefatos                                      |
@@ -235,6 +242,39 @@ mais token double-submit em cookie assinado, comparado em tempo constante. O tok
 por sessao: rotacionar a cada resposta invalidaria qualquer formulario já aberto.
 
 ---
+
+## Consumo e custo estimado
+
+Cada estudo guarda o consumo medido no pipeline: tokens de entrada, de entrada em cache e de saída,
+além do número de chamadas ao LLM e ao decisor. A medição vem do `usage` que o provedor devolve
+(OpenAI-compatível) e do `usage` do envelope do decisor, quando existir; o pipeline tira a
+**diferença antes/depois** da execução, porque os clientes vivem no processo inteiro.
+
+O custo é uma **estimativa** com os preços do ambiente (`GOODBIZZ_PRICE_*`): o código não adivinha o
+preço do seu plano. Com dois estudos rodando ao mesmo tempo o consumo é somado no mesmo contador e a
+diferença pode ficar trocada entre eles — rode um estudo por vez se precisar de números exatos por
+estudo. Os padrões são o preço de tabela do `deepseek-v4-flash` e decisor a custo zero
+(motor `jev` do 9router). O valor aparece no detalhe do estudo e como chip na lista; `/api/studies/:id`
+devolve `usage` e `cost: {usd, brl, note}`.
+
+## Progresso e falhas em linguagem humana
+
+O passo do pipeline é escrito para ser lido por gente (`[3/6] Avaliei "Radar de Estoque" com o
+decisor: índice 1.420 de 2 (maior é melhor), tier B, dor FORTE`), e a página do estudo mostra a fase
+com rótulo (`Fase 3 de 6 — Avaliando cada ideia com o decisor System One`).
+
+Quando algo falha, o erro guardado no estudo é uma explicação com ação — não o JSON do provedor:
+
+| Situação                   | Texto (resumido)                                                                                                                 |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `429` / cota               | "O provedor de IA recusou por limite de uso (429 / cota). Isso passa sozinho: espere alguns minutos e execute o estudo de novo." |
+| `401`/`403`                | "O provedor recusou a credencial… confira `LLM_API_KEY`/`DECISION_API_KEY`."                                                     |
+| rede/DNS                   | "Não foi possível falar com o provedor de IA (rede ou DNS)."                                                                     |
+| `5xx`                      | "O provedor devolveu erro interno (5xx). Tente de novo em alguns minutos."                                                       |
+| sem credencial no roteador | "O modelo escolhido não tem credencial ativa no roteador de IA…"                                                                 |
+
+O erro cru entra entre parênteses (`detalhe: [429]: {...}`) e continua inteiro no log do processo.
+A página do estudo mostra o texto e um botão **"Executar de novo"**.
 
 ## Docker
 

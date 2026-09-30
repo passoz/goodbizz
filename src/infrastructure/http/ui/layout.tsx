@@ -217,8 +217,11 @@ html[data-theme="light"] .theme-btn[aria-pressed="true"] { color: var(--accent-i
 }
 .progress-steps li[data-done="1"] { background: var(--r-lime); }
 .progress-steps li[data-live="1"] { background: var(--r-orange); }
+.progress-label {
+  margin: 14px 0 0; font-size: var(--fs-body); line-height: 1.45; font-weight: 560; color: var(--paper);
+}
 .progress-step-line {
-  margin: 14px 0 0; font: var(--fs-small)/1.5 var(--mono); color: var(--paper);
+  margin: 8px 0 0; font: var(--fs-small)/1.5 var(--mono); color: var(--paper);
   overflow-wrap: anywhere; min-height: 1.5em;
 }
 .progress-note { margin: 8px 0 0; font-size: var(--fs-micro); color: var(--muted); }
@@ -373,6 +376,10 @@ a { color: inherit; text-decoration: none; }
 }
 .brand { display: flex; align-items: baseline; gap: 12px; }
 .brand h1 { margin: 0; font-size: 25px; letter-spacing: -.025em; color: #fff; font-weight: 680; }
+/* A marca e a volta para a lista: link discreto (sem sublinhado, cor herdada) que nao mexe no
+   alinhamento do topbar. O foco visivel continua vindo do :focus-visible global. */
+.brand h1 a { color: inherit; text-decoration: none; cursor: pointer; }
+.brand h1 a:hover { color: var(--accent-hover); }
 .nav { display: flex; align-items: center; gap: 6px; }
 .nav a {
   padding: 9px 16px; border-radius: var(--r-pill); font-size: var(--fs-small); font-weight: 560;
@@ -493,8 +500,23 @@ h3 { font-size: var(--fs-h3); color: var(--paper); font-weight: 620; margin: 28p
 .check { display: flex; align-items: center; gap: 10px; font-size: var(--fs-small); color: var(--paper); }
 .check input { width: 17px; height: 17px; accent-color: var(--r-lime); }
 .form-actions { display: flex; align-items: center; gap: 16px; margin-top: 26px; flex-wrap: wrap; }
-#study-error { color: #ffd2cf; font-size: var(--fs-small); margin: 0; }
-#study-error:empty { display: none; }
+/* Form de renomear no cabecalho do estudo: com JS o campo inline fica escondido (o gatilho abre
+   o dialogo); sem JS o noscript do layout o revela e ele e o campo de verdade. */
+.rename-form { display: flex; align-items: center; gap: 8px; }
+.rename-inline {
+  display: none;
+  width: 190px; padding: 9px 12px; border-radius: var(--r-control); color: var(--paper);
+  font: var(--fs-small)/1.3 var(--sans); background: rgb(10 8 8 / 0.42);
+  border: 1px solid oklch(1 0 0 / 0.16);
+}
+.rename-inline:focus { border-color: rgb(159 219 67 / 0.85); box-shadow: 0 0 0 3px rgb(159 219 67 / 0.22); }
+html[data-theme="light"] .rename-inline {
+  background: rgb(255 255 255 / 0.8);
+  border-color: oklch(0 0 0 / 0.14);
+  color: var(--paper);
+}
+#study-error, #run-error { color: #ffd2cf; font-size: var(--fs-small); margin: 0; }
+#study-error:empty, #run-error:empty, #rename-error:empty { display: none; }
 
 /* ── Hints e selos ─────────────────────────────────────────────────────── */
 .hint { font-size: var(--fs-micro); color: var(--muted); font-weight: 480; letter-spacing: 0.012em; }
@@ -754,6 +776,9 @@ export const GLOSSARY: Record<string, string> = {
     "Marca de estimativa escrita pelo modelo. Não é dado pesquisado nem número medido pelo decisor.",
   escala:
     "Vermelho e laranja apontam sinal quente ou ruim; amarelo é médio; limão e verde apontam sinal bom.",
+  tokens: "Contagem de tokens informada pelos provedores: entrada é o texto enviado, saída é o texto gerado.",
+  custo:
+    "Estimativa a partir dos tokens medidos e dos preços de tabela configurados; não é a fatura do provedor.",
 };
 
 /**
@@ -840,12 +865,18 @@ export const Layout: FC<PropsWithChildren<{ title: string }>> = (props) => (
           combinadores filho e valores com aspas (ex.: content). */}
       <script>{raw(THEME_BOOT)}</script>
       <style>{raw(GLASS_CSS)}</style>
+      {/* Sem JS o campo de renomear volta a aparecer: ele e o formulario de verdade nesse caso. */}
+      <noscript>
+        <style>{raw(".rename-inline { display: inline-block; }")}</style>
+      </noscript>
     </head>
     <body>
       <div class="shell">
         <header class="topbar glass">
           <div class="brand">
-            <h1>GoodBizz</h1>
+            <h1>
+              <a href="/">GoodBizz</a>
+            </h1>
           </div>
           <div class="topbar-actions">
             <div class="theme-toggle" role="group" aria-label="Tema da interface">

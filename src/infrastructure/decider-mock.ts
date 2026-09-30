@@ -3,17 +3,19 @@
  * Portado de goodbizz/decider.py (DeciderMock).
  */
 import type { DeciderClient } from "../domain/ports.ts";
-import type { DeciderAnswers, QuestionSet } from "../domain/types.ts";
+import type { DeciderAnswers, ProviderUsage, QuestionSet } from "../domain/types.ts";
 import { ratioFromDigest } from "../domain/hash.ts";
 
 export class DeciderMock implements DeciderClient {
   private readonly seed: string;
+  private calls = 0;
 
   constructor(seed = "mock") {
     this.seed = seed;
   }
 
   async ask(state: string, questions: QuestionSet): Promise<DeciderAnswers> {
+    this.calls += 1;
     const output: DeciderAnswers = {};
     for (const [qid, question] of Object.entries(questions)) {
       const base = ratioFromDigest(this.seed, state.slice(-120), qid);
@@ -36,6 +38,11 @@ export class DeciderMock implements DeciderClient {
       }
     }
     return output;
+  }
+
+  /** Consumo do modo simulado: só as chamadas (o mock não usa provedor nem tokens). */
+  usage(): ProviderUsage {
+    return { calls: this.calls, inputTokens: 0, cachedInputTokens: 0, outputTokens: 0 };
   }
 
   async queryProbes(state: string, probes: Record<string, string>): Promise<Record<string, number>> {

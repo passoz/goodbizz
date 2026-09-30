@@ -225,3 +225,85 @@ describe("exclusão de estudo", () => {
     expect(((await response.json()) as { error: string }).error).toBe("CONFLICT");
   });
 });
+
+describe("renomear estudo", () => {
+  test("muda o título exibido e aparece na listagem", async () => {
+    const record = await harness.service.create(
+      resolveStudyConfig({ niche: "padarias de bairro", mock: true }),
+    );
+
+    const response = await api().request(`/studies/${record.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ niche: "padarias artesanais do centro" }),
+    });
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as { niche: string };
+    expect(body.niche).toBe("padarias artesanais do centro");
+
+    const listing = (await (await api().request("/studies")).json()) as {
+      studies: Array<{ id: string; niche: string }>;
+    };
+    expect(listing.studies.find((study) => study.id === record.id)?.niche).toBe(
+      "padarias artesanais do centro",
+    );
+  });
+
+  test("recusa título curto com 422 e estudo inexistente com 404", async () => {
+    const record = await harness.service.create(resolveStudyConfig({ niche: "barbearias", mock: true }));
+    const short = await api().request(`/studies/${record.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ niche: " a " }),
+    });
+    expect(short.status).toBe(422);
+
+    const missing = await api().request("/studies/nao-existe", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ niche: "qualquer coisa" }),
+    });
+    expect(missing.status).toBe(404);
+  });
+});
+
+describe("consumo e custo estimado", () => {
+  test("devolve tokens, chamadas e o custo calculado com os preços do ambiente", async () => {
+    const record = await harness.service.create(
+      resolveStudyConfig({ niche: "clinicas odontologicas", mock: true }),
+    );
+    const repo = new SqliteStudyRepository(harness.db.db);
+    await repo.update(record.id, {
+      usage: {
+        llm: { calls: 2, inputTokens: 1_000_000, cachedInputTokens: 0, outputTokens: 0 },
+        decider: { calls: 7, inputTokens: 0, cachedInputTokens: 0, outputTokens: 0 },
+      },
+    });
+
+    const body = (await (await api().request(`/studies/${record.id}`)).json()) as {
+      usage: { llm: { calls: number; inputTokens: number }; decider: { calls: number } };
+      cost: { usd: number; brl: number | null; note: string };
+    };
+    expect(body.usage.llm.inputTokens).toBe(1_000_000);
+    expect(body.usage.decider.calls).toBe(7);
+    // 1M de entrada * US$ 0,14/1M (padrão do ambiente) + decisor grátis.
+    expect(body.cost.usd).toBe(0.14);
+    expect(body.cost.brl).toBeNull();
+    expect(body.cost.note).toContain("0.14/1M entrada");
+
+    const listed = (await (await api().request("/studies")).json()) as {
+      studies: Array<{ id: string; cost: { usd: number } | null }>;
+    };
+    expect(listed.studies.find((study) => study.id === record.id)?.cost?.usd).toBe(0.14);
+  });
+
+  test("estudo sem medição devolve usage e cost nulos", async () => {
+    const record = await harness.service.create(resolveStudyConfig({ niche: "oficinas", mock: true }));
+    const body = (await (await api().request(`/studies/${record.id}`)).json()) as {
+      usage: unknown;
+      cost: unknown;
+    };
+    expect(body.usage).toBeNull();
+    expect(body.cost).toBeNull();
+  });
+});

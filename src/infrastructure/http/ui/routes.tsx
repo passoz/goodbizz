@@ -13,7 +13,7 @@ import { resolveStudyConfig } from "../../../config/runtime.ts";
 import { folderName } from "../../../application/reports.ts";
 import { mdToHtml } from "../../../application/render.ts";
 import type { StudyService } from "../../../application/study-service.ts";
-import { NotFoundError } from "../../../domain/errors.ts";
+import { NotFoundError, ValidationError } from "../../../domain/errors.ts";
 import type { StudyRecord } from "../../../domain/types.ts";
 import { Layout, Term } from "./layout.tsx";
 import { HelpPage, StudiesList, StudyDetail, StudyForm } from "./pages.tsx";
@@ -32,7 +32,9 @@ const ABOUT_ROWS: Array<{ method: string; path: string; description: string }> =
   { method: "POST", path: "/api/studies", description: "cria um estudo a partir de JSON" },
   { method: "GET", path: "/api/studies", description: "lista os estudos" },
   { method: "GET", path: "/api/studies/:id", description: "detalhe de um estudo" },
+  { method: "PATCH", path: "/api/studies/:id", description: "renomeia um estudo" },
   { method: "POST", path: "/api/studies/:id/run", description: "executa o pipeline de um estudo" },
+  { method: "DELETE", path: "/api/studies/:id", description: "exclui um estudo" },
   { method: "GET", path: "/api/studies/:id/artifacts", description: "lista os artefatos" },
   { method: "GET", path: "/api/studies/:id/artifacts/*", description: "conteúdo de um artefato" },
   { method: "POST", path: "/api/diagnose", description: "diagnostica as sondas de dor" },
@@ -136,6 +138,43 @@ export function buildUiApp(deps: UiDeps): Hono {
       throw error;
     }
     return c.redirect("/", 303);
+  });
+
+  /**
+   * Renomear sem JS: o form do cabecalho posta aqui (mesma origem + CSRF) e a pagina volta para o
+   * estudo. Com JS o `PATCH /api/studies/:id` assume, mas a rota existe para o caminho sem script.
+   */
+  ui.post("/ui/studies/:id/rename", requireCsrf, async (c) => {
+    const id = c.req.param("id");
+    const body = await c.req.parseBody();
+    const niche = typeof body["niche"] === "string" ? body["niche"].trim() : "";
+    try {
+      await deps.service.rename(id, niche);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        return c.json({ error: error.code, message: error.message }, 404);
+      }
+      if (error instanceof ValidationError) {
+        return c.json({ error: error.code, message: error.message }, 422);
+      }
+      throw error;
+    }
+    return c.redirect(`/studies/${id}`, 303);
+  });
+
+  /** Executar de novo sem JS: reinicia o pipeline (sem aguardar) e volta para a pagina do estudo. */
+  ui.post("/ui/studies/:id/run", requireCsrf, async (c) => {
+    const id = c.req.param("id");
+    try {
+      await deps.service.get(id);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        return c.json({ error: error.code, message: error.message }, 404);
+      }
+      throw error;
+    }
+    deps.service.start(id);
+    return c.redirect(`/studies/${id}`, 303);
   });
 
   ui.post("/ui/studies", requireCsrf, async (c) => {

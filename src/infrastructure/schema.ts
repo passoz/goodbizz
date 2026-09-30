@@ -20,6 +20,8 @@ export const studies = sqliteTable("studies", {
   step: text("step").notNull().default(""),
   error: text("error"),
   summaryJson: text("summary_json"),
+  /** Consumo medido no pipeline (LLM + decisor), em JSON. Nulo em estudos antigos. */
+  usageJson: text("usage_json"),
 });
 
 export const evaluations = sqliteTable(

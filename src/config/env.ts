@@ -32,6 +32,12 @@ export interface Env {
   GOODBIZZ_MOCK: boolean;
   GOODBIZZ_MOCK_LLM: boolean;
   GOODBIZZ_MOCK_DECIDER: boolean;
+  GOODBIZZ_PRICE_LLM_INPUT_PER_MTOK: number;
+  GOODBIZZ_PRICE_LLM_CACHED_INPUT_PER_MTOK: number;
+  GOODBIZZ_PRICE_LLM_OUTPUT_PER_MTOK: number;
+  GOODBIZZ_PRICE_DECIDER_INPUT_PER_MTOK: number;
+  GOODBIZZ_PRICE_DECIDER_OUTPUT_PER_MTOK: number;
+  GOODBIZZ_USD_BRL: number;
 }
 
 function buildEnv() {
@@ -57,6 +63,16 @@ function buildEnv() {
       GOODBIZZ_MOCK_LLM: booleanFlag("0"),
       /** Simula apenas o decisor (números deterministicos) mantendo o LLM real. */
       GOODBIZZ_MOCK_DECIDER: booleanFlag("0"),
+
+      // Preços para a estimativa de custo por estudo (US$ por 1M de tokens). Os padrões são o preço
+      // de tabela do deepseek-v4-flash; o decisor (motor jev do 9router) é grátis por padrão.
+      GOODBIZZ_PRICE_LLM_INPUT_PER_MTOK: z.coerce.number().min(0).default(0.14),
+      GOODBIZZ_PRICE_LLM_CACHED_INPUT_PER_MTOK: z.coerce.number().min(0).default(0.0028),
+      GOODBIZZ_PRICE_LLM_OUTPUT_PER_MTOK: z.coerce.number().min(0).default(0.28),
+      GOODBIZZ_PRICE_DECIDER_INPUT_PER_MTOK: z.coerce.number().min(0).default(0),
+      GOODBIZZ_PRICE_DECIDER_OUTPUT_PER_MTOK: z.coerce.number().min(0).default(0),
+      /** Cotação US$->R$ só para exibir; 0 desliga a conversão. */
+      GOODBIZZ_USD_BRL: z.coerce.number().min(0).default(0),
     },
     runtimeEnv: Bun.env,
     emptyStringAsUndefined: true,

@@ -11,7 +11,7 @@
  * extract_probability, build).
  */
 import type { DeciderClient } from "../domain/ports.ts";
-import type { DeciderAnswers, QuestionSet, StudyConfig } from "../domain/types.ts";
+import type { DeciderAnswers, ProviderUsage, QuestionSet, StudyConfig } from "../domain/types.ts";
 import { DeciderError } from "../domain/errors.ts";
 import { scrub } from "../config/redact.ts";
 import { DeciderMock } from "./decider-mock.ts";
@@ -115,6 +115,12 @@ function sleep(ms: number): Promise<void> {
 /** HTTP client compatible with any System One endpoint. */
 export class DeciderHttp implements DeciderClient {
   private readonly url: string;
+  private readonly consumed: ProviderUsage = {
+    calls: 0,
+    inputTokens: 0,
+    cachedInputTokens: 0,
+    outputTokens: 0,
+  };
   private readonly model: string;
   private readonly key: string;
   private readonly timeout: number;
@@ -164,6 +170,7 @@ export class DeciderHttp implements DeciderClient {
           throw new HttpStatusError(response.status, response.statusText);
         }
         const raw: unknown = await response.json();
+        addDeciderUsage(this.consumed, raw);
         return extractAnswers(raw, questions);
       } catch (error) {
         if (error instanceof DeciderError) throw error;
@@ -172,6 +179,11 @@ export class DeciderHttp implements DeciderClient {
       }
     }
     throw new DeciderError(`decider failed after ${this.retries} attempts: ${scrub(String(lastError))}`);
+  }
+
+  /** Consumo acumulado desde o início do processo. */
+  usage(): ProviderUsage {
+    return { ...this.consumed };
   }
 
   async queryProbes(state: string, probes: Record<string, string>): Promise<Record<string, number>> {
@@ -186,6 +198,27 @@ export class DeciderHttp implements DeciderClient {
     }
     return output;
   }
+}
+
+/**
+ * Soma o consumo do decisor: sempre conta a chamada; os tokens entram quando o envelope os traz
+ * (o `/v1/systemone` do 9router devolve `usage`, mas cada motor pode usar nomes diferentes).
+ */
+function addDeciderUsage(target: ProviderUsage, body: unknown): void {
+  target.calls += 1;
+  if (body === null || typeof body !== "object" || Array.isArray(body)) return;
+  const usage = (body as Record<string, unknown>)["usage"];
+  if (usage === null || typeof usage !== "object" || Array.isArray(usage)) return;
+  const row = usage as Record<string, unknown>;
+  const num = (...keys: string[]): number => {
+    for (const key of keys) {
+      const value = row[key];
+      if (typeof value === "number" && Number.isFinite(value)) return value;
+    }
+    return 0;
+  };
+  target.inputTokens += num("input_tokens", "prompt_tokens");
+  target.outputTokens += num("output_tokens", "completion_tokens");
 }
 
 /** Build the decider adapter from the study configuration. */

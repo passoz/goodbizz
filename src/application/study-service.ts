@@ -9,13 +9,14 @@ import { join, relative, resolve, sep } from "node:path";
 
 import { diagnoseProbes, diagnoseExitCode, type DiagnoseReport } from "./diagnose.ts";
 import { buildZip } from "./artifacts.ts";
+import { explainFailure } from "./failures.ts";
 import { generateStudy } from "./generate-study.ts";
 import { htmlToPdf } from "./pdf.ts";
 import { recalibrate, type RecalibrateReport } from "./recalibrate.ts";
 import { slug } from "./reports.ts";
 import { scrub } from "../config/redact.ts";
 import { resolveStudyConfig, studyContext } from "../config/runtime.ts";
-import { ConflictError, NotFoundError } from "../domain/errors.ts";
+import { ConflictError, NotFoundError, ValidationError } from "../domain/errors.ts";
 import type { ArtifactFile, DeciderClient, LlmClient, Logger, StudyRepository } from "../domain/ports.ts";
 import type { Idea, StudyConfig, StudyListItem, StudyRecord } from "../domain/types.ts";
 import type { StudyCache } from "./cache.ts";
@@ -71,6 +72,7 @@ export class StudyService {
       progress: { state: "pending", step: "na fila", error: null },
       evaluations: [],
       summary: null,
+      usage: null,
     };
     await this.options.repo.save(record);
     this.options.logger.info("study created", { id, niche: cfg.niche });
@@ -146,7 +148,7 @@ export class StudyService {
         this.options.logger.info("pdf compilation", { id, message: pdfResult.message, ok: pdfResult.ok });
       }
 
-      await this.options.repo.update(id, { brief: result.brief });
+      await this.options.repo.update(id, { brief: result.brief, usage: result.usage });
       await this.options.repo.saveEvaluations(id, result.evaluations, result.summary);
       await setProgress("done", "concluído", null);
 
@@ -154,8 +156,11 @@ export class StudyService {
       if (!updated) throw new NotFoundError(`study ${id} disappeared during the run`);
       return updated;
     } catch (error) {
-      const message = scrub(error instanceof Error ? error.message : String(error));
-      await setProgress("failed", "erro", message);
+      // O texto guardado é o que o operador lê: explica o motivo e o que fazer; o erro cru entra
+      // entre parênteses para depuração e o log mantém tudo.
+      const raw = scrub(error instanceof Error ? error.message : String(error));
+      this.options.logger.error("study run failed", { id, error: raw });
+      await setProgress("failed", "erro", explainFailure(error));
       throw error;
     }
   }
@@ -168,6 +173,20 @@ export class StudyService {
     const record = await this.options.repo.get(id);
     if (!record) throw new NotFoundError(`study ${id} not found`);
     return record;
+  }
+
+  /**
+   * Renomeia o estudo (o título exibido). Não mexe em artefatos nem em pastas: o diretório do
+   * estudo é o id e as pastas das ideias vêm do rank + nome da ideia.
+   */
+  async rename(id: string, niche: string): Promise<StudyRecord> {
+    const clean = niche.trim();
+    if (clean.length < 2) {
+      throw new ValidationError("o nicho precisa de pelo menos 2 caracteres");
+    }
+    await this.get(id);
+    await this.options.repo.update(id, { niche: clean });
+    return this.get(id);
   }
 
   /**
