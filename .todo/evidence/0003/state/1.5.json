@@ -1,0 +1,38 @@
+{
+  "baseline_implementation": {
+    "src/application/generate-study.ts": {
+      "exists": true,
+      "sha256": "2a2cd0a26f017e85618530de1a1468861be73b790bea5662953c80a38d0c563f"
+    },
+    "src/application/generation.ts": {
+      "exists": true,
+      "sha256": "373867418f08bed5fccaa08946729a86a6a37e180d23790051f741fdd831120d"
+    }
+  },
+  "baseline_tests": {
+    "tests/generation.test.ts": {
+      "exists": true,
+      "sha256": "9c097820e47d51bb91e94b6cb69dd6834979d2c5e99cf5ad37686d617c6fc641"
+    }
+  },
+  "created_at": "2026-09-30T19:58:28.829Z",
+  "implementation_files": [
+    "src/application/generate-study.ts",
+    "src/application/generation.ts"
+  ],
+  "red_command": [
+    "bun",
+    "test"
+  ],
+  "red_expect": "nao chama o gerador de brief e escreve documento so para as novas",
+  "red_tests": {
+    "tests/generation.test.ts": {
+      "exists": true,
+      "sha256": "3633260111539d581e80fcc6613f50e84c99139cf9625c245d1b9d1854f6a360"
+    }
+  },
+  "task": "1.5",
+  "test_files": [
+    "tests/generation.test.ts"
+  ]
+}

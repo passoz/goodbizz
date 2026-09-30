@@ -1,0 +1,196 @@
+TASK: 1.4
+CHECK: GREEN
+COMMAND: bun test
+EXIT: 0
+OUTPUT:
+bun test v1.4.2 (744846f84)
+{"level":50,"time":1790798032799,"pid":149867,"hostname":"note","msg":"e"}
+{"level":30,"time":1790798032935,"pid":149867,"hostname":"note","count":0,"msg":"migrations applied"}
+{"level":40,"time":1790798032936,"pid":149867,"hostname":"note","count":1,"msg":"stale studies marked as failed on boot"}
+-------------------------------------------|---------|---------|-------------------
+File                                       | % Funcs | % Lines | Uncovered Line #s
+-------------------------------------------|---------|---------|-------------------
+All files                                  |   98.14 |   98.17 |
+ src/application/artifacts.ts              |  100.00 |  100.00 | 
+ src/application/cache.ts                  |  100.00 |  100.00 | 
+ src/application/costs.ts                  |  100.00 |  100.00 | 
+ src/application/dados.ts                  |  100.00 |  100.00 | 
+ src/application/diagnose.ts               |  100.00 |   95.65 | 146-150
+ src/application/evaluate.ts               |  100.00 |   96.98 | 127,197-198,201-203
+ src/application/failures.ts               |  100.00 |   92.98 | 70-73
+ src/application/generate-study.ts         |  100.00 |  100.00 | 
+ src/application/generation.ts             |  100.00 |  100.00 | 
+ src/application/pain-algorithm.ts         |   91.30 |   95.21 | 90-94,245-246,268-269
+ src/application/pain-choice.ts            |  100.00 |   97.94 | 78-79
+ src/application/pdf.ts                    |  100.00 |   97.92 | 47
+ src/application/prompts.ts                |  100.00 |  100.00 | 
+ src/application/recalibrate.ts            |  100.00 |   94.74 | 104-105,146,166,170-172,212
+ src/application/render.ts                 |  100.00 |   99.30 | 191
+ src/application/reports.ts                |  100.00 |  100.00 | 
+ src/application/settings.ts               |  100.00 |  100.00 | 
+ src/application/study-service.ts          |   96.08 |   99.66 | 107
+ src/application/summary.ts                |   92.31 |  100.00 | 
+ src/application/verification.ts           |  100.00 |   94.62 | 48,68-71
+ src/cli.ts                                |   91.67 |   90.38 | 84-85,96,101,107-108,112,132-134,143,159-160,308-309,325-330,332,334-335,346,396-400,478-479,520-524,527,534,583
+ src/config/env.ts                         |  100.00 |  100.00 | 
+ src/config/providers.ts                   |  100.00 |  100.00 | 
+ src/config/redact.ts                      |  100.00 |  100.00 | 
+ src/config/runtime.ts                     |  100.00 |   98.21 | 93
+ src/domain/errors.ts                      |  100.00 |  100.00 | 
+ src/domain/hash.ts                        |  100.00 |  100.00 | 
+ src/domain/pain.ts                        |  100.00 |  100.00 | 
+ src/infrastructure/cache-repository.ts    |  100.00 |  100.00 | 
+ src/infrastructure/db.ts                  |  100.00 |   97.96 | 45
+ src/infrastructure/decider-mock.ts        |  100.00 |  100.00 | 
+ src/infrastructure/decider.ts             |   86.67 |   95.73 | 101-104,109-111
+ src/infrastructure/http/api.ts            |   83.78 |   94.86 | 130-131,136-139,231-233
+ src/infrastructure/http/app.ts            |  100.00 |  100.00 | 
+ src/infrastructure/http/errors.ts         |  100.00 |   94.74 | 25
+ src/infrastructure/http/health.ts         |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/layout.tsx     |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/pages.tsx      |   97.14 |   99.66 | 89-90,113
+ src/infrastructure/http/ui/routes.tsx     |   96.15 |   93.91 | 149,162,176,189-192,210,214,225-228,239
+ src/infrastructure/http/ui/security.ts    |  100.00 |   93.22 | 47,75-76,86
+ src/infrastructure/json.ts                |  100.00 |   92.00 | 31-32
+ src/infrastructure/llm-mock.ts            |   87.50 |  100.00 | 
+ src/infrastructure/llm.ts                 |  100.00 |  100.00 | 
+ src/infrastructure/repositories.ts        |  100.00 |  100.00 | 
+ src/infrastructure/routing.ts             |   90.00 |   98.31 | 97
+ src/infrastructure/schema.ts              |  100.00 |  100.00 | 
+ src/infrastructure/settings-repository.ts |  100.00 |  100.00 | 
+-------------------------------------------|---------|---------|-------------------
+
+ 282 pass
+ 0 fail
+ 1110 expect() calls
+Ran 282 tests across 31 files. [3.75s]
+
+MUTATION_EXIT: 1
+MUTATION_OUTPUT:
+bun test v1.4.2 (744846f84)
+{"level":50,"time":1790798036550,"pid":149901,"hostname":"note","msg":"e"}
+{"level":30,"time":1790798036698,"pid":149901,"hostname":"note","count":0,"msg":"migrations applied"}
+{"level":40,"time":1790798036698,"pid":149901,"hostname":"note","count":1,"msg":"stale studies marked as failed on boot"}
+
+tests/study-service.test.ts:
+246 |     const { service, db, id } = await completedStudy(3);
+247 |     try {
+248 |       const before = await service.get(id);
+249 |       const middle = before.evaluations[1]!;
+250 | 
+251 |       const after = await service.removeIdea(id, middle.id);
+                                        ^
+TypeError: service.removeIdea is not a function. (In 'service.removeIdea(id, middle.id)', 'service.removeIdea' is undefined)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/study-service.test.ts:251:35)
+(fail) remocao de ideia por id > remove a ideia do meio e zera o ranking a partir de 1 [8.35ms]
+282 |         folderName(1, first!.name),
+283 |         folderName(2, middle!.name),
+284 |         folderName(3, last!.name),
+285 |       ]);
+286 | 
+287 |       await service.removeIdea(id, middle!.id);
+                          ^
+TypeError: service.removeIdea is not a function. (In 'service.removeIdea(id, middle.id)', 'service.removeIdea' is undefined)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/study-service.test.ts:287:21)
+(fail) remocao de ideia por id > apaga a pasta da ideia removida e renomeia as seguintes, sem orfao [5.22ms]
+303 |     try {
+304 |       const before = await service.get(id);
+305 |       const removed = before.evaluations[1]!;
+306 |       const kept = [before.evaluations[0]!, before.evaluations[2]!];
+307 | 
+308 |       await service.removeIdea(id, removed.id);
+                          ^
+TypeError: service.removeIdea is not a function. (In 'service.removeIdea(id, removed.id)', 'service.removeIdea' is undefined)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/study-service.test.ts:308:21)
+(fail) remocao de ideia por id > regera os agregados com exatamente as ideias restantes [7.10ms]
+325 |     const { service, db, id } = await completedStudy(3);
+326 |     try {
+327 |       const before = await service.get(id);
+328 |       const snapshot = ideaFolders(before.artifactDir);
+329 | 
+330 |       await expect(service.removeIdea(id, "id-que-nao-existe")).rejects.toBeInstanceOf(NotFoundError);
+                                 ^
+TypeError: service.removeIdea is not a function. (In 'service.removeIdea(id, "id-que-nao-existe")', 'service.removeIdea' is undefined)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/study-service.test.ts:330:28)
+(fail) remocao de ideia por id > lança NotFoundError para id de ideia inexistente e não toca no disco [4.92ms]
+368 |       for (let attempt = 0; attempt < 200; attempt += 1) {
+369 |         if ((await service.get(record.id)).progress.state === "running") break;
+370 |         await Bun.sleep(5);
+371 |       }
+372 | 
+373 |       await expect(service.removeIdea(record.id, "qualquer")).rejects.toBeInstanceOf(ConflictError);
+                                 ^
+TypeError: service.removeIdea is not a function. (In 'service.removeIdea(record.id, "qualquer")', 'service.removeIdea' is undefined)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/study-service.test.ts:373:28)
+(fail) remocao de ideia por id > lança ConflictError enquanto o estudo roda e não toca no disco [7.89ms]
+394 |       const slugA = folderName(1, first!.name);
+395 |       const twinDoc = readFileSync(join(before.artifactDir, slugA, "README.md"), "utf8");
+396 |       mkdirSync(join(before.artifactDir, folderName(2, first!.name)), { recursive: true });
+397 |       writeFileSync(join(before.artifactDir, folderName(2, first!.name), "README.md"), twinDoc, "utf8");
+398 | 
+399 |       const after = await service.removeIdea(id, first!.id);
+                                        ^
+TypeError: service.removeIdea is not a function. (In 'service.removeIdea(id, first.id)', 'service.removeIdea' is undefined)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/study-service.test.ts:399:35)
+(fail) remocao de ideia por id > nomes iguais: remove so a escolhida e preserva a outra [5.32ms]
+-------------------------------------------|---------|---------|-------------------
+File                                       | % Funcs | % Lines | Uncovered Line #s
+-------------------------------------------|---------|---------|-------------------
+All files                                  |   98.17 |   98.17 |
+ src/application/artifacts.ts              |  100.00 |  100.00 | 
+ src/application/cache.ts                  |  100.00 |  100.00 | 
+ src/application/costs.ts                  |  100.00 |  100.00 | 
+ src/application/dados.ts                  |  100.00 |  100.00 | 
+ src/application/diagnose.ts               |  100.00 |   95.65 | 146-150
+ src/application/evaluate.ts               |  100.00 |   96.98 | 127,197-198,201-203
+ src/application/failures.ts               |  100.00 |   92.98 | 70-73
+ src/application/generate-study.ts         |  100.00 |  100.00 | 
+ src/application/generation.ts             |  100.00 |  100.00 | 
+ src/application/pain-algorithm.ts         |   91.30 |   95.21 | 90-94,245-246,268-269
+ src/application/pain-choice.ts            |  100.00 |   97.94 | 78-79
+ src/application/pdf.ts                    |  100.00 |   97.92 | 47
+ src/application/prompts.ts                |  100.00 |  100.00 | 
+ src/application/recalibrate.ts            |  100.00 |   94.74 | 104-105,146,166,170-172,212
+ src/application/render.ts                 |  100.00 |   99.30 | 191
+ src/application/reports.ts                |  100.00 |  100.00 | 
+ src/application/settings.ts               |  100.00 |  100.00 | 
+ src/application/study-service.ts          |   97.30 |   99.49 | 90
+ src/application/summary.ts                |   92.31 |  100.00 | 
+ src/application/verification.ts           |  100.00 |   94.62 | 48,68-71
+ src/cli.ts                                |   91.67 |   90.38 | 84-85,96,101,107-108,112,132-134,143,159-160,308-309,325-330,332,334-335,346,396-400,478-479,520-524,527,534,583
+ src/config/env.ts                         |  100.00 |  100.00 | 
+ src/config/providers.ts                   |  100.00 |  100.00 | 
+ src/config/redact.ts                      |  100.00 |  100.00 | 
+ src/config/runtime.ts                     |  100.00 |   98.21 | 93
+ src/domain/errors.ts                      |  100.00 |  100.00 | 
+ src/domain/hash.ts                        |  100.00 |  100.00 | 
+ src/domain/pain.ts                        |  100.00 |  100.00 | 
+ src/infrastructure/cache-repository.ts    |  100.00 |  100.00 | 
+ src/infrastructure/db.ts                  |  100.00 |   97.96 | 45
+ src/infrastructure/decider-mock.ts        |  100.00 |  100.00 | 
+ src/infrastructure/decider.ts             |   86.67 |   95.73 | 101-104,109-111
+ src/infrastructure/http/api.ts            |   83.78 |   94.86 | 130-131,136-139,231-233
+ src/infrastructure/http/app.ts            |  100.00 |  100.00 | 
+ src/infrastructure/http/errors.ts         |  100.00 |   94.74 | 25
+ src/infrastructure/http/health.ts         |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/layout.tsx     |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/pages.tsx      |   97.14 |   99.66 | 89-90,113
+ src/infrastructure/http/ui/routes.tsx     |   96.15 |   93.91 | 149,162,176,189-192,210,214,225-228,239
+ src/infrastructure/http/ui/security.ts    |  100.00 |   93.22 | 47,75-76,86
+ src/infrastructure/json.ts                |  100.00 |   92.00 | 31-32
+ src/infrastructure/llm-mock.ts            |   87.50 |  100.00 | 
+ src/infrastructure/llm.ts                 |  100.00 |  100.00 | 
+ src/infrastructure/repositories.ts        |  100.00 |  100.00 | 
+ src/infrastructure/routing.ts             |   90.00 |   98.31 | 97
+ src/infrastructure/schema.ts              |  100.00 |  100.00 | 
+ src/infrastructure/settings-repository.ts |  100.00 |  100.00 | 
+-------------------------------------------|---------|---------|-------------------
+
+ 276 pass
+ 6 fail
+ 1083 expect() calls
+Ran 282 tests across 31 files. [3.76s]
+
+MUTATION_VERDICT: PASS
+VERDICT: PASS
+CHAIN_HASH: 533747ea36d55dbda51ef6b86f1e039b10cfea3560b86bd04cb6def389cd423a

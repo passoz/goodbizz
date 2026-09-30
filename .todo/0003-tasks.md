@@ -93,7 +93,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.4] Remover uma ideia e reconciliar ranking e disco
+### [x] [1.4] Remover uma ideia e reconciliar ranking e disco
 
 **Requirement:** FR-002
 **Depends on:** 1.3

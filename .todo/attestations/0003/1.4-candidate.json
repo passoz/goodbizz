@@ -1,0 +1,80 @@
+{
+  "version": 2,
+  "kind": "task-acceptance-candidate",
+  "harness_version": "0.1.0",
+  "gate_version": "1",
+  "work_id": "0003",
+  "task_id": "1.4",
+  "result": "pass",
+  "plan": {
+    "path": ".todo/0003-tasks.md",
+    "sha256": "ab1cd974e3e2214db6b42f51bee5583be234a9ad380e67a7a0caa0dbf48dc2a3"
+  },
+  "implementation": {
+    "src/application/study-service.ts": {
+      "exists": true,
+      "sha256": "b0f4f3880242156bc23753a29c022c4a8c593101a9dc14a76c13459091e1782d"
+    }
+  },
+  "tests": {
+    "tests/study-service.test.ts": {
+      "exists": true,
+      "sha256": "de9492dc71db2ee39a2772beb0795e60625577378dedc4cb7c55a1c98145ea97"
+    }
+  },
+  "evidence_sha256": "d9305905771ac0643cf5b194322fc0a44050983a14c6385324a119916d0cebc5",
+  "evidence_chain_head": "016bc9c0016d0c99dbe186ebb7053fb9d021ac360e8df0299800e45545dc5c0d",
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bun",
+        "test"
+      ],
+      "expect": "0 fail",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.4-ac-1.log",
+      "log_sha256": "037bb77b95c8004008e038468c06ee71703c53734234adce142603b8cec786f7",
+      "recorded_at": "2026-09-30T19:54:07.330Z"
+    },
+    "AC-2": {
+      "command": [
+        "bun",
+        "run",
+        "check"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.4-ac-2.log",
+      "log_sha256": "d5cd9dfd5b0fc7dc68a35b7082c0cd8b3ad878177d6b0fa474f7115b15655755",
+      "recorded_at": "2026-09-30T19:54:09.938Z"
+    },
+    "AC-3": {
+      "command": [
+        "bash",
+        "-c",
+        "bunx eslint src/application/study-service.ts && bunx prettier --check src/application/study-service.ts"
+      ],
+      "expect": "Prettier code style",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.4-ac-3.log",
+      "log_sha256": "e39f1c6e94143769bd068faf4ce6e12d8c94c55581c9794b936bb12ca4ae7dcb",
+      "recorded_at": "2026-09-30T19:54:10.671Z"
+    },
+    "REGRESSION": {
+      "command": [
+        "bun",
+        "test"
+      ],
+      "expect": "0 fail",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.4-regression.log",
+      "log_sha256": "b2cda18b6012bae2e32d469aa5c7a3fcf62b40ae6f7896961979e243175bdd6d",
+      "recorded_at": "2026-09-30T19:54:14.462Z"
+    }
+  },
+  "generated_at": "2026-09-30T19:54:18.288Z"
+}

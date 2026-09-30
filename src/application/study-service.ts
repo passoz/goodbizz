@@ -4,23 +4,40 @@
  * Owns the lifecycle of a study (create -> run -> artifacts) and exposes the diagnosis and
  * recalibration use cases. Nothing here talks HTTP or SQL directly: it depends on ports.
  */
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  renameSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 
 import { diagnoseProbes, diagnoseExitCode, type DiagnoseReport } from "./diagnose.ts";
-import { buildZip } from "./artifacts.ts";
+import { buildArtifactFiles, buildZip } from "./artifacts.ts";
 import { explainFailure } from "./failures.ts";
 import type { ProviderSettingsStore } from "./settings.ts";
 import { generateStudy } from "./generate-study.ts";
 import { htmlToPdf } from "./pdf.ts";
 import { recalibrate, type RecalibrateReport } from "./recalibrate.ts";
-import { slug } from "./reports.ts";
+import { folderName, slug } from "./reports.ts";
+import { summarizeStudy } from "./summary.ts";
 import { scrub } from "../config/redact.ts";
 import { resolveStudyConfig, studyContext } from "../config/runtime.ts";
 import { ConflictError, NotFoundError, ValidationError } from "../domain/errors.ts";
 import type { ArtifactFile, DeciderClient, LlmClient, Logger, StudyRepository } from "../domain/ports.ts";
 import type { ProviderSettings, ProviderSettingsPatch } from "../domain/types.ts";
-import type { Idea, StudyConfig, StudyListItem, StudyRecord } from "../domain/types.ts";
+import type {
+  Idea,
+  StudyConfig,
+  StudyIdea,
+  StudyListItem,
+  StudyRecord,
+  StudySummary,
+} from "../domain/types.ts";
 import type { StudyCache } from "./cache.ts";
 
 export interface StudyServiceOptions {
@@ -226,6 +243,154 @@ export class StudyService {
     }
     rmSync(record.artifactDir, { recursive: true, force: true });
     await this.options.repo.delete(id);
+  }
+
+  /**
+   * Remove uma ideia pelo id e reconcilia o que dependia dela: ranking persistido, summary e a
+   * arvore de artefatos.
+   *
+   * A identidade vem do `id` (coluna `idea_id`), nunca do nome: com dois nomes iguais, apagar por
+   * nome levaria as duas. O estudo e recusado (409) enquanto o pipeline roda, porque o run
+   * reescreveria pastas e agregados por baixo da remocao.
+   */
+  async removeIdea(id: string, ideaId: string): Promise<StudyRecord> {
+    // A corrida vem antes do resto: durante o run ainda nao existem avaliacoes gravadas, e um
+    // `NotFoundError` de ideia seria a resposta errada para o operador.
+    if (this.inFlight.has(id)) {
+      throw new ConflictError(`study ${id} is still running`);
+    }
+    const record = await this.get(id);
+    const target = record.evaluations.find((evaluation) => evaluation.id === ideaId);
+    if (!target) {
+      throw new NotFoundError(`idea ${ideaId} not found in study ${id}`);
+    }
+    const remaining = record.evaluations.filter((evaluation) => evaluation.id !== ideaId);
+
+    // `saveEvaluations` regrava `rank` pela posicao do array, entao a ordem nova zera em 1.
+    const summary = this.summaryOf(remaining);
+    await this.options.repo.saveEvaluations(id, remaining, summary);
+    this.reconcileIdeasOnDisk(record, target, remaining, summary);
+    this.options.logger.info("idea removed", { id, ideaId, name: target.name });
+
+    const updated = await this.get(id);
+    if (!updated) throw new NotFoundError(`study ${id} disappeared during the removal`);
+    return updated;
+  }
+
+  /**
+   * Reconcilia `NN-slug/` com o ranking novo. A renomeacao e em duas fases porque renomear direto
+   * encolheria `02-x` para `01-x` e depois a `01-x` voltaria para `02-x`, sobrescrevendo a pasta
+   * que acabou de receber o documento. Documentos das ideias preservadas nao sao regerados (isso
+   * exigiria LLM de novo); so os agregados, que sao funcao do conjunto.
+   */
+  private reconcileIdeasOnDisk(
+    record: StudyRecord,
+    removed: StudyIdea,
+    remaining: readonly StudyIdea[],
+    summary: StudySummary | null,
+  ): void {
+    const root = record.artifactDir;
+    if (!existsSync(root)) return;
+
+    // Pasta atual de cada ideia: `NN-slug` do rank antigo. O id nao esta no caminho, entao o
+    // vinculo vem do rank persistido -- nunca de casar nome com nome.
+    const currentFolder = new Map<string, string>();
+    record.evaluations.forEach((idea, position) => {
+      const candidate = folderName(position + 1, idea.name);
+      if (existsSync(join(root, candidate))) currentFolder.set(idea.id, candidate);
+    });
+
+    const staged = new Map<string, string>();
+    for (const [ideaId, folder] of currentFolder) {
+      if (ideaId === removed.id) continue;
+      const temporary = `.pwn-removendo-${ideaId}`;
+      renameSync(join(root, folder), join(root, temporary));
+      staged.set(ideaId, temporary);
+    }
+    for (const [position, idea] of remaining.entries()) {
+      const temporary = staged.get(idea.id);
+      if (temporary === undefined) continue;
+      const target = folderName(position + 1, idea.name);
+      rmSync(join(root, target), { recursive: true, force: true });
+      renameSync(join(root, temporary), join(root, target));
+    }
+
+    // A pasta da ideia removida some pelo id.
+    const removedFolder = currentFolder.get(removed.id);
+    if (removedFolder !== undefined) rmSync(join(root, removedFolder), { recursive: true, force: true });
+
+    // Rede de seguranca do contrato "nenhum orfao": qualquer `NN-slug` que nao perteneca ao
+    // ranking novo e removida.
+    const expected = new Set(remaining.map((idea, position) => folderName(position + 1, idea.name)));
+    for (const folder of this.ideaFoldersOnDisk(root)) {
+      if (!expected.has(folder)) rmSync(join(root, folder), { recursive: true, force: true });
+    }
+
+    const cfg = this.configForRecord(record, remaining.length);
+    const folders: Record<string, string> = {};
+    for (const [position, idea] of remaining.entries()) {
+      folders[idea.name] = folderName(position + 1, idea.name);
+    }
+    const aggregates = buildArtifactFiles(
+      cfg,
+      record.brief ?? "",
+      summary ?? this.summaryOf([])!,
+      [...remaining],
+      folders,
+      {},
+      // Só a raiz: os `NN-slug/README.md` de cada ideia foram preservados pela renomeação.
+    ).filter((file) => !file.path.includes("/"));
+    if (remaining.length === 0) {
+      // Sem ideias nao ha ranking para indexar: o README e o tabelao viriam descrevendo nada.
+      for (const stale of ["README.md", "00-tabelao.md", "00-tabelao.csv"]) {
+        rmSync(join(root, stale), { force: true });
+      }
+      this.writeFiles(
+        root,
+        aggregates.filter((file) => file.path === "dados.json"),
+      );
+      return;
+    }
+    this.writeFiles(root, aggregates);
+  }
+
+  /** Pastas `NN-slug` da raiz do estudo. */
+  private ideaFoldersOnDisk(root: string): string[] {
+    return Array.from(new Bun.Glob("*/").scanSync({ cwd: root, onlyFiles: false }), (entry) =>
+      entry.replace(/\/$/, ""),
+    ).filter((entry) => /^\d\d-/.test(entry));
+  }
+
+  /**
+   * Summary das ideias restantes. Com zero ideias a media populacional vira NaN e o `dados.json`
+   * gravaria `null` no lugar de um numero, entao as medias sao normalizadas para 0.
+   */
+  private summaryOf(ideas: readonly StudyIdea[]): StudySummary | null {
+    if (ideas.length === 0) return null;
+    const summary = summarizeStudy([...ideas]);
+    for (const [key, value] of Object.entries(summary.means)) {
+      if (!Number.isFinite(value)) summary.means[key as keyof StudySummary["means"]] = 0;
+    }
+    return summary;
+  }
+
+  /** Configuracao do estudo com o numero de ideias que ele tem agora (o `dados.json` deve casar). */
+  private configForRecord(record: StudyRecord, numIdeas: number): StudyConfig {
+    return resolveStudyConfig({
+      niche: record.niche,
+      city: record.city,
+      monthlyTicket: record.monthlyTicket,
+      numIdeas,
+      painMethod: record.painMethod,
+      mock: record.mock,
+      mockLlm: record.mock || this.options.mockLlm === true,
+      mockDecider: record.mock || this.options.mockDecider === true,
+      outputDir: record.artifactDir,
+      pdf: this.options.pdf ?? false,
+      concurrency: this.options.concurrency ?? 8,
+      paraphrases: this.options.paraphrases ?? 3,
+      timeout: this.options.timeout,
+    });
   }
 
   /** Relative paths of every artifact already written for the study. */
