@@ -14,8 +14,8 @@ import { loadEnv } from "../../../config/env.ts";
 import { PROVIDER_FIELDS, providerSettingsView } from "../../../config/providers.ts";
 import { folderName } from "../../../application/reports.ts";
 import { mdToHtml } from "../../../application/render.ts";
-import type { StudyService } from "../../../application/study-service.ts";
-import { NotFoundError, ValidationError } from "../../../domain/errors.ts";
+import { MAX_IDEAS_PER_STUDY, type StudyService } from "../../../application/study-service.ts";
+import { ConflictError, NotFoundError, ValidationError } from "../../../domain/errors.ts";
 import type { ProviderSettingsPatch, StudyRecord } from "../../../domain/types.ts";
 import { Layout, Term } from "./layout.tsx";
 import { HelpPage, SettingsPage, StudiesList, StudyDetail, StudyForm } from "./pages.tsx";
@@ -214,6 +214,57 @@ export function buildUiApp(deps: UiDeps): Hono {
       }
       throw error;
     }
+    return c.redirect(`/studies/${id}`, 303);
+  });
+
+  /** Excluir uma ideia sem JS: remove pelo id e volta para a pagina do estudo. */
+  ui.post("/ui/studies/:id/ideas/:ideaId/delete", requireCsrf, async (c) => {
+    const id = c.req.param("id");
+    try {
+      await deps.service.removeIdea(id, c.req.param("ideaId"));
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        return c.json({ error: error.code, message: error.message }, 404);
+      }
+      // `removeIdea` so conhece `NotFoundError` e `ConflictError`; um `ValidationError` aqui
+      // seria branch morto escondendo um erro de verdade.
+      if (error instanceof ConflictError) {
+        return c.json({ error: error.code, message: error.message }, 409);
+      }
+      throw error;
+    }
+    return c.redirect(`/studies/${id}`, 303);
+  });
+
+  /**
+   * Acrescentar ideias sem JS: valida o `count` aqui e deixa a geracao em background.
+   *
+   * A validacao fica na rota, e nao no `addIdeas`, porque o redirect tem de sair agora: o servico
+   * so descobre o erro de teto depois de devolver a promessa, e aqui isso viraria resposta 303
+   * seguida de nada. O servico segue sendo a autoridade e recheca.
+   */
+  ui.post("/ui/studies/:id/ideas", requireCsrf, async (c) => {
+    const id = c.req.param("id");
+    const body = await c.req.parseBody();
+    const count = Number(body["count"]);
+    const record = await deps.service.get(id);
+    if (!Number.isInteger(count) || count < 1) {
+      return c.json(
+        { error: "VALIDATION_FAILED", message: "count precisa ser um numero inteiro de 1 ou mais" },
+        422,
+      );
+    }
+    if (record.evaluations.length + count > MAX_IDEAS_PER_STUDY) {
+      return c.json(
+        {
+          error: "VALIDATION_FAILED",
+          message: `o estudo tem ${record.evaluations.length} de ${MAX_IDEAS_PER_STUDY} ideias; ${count} novas passaria de ${MAX_IDEAS_PER_STUDY}`,
+        },
+        422,
+      );
+    }
+    // Sem `await`: o redirect responde na hora e a adicao continua sozinha.
+    void deps.service.addIdeas(id, count).catch(() => {});
     return c.redirect(`/studies/${id}`, 303);
   });
 

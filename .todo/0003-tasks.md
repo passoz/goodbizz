@@ -218,7 +218,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.9] Tratar as rotas de UI das novas acoes
+### [x] [1.9] Tratar as rotas de UI das novas acoes
 
 **Requirement:** FR-010
 **Depends on:** 1.8

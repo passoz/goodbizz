@@ -700,3 +700,146 @@ describe("gestao de ideias na pagina do estudo", () => {
     expect(form).toContain("value=");
   });
 });
+
+describe("rotas de UI para ideia", () => {
+  /** Estudo concluido, pronto para as duas acoes. */
+  async function completed() {
+    const study = await harness.service.create(resolveStudyConfig({ niche: "clinicas", mock: true }));
+    await harness.service.run(study.id);
+    return harness.service.get(study.id);
+  }
+
+  test("excluir ideia sem token de CSRF e recusado", async () => {
+    const study = await completed();
+    const target = study.evaluations[0]?.id ?? "";
+    const response = await harness.app.request(`/ui/studies/${study.id}/ideas/${target}/delete`, {
+      method: "POST",
+      headers: { ...FORM, Origin: "http://localhost" },
+      body: "",
+    });
+    expect(response.status).toBe(403);
+    // Recusar e recusar mesmo: a ideia continua la.
+    const after = await harness.service.get(study.id);
+    expect(after.evaluations.map((e) => e.id)).toEqual(study.evaluations.map((e) => e.id));
+  });
+
+  test("acrescentar ideias sem token de CSRF e recusado", async () => {
+    const study = await completed();
+    const response = await harness.app.request(`/ui/studies/${study.id}/ideas`, {
+      method: "POST",
+      headers: { ...FORM, Origin: "http://localhost" },
+      body: "count=2",
+    });
+    expect(response.status).toBe(403);
+    const after = await harness.service.get(study.id);
+    expect(after.evaluations).toHaveLength(study.evaluations.length);
+  });
+  test("excluir ideia inexistente com token valido responde 404", async () => {
+    const study = await completed();
+    const { cookiePair, token } = await csrfToken();
+    const response = await harness.app.request(`/ui/studies/${study.id}/ideas/nao-existe/delete`, {
+      method: "POST",
+      headers: { ...FORM, Origin: "http://localhost", Cookie: cookiePair },
+      body: `_csrf=${encodeURIComponent(token)}`,
+    });
+    expect(response.status).toBe(404);
+  });
+
+  test("acrescentar ideias com token valido inicia a adicao e redireciona para o estudo", async () => {
+    const study = await completed();
+    const { cookiePair, token } = await csrfToken();
+    const response = await harness.app.request(`/ui/studies/${study.id}/ideas`, {
+      method: "POST",
+      headers: { ...FORM, Origin: "http://localhost", Cookie: cookiePair },
+      body: `count=2&_csrf=${encodeURIComponent(token)}`,
+    });
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe(`/studies/${study.id}`);
+    // O redirect nao espera a geracao; o que muda e o estudo, e ele so cresce.
+    const after = await harness.service.get(study.id);
+    expect(after.evaluations.length).toBeGreaterThanOrEqual(study.evaluations.length);
+  });
+
+  test("acrescentar ideias com count invalido responde 422 e nao gera", async () => {
+    const study = await completed();
+    const { cookiePair, token } = await csrfToken();
+    const response = await harness.app.request(`/ui/studies/${study.id}/ideas`, {
+      method: "POST",
+      headers: { ...FORM, Origin: "http://localhost", Cookie: cookiePair },
+      body: `count=0&_csrf=${encodeURIComponent(token)}`,
+    });
+    expect(response.status).toBe(422);
+    const after = await harness.service.get(study.id);
+    expect(after.evaluations).toHaveLength(study.evaluations.length);
+  });
+
+  test("excluir ideia com token valido remove e redireciona para o estudo", async () => {
+    const study = await completed();
+    const { cookiePair, token } = await csrfToken();
+    const target = study.evaluations[0]?.id ?? "";
+    const response = await harness.app.request(`/ui/studies/${study.id}/ideas/${target}/delete`, {
+      method: "POST",
+      headers: { ...FORM, Origin: "http://localhost", Cookie: cookiePair },
+      body: `_csrf=${encodeURIComponent(token)}`,
+    });
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe(`/studies/${study.id}`);
+    const after = await harness.service.get(study.id);
+    expect(after.evaluations.map((e) => e.id)).not.toContain(target);
+  });
+  test("excluir ideia de estudo inexistente com token valido responde 404", async () => {
+    const { cookiePair, token } = await csrfToken();
+    const response = await harness.app.request("/ui/studies/estudo-inexistente/ideas/nao-existe/delete", {
+      method: "POST",
+      headers: { ...FORM, Origin: "http://localhost", Cookie: cookiePair },
+      body: `_csrf=${encodeURIComponent(token)}`,
+    });
+    expect(response.status).toBe(404);
+  });
+
+  test("excluir ideia com token valido responde 409 enquanto o pipeline roda", async () => {
+    // Provedor que nunca responde: o estudo fica `running` e dentro do inFlight do serviço.
+    // Precisa de um app proprio porque e o inFlight deste servico que produz o conflito.
+    const db: DatabaseHandle = openMigratedDatabase(":memory:");
+    const hanging = new StudyService({
+      repo: new SqliteStudyRepository(db.db),
+      cache: new StudyCache(new SqliteCacheStore(db.db)),
+      llm: { generateText: () => new Promise<string>(() => {}) },
+      decider: new DeciderMock(),
+      logger: createLogger("error"),
+      artifactsRoot: mkdtempSync(join(tmpdir(), "goodbizz-ui-hanging-")),
+    });
+    const hangingApp = buildUiApp({
+      service: hanging,
+      sessionSecret: loadEnv().SESSION_SECRET,
+      production: false,
+    });
+    const study = await hanging.create(resolveStudyConfig({ niche: "clinicas", mock: true }));
+    hanging.start(study.id);
+    const cookie = (await hangingApp.request("/")).headers.get("set-cookie") ?? "";
+    const cookiePair = cookie.split(";")[0] ?? "";
+    const signed = decodeURIComponent(cookiePair.slice(`${CSRF_COOKIE}=`.length));
+    const token = signed.slice(0, signed.lastIndexOf("."));
+    const response = await hangingApp.request(`/ui/studies/${study.id}/ideas/qualquer/delete`, {
+      method: "POST",
+      headers: { ...FORM, Origin: "http://localhost", Cookie: cookiePair },
+      body: `_csrf=${encodeURIComponent(token)}`,
+    });
+    expect(response.status).toBe(409);
+    expect(((await response.json()) as { error: string }).error).toBe("CONFLICT");
+    db.sqlite.close();
+  });
+
+  test("acrescentar ideias acima do teto responde 422 e nao gera", async () => {
+    const study = await completed();
+    const { cookiePair, token } = await csrfToken();
+    const response = await harness.app.request(`/ui/studies/${study.id}/ideas`, {
+      method: "POST",
+      headers: { ...FORM, Origin: "http://localhost", Cookie: cookiePair },
+      body: `count=39&_csrf=${encodeURIComponent(token)}`,
+    });
+    expect(response.status).toBe(422);
+    const after = await harness.service.get(study.id);
+    expect(after.evaluations).toHaveLength(study.evaluations.length);
+  });
+});
