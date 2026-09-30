@@ -1,0 +1,98 @@
+{
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bun",
+        "test"
+      ],
+      "expect": "0 fail",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.8-ac-1.log",
+      "log_sha256": "27fbab2a8fa9dc15c4429d5cafbf5a49e2dbcf654de972b40e372e1c5897c235",
+      "recorded_at": "2026-09-30T20:16:22.681Z"
+    },
+    "AC-2": {
+      "command": [
+        "bun",
+        "run",
+        "check"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.8-ac-2.log",
+      "log_sha256": "1bf92ee440c06ff73737107c22f1df1703c9b1043d0e24b8491894f017ed66dc",
+      "recorded_at": "2026-09-30T20:16:25.455Z"
+    },
+    "AC-3": {
+      "command": [
+        "bash",
+        "-c",
+        "bunx eslint src/infrastructure/http/ui/pages.tsx && bunx prettier --check src/infrastructure/http/ui/pages.tsx"
+      ],
+      "expect": "Prettier code style",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.8-ac-3.log",
+      "log_sha256": "7fb3d9afbbc673e9525656350e02a2c0a85ab14fc173f42361412c5ac4595403",
+      "recorded_at": "2026-09-30T20:16:26.369Z"
+    },
+    "REGRESSION": {
+      "command": [
+        "bun",
+        "test"
+      ],
+      "expect": "0 fail",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.8-regression.log",
+      "log_sha256": "74dd1862e029e34aa23741e861830207eb9b99be150da7728e6e1120247b4519",
+      "recorded_at": "2026-09-30T20:16:30.319Z"
+    }
+  },
+  "baseline_implementation": {
+    "src/infrastructure/http/ui/pages.tsx": {
+      "exists": true,
+      "sha256": "048f9113f922e71bdef40a5dc956114d1d2b2a638cb42ee04919a49b7bc8a93e"
+    }
+  },
+  "baseline_tests": {
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "d16acd5afdfa70331e5aa8395c548d5f69183cbc6d2c3c6b66c16ea6a2570371"
+    }
+  },
+  "created_at": "2026-09-30T20:16:03.836Z",
+  "green_expect": null,
+  "green_implementation": {
+    "src/infrastructure/http/ui/pages.tsx": {
+      "exists": true,
+      "sha256": "2a1f31f57391048c6f92e30b7a2581bee3b0286169042628a46baaf07334fe0a"
+    }
+  },
+  "green_tests": {
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "098fe85c30b457c4fcc62a4b082a022b45edcd3101d7a231898951ecd3992962"
+    }
+  },
+  "implementation_files": [
+    "src/infrastructure/http/ui/pages.tsx"
+  ],
+  "red_command": [
+    "bun",
+    "test"
+  ],
+  "red_expect": "cada linha do ranking tem um botao de excluir com dialogo de confirmacao",
+  "red_tests": {
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "098fe85c30b457c4fcc62a4b082a022b45edcd3101d7a231898951ecd3992962"
+    }
+  },
+  "task": "1.8",
+  "test_files": [
+    "tests/ui.test.ts"
+  ]
+}

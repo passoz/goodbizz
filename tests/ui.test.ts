@@ -13,7 +13,7 @@ import { ProviderSettingsStore } from "../src/application/settings.ts";
 import { StudyService } from "../src/application/study-service.ts";
 import { loadEnv, resetEnv } from "../src/config/env.ts";
 import { createLogger, resolveStudyConfig } from "../src/config/runtime.ts";
-import type { StudyIdea, StudySummary } from "../src/domain/types.ts";
+import type { StudyIdea, StudyState, StudySummary } from "../src/domain/types.ts";
 import { SqliteCacheStore } from "../src/infrastructure/cache-repository.ts";
 import { openMigratedDatabase, type DatabaseHandle } from "../src/infrastructure/db.ts";
 import { DeciderMock } from "../src/infrastructure/decider-mock.ts";
@@ -634,5 +634,69 @@ describe("configuracao dos provedores", () => {
     });
     expect(response.status).toBe(422);
     expect(await harness.service.providerSettings()).toEqual({});
+  });
+});
+
+describe("gestao de ideias na pagina do estudo", () => {
+  /**
+   * Estudo concluido renderizado pela propria app, e nao pelo componente isolado: o que o operador
+   * ve e o que a rota devolve, incluindo o token de CSRF injetado pela app.
+   */
+  async function rendered(numIdeas = 3, state?: StudyState) {
+    const study = await harness.service.create(
+      resolveStudyConfig({ niche: "clinicas", numIdeas, mock: true }),
+    );
+    await harness.service.run(study.id);
+    if (state !== undefined) {
+      await harness.repo.update(study.id, { progress: { state, step: "x", error: null } });
+    }
+    const done = await harness.service.get(study.id);
+    const html = await (await harness.app.request(`/studies/${study.id}`)).text();
+    return { html, evaluations: done.evaluations, id: study.id };
+  }
+
+  test("cada linha do ranking tem um botao de excluir com dialogo de confirmacao", async () => {
+    const { html, evaluations } = await rendered();
+
+    // Um botao por ideia, e nao um por linha decorada: a contagem bate com as avaliacoes.
+    const buttons = html.match(/data-idea-delete=/g) ?? [];
+    expect(buttons).toHaveLength(evaluations.length);
+    // O dialogo de confirmacao existe e tem os dois caminhos: confirmar e cancelar.
+    expect(html).toContain('id="idea-delete-modal"');
+    expect(html).toContain('id="idea-delete-confirm"');
+    expect(html).toContain('id="idea-delete-cancel"');
+    expect(html).toContain("<dialog");
+  });
+
+  test("o botao de excluir carrega o id da ideia, nao o nome nem a posicao", async () => {
+    const { html, evaluations } = await rendered();
+    for (const idea of evaluations) {
+      expect(html).toContain(`data-idea-delete="${idea.id}"`);
+    }
+    // A posicao e o nome nao podem servir de identidade: dois nomes iguais existem.
+    expect(html).not.toMatch(/data-idea-delete="\d+"/);
+  });
+
+  test("existe um campo numerico e um botao para pedir N ideias novas", async () => {
+    const { html, id } = await rendered();
+    expect(html).toContain('name="count"');
+    expect(html).toContain('type="number"');
+    expect(html).toContain(`action="/ui/studies/${id}/ideas"`);
+    expect(html).toContain("data-add-ideas");
+    // O teto aparece para o operador nao descobrir o limite so depois de pedir.
+    expect(html).toContain("40");
+  });
+
+  test("as acoes mutaveis nao aparecem enquanto o estudo roda", async () => {
+    const { html } = await rendered(3, "running");
+    expect(html).not.toContain("data-idea-delete=");
+    expect(html).not.toContain("data-add-ideas");
+  });
+
+  test("o formulario de adicao leva o token de CSRF", async () => {
+    const { html } = await rendered();
+    const form = html.match(/<form[^>]*data-add-ideas[^>]*>[\s\S]*?<\/form>/)?.[0] ?? "";
+    expect(form).toContain('name="_csrf"');
+    expect(form).toContain("value=");
   });
 });

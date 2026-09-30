@@ -1,0 +1,127 @@
+TASK: 1.8
+CHECK: RED
+COMMAND: bun test
+EXIT: 1
+OUTPUT:
+bun test v1.4.2 (744846f84)
+{"level":50,"time":1790799364250,"pid":160876,"hostname":"note","msg":"e"}
+{"level":30,"time":1790799364495,"pid":160876,"hostname":"note","count":0,"msg":"migrations applied"}
+{"level":40,"time":1790799364496,"pid":160876,"hostname":"note","count":1,"msg":"stale studies marked as failed on boot"}
+
+tests/ui.test.ts:
+658 |   test("cada linha do ranking tem um botao de excluir com dialogo de confirmacao", async () => {
+659 |     const { html, evaluations } = await rendered();
+660 | 
+661 |     // Um botao por ideia, e nao um por linha decorada: a contagem bate com as avaliacoes.
+662 |     const buttons = html.match(/data-idea-delete=/g) ?? [];
+663 |     expect(buttons).toHaveLength(evaluations.length);
+                          ^
+error: expect(received).toHaveLength(expected)
+
+Expected length: 3
+Received length: 0
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/ui.test.ts:663:21)
+(fail) gestao de ideias na pagina do estudo > cada linha do ranking tem um botao de excluir com dialogo de confirmacao [6.54ms]
+669 |   });
+670 | 
+671 |   test("o botao de excluir carrega o id da ideia, nao o nome nem a posicao", async () => {
+672 |     const { html, evaluations } = await rendered();
+673 |     for (const idea of evaluations) {
+674 |       expect(html).toContain(`data-idea-delete="${idea.id}"`);
+                         ^
+error: expect(received).toContain(expected)
+
+Expected to contain: "data-idea-delete=\"01a0f3f5-ce90-76cb-9981-eff468c4d36f\""
+Received: [REDACTED]
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/ui.test.ts:674:20)
+(fail) gestao de ideias na pagina do estudo > o botao de excluir carrega o id da ideia, nao o nome nem a posicao [9.51ms]
+677 |     expect(html).not.toMatch(/data-idea-delete="\d+"/);
+678 |   });
+679 | 
+680 |   test("existe um campo numerico e um botao para pedir N ideias novas", async () => {
+681 |     const { html, id } = await rendered();
+682 |     expect(html).toContain('name="count"');
+                       ^
+error: expect(received).toContain(expected)
+
+Expected to contain: "name=\"count\""
+Received: [REDACTED]
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/ui.test.ts:682:18)
+(fail) gestao de ideias na pagina do estudo > existe um campo numerico e um botao para pedir N ideias novas [7.38ms]
+694 |   });
+695 | 
+sensitive: [REDACTED]
+697 |     const { html } = await rendered();
+698 |     const form = html.match(/<form[^>]*data-add-ideas[^>]*>[\s\S]*?<\/form>/)?.[0] ?? "";
+699 |     expect(form).toContain('name="_csrf"');
+                       ^
+error: expect(received).toContain(expected)
+
+Expected to contain: "name=\"_csrf\""
+Received: ""
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/ui.test.ts:699:18)
+sensitive: [REDACTED]
+-------------------------------------------|---------|---------|-------------------
+File                                       | % Funcs | % Lines | Uncovered Line #s
+-------------------------------------------|---------|---------|-------------------
+All files                                  |   98.20 |   98.10 |
+ src/application/artifacts.ts              |  100.00 |  100.00 | 
+ src/application/cache.ts                  |  100.00 |  100.00 | 
+ src/application/costs.ts                  |  100.00 |  100.00 | 
+ src/application/dados.ts                  |  100.00 |  100.00 | 
+ src/application/diagnose.ts               |  100.00 |   95.65 | 146-150
+ src/application/evaluate.ts               |  100.00 |   96.98 | 127,197-198,201-203
+ src/application/failures.ts               |  100.00 |   92.98 | 70-73
+ src/application/generate-study.ts         |  100.00 |   95.94 | 175-187
+ src/application/generation.ts             |  100.00 |  100.00 | 
+ src/application/pain-algorithm.ts         |   91.30 |   95.21 | 90-94,245-246,268-269
+ src/application/pain-choice.ts            |  100.00 |   97.94 | 78-79
+ src/application/pdf.ts                    |  100.00 |   97.92 | 47
+ src/application/prompts.ts                |  100.00 |  100.00 | 
+ src/application/recalibrate.ts            |  100.00 |   94.74 | 104-105,146,166,170-172,212
+ src/application/render.ts                 |  100.00 |   99.30 | 191
+ src/application/reports.ts                |  100.00 |  100.00 | 
+ src/application/settings.ts               |  100.00 |  100.00 | 
+ src/application/study-service.ts          |   95.31 |   99.51 | 110,543
+ src/application/summary.ts                |   92.31 |  100.00 | 
+ src/application/verification.ts           |  100.00 |   94.62 | 48,68-71
+ src/cli.ts                                |   91.67 |   90.38 | 84-85,96,101,107-108,112,132-134,143,159-160,308-309,325-330,332,334-335,346,396-400,478-479,520-524,527,534,583
+ src/config/env.ts                         |  100.00 |  100.00 | 
+ src/config/providers.ts                   |  100.00 |  100.00 | 
+ src/config/redact.ts                      |  100.00 |  100.00 | 
+ src/config/runtime.ts                     |  100.00 |   98.21 | 93
+ src/domain/errors.ts                      |  100.00 |  100.00 | 
+ src/domain/hash.ts                        |  100.00 |  100.00 | 
+ src/domain/pain.ts                        |  100.00 |  100.00 | 
+ src/infrastructure/cache-repository.ts    |  100.00 |  100.00 | 
+ src/infrastructure/db.ts                  |  100.00 |   97.96 | 45
+ src/infrastructure/decider-mock.ts        |  100.00 |  100.00 | 
+ src/infrastructure/decider.ts             |   86.67 |   95.73 | 101-104,109-111
+ src/infrastructure/http/api.ts            |   83.33 |   95.61 | 140-141,146-149,282-284
+ src/infrastructure/http/app.ts            |  100.00 |  100.00 | 
+ src/infrastructure/http/errors.ts         |  100.00 |   94.74 | 25
+ src/infrastructure/http/health.ts         |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/layout.tsx     |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/pages.tsx      |   97.14 |   99.66 | 89-90,113
+ src/infrastructure/http/ui/routes.tsx     |   96.15 |   93.91 | 149,162,176,189-192,210,214,225-228,239
+ src/infrastructure/http/ui/security.ts    |  100.00 |   93.22 | 47,75-76,86
+ src/infrastructure/json.ts                |  100.00 |   92.00 | 31-32
+ src/infrastructure/llm-mock.ts            |   91.67 |  100.00 | 
+ src/infrastructure/llm.ts                 |  100.00 |  100.00 | 
+ src/infrastructure/repositories.ts        |  100.00 |  100.00 | 
+ src/infrastructure/routing.ts             |   90.00 |   98.31 | 97
+ src/infrastructure/schema.ts              |  100.00 |  100.00 | 
+ src/infrastructure/settings-repository.ts |  100.00 |  100.00 | 
+-------------------------------------------|---------|---------|-------------------
+
+ 300 pass
+ 4 fail
+ 1214 expect() calls
+Ran 304 tests across 31 files. [4.01s]
+
+VERDICT: PASS
+CHAIN_HASH: 0f39f51d2aaa8827cf17b6eb6f1ec3cd1ae9f357939e49e6eaca9146936361a5

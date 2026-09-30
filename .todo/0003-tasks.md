@@ -193,7 +193,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.8] Renderizar as acoes de remover e adicionar na tabela
+### [x] [1.8] Renderizar as acoes de remover e adicionar na tabela
 
 **Requirement:** FR-006
 **Depends on:** 1.7

@@ -11,11 +11,12 @@ import { html, raw } from "hono/html";
 
 import { estimateCost } from "../../../application/costs.ts";
 import { tierOf } from "../../../application/evaluate.ts";
+import { MAX_IDEAS_PER_STUDY } from "../../../application/study-service.ts";
 import { explainFailure } from "../../../application/failures.ts";
 import { folderName } from "../../../application/reports.ts";
 import type { ProviderSettingRow, ProviderSource } from "../../../config/providers.ts";
 import type {
-  IdeaEvaluation,
+  StudyIdea,
   StudyListItem,
   StudyRecord,
   StudyState,
@@ -1072,10 +1073,123 @@ const IDEA_MODAL_SCRIPT = `
   });
 })();`;
 
+/**
+ * Excluir uma ideia: com JS intercepta o `submit`, confirma no dialogo e envia o `DELETE`; sem JS o
+ * form posta direto em `/ui/studies/:id/ideas/:ideaId/delete` (mesma origem + CSRF).
+ *
+ * A identidade vai no `data-idea-delete` e no action da URL, nunca no nome nem na posicao: nomes
+ * repetem e a posicao muda quando outra ideia e removida.
+ */
+const IdeaDeleteForm: FC<{ id: string; ideaId: string; token: string; name: string }> = (props) => (
+  <form
+    class="idea-delete-form"
+    method="post"
+    action={`/ui/studies/${props.id}/ideas/${props.ideaId}/delete`}
+    data-idea-delete={props.ideaId}
+    data-delete-api={`/api/studies/${props.id}/ideas/${props.ideaId}`}
+    data-delete-name={props.name}
+  >
+    <input type="hidden" name="_csrf" value={props.token} />
+    <button type="submit" class="btn btn-danger btn-sm" title={`Excluir ${props.name}`}>
+      Excluir
+    </button>
+  </form>
+);
+
+/** Script do dialogo de exclusao de ideia; sem JS o form acima ja posta direto. */
+const IDEA_DELETE_SCRIPT = `
+(function () {
+  var modal = document.getElementById("idea-delete-modal");
+  if (!modal || typeof modal.showModal !== "function") return;
+  var text = document.getElementById("idea-delete-text");
+  var cancel = document.getElementById("idea-delete-cancel");
+  var confirm = document.getElementById("idea-delete-confirm");
+  var pending = null;
+  function close() { if (modal.open) modal.close(); pending = null; }
+  Array.prototype.slice.call(document.querySelectorAll(".idea-delete-form")).forEach(function (form) {
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+      pending = form;
+      if (text) text.textContent = "Excluir " + (form.getAttribute("data-delete-name") || "esta ideia") + "? O ranking inteiro e renumerado.";
+      modal.showModal();
+    });
+  });
+  if (cancel) cancel.addEventListener("click", close);
+  if (confirm) {
+    confirm.addEventListener("click", function () {
+      if (!pending) return close();
+      var form = pending;
+      close();
+      var button = form.querySelector("button");
+      if (button) { button.disabled = true; button.textContent = "Excluindo..."; }
+      fetch(form.getAttribute("data-delete-api"), { method: "DELETE", headers: { Accept: "application/json" } })
+        .then(function (response) {
+          if (!response.ok) throw new Error("falhou com " + response.status);
+          location.reload();
+        })
+        .catch(function (error) {
+          if (button) { button.disabled = false; button.textContent = "Excluir"; }
+          console.error(error);
+        });
+    });
+  }
+  modal.addEventListener("cancel", close);
+  modal.addEventListener("click", function (event) { if (event.target === modal) close(); });
+})();`;
+
+/** Confirmacao da exclusao de uma ideia. */
+const IdeaDeleteDialog: FC = () => (
+  <dialog id="idea-delete-modal" class="modal modal-confirm" aria-labelledby="idea-delete-title">
+    <div class="modal-head">
+      <h3 id="idea-delete-title">Excluir ideia</h3>
+    </div>
+    <div class="modal-body">
+      <p id="idea-delete-text">Excluir esta ideia? O ranking inteiro e renumerado.</p>
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" id="idea-delete-cancel">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-danger" id="idea-delete-confirm">
+          Confirmar
+        </button>
+      </div>
+    </div>
+  </dialog>
+);
+
+/**
+ * Pedir mais ideias: com JS intercepta o `submit` e mostra o estudo recarregando; sem JS o form posta
+ * direto em `/ui/studies/:id/ideas` (mesma origem + CSRF), que responde 303 para a pagina do estudo.
+ *
+ * O teto aparece no campo: descobrir o limite so depois de pedir queima uma geracao.
+ */
+const AddIdeasForm: FC<{ id: string; token: string; remaining: number }> = (props) => (
+  <form class="add-ideas-form" method="post" action={`/ui/studies/${props.id}/ideas`} data-add-ideas>
+    <input type="hidden" name="_csrf" value={props.token} />
+    <label for="add-ideas-count">Acrescentar ideias</label>
+    <input
+      id="add-ideas-count"
+      type="number"
+      name="count"
+      min="1"
+      max={String(props.remaining)}
+      value="1"
+      required
+    />
+    <span class="hint">
+      ate {props.remaining}; o estudo fecha em {MAX_IDEAS_PER_STUDY}
+    </span>
+    <button type="submit" class="btn btn-primary">
+      Adicionar
+    </button>
+  </form>
+);
+
 /** Detalhe: cabecalho com as acoes, progresso ao vivo, ranking, medias, grupos e artefatos. */
 export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; token: string }> = (props) => {
   const { study } = props;
-  const ranked: IdeaEvaluation[] = study.summary
+  // `StudyIdea`, e nao `IdeaEvaluation`: e ela que carrega o id usado nas acoes por linha.
+  const ranked: StudyIdea[] = study.summary
     ? study.summary.ordered
     : [...study.evaluations].sort((left, right) => right.index - left.index);
   const summary = study.summary;
@@ -1204,6 +1318,9 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; token: s
                   <th class="tip-end">
                     <Term of="dor">Dor</Term> <Hint>FORTE é o sinal que interessa</Hint>
                   </th>
+                  <th class="tip-end">
+                    <span class="sr-only">Acoes</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -1256,6 +1373,17 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; token: s
                       <td>
                         <PainBadge label={idea.algorithm.label} />
                       </td>
+                      <td class="tip-end">
+                        {/* Acao mutavel some enquanto o pipeline roda, junto com o formulario de adicao. */}
+                        {running ? null : (
+                          <IdeaDeleteForm
+                            id={study.id}
+                            ideaId={idea.id}
+                            token={props.token}
+                            name={idea.name}
+                          />
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
@@ -1264,6 +1392,21 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; token: s
           </div>
         )}
       </section>
+
+      {running ? null : (
+        <section class="panel glass" id="add-ideas">
+          <h3>Acrescentar ideias</h3>
+          <p class="sub">
+            As {ranked.length} ideias atuais ficam como estão: o que já foi medido e documentado não é
+            refeito, e o ranking inteiro é renumerado.
+          </p>
+          <AddIdeasForm
+            id={study.id}
+            token={props.token}
+            remaining={Math.max(0, MAX_IDEAS_PER_STUDY - ranked.length)}
+          />
+        </section>
+      )}
 
       {summary ? (
         <section class="panel glass">
@@ -1388,6 +1531,8 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; token: s
       ) : null}
 
       <DeleteDialog />
+      <IdeaDeleteDialog />
+      <script>{raw(IDEA_DELETE_SCRIPT)}</script>
       <RenameDialog />
     </>
   );
