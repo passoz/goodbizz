@@ -82,7 +82,7 @@ describe("providerSources", () => {
 
 describe("maskSecret", () => {
   test("mostra começo e fim de chaves longas", () => {
-    expect(maskSecret("sk-107d6f960041ef07-abcdef")).toBe("sk-…cdef");
+    expect(maskSecret("sk-teste-abcdef")).toBe("sk-…cdef");
   });
 
   test("esconde chaves curtas por inteiro e mantém vazio", () => {
@@ -93,7 +93,7 @@ describe("maskSecret", () => {
 
 describe("providerSettingsView", () => {
   test("mascara só os segredos e diz de onde vem cada campo", () => {
-    const rows = providerSettingsView(env(), { llmApiKey: "sk-salvo-no-banco-1234" });
+    const rows = providerSettingsView(env(), { llmApiKey: "sk-teste-1234" });
     const byKey = Object.fromEntries(rows.map((row) => [row.key, row]));
 
     expect(byKey["llmApiKey"]?.source).toBe("settings");
@@ -102,6 +102,6 @@ describe("providerSettingsView", () => {
     expect(byKey["llmBaseUrl"]?.value).toBe("https://env.test/v1");
     expect(byKey["llmBaseUrl"]?.secret).toBe(false);
     // A chave em claro não aparece em lugar nenhum da visão.
-    expect(JSON.stringify(rows)).not.toContain("sk-salvo-no-banco-1234");
+    expect(JSON.stringify(rows)).not.toContain("sk-teste-1234");
   });
 });

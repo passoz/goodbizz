@@ -11,3 +11,7 @@ useDefault = true
 description = "Placeholders de documentação (variáveis de ambiente de exemplo)"
 paths = ['''\.md$''']
 regexes = ['''([A-Z_]*?(SECRET|TOKEN|PASSWORD)[A-Z_]*=)(<[^>]*>|troque-por[^\s]*|substitua[^\s]*|[A-Za-z0-9_-]*[-_]?(me|exemplo|placeholder)[A-Za-z0-9_-]*)''']
+
+[[allowlists]]
+description = "Credenciais de mentira em testes (fixtures: sk-teste, chave-do-decisor, etc.)"
+paths = ['''^tests/.*\.(ts|tsx)$''']
