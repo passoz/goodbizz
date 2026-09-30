@@ -14,7 +14,7 @@ import { explainFailure } from "../../application/failures.ts";
 import { ValidationError } from "../../domain/errors.ts";
 import type { Logger } from "../../domain/ports.ts";
 import type { StudyRecord } from "../../domain/types.ts";
-import type { StudyService } from "../../application/study-service.ts";
+import { MAX_IDEAS_PER_STUDY, type StudyService } from "../../application/study-service.ts";
 
 const StudyInput = z.object({
   niche: z.string().trim().min(2, "o nicho precisa de pelo menos 2 caracteres"),
@@ -49,6 +49,16 @@ const ProviderSettingsPatchInput = z
 const RenameInput = z.object({
   niche: z.string().trim().min(2, "o nicho precisa de pelo menos 2 caracteres"),
 });
+
+/**
+ * Quantas ideias acrescentar. O teto por estudo e conferido no serviço, e nao aqui: ele depende de
+ * quantas o estudo ja tem, e a rota nao deve carregar essa regra.
+ */
+const AddIdeasInput = z
+  .object({
+    count: z.number().int("count precisa ser um numero inteiro").min(1, "count precisa ser pelo menos 1"),
+  })
+  .strict();
 
 const IdeaInput = z.object({
   name: z.string().trim().min(1),
@@ -169,6 +179,47 @@ export function buildApiApp(deps: ApiDeps): Hono {
   api.post("/studies/:id/run", async (c) => {
     const record = await deps.service.run(c.req.param("id"));
     return c.json(publicStudy(record));
+  });
+
+  /**
+   * Remove uma ideia pelo id: 204 sem corpo. 404 para estudo ou ideia inexistente, 409 enquanto o
+   * pipeline roda.
+   */
+  api.delete("/studies/:id/ideas/:ideaId", async (c) => {
+    await deps.service.removeIdea(c.req.param("id"), c.req.param("ideaId"));
+    return c.body(null, 204);
+  });
+
+  /**
+   * Acrescenta ideias: 201 na hora e a geracao em background.
+   *
+   * A ordem importa. O `get` vem primeiro para o estudo inexistente ser 404, e `addIdeas` e
+   * chamado sem `await` de proposito: ele decide 409 e 422 de forma sincrona (a tarefa anterior),
+   * e a promessa devolvida e o trabalho em background, que nao pode segurar a requisicao.
+   */
+  api.post("/studies/:id/ideas", async (c) => {
+    const id = c.req.param("id");
+    const input = parseOrThrow(AddIdeasInput, await c.req.json());
+    const record = await deps.service.get(id);
+    // O serviço continua sendo a autoridade sobre o teto, mas ele só descobre a resposta depois
+    // de devolver a promessa. Conferir aqui com a mesma constante é o que faz o 422 chegar junto
+    // da resposta, em vez de virar uma rejeição que ninguém está esperando.
+    if (record.evaluations.length + input.count > MAX_IDEAS_PER_STUDY) {
+      throw new ValidationError(
+        `o estudo tem ${record.evaluations.length} de ${MAX_IDEAS_PER_STUDY} ideias; ` +
+          `${input.count} novas passaria de ${MAX_IDEAS_PER_STUDY}`,
+      );
+    }
+    const pending = deps.service.addIdeas(id, input.count);
+    // A falha da adicao ja foi persistida no estado do estudo; aqui so evitamos rejeição solta.
+    void pending.catch(() => {});
+    return c.json(
+      publicStudy({
+        ...record,
+        progress: { state: "running", step: `adicionando ${input.count} ideias`, error: null },
+      }),
+      201,
+    );
   });
 
   api.get("/studies/:id/artifacts", async (c) => {

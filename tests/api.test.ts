@@ -307,3 +307,122 @@ describe("consumo e custo estimado", () => {
     expect(body.cost).toBeNull();
   });
 });
+
+/**
+ * Mensagem de um 404 de dominio. Uma rota inexistente tambem devolve 404, entao a unica forma de
+ * provar que a rota existe e responder com o erro do dominio e nao com "rota nao encontrada".
+ */
+async function domainMessage(response: Response): Promise<string> {
+  const body = (await response.json()) as { error: string; message: string };
+  expect(body.error).toBe("NOT_FOUND");
+  expect(body.message).not.toContain("rota nao encontrada");
+  return body.message;
+}
+
+describe("gestao de ideias na API", () => {
+  /** Estudo concluido, com ideia ids known, pronto para DELETE/POST. */
+  async function completed(numIdeas = 3) {
+    const record = await harness.service.create(
+      resolveStudyConfig({ niche: "clinicas", numIdeas, mock: true, outputDir: harness.artifactsRoot }),
+    );
+    await harness.service.run(record.id);
+    const done = await harness.service.get(record.id);
+    return { id: record.id, evaluations: done.evaluations };
+  }
+
+  test("DELETE /studies/:id/ideas/:ideaId responde 204 e a ideia sai do estudo", async () => {
+    const { id, evaluations } = await completed();
+    const target = evaluations[1]!;
+
+    const response = await api().request(`/studies/${id}/ideas/${target.id}`, { method: "DELETE" });
+
+    expect(response.status).toBe(204);
+    expect(await response.text()).toBe("");
+    const after = (await (await api().request(`/studies/${id}`)).json()) as {
+      evaluations: { id: string }[];
+    };
+    expect(after.evaluations.map((e) => e.id)).toEqual([evaluations[0]!.id, evaluations[2]!.id]);
+  });
+
+  test("DELETE com ideia inexistente responde 404", async () => {
+    const { id } = await completed();
+    const response = await api().request(`/studies/${id}/ideas/nao-existe`, { method: "DELETE" });
+    expect(response.status).toBe(404);
+    expect(await domainMessage(response)).toContain("nao-existe");
+  });
+
+  test("DELETE com estudo inexistente responde 404", async () => {
+    const response = await api().request("/studies/estudo-inexistente/ideas/x", { method: "DELETE" });
+    expect(response.status).toBe(404);
+    expect(await domainMessage(response)).toContain("estudo-inexistente");
+  });
+
+  test("POST /studies/:id/ideas responde 201 e gera em background", async () => {
+    const { id, evaluations } = await completed(2);
+
+    const response = await api().request(`/studies/${id}/ideas`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ count: 2 }),
+    });
+
+    // 201 imediato: a requisicao nao espera o LLM.
+    expect(response.status).toBe(201);
+    const body = (await response.json()) as { id: string; evaluations: { id: string }[] };
+    expect(body.id).toBe(id);
+    expect(body.evaluations.map((e) => e.id)).toEqual(evaluations.map((e) => e.id));
+
+    // A geracao acontece depois da resposta.
+    for (let attempt = 0; attempt < 400; attempt += 1) {
+      const current = await harness.service.get(id);
+      if (current.evaluations.length === 4) break;
+      await Bun.sleep(5);
+    }
+    const after = await harness.service.get(id);
+    expect(after.evaluations).toHaveLength(4);
+    // Os ids antigos sobreviveram intactos; a posicao muda porque adicionar re-ranqueia.
+    const oldIds = evaluations.map((e) => e.id).sort();
+    expect(
+      after.evaluations
+        .filter((e) => oldIds.includes(e.id))
+        .map((e) => e.id)
+        .sort(),
+    ).toEqual(oldIds);
+  });
+
+  test("POST com count invalido responde 422 com detalhe de validacao", async () => {
+    const { id } = await completed(2);
+    for (const body of [{ count: 0 }, { count: -1 }, { count: 1.5 }, { count: "cinco" }, {}]) {
+      const response = await api().request(`/studies/${id}/ideas`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      expect(response.status).toBe(422);
+      const payload = (await response.json()) as { error: string; details?: unknown };
+      expect(payload.error).toBe("VALIDATION_FAILED");
+    }
+    expect((await harness.service.get(id)).evaluations).toHaveLength(2);
+  });
+
+  test("POST com estudo inexistente responde 404", async () => {
+    const response = await api().request("/studies/estudo-inexistente/ideas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ count: 2 }),
+    });
+    expect(response.status).toBe(404);
+    expect(await domainMessage(response)).toContain("estudo-inexistente");
+  });
+
+  test("POST acima do teto de 40 responde 422 sem consumir token", async () => {
+    const { id } = await completed(2);
+    const response = await api().request(`/studies/${id}/ideas`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ count: 39 }),
+    });
+    expect(response.status).toBe(422);
+    expect((await harness.service.get(id)).evaluations).toHaveLength(2);
+  });
+});

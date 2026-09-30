@@ -168,7 +168,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.7] Expor remocao e adicao na API HTTP
+### [x] [1.7] Expor remocao e adicao na API HTTP
 
 **Requirement:** FR-005
 **Depends on:** 1.4, 1.6

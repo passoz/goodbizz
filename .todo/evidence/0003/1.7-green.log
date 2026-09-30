@@ -1,0 +1,225 @@
+TASK: 1.7
+CHECK: GREEN
+COMMAND: bun test
+EXIT: 0
+OUTPUT:
+bun test v1.4.2 (744846f84)
+{"level":50,"time":1790798909837,"pid":157314,"hostname":"note","msg":"e"}
+{"level":30,"time":1790798910225,"pid":157314,"hostname":"note","count":0,"msg":"migrations applied"}
+{"level":40,"time":1790798910226,"pid":157314,"hostname":"note","count":1,"msg":"stale studies marked as failed on boot"}
+-------------------------------------------|---------|---------|-------------------
+File                                       | % Funcs | % Lines | Uncovered Line #s
+-------------------------------------------|---------|---------|-------------------
+All files                                  |   98.20 |   98.10 |
+ src/application/artifacts.ts              |  100.00 |  100.00 | 
+ src/application/cache.ts                  |  100.00 |  100.00 | 
+ src/application/costs.ts                  |  100.00 |  100.00 | 
+ src/application/dados.ts                  |  100.00 |  100.00 | 
+ src/application/diagnose.ts               |  100.00 |   95.65 | 146-150
+ src/application/evaluate.ts               |  100.00 |   96.98 | 127,197-198,201-203
+ src/application/failures.ts               |  100.00 |   92.98 | 70-73
+ src/application/generate-study.ts         |  100.00 |   95.94 | 175-187
+ src/application/generation.ts             |  100.00 |  100.00 | 
+ src/application/pain-algorithm.ts         |   91.30 |   95.21 | 90-94,245-246,268-269
+ src/application/pain-choice.ts            |  100.00 |   97.94 | 78-79
+ src/application/pdf.ts                    |  100.00 |   97.92 | 47
+ src/application/prompts.ts                |  100.00 |  100.00 | 
+ src/application/recalibrate.ts            |  100.00 |   94.74 | 104-105,146,166,170-172,212
+ src/application/render.ts                 |  100.00 |   99.30 | 191
+ src/application/reports.ts                |  100.00 |  100.00 | 
+ src/application/settings.ts               |  100.00 |  100.00 | 
+ src/application/study-service.ts          |   95.31 |   99.51 | 110,543
+ src/application/summary.ts                |   92.31 |  100.00 | 
+ src/application/verification.ts           |  100.00 |   94.62 | 48,68-71
+ src/cli.ts                                |   91.67 |   90.38 | 84-85,96,101,107-108,112,132-134,143,159-160,308-309,325-330,332,334-335,346,396-400,478-479,520-524,527,534,583
+ src/config/env.ts                         |  100.00 |  100.00 | 
+ src/config/providers.ts                   |  100.00 |  100.00 | 
+ src/config/redact.ts                      |  100.00 |  100.00 | 
+ src/config/runtime.ts                     |  100.00 |   98.21 | 93
+ src/domain/errors.ts                      |  100.00 |  100.00 | 
+ src/domain/hash.ts                        |  100.00 |  100.00 | 
+ src/domain/pain.ts                        |  100.00 |  100.00 | 
+ src/infrastructure/cache-repository.ts    |  100.00 |  100.00 | 
+ src/infrastructure/db.ts                  |  100.00 |   97.96 | 45
+ src/infrastructure/decider-mock.ts        |  100.00 |  100.00 | 
+ src/infrastructure/decider.ts             |   86.67 |   95.73 | 101-104,109-111
+ src/infrastructure/http/api.ts            |   83.33 |   95.61 | 140-141,146-149,282-284
+ src/infrastructure/http/app.ts            |  100.00 |  100.00 | 
+ src/infrastructure/http/errors.ts         |  100.00 |   94.74 | 25
+ src/infrastructure/http/health.ts         |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/layout.tsx     |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/pages.tsx      |   97.14 |   99.66 | 89-90,113
+ src/infrastructure/http/ui/routes.tsx     |   96.15 |   93.91 | 149,162,176,189-192,210,214,225-228,239
+ src/infrastructure/http/ui/security.ts    |  100.00 |   93.22 | 47,75-76,86
+ src/infrastructure/json.ts                |  100.00 |   92.00 | 31-32
+ src/infrastructure/llm-mock.ts            |   91.67 |  100.00 | 
+ src/infrastructure/llm.ts                 |  100.00 |  100.00 | 
+ src/infrastructure/repositories.ts        |  100.00 |  100.00 | 
+ src/infrastructure/routing.ts             |   90.00 |   98.31 | 97
+ src/infrastructure/schema.ts              |  100.00 |  100.00 | 
+ src/infrastructure/settings-repository.ts |  100.00 |  100.00 | 
+-------------------------------------------|---------|---------|-------------------
+
+ 299 pass
+ 0 fail
+ 1208 expect() calls
+Ran 299 tests across 31 files. [4.41s]
+
+MUTATION_EXIT: 1
+MUTATION_OUTPUT:
+bun test v1.4.2 (744846f84)
+{"level":50,"time":1790798914283,"pid":157350,"hostname":"note","msg":"e"}
+{"level":30,"time":1790798914619,"pid":157350,"hostname":"note","count":0,"msg":"migrations applied"}
+{"level":40,"time":1790798914620,"pid":157350,"hostname":"note","count":1,"msg":"stale studies marked as failed on boot"}
+
+tests/api.test.ts:
+334 |     const { id, evaluations } = await completed();
+335 |     const target = evaluations[1]!;
+336 | 
+337 |     const response = await api().request(`/studies/${id}/ideas/${target.id}`, { method: "DELETE" });
+338 | 
+339 |     expect(response.status).toBe(204);
+                                  ^
+error: expect(received).toBe(expected)
+
+Expected: 204
+Received: 404
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/api.test.ts:339:29)
+(fail) gestao de ideias na API > DELETE /studies/:id/ideas/:ideaId responde 204 e a ideia sai do estudo [7.36ms]
+311 | /**
+312 |  * Mensagem de um 404 de dominio. Uma rota inexistente tambem devolve 404, entao a unica forma de
+313 |  * provar que a rota existe e responder com o erro do dominio e nao com "rota nao encontrada".
+314 |  */
+315 | async function domainMessage(response: Response): Promise<string> {
+316 |   const body = (await response.json()) as { error: string; message: string };
+                                     ^
+SyntaxError: JSON Parse error: Unable to parse JSON string
+      at domainMessage (/home/passoz/dev/goodbizz/tests/api.test.ts:316:32)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/api.test.ts:351:18)
+(fail) gestao de ideias na API > DELETE com ideia inexistente responde 404 [7.43ms]
+311 | /**
+312 |  * Mensagem de um 404 de dominio. Uma rota inexistente tambem devolve 404, entao a unica forma de
+313 |  * provar que a rota existe e responder com o erro do dominio e nao com "rota nao encontrada".
+314 |  */
+315 | async function domainMessage(response: Response): Promise<string> {
+316 |   const body = (await response.json()) as { error: string; message: string };
+                                     ^
+SyntaxError: JSON Parse error: Unable to parse JSON string
+      at domainMessage (/home/passoz/dev/goodbizz/tests/api.test.ts:316:32)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/api.test.ts:357:18)
+(fail) gestao de ideias na API > DELETE com estudo inexistente responde 404 [1.40ms]
+365 |       headers: { "Content-Type": "application/json" },
+366 |       body: JSON.stringify({ count: 2 }),
+367 |     });
+368 | 
+369 |     // 201 imediato: a requisicao nao espera o LLM.
+370 |     expect(response.status).toBe(201);
+                                  ^
+error: expect(received).toBe(expected)
+
+Expected: 201
+Received: 404
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/api.test.ts:370:29)
+(fail) gestao de ideias na API > POST /studies/:id/ideas responde 201 e gera em background [6.26ms]
+396 |       const response = await api().request(`/studies/${id}/ideas`, {
+397 |         method: "POST",
+398 |         headers: { "Content-Type": "application/json" },
+399 |         body: JSON.stringify(body),
+400 |       });
+401 |       expect(response.status).toBe(422);
+                                    ^
+error: expect(received).toBe(expected)
+
+Expected: 422
+Received: 404
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/api.test.ts:401:31)
+(fail) gestao de ideias na API > POST com count invalido responde 422 com detalhe de validacao [9.68ms]
+311 | /**
+312 |  * Mensagem de um 404 de dominio. Uma rota inexistente tambem devolve 404, entao a unica forma de
+313 |  * provar que a rota existe e responder com o erro do dominio e nao com "rota nao encontrada".
+314 |  */
+315 | async function domainMessage(response: Response): Promise<string> {
+316 |   const body = (await response.json()) as { error: string; message: string };
+                                     ^
+SyntaxError: JSON Parse error: Unable to parse JSON string
+      at domainMessage (/home/passoz/dev/goodbizz/tests/api.test.ts:316:32)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/api.test.ts:415:18)
+(fail) gestao de ideias na API > POST com estudo inexistente responde 404 [1.60ms]
+420 |     const response = await api().request(`/studies/${id}/ideas`, {
+421 |       method: "POST",
+422 |       headers: { "Content-Type": "application/json" },
+423 |       body: JSON.stringify({ count: 39 }),
+424 |     });
+425 |     expect(response.status).toBe(422);
+                                  ^
+error: expect(received).toBe(expected)
+
+Expected: 422
+Received: 404
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/api.test.ts:425:29)
+sensitive: [REDACTED]
+-------------------------------------------|---------|---------|-------------------
+File                                       | % Funcs | % Lines | Uncovered Line #s
+-------------------------------------------|---------|---------|-------------------
+All files                                  |   98.21 |   98.08 |
+ src/application/artifacts.ts              |  100.00 |  100.00 | 
+ src/application/cache.ts                  |  100.00 |  100.00 | 
+ src/application/costs.ts                  |  100.00 |  100.00 | 
+ src/application/dados.ts                  |  100.00 |  100.00 | 
+ src/application/diagnose.ts               |  100.00 |   95.65 | 146-150
+ src/application/evaluate.ts               |  100.00 |   96.98 | 127,197-198,201-203
+ src/application/failures.ts               |  100.00 |   92.98 | 70-73
+ src/application/generate-study.ts         |  100.00 |   95.94 | 175-187
+ src/application/generation.ts             |  100.00 |  100.00 | 
+ src/application/pain-algorithm.ts         |   91.30 |   95.21 | 90-94,245-246,268-269
+ src/application/pain-choice.ts            |  100.00 |   97.94 | 78-79
+ src/application/pdf.ts                    |  100.00 |   97.92 | 47
+ src/application/prompts.ts                |  100.00 |  100.00 | 
+ src/application/recalibrate.ts            |  100.00 |   94.74 | 104-105,146,166,170-172,212
+ src/application/render.ts                 |  100.00 |   99.30 | 191
+ src/application/reports.ts                |  100.00 |  100.00 | 
+ src/application/settings.ts               |  100.00 |  100.00 | 
+ src/application/study-service.ts          |   95.31 |   99.51 | 110,543
+ src/application/summary.ts                |   92.31 |  100.00 | 
+ src/application/verification.ts           |  100.00 |   94.62 | 48,68-71
+ src/cli.ts                                |   91.67 |   90.38 | 84-85,96,101,107-108,112,132-134,143,159-160,308-309,325-330,332,334-335,346,396-400,478-479,520-524,527,534,583
+ src/config/env.ts                         |  100.00 |  100.00 | 
+ src/config/providers.ts                   |  100.00 |  100.00 | 
+ src/config/redact.ts                      |  100.00 |  100.00 | 
+ src/config/runtime.ts                     |  100.00 |   98.21 | 93
+ src/domain/errors.ts                      |  100.00 |  100.00 | 
+ src/domain/hash.ts                        |  100.00 |  100.00 | 
+ src/domain/pain.ts                        |  100.00 |  100.00 | 
+ src/infrastructure/cache-repository.ts    |  100.00 |  100.00 | 
+ src/infrastructure/db.ts                  |  100.00 |   97.96 | 45
+ src/infrastructure/decider-mock.ts        |  100.00 |  100.00 | 
+ src/infrastructure/decider.ts             |   86.67 |   95.73 | 101-104,109-111
+ src/infrastructure/http/api.ts            |   83.78 |   94.86 | 130-131,136-139,231-233
+ src/infrastructure/http/app.ts            |  100.00 |  100.00 | 
+ src/infrastructure/http/errors.ts         |  100.00 |   94.74 | 25
+ src/infrastructure/http/health.ts         |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/layout.tsx     |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/pages.tsx      |   97.14 |   99.66 | 89-90,113
+ src/infrastructure/http/ui/routes.tsx     |   96.15 |   93.91 | 149,162,176,189-192,210,214,225-228,239
+ src/infrastructure/http/ui/security.ts    |  100.00 |   93.22 | 47,75-76,86
+ src/infrastructure/json.ts                |  100.00 |   92.00 | 31-32
+ src/infrastructure/llm-mock.ts            |   91.67 |  100.00 | 
+ src/infrastructure/llm.ts                 |  100.00 |  100.00 | 
+ src/infrastructure/repositories.ts        |  100.00 |  100.00 | 
+ src/infrastructure/routing.ts             |   90.00 |   98.31 | 97
+ src/infrastructure/schema.ts              |  100.00 |  100.00 | 
+ src/infrastructure/settings-repository.ts |  100.00 |  100.00 | 
+-------------------------------------------|---------|---------|-------------------
+
+ 292 pass
+ 7 fail
+ 1182 expect() calls
+Ran 299 tests across 31 files. [4.34s]
+
+MUTATION_VERDICT: PASS
+VERDICT: PASS
+CHAIN_HASH: 1045c2dfe83ca586246bad5e385ac54c2aed358d11494b5d95f5ce92ae2c25d7
