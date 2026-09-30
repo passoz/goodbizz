@@ -22,8 +22,13 @@ import { explainFailure } from "./failures.ts";
 import type { ProviderSettingsStore } from "./settings.ts";
 import { generateAddition, generateStudy } from "./generate-study.ts";
 import { htmlToPdf } from "./pdf.ts";
+const SEPARADOR_PAGINA = '\n<hr style="page-break-after: always">\n';
+
 import { recalibrate, type RecalibrateReport } from "./recalibrate.ts";
 import { folderName, slug } from "./reports.ts";
+
+import { fullHtml } from "./render.ts";
+import { mdToHtml } from "./render.ts";
 import { summarizeStudy } from "./summary.ts";
 import { scrub } from "../config/redact.ts";
 import { resolveStudyConfig, studyContext } from "../config/runtime.ts";
@@ -340,7 +345,7 @@ export class StudyService {
     record: StudyRecord,
     removed: StudyIdea,
     remaining: readonly StudyIdea[],
-    summary: StudySummary | null,
+    summary: StudySummary,
   ): void {
     const root = record.artifactDir;
     if (!existsSync(root)) return;
@@ -387,7 +392,7 @@ export class StudyService {
     const aggregates = buildArtifactFiles(
       cfg,
       record.brief ?? "",
-      summary ?? this.summaryOf([])!,
+      summary,
       [...remaining],
       folders,
       {},
@@ -402,9 +407,12 @@ export class StudyService {
         root,
         aggregates.filter((file) => file.path === "dados.json"),
       );
+      this.refreshFullHtml(record, cfg);
       return;
     }
     this.writeFiles(root, aggregates);
+    // DEC-006: o HTML completo e o PDF, quando ja existem, descrevem os agregados antigos ate aqui.
+    this.refreshFullHtml(record, cfg);
   }
 
   /** Pastas `NN-slug` da raiz do estudo. */
@@ -418,8 +426,9 @@ export class StudyService {
    * Summary das ideias restantes. Com zero ideias a media populacional vira NaN e o `dados.json`
    * gravaria `null` no lugar de um numero, entao as medias sao normalizadas para 0.
    */
-  private summaryOf(ideas: readonly StudyIdea[]): StudySummary | null {
-    if (ideas.length === 0) return null;
+  private summaryOf(ideas: readonly StudyIdea[]): StudySummary {
+    // Mesmo vazio, devolve um resumo: `buildArtifactFiles` sempre serializa as medias, e devolver
+    // `null` aqui era um `TypeError` esperando para quando a ultima ideia saisse do estudo.
     const summary = summarizeStudy([...ideas]);
     for (const [key, value] of Object.entries(summary.means)) {
       if (!Number.isFinite(value)) summary.means[key as keyof StudySummary["means"]] = 0;
@@ -519,7 +528,7 @@ export class StudyService {
         result.evaluations.slice(record.evaluations.length).map((idea) => idea.name),
       );
       this.reconcileFolders(record, record.evaluations, result.folders, freshNames, result.files);
-      this.rebuildPdf(record, cfg, id);
+      this.refreshFullHtml(record, cfg);
 
       await setProgress("done", "concluído", null);
       this.options.logger.info("ideas added", { id, added: count, total: result.evaluations.length });
@@ -535,13 +544,26 @@ export class StudyService {
     }
   }
 
-  /** Regera o PDF quando o estudo o produz: o `dados.json` e o HTML acabaram de mudar. */
-  private rebuildPdf(record: StudyRecord, cfg: StudyConfig, id: string): void {
-    if (!cfg.pdf) return;
-    const htmlPath = join(record.artifactDir, "estudo-completo.html");
+  /**
+   * Regera o HTML completo e, se ele ja existia, o PDF a partir dos agregados atuais (DEC-006).
+   *
+   * O gatilho e a existencia do artefato, e nao `cfg.pdf`: um estudo que rodou sem PDF nao ganha um
+   * agora, e um que ja tem HTML nao pode continuar descrevendo as ideias antigas. Reaproveitar o
+   * HTML anterior daria um PDF impecavel de um estudo que nao existe mais.
+   */
+  private refreshFullHtml(record: StudyRecord, cfg: StudyConfig): void {
+    const root = record.artifactDir;
+    const htmlPath = join(root, "estudo-completo.html");
     if (!existsSync(htmlPath)) return;
-    void htmlToPdf(htmlPath, join(record.artifactDir, "estudo-completo.pdf")).then((result) => {
-      this.options.logger.info("pdf compilation", { id, message: result.message, ok: result.ok });
+    this.rebuildFullHtml(record, cfg);
+    const pdfPath = join(root, "estudo-completo.pdf");
+    if (!existsSync(pdfPath)) return;
+    void htmlToPdf(htmlPath, pdfPath).then((result) => {
+      this.options.logger.info("pdf compilation", {
+        id: record.id,
+        message: result.message,
+        ok: result.ok,
+      });
     });
   }
 
@@ -631,5 +653,33 @@ export class StudyService {
       throw new NotFoundError(`artifact ${relativePath} not found`);
     }
     return target;
+  }
+  /**
+   * Regrava `estudo-completo.html` a partir dos artefatos ja reconciliados em disco, com a mesma
+   * montagem do `generateStudy`. Sem isso, um PDF regerado depois de uma adicao descreveria o
+   * estudo anterior.
+   */
+  /** Separador de pagina do HTML completo, igual ao do `generateStudy`. */
+  private rebuildFullHtml(record: StudyRecord, cfg: StudyConfig): void {
+    const root = record.artifactDir;
+    const names = [
+      "README.md",
+      "00-brief.md",
+      "00-tabelao.md",
+      ...this.ideaFoldersOnDisk(root)
+        .sort()
+        .map((folder) => `${folder}/README.md`),
+    ];
+    const sections = names
+      .map((name) => join(root, name))
+      .filter((path) => existsSync(path))
+      .map((path) => readFileSync(path, "utf8"))
+      .map((content) => mdToHtml(content));
+    if (sections.length === 0) return;
+    writeFileSync(
+      join(root, "estudo-completo.html"),
+      fullHtml(`Estudo de nicho — ${cfg.niche}`, sections.join(SEPARADOR_PAGINA)),
+      "utf8",
+    );
   }
 }

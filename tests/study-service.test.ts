@@ -594,3 +594,76 @@ describe("adicao de ideias por quantidade", () => {
     }
   });
 });
+
+describe("regeracao do HTML completo (DEC-006)", () => {
+  /** Estudo com PDF ligado, onde o HTML completo e produzido junto. */
+  async function pdfStudy(numIdeas: number) {
+    withCredentials();
+    const db = openMigratedDatabase(":memory:");
+    const dir = tempDir("goodbizz-html-");
+    const service = new StudyService({
+      repo: new SqliteStudyRepository(db.db),
+      cache: new StudyCache(new SqliteCacheStore(db.db)),
+      llm: new LlmMock(),
+      decider: new DeciderMock(),
+      logger: silentLogger(),
+      artifactsRoot: dir,
+      pdf: true,
+    });
+    const record = await service.create(
+      resolveStudyConfig({ niche: "clinicas", numIdeas, mock: true, outputDir: dir, pdf: true }),
+    );
+    await service.run(record.id);
+    return { service, db, dir, id: record.id };
+  }
+
+  test("adicionar regrava o HTML com as ideias novas", async () => {
+    const { service, db, id } = await pdfStudy(2);
+    try {
+      const before = await service.readArtifact(id, "estudo-completo.html");
+      const after = await service.addIdeas(id, 2);
+      const html = await service.readArtifact(id, "estudo-completo.html");
+      expect(html).not.toBe(before);
+      for (const idea of after.evaluations.slice(2)) expect(html).toContain(idea.name);
+    } finally {
+      db.sqlite.close();
+    }
+  });
+
+  test("remover regrava o HTML sem a ideia que saiu", async () => {
+    const { service, db, id } = await pdfStudy(3);
+    try {
+      const before = await service.get(id);
+      const removed = before.evaluations[1]!;
+      await service.removeIdea(id, removed.id);
+      const html = await service.readArtifact(id, "estudo-completo.html");
+      expect(html).not.toContain(removed.name);
+      for (const idea of before.evaluations.filter((e) => e.id !== removed.id)) {
+        expect(html).toContain(idea.name);
+      }
+    } finally {
+      db.sqlite.close();
+    }
+  });
+
+  test("remover a ultima ideia zera o estudo sem quebrar", async () => {
+    const { service, db, id } = await pdfStudy(1);
+    try {
+      const before = await service.get(id);
+      const after = await service.removeIdea(id, before.evaluations[0]!.id);
+      expect(after.evaluations).toHaveLength(0);
+      // Sem ideias o resumo fica zerado, e nao `null`: o `dados.json` sempre serializa as medias.
+      expect(after.summary?.ordered).toHaveLength(0);
+      expect(after.summary?.means.fit).toBe(0);
+      // O JSON continua bem formado, com medias 0 e sem lista de ideias.
+      const dados = JSON.parse(await service.readArtifact(id, "dados.json")) as {
+        ideias: unknown[];
+        medias: Record<string, number>;
+      };
+      expect(dados.ideias).toHaveLength(0);
+      expect(Object.values(dados.medias).every((value) => Number.isFinite(value))).toBe(true);
+    } finally {
+      db.sqlite.close();
+    }
+  });
+});

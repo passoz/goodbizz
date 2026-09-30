@@ -4,9 +4,9 @@ COMMAND: bun test
 EXIT: 1
 OUTPUT:
 bun test v1.4.2 (744846f84)
-{"level":50,"time":1790797975014,"pid":149491,"hostname":"note","msg":"e"}
-{"level":30,"time":1790797975166,"pid":149491,"hostname":"note","count":0,"msg":"migrations applied"}
-{"level":40,"time":1790797975166,"pid":149491,"hostname":"note","count":1,"msg":"stale studies marked as failed on boot"}
+{"level":30,"time":1790800018792,"pid":166185,"hostname":"note","count":0,"msg":"migrations applied"}
+{"level":40,"time":1790800018793,"pid":166185,"hostname":"note","count":1,"msg":"stale studies marked as failed on boot"}
+{"level":50,"time":1790800022140,"pid":166185,"hostname":"note","msg":"e"}
 
 tests/study-service.test.ts:
 246 |     const { service, db, id } = await completedStudy(3);
@@ -17,8 +17,8 @@ tests/study-service.test.ts:
 251 |       const after = await service.removeIdea(id, middle.id);
                                         ^
 TypeError: service.removeIdea is not a function. (In 'service.removeIdea(id, middle.id)', 'service.removeIdea' is undefined)
-      at <anonymous> (/home/passoz/dev/goodbizz/tests/study-service.test.ts:251:35)
-(fail) remocao de ideia por id > remove a ideia do meio e zera o ranking a partir de 1 [7.94ms]
+      at <anonymous> (/tmp/opencode/pwn0003/wt14/tests/study-service.test.ts:251:35)
+(fail) remocao de ideia por id > remove a ideia do meio e zera o ranking a partir de 1 [7.93ms]
 282 |         folderName(1, first!.name),
 283 |         folderName(2, middle!.name),
 284 |         folderName(3, last!.name),
@@ -27,8 +27,8 @@ TypeError: service.removeIdea is not a function. (In 'service.removeIdea(id, mid
 287 |       await service.removeIdea(id, middle!.id);
                           ^
 TypeError: service.removeIdea is not a function. (In 'service.removeIdea(id, middle.id)', 'service.removeIdea' is undefined)
-      at <anonymous> (/home/passoz/dev/goodbizz/tests/study-service.test.ts:287:21)
-(fail) remocao de ideia por id > apaga a pasta da ideia removida e renomeia as seguintes, sem orfao [7.24ms]
+      at <anonymous> (/tmp/opencode/pwn0003/wt14/tests/study-service.test.ts:287:21)
+(fail) remocao de ideia por id > apaga a pasta da ideia removida e renomeia as seguintes, sem orfao [7.41ms]
 303 |     try {
 304 |       const before = await service.get(id);
 305 |       const removed = before.evaluations[1]!;
@@ -37,8 +37,8 @@ TypeError: service.removeIdea is not a function. (In 'service.removeIdea(id, mid
 308 |       await service.removeIdea(id, removed.id);
                           ^
 TypeError: service.removeIdea is not a function. (In 'service.removeIdea(id, removed.id)', 'service.removeIdea' is undefined)
-      at <anonymous> (/home/passoz/dev/goodbizz/tests/study-service.test.ts:308:21)
-(fail) remocao de ideia por id > regera os agregados com exatamente as ideias restantes [10.05ms]
+      at <anonymous> (/tmp/opencode/pwn0003/wt14/tests/study-service.test.ts:308:21)
+(fail) remocao de ideia por id > regera os agregados com exatamente as ideias restantes [8.78ms]
 325 |     const { service, db, id } = await completedStudy(3);
 326 |     try {
 327 |       const before = await service.get(id);
@@ -47,8 +47,8 @@ TypeError: service.removeIdea is not a function. (In 'service.removeIdea(id, rem
 330 |       await expect(service.removeIdea(id, "id-que-nao-existe")).rejects.toBeInstanceOf(NotFoundError);
                                  ^
 TypeError: service.removeIdea is not a function. (In 'service.removeIdea(id, "id-que-nao-existe")', 'service.removeIdea' is undefined)
-      at <anonymous> (/home/passoz/dev/goodbizz/tests/study-service.test.ts:330:28)
-(fail) remocao de ideia por id > lança NotFoundError para id de ideia inexistente e não toca no disco [4.98ms]
+      at <anonymous> (/tmp/opencode/pwn0003/wt14/tests/study-service.test.ts:330:28)
+(fail) remocao de ideia por id > lança NotFoundError para id de ideia inexistente e não toca no disco [6.65ms]
 368 |       for (let attempt = 0; attempt < 200; attempt += 1) {
 369 |         if ((await service.get(record.id)).progress.state === "running") break;
 370 |         await Bun.sleep(5);
@@ -57,8 +57,8 @@ TypeError: service.removeIdea is not a function. (In 'service.removeIdea(id, "id
 373 |       await expect(service.removeIdea(record.id, "qualquer")).rejects.toBeInstanceOf(ConflictError);
                                  ^
 TypeError: service.removeIdea is not a function. (In 'service.removeIdea(record.id, "qualquer")', 'service.removeIdea' is undefined)
-      at <anonymous> (/home/passoz/dev/goodbizz/tests/study-service.test.ts:373:28)
-(fail) remocao de ideia por id > lança ConflictError enquanto o estudo roda e não toca no disco [7.68ms]
+      at <anonymous> (/tmp/opencode/pwn0003/wt14/tests/study-service.test.ts:373:28)
+(fail) remocao de ideia por id > lança ConflictError enquanto o estudo roda e não toca no disco [8.43ms]
 394 |       const slugA = folderName(1, first!.name);
 395 |       const twinDoc = readFileSync(join(before.artifactDir, slugA, "README.md"), "utf8");
 396 |       mkdirSync(join(before.artifactDir, folderName(2, first!.name)), { recursive: true });
@@ -67,64 +67,8 @@ TypeError: service.removeIdea is not a function. (In 'service.removeIdea(record.
 399 |       const after = await service.removeIdea(id, first!.id);
                                         ^
 TypeError: service.removeIdea is not a function. (In 'service.removeIdea(id, first.id)', 'service.removeIdea' is undefined)
-      at <anonymous> (/home/passoz/dev/goodbizz/tests/study-service.test.ts:399:35)
-(fail) remocao de ideia por id > nomes iguais: remove so a escolhida e preserva a outra [6.31ms]
-
-tests/repositories.test.ts:
-170 |     try {
-171 |       seedStudy(repo, db, "estudo-id");
-172 |       await repo.saveEvaluations("estudo-id", [evaluation("id-a", "A", 0.9)], null);
-173 | 
-174 |       const record = await repo.get("estudo-id");
-175 |       expect(record?.evaluations.map((e) => e.id)).toEqual(["id-a"]);
-                                                         ^
-error: expect(received).toEqual(expected)
-
-  [
--   "id-a",
-+   undefined,
-  ]
-
-- Expected  - 1
-+ Received  + 1
-
-      at <anonymous> (/home/passoz/dev/goodbizz/tests/repositories.test.ts:175:52)
-(fail) identidade na persistencia > o id gravado volta na leitura [0.96ms]
-190 |       );
-191 | 
-192 |       const record = await repo.get("estudo-homonimas");
-193 |       // Mesmos nomes, identidades distintas: e isso que permite remover uma e nao a outra.
-194 |       expect(record?.evaluations.map((e) => e.name)).toEqual(["Agenda Vazada", "Agenda Vazada"]);
-195 |       expect(record?.evaluations.map((e) => e.id)).toEqual(["id-1", "id-2"]);
-                                                         ^
-error: expect(received).toEqual(expected)
-
-  [
--   "id-1",
--   "id-2",
-+   undefined,
-+   undefined,
-  ]
-
-- Expected  - 2
-+ Received  + 2
-
-      at <anonymous> (/home/passoz/dev/goodbizz/tests/repositories.test.ts:195:52)
-(fail) identidade na persistencia > duas ideias de mesmo name coexistem com ids distintos [0.89ms]
-216 |         null,
-217 |       );
-218 | 
-219 |       const record = await repo.get("estudo-ordem");
-220 |       const byName = new Map(record?.evaluations.map((e) => [e.name, e.id]));
-221 |       expect(byName.get("A")).toBe("id-a");
-                                    ^
-error: expect(received).toBe(expected)
-
-Expected: "id-a"
-Received: undefined
-
-      at <anonymous> (/home/passoz/dev/goodbizz/tests/repositories.test.ts:221:31)
-(fail) identidade na persistencia > o id acompanha a ideia quando a ordem muda [1.20ms]
+      at <anonymous> (/tmp/opencode/pwn0003/wt14/tests/study-service.test.ts:399:35)
+(fail) remocao de ideia por id > nomes iguais: remove so a escolhida e preserva a outra [10.20ms]
 -------------------------------------------|---------|---------|-------------------
 File                                       | % Funcs | % Lines | Uncovered Line #s
 -------------------------------------------|---------|---------|-------------------
@@ -178,10 +122,10 @@ All files                                  |   98.17 |   98.17 |
  src/infrastructure/settings-repository.ts |  100.00 |  100.00 | 
 -------------------------------------------|---------|---------|-------------------
 
- 273 pass
- 9 fail
- 1081 expect() calls
-Ran 282 tests across 31 files. [3.75s]
+ 276 pass
+ 6 fail
+ 1083 expect() calls
+Ran 282 tests across 31 files. [3.81s]
 
 VERDICT: PASS
-CHAIN_HASH: cda60c043e02dea98e4087257059b7192e2e712afb3e0a2eabd4f2f2449764f2
+CHAIN_HASH: f7a27c82130505bd7e66fe242bbdf6cc11b495e9c469921e15d9acdc5ee7314c

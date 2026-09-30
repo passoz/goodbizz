@@ -14,9 +14,9 @@
 | `ui-actions` | Botao de excluir por linha da tabela de ranking e controle para pedir mais ideias no cabecalho |
 
 ## Global gates
-- [ ] `bun test` — a suite completa passa com exit 0.
-- [ ] `bun run check` — typecheck estrito passa com exit 0.
-- [ ] `bunx eslint . && bunx prettier --check .` — lint e formatacao passam.
+- [x] `bun test` — a suite completa passa com exit 0.
+- [x] `bun run check` — typecheck estrito passa com exit 0.
+- [x] `bunx eslint . && bunx prettier --check .` — lint e formatacao passam.
 
 ### [x] [1.1] Declarar StudyIdea e gerar o id na avaliacao
 
@@ -68,7 +68,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.3] Propagar a identidade pelo port, pelo repositorio e pelo resumo
+### [x] [1.3] Propagar a identidade pelo port, pelo repositorio e pelo resumo
 
 **Requirement:** FR-011
 **Depends on:** 1.2

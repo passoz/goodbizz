@@ -4,9 +4,9 @@ COMMAND: bun test
 EXIT: 0
 OUTPUT:
 bun test v1.4.2 (744846f84)
-{"level":50,"time":1790798032799,"pid":149867,"hostname":"note","msg":"e"}
-{"level":30,"time":1790798032935,"pid":149867,"hostname":"note","count":0,"msg":"migrations applied"}
-{"level":40,"time":1790798032936,"pid":149867,"hostname":"note","count":1,"msg":"stale studies marked as failed on boot"}
+{"level":30,"time":1790800030307,"pid":166267,"hostname":"note","count":0,"msg":"migrations applied"}
+{"level":40,"time":1790800030308,"pid":166267,"hostname":"note","count":1,"msg":"stale studies marked as failed on boot"}
+{"level":50,"time":1790800033670,"pid":166267,"hostname":"note","msg":"e"}
 -------------------------------------------|---------|---------|-------------------
 File                                       | % Funcs | % Lines | Uncovered Line #s
 -------------------------------------------|---------|---------|-------------------
@@ -63,14 +63,14 @@ All files                                  |   98.14 |   98.17 |
  282 pass
  0 fail
  1110 expect() calls
-Ran 282 tests across 31 files. [3.75s]
+Ran 282 tests across 31 files. [3.78s]
 
 MUTATION_EXIT: 1
 MUTATION_OUTPUT:
 bun test v1.4.2 (744846f84)
-{"level":50,"time":1790798036550,"pid":149901,"hostname":"note","msg":"e"}
-{"level":30,"time":1790798036698,"pid":149901,"hostname":"note","count":0,"msg":"migrations applied"}
-{"level":40,"time":1790798036698,"pid":149901,"hostname":"note","count":1,"msg":"stale studies marked as failed on boot"}
+{"level":30,"time":1790800034083,"pid":166300,"hostname":"note","count":0,"msg":"migrations applied"}
+{"level":40,"time":1790800034084,"pid":166300,"hostname":"note","count":1,"msg":"stale studies marked as failed on boot"}
+{"level":50,"time":1790800037434,"pid":166300,"hostname":"note","msg":"e"}
 
 tests/study-service.test.ts:
 246 |     const { service, db, id } = await completedStudy(3);
@@ -81,8 +81,8 @@ tests/study-service.test.ts:
 251 |       const after = await service.removeIdea(id, middle.id);
                                         ^
 TypeError: service.removeIdea is not a function. (In 'service.removeIdea(id, middle.id)', 'service.removeIdea' is undefined)
-      at <anonymous> (/home/passoz/dev/goodbizz/tests/study-service.test.ts:251:35)
-(fail) remocao de ideia por id > remove a ideia do meio e zera o ranking a partir de 1 [8.35ms]
+      at <anonymous> (/tmp/opencode/pwn0003/wt14/tests/study-service.test.ts:251:35)
+(fail) remocao de ideia por id > remove a ideia do meio e zera o ranking a partir de 1 [6.92ms]
 282 |         folderName(1, first!.name),
 283 |         folderName(2, middle!.name),
 284 |         folderName(3, last!.name),
@@ -91,8 +91,8 @@ TypeError: service.removeIdea is not a function. (In 'service.removeIdea(id, mid
 287 |       await service.removeIdea(id, middle!.id);
                           ^
 TypeError: service.removeIdea is not a function. (In 'service.removeIdea(id, middle.id)', 'service.removeIdea' is undefined)
-      at <anonymous> (/home/passoz/dev/goodbizz/tests/study-service.test.ts:287:21)
-(fail) remocao de ideia por id > apaga a pasta da ideia removida e renomeia as seguintes, sem orfao [5.22ms]
+      at <anonymous> (/tmp/opencode/pwn0003/wt14/tests/study-service.test.ts:287:21)
+(fail) remocao de ideia por id > apaga a pasta da ideia removida e renomeia as seguintes, sem orfao [4.98ms]
 303 |     try {
 304 |       const before = await service.get(id);
 305 |       const removed = before.evaluations[1]!;
@@ -101,8 +101,8 @@ TypeError: service.removeIdea is not a function. (In 'service.removeIdea(id, mid
 308 |       await service.removeIdea(id, removed.id);
                           ^
 TypeError: service.removeIdea is not a function. (In 'service.removeIdea(id, removed.id)', 'service.removeIdea' is undefined)
-      at <anonymous> (/home/passoz/dev/goodbizz/tests/study-service.test.ts:308:21)
-(fail) remocao de ideia por id > regera os agregados com exatamente as ideias restantes [7.10ms]
+      at <anonymous> (/tmp/opencode/pwn0003/wt14/tests/study-service.test.ts:308:21)
+(fail) remocao de ideia por id > regera os agregados com exatamente as ideias restantes [7.24ms]
 325 |     const { service, db, id } = await completedStudy(3);
 326 |     try {
 327 |       const before = await service.get(id);
@@ -111,8 +111,8 @@ TypeError: service.removeIdea is not a function. (In 'service.removeIdea(id, rem
 330 |       await expect(service.removeIdea(id, "id-que-nao-existe")).rejects.toBeInstanceOf(NotFoundError);
                                  ^
 TypeError: service.removeIdea is not a function. (In 'service.removeIdea(id, "id-que-nao-existe")', 'service.removeIdea' is undefined)
-      at <anonymous> (/home/passoz/dev/goodbizz/tests/study-service.test.ts:330:28)
-(fail) remocao de ideia por id > lança NotFoundError para id de ideia inexistente e não toca no disco [4.92ms]
+      at <anonymous> (/tmp/opencode/pwn0003/wt14/tests/study-service.test.ts:330:28)
+(fail) remocao de ideia por id > lança NotFoundError para id de ideia inexistente e não toca no disco [4.62ms]
 368 |       for (let attempt = 0; attempt < 200; attempt += 1) {
 369 |         if ((await service.get(record.id)).progress.state === "running") break;
 370 |         await Bun.sleep(5);
@@ -121,8 +121,8 @@ TypeError: service.removeIdea is not a function. (In 'service.removeIdea(id, "id
 373 |       await expect(service.removeIdea(record.id, "qualquer")).rejects.toBeInstanceOf(ConflictError);
                                  ^
 TypeError: service.removeIdea is not a function. (In 'service.removeIdea(record.id, "qualquer")', 'service.removeIdea' is undefined)
-      at <anonymous> (/home/passoz/dev/goodbizz/tests/study-service.test.ts:373:28)
-(fail) remocao de ideia por id > lança ConflictError enquanto o estudo roda e não toca no disco [7.89ms]
+      at <anonymous> (/tmp/opencode/pwn0003/wt14/tests/study-service.test.ts:373:28)
+(fail) remocao de ideia por id > lança ConflictError enquanto o estudo roda e não toca no disco [7.09ms]
 394 |       const slugA = folderName(1, first!.name);
 395 |       const twinDoc = readFileSync(join(before.artifactDir, slugA, "README.md"), "utf8");
 396 |       mkdirSync(join(before.artifactDir, folderName(2, first!.name)), { recursive: true });
@@ -131,8 +131,8 @@ TypeError: service.removeIdea is not a function. (In 'service.removeIdea(record.
 399 |       const after = await service.removeIdea(id, first!.id);
                                         ^
 TypeError: service.removeIdea is not a function. (In 'service.removeIdea(id, first.id)', 'service.removeIdea' is undefined)
-      at <anonymous> (/home/passoz/dev/goodbizz/tests/study-service.test.ts:399:35)
-(fail) remocao de ideia por id > nomes iguais: remove so a escolhida e preserva a outra [5.32ms]
+      at <anonymous> (/tmp/opencode/pwn0003/wt14/tests/study-service.test.ts:399:35)
+(fail) remocao de ideia por id > nomes iguais: remove so a escolhida e preserva a outra [5.58ms]
 -------------------------------------------|---------|---------|-------------------
 File                                       | % Funcs | % Lines | Uncovered Line #s
 -------------------------------------------|---------|---------|-------------------
@@ -189,8 +189,8 @@ All files                                  |   98.17 |   98.17 |
  276 pass
  6 fail
  1083 expect() calls
-Ran 282 tests across 31 files. [3.76s]
+Ran 282 tests across 31 files. [3.75s]
 
 MUTATION_VERDICT: PASS
 VERDICT: PASS
-CHAIN_HASH: 533747ea36d55dbda51ef6b86f1e039b10cfea3560b86bd04cb6def389cd423a
+CHAIN_HASH: a55383c32df783e9e87eb115a5b3268efdd1aeec8f90c002d52f6239ee0f8661

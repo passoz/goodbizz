@@ -1,4 +1,56 @@
 {
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bun",
+        "test"
+      ],
+      "expect": "0 fail",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.4-ac-1.log",
+      "log_sha256": "03131fb8850c22c203b71128934ad6964912df18173dba3b85a2cd4510463c6c",
+      "recorded_at": "2026-09-30T20:27:21.384Z"
+    },
+    "AC-2": {
+      "command": [
+        "bun",
+        "run",
+        "check"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.4-ac-2.log",
+      "log_sha256": "6c1f57af59f1b11b36e8ed9fb0937a0fd9251fba9f6db588abea592e84630a78",
+      "recorded_at": "2026-09-30T20:27:23.952Z"
+    },
+    "AC-3": {
+      "command": [
+        "bash",
+        "-c",
+        "bunx eslint src/application/study-service.ts && bunx prettier --check src/application/study-service.ts"
+      ],
+      "expect": "Prettier code style",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.4-ac-3.log",
+      "log_sha256": "b351a2ce74b07479a1f3d46ddc4d67459117331a581a97664a90794415fd478d",
+      "recorded_at": "2026-09-30T20:27:24.772Z"
+    },
+    "REGRESSION": {
+      "command": [
+        "bun",
+        "test"
+      ],
+      "expect": "0 fail",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.4-regression.log",
+      "log_sha256": "e44b59dd8a38107cd2c8d1292d65d80d3610e29adf37feed3573da162017f828",
+      "recorded_at": "2026-09-30T20:27:28.609Z"
+    }
+  },
   "baseline_implementation": {
     "src/application/study-service.ts": {
       "exists": true,
@@ -11,7 +63,20 @@
       "sha256": "2d842c8988fdd1511646afef7bfd94fd52f35f2949099412668e4e7994d351fd"
     }
   },
-  "created_at": "2026-09-30T19:52:54.620Z",
+  "created_at": "2026-09-30T20:26:54.607Z",
+  "green_expect": null,
+  "green_implementation": {
+    "src/application/study-service.ts": {
+      "exists": true,
+      "sha256": "b0f4f3880242156bc23753a29c022c4a8c593101a9dc14a76c13459091e1782d"
+    }
+  },
+  "green_tests": {
+    "tests/study-service.test.ts": {
+      "exists": true,
+      "sha256": "de9492dc71db2ee39a2772beb0795e60625577378dedc4cb7c55a1c98145ea97"
+    }
+  },
   "implementation_files": [
     "src/application/study-service.ts"
   ],
@@ -19,7 +84,7 @@
     "bun",
     "test"
   ],
-  "red_expect": "remove a ideia do meio e zera o ranking a partir de 1",
+  "red_expect": "remove",
   "red_tests": {
     "tests/study-service.test.ts": {
       "exists": true,
