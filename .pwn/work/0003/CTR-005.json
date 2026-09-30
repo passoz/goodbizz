@@ -1,0 +1,111 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.5",
+  "work_id": "0003",
+  "title": "Gerar apenas as ideias novas no pipeline incremental",
+  "risk": {
+    "level": "L3",
+    "reasons": [
+      "Reaproveitar brief e avaliacoes antigas e o que impede que o pedido do operador vire um estudo inteiro de novo; errar o caminho incremental multiplica custo e tempo",
+      "No tier gratuito em producao cada documento custa cerca de 725 s, entao um laco que regeraria os antigos estouraria a janela de execucao",
+      "Cache key errada faz o segundo pedido devolver em cache as ideias do primeiro"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.5-01",
+        "given": "Um estudo concluido com 3 ideias avaliadas e brief gravado",
+        "when": "Quando o pipeline incremental roda",
+        "then": "Então o gerador de brief nao e chamado e o de documento e chamado so para as 5 novas"
+      },
+      {
+        "id": "SCENARIO-1.5-02",
+        "given": "O mesmo estudo",
+        "when": "Quando as 3 ideias antigas passam pelo pipeline",
+        "then": "Então nenhuma e reavaliada e seus documentos nao sao regravados"
+      },
+      {
+        "id": "SCENARIO-1.5-03",
+        "given": "Um estudo que ja tem ideias",
+        "when": "Quando as novas sao pedidas ao LLM",
+        "then": "Então o prompt lista os nomes ja existentes e pede ideias distintas deles"
+      },
+      {
+        "id": "SCENARIO-1.5-04",
+        "given": "Um estudo com ideias",
+        "when": "Quando o estudo original e um segundo pedido de adicao sao processados",
+        "then": "Então as chaves de cache das duas adicoes e do estudo original sao distintas"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/application/generate-study.ts",
+      "src/application/generation.ts",
+      "tests/generation.test.ts"
+    ],
+    "affected_components": [
+      "idea-addition"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "src/domain nao importa src/infrastructure",
+      "Nao quebrar retrocompatibilidade nem expor dados sensiveis",
+      "Manter a suite de testes existente verde (sem regressoes)",
+      "O layout de dados.json e do payload_json continua compativel com o baseline Python (CON-006): nenhuma chave nova no objeto serializado do baseline",
+      "O pipeline de estudo completo continua produzindo o mesmo resultado"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun test",
+      "bun run check"
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/application/generate-study.ts",
+      "src/application/generation.ts",
+      "tests/generation.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env*",
+      ".pwn/**",
+      ".specs/**",
+      ".prompts/**",
+      ".todo/**",
+      "drizzle/meta/*"
+    ],
+    "out_of_scope": [
+      "Streaming de tokens",
+      "Reavaliar do zero ideias que ja tem avaliacao",
+      "Reordenar ideias por arraste",
+      "Tornar vps/k3s/goodbizz/ rastreado no repo fleet",
+      "Corrigir o teto de 600 s do campo timeout em POST /api/studies",
+      "Execucao distribuida com fila",
+      "Undo da remocao"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 100000,
+    "max_cost_usd": 2.0,
+    "max_duration_minutes": 30,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 50,
+    "max_tool_calls": 100,
+    "max_shell_executions": 30
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "work_id": "0003",
+  "created_at": "2026-09-30T19:05:55.247Z",
+  "objective": "Remover uma ideia de um estudo ja concluido, deletando tambem a pasta dela, ou pedir mais N ideias mantendo as antigas, gerando e avaliando as novas em background, recalculando o ranking e regerando a visualizacao e os artefatos agregados.",
+  "requester": "operator",
+  "status": "confirmed"
+}

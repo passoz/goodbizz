@@ -18,7 +18,7 @@ import { checkDocument } from "./verification.ts";
 import type { Logger, LlmClient, DeciderClient, ArtifactFile } from "../domain/ports.ts";
 import type {
   Idea,
-  IdeaEvaluation,
+  StudyIdea,
   ProviderUsage,
   StudyConfig,
   StudySummary,
@@ -34,7 +34,7 @@ export interface ArtifactBundle {
 export interface GenerateStudyResult {
   brief: string;
   ideas: Idea[];
-  evaluations: IdeaEvaluation[];
+  evaluations: StudyIdea[];
   summary: StudySummary;
   folders: Record<string, string>;
   documents: Record<string, string>;
@@ -137,7 +137,7 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
       idea.name,
       idea.description,
     );
-    const cached = await cache.get<IdeaEvaluation>(key);
+    const cached = await cache.get<StudyIdea>(key);
     if (cached !== null) return cached;
     const evaluated = await evaluateIdea(idea, decider, cfg);
     await cache.put(key, evaluated);
@@ -191,7 +191,7 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
   const documents: Record<string, string> = {};
 
   const written = await mapLimit(summary.ordered, cfg.concurrency, async (ordered) => {
-    const evaluation = byName.get(ordered.name) as IdeaEvaluation;
+    const evaluation = byName.get(ordered.name) as StudyIdea;
     const key = cacheKeyFor("doc", cfg.niche, String(cfg.monthlyTicket), ordered.name, String(ordered.index));
     let text = await cache.get<string>(key);
     if (text === null) {

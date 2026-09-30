@@ -1,0 +1,92 @@
+{
+  "version": 2,
+  "kind": "task-acceptance-candidate",
+  "harness_version": "0.1.0",
+  "gate_version": "1",
+  "work_id": "0003",
+  "task_id": "1.1",
+  "result": "pass",
+  "plan": {
+    "path": ".todo/0003-tasks.md",
+    "sha256": "33e9ad6b986e0d0fecf29d47ef9130199561ea1ee8131ed9ee9b242d95f52726"
+  },
+  "implementation": {
+    "src/domain/types.ts": {
+      "exists": true,
+      "sha256": "30836adc4b06f51dd5ea0d089a029c0b4c8119da2d17ef1c63074fae4edac902"
+    },
+    "src/application/evaluate.ts": {
+      "exists": true,
+      "sha256": "6a1c3ea77c70ea0f3a5ba12480c8cdc617ddfec1d92a73e2a9921bb8de43cce6"
+    },
+    "src/application/generate-study.ts": {
+      "exists": true,
+      "sha256": "2a2cd0a26f017e85618530de1a1468861be73b790bea5662953c80a38d0c563f"
+    }
+  },
+  "tests": {
+    "tests/study-service.test.ts": {
+      "exists": true,
+      "sha256": "2d842c8988fdd1511646afef7bfd94fd52f35f2949099412668e4e7994d351fd"
+    },
+    "tests/generation.test.ts": {
+      "exists": true,
+      "sha256": "9c097820e47d51bb91e94b6cb69dd6834979d2c5e99cf5ad37686d617c6fc641"
+    }
+  },
+  "evidence_sha256": "52d4d068568035981af3db47628a8bb446be50a78970848b399baec06f0bce16",
+  "evidence_chain_head": "06a6741c8ea797947762cce7f693e5abf435e2cd074ef5b7055f23794c480a90",
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bun",
+        "test"
+      ],
+      "expect": "0 fail",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.1-ac-1.log",
+      "log_sha256": "f74103bfabf682f3ba56d1d759efbc915ea97897f97b1fcfaaacd496382b99e3",
+      "recorded_at": "2026-09-30T19:26:01.437Z"
+    },
+    "AC-2": {
+      "command": [
+        "bun",
+        "run",
+        "check"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.1-ac-2.log",
+      "log_sha256": "0ddd7328e9393f2abae393b52586493afdc3359ebbbea0aebaab6c1a2f587ca4",
+      "recorded_at": "2026-09-30T19:26:04.247Z"
+    },
+    "AC-3": {
+      "command": [
+        "bash",
+        "-c",
+        "bunx eslint src/domain/types.ts src/application/evaluate.ts src/application/generate-study.ts && bunx prettier --check src/domain/types.ts src/application/evaluate.ts src/application/generate-study.ts"
+      ],
+      "expect": "Prettier code style",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.1-ac-3.log",
+      "log_sha256": "029b87f06241dbf1cbb0ad07ecd682958d277869c786fb89d4f3c304c82ca6f6",
+      "recorded_at": "2026-09-30T19:26:05.158Z"
+    },
+    "REGRESSION": {
+      "command": [
+        "bun",
+        "test"
+      ],
+      "expect": "0 fail",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.1-regression.log",
+      "log_sha256": "d404bf5033e69435e4c29429ee45152266672bef2728ae82e5a5e048561fa67c",
+      "recorded_at": "2026-09-30T19:26:27.334Z"
+    }
+  },
+  "generated_at": "2026-09-30T19:26:31.109Z"
+}

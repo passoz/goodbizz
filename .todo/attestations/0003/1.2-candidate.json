@@ -1,0 +1,88 @@
+{
+  "version": 2,
+  "kind": "task-acceptance-candidate",
+  "harness_version": "0.1.0",
+  "gate_version": "1",
+  "work_id": "0003",
+  "task_id": "1.2",
+  "result": "pass",
+  "plan": {
+    "path": ".todo/0003-tasks.md",
+    "sha256": "8a4f679ace1c5b66882225fa47af310621a05fd2b228584c9e0b6c7b51c81019"
+  },
+  "implementation": {
+    "src/infrastructure/schema.ts": {
+      "exists": true,
+      "sha256": "369904657264bb4850e94b11267b2cb04c0fd22ca95acfc23d81a3141d03f371"
+    },
+    "drizzle.config.ts": {
+      "exists": true,
+      "sha256": "7a42706453d3eecca6e30f7db7e31f6ce5ea7b90a96868e3e1bdbe9f800a0c6d"
+    },
+    "drizzle/0003_idea_id.sql": {
+      "exists": true,
+      "sha256": "5a0fcb593a89af0894557827bb2f87c80a866efb8f3b974d4c075fb824d9543d"
+    }
+  },
+  "tests": {
+    "tests/repositories.test.ts": {
+      "exists": true,
+      "sha256": "95cff96a9e29e6ab2dc3a065e36619953a654374bce4d8ee709d37ba8632a175"
+    }
+  },
+  "evidence_sha256": "25aa09252ab8b3f3915981616cc7f874853f10c5172b22d2f516a7cd71495a6f",
+  "evidence_chain_head": "261d40d75545cfc31784d0f2dfe264d51faf5fc6338bfe535c9149c123ca7166",
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bun",
+        "test"
+      ],
+      "expect": "0 fail",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.2-ac-1.log",
+      "log_sha256": "56c169cfb83b45c3be7be1c413096a5164dc9afc8e5d77efb9fd7d22459807f3",
+      "recorded_at": "2026-09-30T19:31:43.748Z"
+    },
+    "AC-2": {
+      "command": [
+        "bun",
+        "run",
+        "check"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.2-ac-2.log",
+      "log_sha256": "9487b5aa9e35f33893c84a377be05e064326b187c62157d3ca19c807d65a8aa5",
+      "recorded_at": "2026-09-30T19:31:46.913Z"
+    },
+    "AC-3": {
+      "command": [
+        "bash",
+        "-c",
+        "bunx eslint src/infrastructure/schema.ts tests/repositories.test.ts && bunx prettier --check src/infrastructure/schema.ts tests/repositories.test.ts"
+      ],
+      "expect": "Prettier code style",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.2-ac-3.log",
+      "log_sha256": "fb6bbe5c0135302bc2b86fe79afd3f02a4b35c9a211baa4d6562938f687ef6f3",
+      "recorded_at": "2026-09-30T19:31:47.641Z"
+    },
+    "REGRESSION": {
+      "command": [
+        "bun",
+        "test"
+      ],
+      "expect": "0 fail",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.2-regression.log",
+      "log_sha256": "fa1fd4104ab3a91d75ae031529c59af494a43fc34022eb6b1dcab9a1c755a460",
+      "recorded_at": "2026-09-30T19:31:51.496Z"
+    }
+  },
+  "generated_at": "2026-09-30T19:31:55.354Z"
+}

@@ -1,0 +1,107 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.7",
+  "work_id": "0003",
+  "title": "Expor remocao e adicao na API HTTP",
+  "risk": {
+    "level": "L2",
+    "reasons": [
+      "Rotas publicas novas: DELETE precisa dos mesmos guards que o delete de estudo ja tem (404 e 409) para nao expor remocao durante execucao",
+      "A adicao dispara trabalho de LLM; se a requisicao esperar, o cliente estoura o timeout de 600 s ja documentado como limitacao"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.7-01",
+        "given": "Um estudo com 3 ideias",
+        "when": "Quando DELETE /api/studies/:id/ideas/:ideaId tem sucesso",
+        "then": "Então a resposta e 204 sem corpo e a ideia nao aparece mais em GET /api/studies/:id"
+      },
+      {
+        "id": "SCENARIO-1.7-02",
+        "given": "Um estudo existente",
+        "when": "Quando POST /api/studies/:id/ideas recebe { count: 5 }",
+        "then": "Então a resposta e 201 com o estudo e as 5 ideias sao geradas em background, sem segurar a requisicao"
+      },
+      {
+        "id": "SCENARIO-1.7-03",
+        "given": "count igual a 0, 41, negativo ou nao inteiro",
+        "when": "Quando POST /api/studies/:id/ideas e chamado",
+        "then": "Então a resposta e 422 com detalhe de validacao"
+      },
+      {
+        "id": "SCENARIO-1.7-04",
+        "given": "Um estudo inexistente ou um ideaId inexistente",
+        "when": "Quando as rotas sao chamadas",
+        "then": "Então ambas respondem 404"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/infrastructure/http/api.ts",
+      "tests/api.test.ts"
+    ],
+    "affected_components": [
+      "api-surface"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "src/domain nao importa src/infrastructure",
+      "Nao quebrar retrocompatibilidade nem expor dados sensiveis",
+      "Manter a suite de testes existente verde (sem regressoes)",
+      "O layout de dados.json e do payload_json continua compativel com o baseline Python (CON-006): nenhuma chave nova no objeto serializado do baseline"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun test",
+      "bun run check"
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/infrastructure/http/api.ts",
+      "tests/api.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env*",
+      ".pwn/**",
+      ".specs/**",
+      ".prompts/**",
+      ".todo/**",
+      "drizzle/meta/*"
+    ],
+    "out_of_scope": [
+      "Streaming de tokens",
+      "Reavaliar do zero ideias que ja tem avaliacao",
+      "Reordenar ideias por arraste",
+      "Tornar vps/k3s/goodbizz/ rastreado no repo fleet",
+      "Corrigir o teto de 600 s do campo timeout em POST /api/studies",
+      "Execucao distribuida com fila",
+      "Undo da remocao"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 50000,
+    "max_cost_usd": 0.5,
+    "max_duration_minutes": 15,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 30,
+    "max_tool_calls": 60,
+    "max_shell_executions": 15
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

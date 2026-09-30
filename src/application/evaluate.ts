@@ -13,7 +13,7 @@ import type { DeciderClient } from "../domain/ports.ts";
 import type {
   BusinessBlock,
   Idea,
-  IdeaEvaluation,
+  StudyIdea,
   Indicators,
   PainBlock,
   PainResult,
@@ -159,11 +159,7 @@ function hasAnswer(answer: unknown): boolean {
 }
 
 /** Avalia todos os indicadores de UMA ideia e devolve o bloco completo de dados. */
-export async function evaluateIdea(
-  idea: Idea,
-  decider: DeciderClient,
-  cfg: StudyConfig,
-): Promise<IdeaEvaluation> {
+export async function evaluateIdea(idea: Idea, decider: DeciderClient, cfg: StudyConfig): Promise<StudyIdea> {
   const context = studyContext(cfg);
   const state = `${context}\nIdeia: ${idea.name} — ${idea.description}`;
 
@@ -249,6 +245,7 @@ export async function evaluateIdea(
   };
 
   return {
+    id: Bun.randomUUIDv7(),
     name: idea.name,
     sector: idea.sector,
     description: idea.description,

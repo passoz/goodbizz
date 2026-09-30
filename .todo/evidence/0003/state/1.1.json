@@ -1,0 +1,129 @@
+{
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bun",
+        "test"
+      ],
+      "expect": "0 fail",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.1-ac-1.log",
+      "log_sha256": "f74103bfabf682f3ba56d1d759efbc915ea97897f97b1fcfaaacd496382b99e3",
+      "recorded_at": "2026-09-30T19:26:01.437Z"
+    },
+    "AC-2": {
+      "command": [
+        "bun",
+        "run",
+        "check"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.1-ac-2.log",
+      "log_sha256": "0ddd7328e9393f2abae393b52586493afdc3359ebbbea0aebaab6c1a2f587ca4",
+      "recorded_at": "2026-09-30T19:26:04.247Z"
+    },
+    "AC-3": {
+      "command": [
+        "bash",
+        "-c",
+        "bunx eslint src/domain/types.ts src/application/evaluate.ts src/application/generate-study.ts && bunx prettier --check src/domain/types.ts src/application/evaluate.ts src/application/generate-study.ts"
+      ],
+      "expect": "Prettier code style",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.1-ac-3.log",
+      "log_sha256": "029b87f06241dbf1cbb0ad07ecd682958d277869c786fb89d4f3c304c82ca6f6",
+      "recorded_at": "2026-09-30T19:26:05.158Z"
+    },
+    "REGRESSION": {
+      "command": [
+        "bun",
+        "test"
+      ],
+      "expect": "0 fail",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.1-regression.log",
+      "log_sha256": "d404bf5033e69435e4c29429ee45152266672bef2728ae82e5a5e048561fa67c",
+      "recorded_at": "2026-09-30T19:26:27.334Z"
+    }
+  },
+  "baseline_implementation": {
+    "src/domain/types.ts": {
+      "exists": true,
+      "sha256": "0b27f7416f4da9304fb0b7692841bf1c25273efc0e16da6ef56ef0c5d6b91a22"
+    },
+    "src/application/evaluate.ts": {
+      "exists": true,
+      "sha256": "07d843297ee7efa7d5081c73de26c4388bf9b9b865cdc4827270875dfe40d6fb"
+    },
+    "src/application/generate-study.ts": {
+      "exists": true,
+      "sha256": "dc3e7096bfae6cbe925c00187e6c8752dc83cb7948b7c9637790506f637266d3"
+    }
+  },
+  "baseline_tests": {
+    "tests/study-service.test.ts": {
+      "exists": true,
+      "sha256": "e28181d085067600d319ad0555f4a5a5a0a5a5d19b36b36e06ecdd639bba1563"
+    },
+    "tests/generation.test.ts": {
+      "exists": true,
+      "sha256": "9c097820e47d51bb91e94b6cb69dd6834979d2c5e99cf5ad37686d617c6fc641"
+    }
+  },
+  "created_at": "2026-09-30T19:25:28.459Z",
+  "green_expect": null,
+  "green_implementation": {
+    "src/domain/types.ts": {
+      "exists": true,
+      "sha256": "30836adc4b06f51dd5ea0d089a029c0b4c8119da2d17ef1c63074fae4edac902"
+    },
+    "src/application/evaluate.ts": {
+      "exists": true,
+      "sha256": "6a1c3ea77c70ea0f3a5ba12480c8cdc617ddfec1d92a73e2a9921bb8de43cce6"
+    },
+    "src/application/generate-study.ts": {
+      "exists": true,
+      "sha256": "2a2cd0a26f017e85618530de1a1468861be73b790bea5662953c80a38d0c563f"
+    }
+  },
+  "green_tests": {
+    "tests/study-service.test.ts": {
+      "exists": true,
+      "sha256": "2d842c8988fdd1511646afef7bfd94fd52f35f2949099412668e4e7994d351fd"
+    },
+    "tests/generation.test.ts": {
+      "exists": true,
+      "sha256": "9c097820e47d51bb91e94b6cb69dd6834979d2c5e99cf5ad37686d617c6fc641"
+    }
+  },
+  "implementation_files": [
+    "src/domain/types.ts",
+    "src/application/evaluate.ts",
+    "src/application/generate-study.ts"
+  ],
+  "red_command": [
+    "bun",
+    "test"
+  ],
+  "red_expect": "identidade estavel por ideia > cada ideia avaliada recebe um id preenchido",
+  "red_tests": {
+    "tests/study-service.test.ts": {
+      "exists": true,
+      "sha256": "2d842c8988fdd1511646afef7bfd94fd52f35f2949099412668e4e7994d351fd"
+    },
+    "tests/generation.test.ts": {
+      "exists": true,
+      "sha256": "9c097820e47d51bb91e94b6cb69dd6834979d2c5e99cf5ad37686d617c6fc641"
+    }
+  },
+  "task": "1.1",
+  "test_files": [
+    "tests/study-service.test.ts",
+    "tests/generation.test.ts"
+  ]
+}

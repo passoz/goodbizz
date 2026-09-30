@@ -1,0 +1,112 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.2",
+  "work_id": "0003",
+  "title": "Criar a coluna idea_id e o backfill das linhas legadas",
+  "risk": {
+    "level": "L2",
+    "reasons": [
+      "Coluna nova em tabela com dados de producao: sem backfill, um estudo gravado antes da mudanca ficaria sem identidade e o operador nao poderia remover nenhuma ideia dele",
+      "A migracao roda em banco vivo e nao pode reescrever payload_json, que e a fonte de verdade do baseline",
+      "drizzle-kit generate tambem reescreve o snapshot em drizzle/meta; se o contrato nao o permitir, o proximo db:generate tentaria recriar a coluna e a migracao voltaria a rodar duas vezes",
+      "drizzle.config.ts usa Bun.env, mas drizzle-kit roda em Node: db:generate quebrava antes deste Work, entao a migracao so pode ser gerada depois de corrigir a config, e a correcao entra no mesmo diff"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.2-01",
+        "given": "Avaliacoes gravadas antes da mudanca, com a coluna ausente",
+        "when": "Quando a migracao roda",
+        "then": "Então a coluna idea_id existe e toda linha legada recebe um id preenchido"
+      },
+      {
+        "id": "SCENARIO-1.2-02",
+        "given": "O mesmo banco",
+        "when": "Quando a migracao roda",
+        "then": "Então payload_json fica byte a byte igual e nenhuma linha e apagada"
+      },
+      {
+        "id": "SCENARIO-1.2-03",
+        "given": "Duas linhas legadas da mesma estudo",
+        "when": "Quando a migracao roda",
+        "then": "Então cada uma recebe um id diferente entre si"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/infrastructure/schema.ts",
+      "drizzle.config.ts",
+      "drizzle/0003_idea_id.sql",
+      "drizzle/meta/**",
+      "tests/repositories.test.ts"
+    ],
+    "affected_components": [
+      "idea-identity"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "src/domain nao importa src/infrastructure",
+      "Nao quebrar retrocompatibilidade nem expor dados sensiveis",
+      "Manter a suite de testes existente verde (sem regressoes)",
+      "O layout de dados.json e do payload_json continua compativel com o baseline Python (CON-006): nenhuma chave nova no objeto serializado do baseline",
+      "A migracao e aditiva e nao altera nenhuma coluna existente",
+      "A migracao continua sendo gerada por drizzle-kit generate; nenhuma edicao manual do SQL"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun test",
+      "bun run check"
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/infrastructure/schema.ts",
+      "drizzle.config.ts",
+      "drizzle/0003_idea_id.sql",
+      "drizzle/meta/**",
+      "tests/repositories.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env*",
+      ".pwn/**",
+      ".specs/**",
+      ".prompts/**",
+      ".todo/**"
+    ],
+    "out_of_scope": [
+      "Streaming de tokens",
+      "Reavaliar do zero ideias que ja tem avaliacao",
+      "Reordenar ideias por arraste",
+      "Tornar vps/k3s/goodbizz/ rastreado no repo fleet",
+      "Corrigir o teto de 600 s do campo timeout em POST /api/studies",
+      "Execucao distribuida com fila",
+      "Undo da remocao",
+      "Migrar dados entre bancos",
+      "Converter nomes existentes"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 50000,
+    "max_cost_usd": 0.5,
+    "max_duration_minutes": 15,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 30,
+    "max_tool_calls": 60,
+    "max_shell_executions": 15
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

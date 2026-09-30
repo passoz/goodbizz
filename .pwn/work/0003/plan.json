@@ -1,0 +1,502 @@
+{
+  "$schema": "../../../schemas/plan.schema.json",
+  "work_id": "0003",
+  "title": "Adicionar e remover ideias de um estudo, com ranking e artefatos regerados",
+  "components": [
+    {
+      "name": "idea-identity",
+      "purpose": "Identidade estavel por ideia: id gerado na avaliacao, persistido em coluna propria e preservado por reordenacao"
+    },
+    {
+      "name": "idea-removal",
+      "purpose": "Remocao de uma ideia com recalculo de ranking, reconciliacao de disco e regeracao dos agregados"
+    },
+    {
+      "name": "idea-addition",
+      "purpose": "Geracao incremental de N ideias: prompt distinto, avaliacao e documento so das novas, ranking recalculado"
+    },
+    {
+      "name": "api-surface",
+      "purpose": "Rotas DELETE /api/studies/:id/ideas/:ideaId e POST /api/studies/:id/ideas com validacao e codigos de erro"
+    },
+    {
+      "name": "ui-actions",
+      "purpose": "Botao de excluir por linha da tabela de ranking e controle para pedir mais ideias no cabecalho"
+    }
+  ],
+  "global_gates": [
+    "`bun test` — a suite completa passa com exit 0.",
+    "`bun run check` — typecheck estrito passa com exit 0.",
+    "`bunx eslint . && bunx prettier --check .` — lint e formatacao passam."
+  ],
+  "tasks": [
+    {
+      "id": "1.1",
+      "title": "Declarar StudyIdea e gerar o id na avaliacao",
+      "requirement_id": "FR-001",
+      "depends_on": [],
+      "behavior": "evaluateIdea devolve StudyIdea com id preenchido e distinto a cada chamada, e o pipeline exp oe esse tipo sem alterar nada do que ja era serializado em dados.json",
+      "components": [
+        "idea-identity"
+      ],
+      "files": [
+        "src/domain/types.ts",
+        "src/application/evaluate.ts",
+        "src/application/generate-study.ts",
+        "tests/study-service.test.ts",
+        "tests/generation.test.ts"
+      ],
+      "implementation_files": [
+        "src/domain/types.ts",
+        "src/application/evaluate.ts",
+        "src/application/generate-study.ts"
+      ],
+      "test_files": [
+        "tests/study-service.test.ts",
+        "tests/generation.test.ts"
+      ],
+      "red": {
+        "command": "bun test",
+        "description": "StudyIdea nao existe e evaluateIdea nao devolve id, entao o teste que exige id preenchido e distinto em avaliacoes reais falha"
+      },
+      "implementation_steps": [
+        "Escrever os testes que falham (RED): id preenchido, distinto entre avaliacoes e presente no resultado do pipeline",
+        "Declarar StudyIdea como subtipo de IdeaEvaluation com id obrigatorio, gerar o id em evaluateIdea e tipar o resultado do pipeline (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test",
+          "description": "a suite passa com os testes de identidade em evaluateIdea e no pipeline"
+        },
+        {
+          "command": "bun run check",
+          "description": "o typecheck estrito passa sem alterar evaluationFromJson nem a forma do dados.json"
+        },
+        {
+          "command": "bunx eslint src/domain/types.ts src/application/evaluate.ts src/application/generate-study.ts && bunx prettier --check src/domain/types.ts src/application/evaluate.ts src/application/generate-study.ts",
+          "description": "o lint e a formatacao dos arquivos tocados passam"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-018",
+      "contract_id": "CTR-001",
+      "complexity": "medium",
+      "status": "pending"
+    },
+    {
+      "id": "1.2",
+      "title": "Criar a coluna idea_id e o backfill das linhas legadas",
+      "requirement_id": "FR-008",
+      "depends_on": [
+        "1.1"
+      ],
+      "behavior": "a tabela evaluations ganha a coluna idea_id e a migracao preenche um id deterministico nas linhas gravadas antes da mudanca, sem reescrever payload_json",
+      "components": [
+        "idea-identity"
+      ],
+      "files": [
+        "src/infrastructure/schema.ts",
+        "drizzle.config.ts",
+        "drizzle/0003_idea_id.sql",
+        "tests/repositories.test.ts"
+      ],
+      "implementation_files": [
+        "src/infrastructure/schema.ts",
+        "drizzle.config.ts",
+        "drizzle/0003_idea_id.sql"
+      ],
+      "test_files": [
+        "tests/repositories.test.ts"
+      ],
+      "red": {
+        "command": "bun test",
+        "description": "a coluna idea_id nao existe, entao o teste que espera um id em studies gravados antes da migracao falha"
+      },
+      "implementation_steps": [
+        "Escrever os testes que falham (RED): coluna ausente, linhas legadas sem id, payload_json intacto e segunda execucao sem efeito",
+        "Adicionar a coluna idea_id, corrigir drizzle.config.ts para rodar no drizzle-kit, gerar a migracao e acrescentar o backfill deterministico (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test",
+          "description": "a suite passa com os testes de migracao e de backfill das linhas legadas"
+        },
+        {
+          "command": "bun run check",
+          "description": "o typecheck estrito passa"
+        },
+        {
+          "command": "bunx eslint src/infrastructure/schema.ts && bunx prettier --check src/infrastructure/schema.ts",
+          "description": "o lint e a formatacao dos arquivos tocados passam"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-018",
+      "contract_id": "CTR-002",
+      "complexity": "medium",
+      "status": "pending"
+    },
+    {
+      "id": "1.3",
+      "title": "Propagar a identidade pelo port, pelo repositorio e pelo resumo",
+      "requirement_id": "FR-011",
+      "depends_on": [
+        "1.2"
+      ],
+      "behavior": "saveEvaluations grava o id na coluna, a leitura o devolve junto da ideia, a reordenacao por indice mantem cada id com a sua ideia, e ordered passa a expor StudyIdea para o consumidor da UI",
+      "components": [
+        "idea-identity"
+      ],
+      "files": [
+        "src/domain/ports.ts",
+        "src/infrastructure/repositories.ts",
+        "src/application/summary.ts",
+        "tests/repositories.test.ts",
+        "tests/study-service.test.ts"
+      ],
+      "implementation_files": [
+        "src/domain/ports.ts",
+        "src/infrastructure/repositories.ts",
+        "src/application/summary.ts"
+      ],
+      "test_files": [
+        "tests/repositories.test.ts",
+        "tests/study-service.test.ts"
+      ],
+      "red": {
+        "command": "bun test",
+        "description": "o port e o repositorio recebem IdeaEvaluation, entao o teste que espera o id gravado e devolvido, e preservado apos reordenar, falha"
+      },
+      "implementation_steps": [
+        "Escrever os testes que falham (RED): round-trip do id, dois nomes iguais com ids distintos e id preservado apos reordenar",
+        "Trocar o port e o repositorio para StudyIdea, gravar e ler idea_id, anexar o id na leitura e tipar ordered como StudyIdea (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test",
+          "description": "a suite passa com os testes de persistencia, de nomes homonimos e de reordenacao"
+        },
+        {
+          "command": "bun run check",
+          "description": "o typecheck estrito passa e evaluationFromJson continua lendo o baseline sem id"
+        },
+        {
+          "command": "bunx eslint src/domain/ports.ts src/infrastructure/repositories.ts src/application/summary.ts && bunx prettier --check src/domain/ports.ts src/infrastructure/repositories.ts src/application/summary.ts",
+          "description": "o lint e a formatacao dos arquivos tocados passam"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-018",
+      "contract_id": "CTR-003",
+      "complexity": "high",
+      "status": "pending"
+    },
+    {
+      "id": "1.4",
+      "title": "Remover uma ideia e reconciliar ranking e disco",
+      "requirement_id": "FR-002",
+      "depends_on": [
+        "1.3"
+      ],
+      "behavior": "remover uma ideia por id zera o ranking a partir de 1, recalcula summary.ordered, apaga a pasta da ideia removida, renomeia as demais para os indices novos e nao deixa orfao em disco",
+      "components": [
+        "idea-removal"
+      ],
+      "files": [
+        "src/application/study-service.ts",
+        "tests/study-service.test.ts"
+      ],
+      "implementation_files": [
+        "src/application/study-service.ts"
+      ],
+      "test_files": [
+        "tests/study-service.test.ts"
+      ],
+      "red": {
+        "command": "bun test",
+        "description": "removeIdea nao existe, entao o teste que remove a ideia do meio e exige as pastas 01 e 02 sem a 03 falha"
+      },
+      "implementation_steps": [
+        "Escrever os testes que falham (RED): remocao do meio zera o ranking, ConflictError em execucao e NotFoundError em id desconhecido",
+        "Implementar removeIdea com reconciliacao do disco por id, remocao da pasta orfa, renomeacao das seguintes e ConflictError/NotFoundError (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test",
+          "description": "a suite passa com os testes de remocao, renomeacao e ausencia de orfaos"
+        },
+        {
+          "command": "bun run check",
+          "description": "o typecheck estrito passa"
+        },
+        {
+          "command": "bunx eslint src/application/study-service.ts && bunx prettier --check src/application/study-service.ts",
+          "description": "o lint e a formatacao dos arquivos tocados passam"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-018",
+      "contract_id": "CTR-004",
+      "complexity": "high",
+      "status": "pending"
+    },
+    {
+      "id": "1.5",
+      "title": "Gerar apenas as ideias novas no pipeline incremental",
+      "requirement_id": "FR-003",
+      "depends_on": [
+        "1.1"
+      ],
+      "behavior": "o pipeline incremental (FR-007) reaproveita o brief gravado, nao reavalia as ideias existentes e pede ao LLM nomes distintos dos que ja existem, com chave de cache diferente da do estudo original e da de um segundo pedido",
+      "components": [
+        "idea-addition"
+      ],
+      "files": [
+        "src/application/generate-study.ts",
+        "src/application/generation.ts",
+        "tests/generation.test.ts"
+      ],
+      "implementation_files": [
+        "src/application/generate-study.ts",
+        "src/application/generation.ts"
+      ],
+      "test_files": [
+        "tests/generation.test.ts"
+      ],
+      "red": {
+        "command": "bun test",
+        "description": "o pipeline so aceita o fluxo completo, entao o teste que exige brief reaproveitado e geracao apenas das novas falha"
+      },
+      "implementation_steps": [
+        "Escrever os testes que falham (RED): brief nao regerado, gerador de documento chamado so para as novas e prompt com os nomes existentes",
+        "Implementar o modo incremental com reutilizacao do brief, prompt anti-duplicata e chave de cache propria (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test",
+          "description": "a suite passa com os testes de incremental, anti-duplicata e cache"
+        },
+        {
+          "command": "bun run check",
+          "description": "o typecheck estrito passa"
+        },
+        {
+          "command": "bunx eslint src/application/generate-study.ts src/application/generation.ts && bunx prettier --check src/application/generate-study.ts src/application/generation.ts",
+          "description": "o lint e a formatacao dos arquivos tocados passam"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-018",
+      "contract_id": "CTR-005",
+      "complexity": "high",
+      "status": "pending"
+    },
+    {
+      "id": "1.6",
+      "title": "Orquestrar addIdeas preservando as antigas e recalculando o ranking",
+      "requirement_id": "FR-009",
+      "depends_on": [
+        "1.3",
+        "1.5"
+      ],
+      "behavior": "addIdeas (FR-004) preserva as avaliacoes e documentos anteriores, anexa as N novas, recalcula o ranking persistido junto de summary.ordered, recusa execucao em andamento ou excesso do teto de 40 antes de qualquer chamada de LLM, e consome o id definido nas tasks 1.1 a 1.3 sem redefini-lo",
+      "components": [
+        "idea-addition"
+      ],
+      "files": [
+        "src/application/study-service.ts",
+        "tests/study-service.test.ts"
+      ],
+      "implementation_files": [
+        "src/application/study-service.ts"
+      ],
+      "test_files": [
+        "tests/study-service.test.ts"
+      ],
+      "red": {
+        "command": "bun test",
+        "description": "addIdeas nao existe, entao o teste que preserva as 3 ideias antigas ao pedir 5 e o que excede o teto de 40 falham"
+      },
+      "implementation_steps": [
+        "Escrever os testes que falham (RED): 3 antigas preservadas com 5 novas, teto de 40 validado antes do LLM e ConflictError em execucao",
+        "Implementar addIdeas ligando o pipeline incremental, preservando os documentos antigos, reindexando o ranking e validando o teto (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test",
+          "description": "a suite passa com os testes de adicao incremental e de teto"
+        },
+        {
+          "command": "bun run check",
+          "description": "o typecheck estrito passa"
+        },
+        {
+          "command": "bunx eslint src/application/study-service.ts && bunx prettier --check src/application/study-service.ts",
+          "description": "o lint e a formatacao dos arquivos tocados passam"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-018",
+      "contract_id": "CTR-006",
+      "complexity": "high",
+      "status": "pending"
+    },
+    {
+      "id": "1.7",
+      "title": "Expor remocao e adicao na API HTTP",
+      "requirement_id": "FR-005",
+      "depends_on": [
+        "1.4",
+        "1.6"
+      ],
+      "behavior": "DELETE /api/studies/:id/ideas/:ideaId responde 204 e POST /api/studies/:id/ideas com { count } responde 201 iniciando a execucao em background, com 422 para count invalido e 404 para ids inexistentes",
+      "components": [
+        "api-surface"
+      ],
+      "files": [
+        "src/infrastructure/http/api.ts",
+        "tests/api.test.ts"
+      ],
+      "implementation_files": [
+        "src/infrastructure/http/api.ts"
+      ],
+      "test_files": [
+        "tests/api.test.ts"
+      ],
+      "red": {
+        "command": "bun test",
+        "description": "as rotas de ideias nao existem, entao o teste que espera 204 na remocao e 201 na adicao falha com 404"
+      },
+      "implementation_steps": [
+        "Escrever os testes que falham (RED): 204 na remocao, 201 na adicao, 422 em count invalido e 404 em id inexistente",
+        "Registrar as duas rotas reaproveitando os guards de delete de estudo ja existentes e disparar a execucao sem bloquear a requisicao (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test",
+          "description": "a suite passa com os testes das rotas de ideias"
+        },
+        {
+          "command": "bun run check",
+          "description": "o typecheck estrito passa"
+        },
+        {
+          "command": "bunx eslint src/infrastructure/http/api.ts && bunx prettier --check src/infrastructure/http/api.ts",
+          "description": "o lint e a formatacao dos arquivos tocados passam"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-018",
+      "contract_id": "CTR-007",
+      "complexity": "low",
+      "status": "pending"
+    },
+    {
+      "id": "1.8",
+      "title": "Renderizar as acoes de remover e adicionar na tabela",
+      "requirement_id": "FR-006",
+      "depends_on": [
+        "1.7"
+      ],
+      "behavior": "a tabela de ranking mostra um botao de excluir por linha com dialogo de confirmacao e um controle numerico para pedir N ideias, ambos ausentes enquanto o estudo esta em execucao",
+      "components": [
+        "ui-actions"
+      ],
+      "files": [
+        "src/infrastructure/http/ui/pages.tsx",
+        "tests/ui.test.ts"
+      ],
+      "implementation_files": [
+        "src/infrastructure/http/ui/pages.tsx"
+      ],
+      "test_files": [
+        "tests/ui.test.ts"
+      ],
+      "red": {
+        "command": "bun test",
+        "description": "a tabela nao tem os controles, entao o teste que procura o botao de excluir por linha e o campo numerico falha"
+      },
+      "implementation_steps": [
+        "Escrever os testes que falham (RED): botao de excluir por linha, dialogo de confirmacao, campo numerico e ausencia durante running",
+        "Renderizar o botao de exclusao com confirmacao e o formulario de N ideias, reaproveitando o padrao de Form e csrf dos formularios existentes (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test",
+          "description": "a suite passa com os testes de render das duas acoes"
+        },
+        {
+          "command": "bun run check",
+          "description": "o typecheck estrito passa"
+        },
+        {
+          "command": "bunx eslint src/infrastructure/http/ui/pages.tsx && bunx prettier --check src/infrastructure/http/ui/pages.tsx",
+          "description": "o lint e a formatacao dos arquivos tocados passam"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-018",
+      "contract_id": "CTR-008",
+      "complexity": "medium",
+      "status": "pending"
+    },
+    {
+      "id": "1.9",
+      "title": "Tratar as rotas de UI das novas acoes",
+      "requirement_id": "FR-010",
+      "depends_on": [
+        "1.8"
+      ],
+      "behavior": "as duas novas acoes de UI exigem token CSRF valido e respondem com redirect para a pagina do estudo, igual as demais acoes mutantes",
+      "components": [
+        "ui-actions"
+      ],
+      "files": [
+        "src/infrastructure/http/ui/routes.tsx",
+        "tests/ui.test.ts"
+      ],
+      "implementation_files": [
+        "src/infrastructure/http/ui/routes.tsx"
+      ],
+      "test_files": [
+        "tests/ui.test.ts"
+      ],
+      "red": {
+        "command": "bun test",
+        "description": "as rotas de UI das novas acoes nao existem, entao o teste que chama sem CSRF valido falha"
+      },
+      "implementation_steps": [
+        "Escrever os testes que falham (RED): recusa sem CSRF e redirect com CSRF valido nas duas acoes",
+        "Registrar as rotas de UI com verificacao de CSRF e redirect, reaproveitando o mesmo padrao de DeleteForm e RenameForm (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test",
+          "description": "a suite passa com os testes de CSRF e redirect das novas rotas"
+        },
+        {
+          "command": "bun run check",
+          "description": "o typecheck estrito passa"
+        },
+        {
+          "command": "bunx eslint src/infrastructure/http/ui/routes.tsx && bunx prettier --check src/infrastructure/http/ui/routes.tsx",
+          "description": "o lint e a formatacao dos arquivos tocados passam"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-018",
+      "contract_id": "CTR-009",
+      "complexity": "low",
+      "status": "pending"
+    }
+  ]
+}

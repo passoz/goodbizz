@@ -1,0 +1,116 @@
+{
+  "work_id": "0003",
+  "requirements": [
+    {
+      "id": "FR-001",
+      "title": "Identidade estavel por ideia",
+      "user_story": "Como operador, quero que cada ideia receba um id proprio no momento em que e avaliada, para que eu possa referencia-la sem depender do nome",
+      "acceptance_criteria": [
+        "bun test tests/study-service.test.ts — IdeaEvaluation traz `id` preenchido e distinto para cada ideia de um mesmo estudo",
+        "bun test tests/study-service.test.ts — duas ideias com o mesmo `name` recebem `id` diferentes",
+        "bun test tests/study-service.test.ts — o `id` acompanha a ideia quando o ranking e reordenado"
+      ]
+    },
+    {
+      "id": "FR-002",
+      "title": "Remover uma ideia zera o ranking e os artefatos",
+      "user_story": "Como operador, quero excluir uma ideia do estudo e ver o ranking recalculado, para nao carregar um plano que descartei",
+      "acceptance_criteria": [
+        "bun test tests/study-service.test.ts — removeIdea tira a ideia de record.evaluations, recalcula summary.ordered com as restantes e persiste via saveEvaluations",
+        "bun test tests/study-service.test.ts — removeIdea apaga do disco a pasta NN-slug da ideia removida e reescreve os agregados (00-brief.md, 00-tabelao.md, 00-tabelao.csv, dados.json, README.md) com os numeros de rank novos",
+        "bun test tests/study-service.test.ts — removeIdea nao deixa no disco nenhuma pasta NN-slug que nao corresponda a uma ideia do ranking, depois de remover uma ideia do meio",
+        "bun test tests/study-service.test.ts — removeIdea de id inexistente lanca NotFoundError e o de ideia inexistente tambem"
+      ]
+    },
+    {
+      "id": "FR-003",
+      "title": "Adicionar N ideias preserva as antigas e recalcula o ranking",
+      "user_story": "Como operador, quero pedir mais N ideias em um estudo ja pronto e ver o ranking recalculado com as antigas e as novas juntas, para ampliar o estudo sem perder o que approvei",
+      "acceptance_criteria": [
+        "bun test tests/study-service.test.ts — addIdeas preserva as avaliacoes existentes e acrescenta exatamente N avaliacoes novas",
+        "bun test tests/study-service.test.ts — addIdeas recalcula summary.ordered sobre o conjunto completo e a posicao persistida (rank) e contigua de 1",
+        "bun test tests/study-service.test.ts — addIdeas gera documento apenas para as ideias novas e nao chama o gerador de documento para as antigas",
+        "bun test tests/study-service.test.ts — addIdeas nao chama o gerador de brief",
+        "bun test tests/study-service.test.ts — pedir mais ideias do que o teto de 40 no estudo lanca ValidationError, sem chamar o LLM"
+      ]
+    },
+    {
+      "id": "FR-004",
+      "title": "Conflito com execucao em andamento",
+      "user_story": "Como operador, quero que remocao e adicao sejam recusadas enquanto o estudo roda, para nao corromper um pipeline em andamento",
+      "acceptance_criteria": [
+        "bun test tests/study-service.test.ts — removeIdea e addIdeas com o estudo em execucao lancam ConflictError",
+        "bun test tests/study-service.test.ts — removeIdea e addIdeas com progress.state running e tambem recusam"
+      ]
+    },
+    {
+      "id": "FR-005",
+      "title": "Superficie HTTP",
+      "user_story": "Como integrador, quero rotas dedicated para remover e adicionar ideias, para nao depender de reexecutar o estudo inteiro",
+      "acceptance_criteria": [
+        "bun test tests/api.test.ts — DELETE /api/studies/:id/ideas/:ideaId responde 204 e a ideia some de GET /api/studies/:id",
+        "bun test tests/api.test.ts — POST /api/studies/:id/ideas com { count } responde 201 com o estudo e lanca a execucao em background",
+        "bun test tests/api.test.ts — DELETE e POST com count invalido (0, 41, nao inteiro, negativo) respondem 422",
+        "bun test tests/api.test.ts — DELETE de ideia inexistente responde 404 e o de estudo inexistente tambem"
+      ]
+    },
+    {
+      "id": "FR-006",
+      "title": "Acoes na tabela de ranking",
+      "user_story": "Como operador, quero excluir uma ideia direto da tabela e pedir mais ideias no cabecalho do ranking, para nao precisar chamar API",
+      "acceptance_criteria": [
+        "bun test tests/ui.test.ts — a tabela de ranking tem um botao de excluir por ideia, com confirmacao, que dispara POST no fluxo de remocao",
+        "bun test tests/ui.test.ts — o cabecalho do ranking tem controle para pedir N ideias novas",
+        "bun test tests/ui.test.ts — o botao de excluir nao aparece quando o estudo esta em execucao"
+      ]
+    },
+    {
+      "id": "FR-007",
+      "title": "Ideias novas nao repetem as existentes",
+      "user_story": "Como operador, quero que as ideias novas sejam diferentes das que ja tenho, para o estudo crescer de verdade em vez de duplicar",
+      "acceptance_criteria": [
+        "bun test tests/generation.test.ts — o prompt de ideias novas recebe a lista de nomes ja existentes e pede ideias distintas delas",
+        "bun test tests/generation.test.ts — a chave de cache das ideias incrementalmente adicionadas difere da das ideias do estudo original e da de um segundo pedido"
+      ]
+    },
+    {
+      "id": "FR-008",
+      "title": "O id da ideia sobrevive a gravacao e astudies antigos",
+      "user_story": "Como operador, quero que o id criado na avaliacao seja gravado e devolvido nas leituras, inclusive em estudos ja gravados antes dessa mudanca, para que eu consiga remover ideias de estudos antigos",
+      "acceptance_criteria": [
+        "bun test tests/repositories.test.ts — o `id` sobrevive a um save/get e a um saveEvaluations seguido de reordenacao por indice",
+        "bun test tests/repositories.test.ts — linhas gravadas com `idea_id` nulo recebem um id estavel no backfill",
+        "bun test tests/repositories.test.ts — o `payload_json` nao e reescrito pelo backfill"
+      ]
+    },
+    {
+      "id": "FR-009",
+      "title": "A adicao de N ideias mantem as antigas e recalcula o ranking",
+      "user_story": "Como operador, quero pedir mais N ideias em um estudo ja concluido e receber as antigas intactas com o ranking recalculado sobre o conjunto todo, para que o estudo continue util e coerente",
+      "acceptance_criteria": [
+        "bun test tests/study-service.test.ts — pedir 5 ideias em um estudo com 3 resulta em 8 avaliacoes, com as 3 antigas e seus documentos intactos",
+        "bun test tests/study-service.test.ts — `summary.ordered` e a ordem persistida refletem o ranking recalculado sobre as 8",
+        "bun test tests/study-service.test.ts — pedir mais ideias do que o teto de 40 falha com ValidationError antes de qualquer chamada de LLM"
+      ]
+    },
+    {
+      "id": "FR-010",
+      "title": "As acoes de UI exigem CSRF e devolvem redirect",
+      "user_story": "Como operador autenticado, quero que as novas acoes de remover e adicionar sejam protegidas por CSRF e me devolvam para a pagina do estudo, para que um site terceiro nao apague minhas ideias",
+      "acceptance_criteria": [
+        "bun test tests/ui.test.ts — as duas novas rotas de UI recusam requisicao sem token de CSRF valido",
+        "bun test tests/ui.test.ts — com CSRF valido, ambas respondem com redirect para a pagina do estudo"
+      ]
+    },
+    {
+      "id": "FR-011",
+      "title": "A identidade atravessa o port, o repositorio e o resumo",
+      "user_story": "Como operador, quero que o id gravado volte na leitura e acompanhe a ideia quando o ranking muda de ordem, para que eu remova exatamente a ideia que escolhi em qualquer estudo",
+      "acceptance_criteria": [
+        "bun test tests/repositories.test.ts — o `id` volta na leitura e continua junto da ideia depois de um `saveEvaluations` com a ordem trocada",
+        "bun test tests/repositories.test.ts — duas ideias com o mesmo `name` e `id` diferentes coexistem e sao localizadas separadamente",
+        "bun test tests/repositories.test.ts — `summary.ordered` expoe `StudyIdea`, entao o consumidor da UI tem o `id` de cada linha"
+      ]
+    }
+  ]
+}

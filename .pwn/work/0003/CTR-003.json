@@ -1,0 +1,116 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.3",
+  "work_id": "0003",
+  "title": "Propagar a identidade pelo port, pelo repositorio e pelo resumo",
+  "risk": {
+    "level": "L3",
+    "reasons": [
+      "saveEvaluations apaga e reinsere todas as linhas do estudo: se o id nao for gravado e lido, a identidade se perde a cada gravacao e a remocao por id fica impossivel",
+      "A leitura monta IdeaEvaluation a partir de payload_json e so pode acrescentar o id vindo da coluna nova; uma confusao entre a ordem por indice e a identidade trocaria o id entre ideias"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.3-01",
+        "given": "Um estudo gravado com ids",
+        "when": "Quando save/get sao chamados",
+        "then": "Então cada ideia volta com o mesmo id que foi gravado"
+      },
+      {
+        "id": "SCENARIO-1.3-02",
+        "given": "Um estudo com duas ideias de mesmo name",
+        "when": "Quando saveEvaluations e chamado",
+        "then": "Então as duas coexistem com ids distintos e podem ser localizadas separadamente"
+      },
+      {
+        "id": "SCENARIO-1.3-03",
+        "given": "Um estudo gravado",
+        "when": "Quando saveEvaluations e chamado com a ordem trocada",
+        "then": "Então cada id continua junto da sua ideia, e nao na posicao antiga"
+      },
+      {
+        "id": "SCENARIO-1.3-04",
+        "given": "Um estudo com payload_json gravado",
+        "when": "Quando a leitura monta as ideias",
+        "then": "Então o id vem da coluna e o restante do objeto continua vindo do payload_json"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/domain/ports.ts",
+      "src/infrastructure/repositories.ts",
+      "src/application/summary.ts",
+      "tests/repositories.test.ts",
+      "tests/study-service.test.ts"
+    ],
+    "affected_components": [
+      "idea-identity"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "src/domain nao importa src/infrastructure",
+      "Nao quebrar retrocompatibilidade nem expor dados sensiveis",
+      "Manter a suite de testes existente verde (sem regressoes)",
+      "O layout de dados.json e do payload_json continua compativel com o baseline Python (CON-006): nenhuma chave nova no objeto serializado do baseline",
+      "A coluna idea_id e a unica fonte do id na leitura; o payload_json permanece intacto"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun test",
+      "bun run check"
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/domain/ports.ts",
+      "src/infrastructure/repositories.ts",
+      "src/application/summary.ts",
+      "tests/repositories.test.ts",
+      "tests/study-service.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env*",
+      ".pwn/**",
+      ".specs/**",
+      ".prompts/**",
+      ".todo/**",
+      "drizzle/meta/*"
+    ],
+    "out_of_scope": [
+      "Streaming de tokens",
+      "Reavaliar do zero ideias que ja tem avaliacao",
+      "Reordenar ideias por arraste",
+      "Tornar vps/k3s/goodbizz/ rastreado no repo fleet",
+      "Corrigir o teto de 600 s do campo timeout em POST /api/studies",
+      "Execucao distribuida com fila",
+      "Undo da remocao",
+      "Gravar o id dentro do payload_json",
+      "Mudar a forma do dados.json"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 100000,
+    "max_cost_usd": 2.0,
+    "max_duration_minutes": 30,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 50,
+    "max_tool_calls": 100,
+    "max_shell_executions": 30
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

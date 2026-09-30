@@ -1,0 +1,102 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.9",
+  "work_id": "0003",
+  "title": "Tratar as rotas de UI das novas acoes",
+  "risk": {
+    "level": "L2",
+    "reasons": [
+      "Rotas de UI novas sao mutantes: sem verificacao de CSRF, um site terceiro poderia apagar ideias do usuario autenticado",
+      "O redirect precisa levar de volta a pagina do estudo certo, nao a raiz"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.9-01",
+        "given": "Um formulario de UI que dispara as novas acoes",
+        "when": "Quando a rota e chamada sem token de CSRF valido",
+        "then": "Então a requisicao e recusada, igual as demais acoes mutantes"
+      },
+      {
+        "id": "SCENARIO-1.9-02",
+        "given": "O mesmo formulario com CSRF valido",
+        "when": "Quando a rota e chamada com um ideaId existente",
+        "then": "Então a ideia e removida e a resposta e um redirect para a pagina do estudo"
+      },
+      {
+        "id": "SCENARIO-1.9-03",
+        "given": "O formulario de adicao com CSRF valido e count valido",
+        "when": "Quando a rota e chamada",
+        "then": "Então a adicao e iniciada e a resposta e um redirect para a pagina do estudo"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/infrastructure/http/ui/routes.tsx",
+      "tests/ui.test.ts"
+    ],
+    "affected_components": [
+      "ui-actions"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "src/domain nao importa src/infrastructure",
+      "Nao quebrar retrocompatibilidade nem expor dados sensiveis",
+      "Manter a suite de testes existente verde (sem regressoes)",
+      "O layout de dados.json e do payload_json continua compativel com o baseline Python (CON-006): nenhuma chave nova no objeto serializado do baseline",
+      "Nenhuma acao mutavel nova dispensa CSRF"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun test",
+      "bun run check"
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/infrastructure/http/ui/routes.tsx",
+      "tests/ui.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env*",
+      ".pwn/**",
+      ".specs/**",
+      ".prompts/**",
+      ".todo/**",
+      "drizzle/meta/*"
+    ],
+    "out_of_scope": [
+      "Streaming de tokens",
+      "Reavaliar do zero ideias que ja tem avaliacao",
+      "Reordenar ideias por arraste",
+      "Tornar vps/k3s/goodbizz/ rastreado no repo fleet",
+      "Corrigir o teto de 600 s do campo timeout em POST /api/studies",
+      "Execucao distribuida com fila",
+      "Undo da remocao"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 50000,
+    "max_cost_usd": 0.5,
+    "max_duration_minutes": 15,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 30,
+    "max_tool_calls": 60,
+    "max_shell_executions": 15
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

@@ -85,6 +85,19 @@ export interface IdeaEvaluation {
   tier: Tier;
 }
 
+/**
+ * Avaliacao com a identidade da ideia dentro do estudo.
+ *
+ * `id` fica aqui, e nao em `IdeaEvaluation`, porque a forma do baseline (`dados.json` e
+ * `payload_json`) e lida e escrita por ferramentas Python que casam por chave (CON-006).
+ * Acrescentar `id` a essa forma quebraria `evaluationFromJson`, que nao tem como
+ * reconstruir um id que nunca foi serializado. Como subtipo, toda leitura so do baseline
+ * continua aceitando `IdeaEvaluation`, e o `id` aparece so onde a ideia tem identidade.
+ */
+export interface StudyIdea extends IdeaEvaluation {
+  id: string;
+}
+
 export interface PainGroups {
   forte: string[];
   mista: string[];

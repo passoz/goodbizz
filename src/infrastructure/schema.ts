@@ -2,7 +2,7 @@
  * SQLite schema (Drizzle). Tables only — no driver import, so `drizzle-kit generate` can read it.
  * Migrations under `drizzle/` are produced by drizzle-kit, never written by hand.
  */
-import { integer, primaryKey, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { integer, primaryKey, real, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 export const studies = sqliteTable("studies", {
   id: text("id").primaryKey(),
@@ -40,8 +40,16 @@ export const evaluations = sqliteTable(
     index: real("index").notNull(),
     tier: text("tier").notNull(),
     payloadJson: text("payload_json").notNull(),
+    /**
+     * Identidade da ideia dentro do estudo. Vive em coluna propria e nao no `payload_json`
+     * porque esse campo guarda a forma do baseline lida por ferramentas Python (CON-006).
+     */
+    ideaId: text("idea_id"),
   },
-  (table) => [primaryKey({ columns: [table.studyId, table.rank] })],
+  (table) => [
+    primaryKey({ columns: [table.studyId, table.rank] }),
+    uniqueIndex("evaluations_study_idea_id_unique").on(table.studyId, table.ideaId),
+  ],
 );
 
 export const cacheEntries = sqliteTable("cache_entries", {

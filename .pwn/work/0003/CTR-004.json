@@ -1,0 +1,109 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.4",
+  "work_id": "0003",
+  "title": "Remover uma ideia e reconciliar ranking e disco",
+  "risk": {
+    "level": "L3",
+    "reasons": [
+      "A remocao apaga diretorio em disco de forma destrutiva e o operador escolheu a destruicao em vez de preservar (DEC-005): uma pasta apagada nao volta",
+      "Como o rank entra no nome da pasta, remover do meio renomeia todas as seguintes; erro na reconciliacao deixa o ranking persistido e o disco divergentes",
+      "Confundir dois nomes iguais e apagar a pasta errada"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.4-01",
+        "given": "Um estudo concluido com 3 ideias e pastas 01, 02 e 03",
+        "when": "Quando a ideia do meio e removida por id",
+        "then": "Então sobram 2 linhas, o indice gravado e 1 e 2, e summary.ordered reflete a nova ordem"
+      },
+      {
+        "id": "SCENARIO-1.4-02",
+        "given": "O mesmo estudo",
+        "when": "Quando os artefatos sao reconciliados",
+        "then": "Então a pasta da ideia removida nao existe, as restantes tem os numeros do ranking novo e nenhum orfao NN-slug sobra"
+      },
+      {
+        "id": "SCENARIO-1.4-03",
+        "given": "Depois de uma remocao",
+        "when": "Quando os agregados sao regerados",
+        "then": "Então 00-tabelao.md, 00-tabelao.csv, dados.json e o indice listam exatamente as ideias do ranking novo"
+      },
+      {
+        "id": "SCENARIO-1.4-04",
+        "given": "Um estudo em execucao, ou um id de ideia inexistente",
+        "when": "Quando removeIdea e chamado",
+        "then": "Então lanca ConflictError no primeiro caso e NotFoundError no segundo, sem tocar no disco"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/application/study-service.ts",
+      "tests/study-service.test.ts"
+    ],
+    "affected_components": [
+      "idea-removal"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "src/domain nao importa src/infrastructure",
+      "Nao quebrar retrocompatibilidade nem expor dados sensiveis",
+      "Manter a suite de testes existente verde (sem regressoes)",
+      "O layout de dados.json e do payload_json continua compativel com o baseline Python (CON-006): nenhuma chave nova no objeto serializado do baseline",
+      "A remocao nunca apaga a pasta de outra ideia, nem quando os nomes coincidem"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun test",
+      "bun run check"
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/application/study-service.ts",
+      "tests/study-service.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env*",
+      ".pwn/**",
+      ".specs/**",
+      ".prompts/**",
+      ".todo/**",
+      "drizzle/meta/*"
+    ],
+    "out_of_scope": [
+      "Streaming de tokens",
+      "Reavaliar do zero ideias que ja tem avaliacao",
+      "Reordenar ideias por arraste",
+      "Tornar vps/k3s/goodbizz/ rastreado no repo fleet",
+      "Corrigir o teto de 600 s do campo timeout em POST /api/studies",
+      "Execucao distribuida com fila",
+      "Undo da remocao"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 100000,
+    "max_cost_usd": 2.0,
+    "max_duration_minutes": 30,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 50,
+    "max_tool_calls": 100,
+    "max_shell_executions": 30
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

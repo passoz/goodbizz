@@ -1,0 +1,96 @@
+{
+  "work_id": "0003",
+  "title": "Adicionar e remover ideias de um estudo, com ranking e artefatos regerados",
+  "capabilities": [
+    {
+      "id": "CAP-018",
+      "name": "Gestao incremental de ideias de um estudo",
+      "description": "Capacidade que remove uma ideia do ranking de um estudo e que acrescenta N ideias novas, reaproveitando brief e avaliacoes ja existentes, recalculando o ranking e reconciliando os artefatos em disco.",
+      "actors": [
+        "ACT-001",
+        "ACT-002",
+        "ACT-003"
+      ],
+      "behavior": "removeIdea tira a avaliacao, apaga a pasta NN-slug e regera os agregados; addIdeas gera, avalia e documenta apenas as ideias novas e regera os agregados sobre o conjunto completo",
+      "failures": "409 enquanto o estudo executa; 404 para estudo ou ideia inexistente; 422 para quantidade fora de 1..40 ou acima do teto de ideias do estudo",
+      "rules": [
+        "BR-020",
+        "BR-021",
+        "BR-022",
+        "BR-023",
+        "BR-024"
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "BR-020",
+      "statement": "BR-020 Toda ideia avaliada recebe um id estavel, gerado uma unica vez no momento da avaliacao. O id NAO entra no layout de dados.json: evaluationToIdeaJson alimenta tanto o export quanto o payload_json do banco, e adicionar a chave ali quebraria a compatibilidade com o baseline Python (CON-006). Por isso a identidade vive em um subtipo StudyIdea = IdeaEvaluation & { id } e em uma coluna propria na tabela evaluations, nunca no objeto serializado do baseline.",
+      "coverage": [
+        "CAP-018"
+      ],
+      "evidence": "tests/study-service.test.ts com ideias de mesmo nome e ids distintos",
+      "rationale": "dados.json e lido e escrito por ferramentas Python que casam por chave; a forma do baseline precisa ficar estavel. Tornar id obrigatorio em IdeaEvaluation quebraria evaluationFromJson e a leitura do payload_json, que nao tem como reconstruir um id que nao foi serializado."
+    },
+    {
+      "id": "BR-021",
+      "statement": "Adicionar ideias nao chama o gerador de brief nem reavalia as ideias existentes: o brief vem do registro e as avaliacoes velhas sao reaproveitadas. Apenas as ideias novas passam por geracao, avaliacao e documentacao.",
+      "coverage": [
+        "CAP-018"
+      ],
+      "evidence": "tests/study-service.test.ts contando chamadas ao mock de LLM por etapa"
+    },
+    {
+      "id": "BR-022",
+      "statement": "Toda operacao incremental termina com o ranking recalculado sobre o conjunto resultante e persistido de forma transacional: avaliacoes e summary_json sao gravados na mesma transacao de saveEvaluations, com rank contiguo a partir de 1.",
+      "coverage": [
+        "CAP-018"
+      ],
+      "evidence": "tests/study-service.test.ts conferindo summary.ordered e a ordem persistida"
+    },
+    {
+      "id": "BR-023",
+      "statement": "O disco e reconciliado com o ranking: os agregados sao regerados e o que ficou orfao e removido. Como o rank entra no nome da pasta (NN-<slug>), remover uma ideia do meio renomeia as pastas seguintes, e sem reconciliar o estudo acumularia pastas com numeros divergentes do ranking exibido.",
+      "coverage": [
+        "CAP-018"
+      ],
+      "evidence": "tests/study-service.test.ts conferindo que as pastas em disco batem com o ranking"
+    },
+    {
+      "id": "BR-024",
+      "statement": "Remover e adicionar sao recusados com ConflictError enquanto o estudo esta executando, para que saveEvaluations nao sobrescreva as avaliacoes no meio de um pipeline em andamento.",
+      "coverage": [
+        "CAP-018"
+      ],
+      "evidence": "tests/study-service.test.ts com o estudo em execucao"
+    },
+    {
+      "id": "BR-025",
+      "statement": "As ideias geradas em um pedido incremental sao distintas das ja existentes, e a chave de cache do pedido inclui o conjunto de nomes ja usados, para que um segundo pedido nao devolva em cache as ideias do primeiro.",
+      "coverage": [
+        "CAP-018"
+      ],
+      "evidence": "tests/generation.test.ts com o prompt de ideias distintas e com chaves de cache distintas"
+    },
+    {
+      "id": "BR-026",
+      "statement": "Nenhuma regressao: a suite existente permanece verde e a write_allow do contrato V4 nao e excedida.",
+      "coverage": [
+        "CAP-018"
+      ],
+      "evidence": "bun test com exit 0 e diff guard do contrato V4"
+    }
+  ],
+  "contract_reconciliation": [
+    {
+      "contract": "CON-002",
+      "action": "update",
+      "note": "Entram DELETE /api/studies/:id/ideas/:ideaId (204) e POST /api/studies/:id/ideas com { count } (201, execucao em background). Erros 409, 404 e 422 acrescidos ao contrato."
+    },
+    {
+      "contract": "CON-006",
+      "action": "update",
+      "note": "O layout dos artefatos nao muda (mesmos nomes e chaves), mas passa a ser reconciliado: pastas NN-<slug> que nao correspondem a nenhuma ideia do ranking sao removidas."
+    }
+  ]
+}

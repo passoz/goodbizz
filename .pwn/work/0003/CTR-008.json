@@ -1,0 +1,108 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.8",
+  "work_id": "0003",
+  "title": "Renderizar as acoes de remover e adicionar na tabela",
+  "risk": {
+    "level": "L2",
+    "reasons": [
+      "A acao de excluir e destrutiva e precisa de confirmacao visivel antes do submit, como ja ocorre com DeleteForm e RenameForm",
+      "O botao de excluir depende do id da ideia, entao nao pode ser montado a partir de name nem de position"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.8-01",
+        "given": "A tabela de ranking de um estudo concluido",
+        "when": "Quando a pagina e renderizada",
+        "then": "Então cada linha de ideia tem um botao de excluir que abre dialogo de confirmacao"
+      },
+      {
+        "id": "SCENARIO-1.8-02",
+        "given": "O cabecalho do ranking",
+        "when": "Quando a pagina e renderizada",
+        "then": "Então existe um campo numerico e um botao para pedir N ideias novas"
+      },
+      {
+        "id": "SCENARIO-1.8-03",
+        "given": "Um estudo com progress.state running",
+        "when": "Quando a pagina e renderizada",
+        "then": "Então o botao de excluir por ideia e o formulario de adicao nao aparecem"
+      },
+      {
+        "id": "SCENARIO-1.8-04",
+        "given": "Uma linha da tabela",
+        "when": "Quando a pagina e renderizada",
+        "then": "Então o botao de excluir carrega o id da ideia, nao o nome nem a posicao"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/infrastructure/http/ui/pages.tsx",
+      "tests/ui.test.ts"
+    ],
+    "affected_components": [
+      "ui-actions"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "src/domain nao importa src/infrastructure",
+      "Nao quebrar retrocompatibilidade nem expor dados sensiveis",
+      "Manter a suite de testes existente verde (sem regressoes)",
+      "O layout de dados.json e do payload_json continua compativel com o baseline Python (CON-006): nenhuma chave nova no objeto serializado do baseline",
+      "Nenhuma acao mutavel nova dispensa CSRF"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun test",
+      "bun run check"
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/infrastructure/http/ui/pages.tsx",
+      "tests/ui.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env*",
+      ".pwn/**",
+      ".specs/**",
+      ".prompts/**",
+      ".todo/**",
+      "drizzle/meta/*"
+    ],
+    "out_of_scope": [
+      "Streaming de tokens",
+      "Reavaliar do zero ideias que ja tem avaliacao",
+      "Reordenar ideias por arraste",
+      "Tornar vps/k3s/goodbizz/ rastreado no repo fleet",
+      "Corrigir o teto de 600 s do campo timeout em POST /api/studies",
+      "Execucao distribuida com fila",
+      "Undo da remocao"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 50000,
+    "max_cost_usd": 0.5,
+    "max_duration_minutes": 15,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 30,
+    "max_tool_calls": 60,
+    "max_shell_executions": 15
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

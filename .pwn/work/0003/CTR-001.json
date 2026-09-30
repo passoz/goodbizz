@@ -1,0 +1,111 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.1",
+  "work_id": "0003",
+  "title": "Declarar StudyIdea e gerar o id na avaliacao",
+  "risk": {
+    "level": "L2",
+    "reasons": [
+      "Campo de identidade novo atravessa o dominio, mas evaluationToIdeaJson alimenta o export e o payload_json: se o id entrar no objeto do baseline, a compatibilidade com o Python quebra (CON-006)",
+      "Um subtipo mal colocado tornaria id obrigatorio em IdeaEvaluation e quebraria evaluationFromJson, que nao tem como reconstruir um id nunca serializado"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.1-01",
+        "given": "Dado o mesmo Idea avaliado duas vezes",
+        "when": "Quando evaluateIdea e chamado nas duas",
+        "then": "Então os dois resultados tem id preenchido e os ids sao diferentes entre si"
+      },
+      {
+        "id": "SCENARIO-1.1-02",
+        "given": "Dado um pipeline de estudo completo",
+        "when": "Quando ele termina",
+        "then": "Então o resultado expoe StudyIdea, com id presente em todas as ideias, e o dados.json gerado tem as mesmas chaves de antes"
+      },
+      {
+        "id": "SCENARIO-1.1-03",
+        "given": "Dado um dados.json gravado antes desta mudanca",
+        "when": "Quando evaluationFromJson o le",
+        "then": "Então a leitura funciona igual, porque o id nao faz parte da forma do baseline"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/domain/types.ts",
+      "src/application/evaluate.ts",
+      "src/application/generate-study.ts",
+      "tests/study-service.test.ts",
+      "tests/generation.test.ts"
+    ],
+    "affected_components": [
+      "idea-identity"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "src/domain nao importa src/infrastructure",
+      "Nao quebrar retrocompatibilidade nem expor dados sensiveis",
+      "Manter a suite de testes existente verde (sem regressoes)",
+      "O layout de dados.json e do payload_json continua compativel com o baseline Python (CON-006): nenhuma chave nova no objeto serializado do baseline",
+      "StudyIdea estende IdeaEvaluation; leitura so de dados.json continua aceitando IdeaEvaluation"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun test",
+      "bun run check"
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/domain/types.ts",
+      "src/application/evaluate.ts",
+      "src/application/generate-study.ts",
+      "tests/study-service.test.ts",
+      "tests/generation.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env*",
+      ".pwn/**",
+      ".specs/**",
+      ".prompts/**",
+      ".todo/**",
+      "drizzle/meta/*"
+    ],
+    "out_of_scope": [
+      "Streaming de tokens",
+      "Reavaliar do zero ideias que ja tem avaliacao",
+      "Reordenar ideias por arraste",
+      "Tornar vps/k3s/goodbizz/ rastreado no repo fleet",
+      "Corrigir o teto de 600 s do campo timeout em POST /api/studies",
+      "Execucao distribuida com fila",
+      "Undo da remocao",
+      "Gravar o id em dados.json",
+      "Tornar id obrigatorio em IdeaEvaluation",
+      "Criar a coluna idea_id"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 50000,
+    "max_cost_usd": 0.5,
+    "max_duration_minutes": 15,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 30,
+    "max_tool_calls": 60,
+    "max_shell_executions": 15
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

@@ -1,0 +1,111 @@
+TASK: 1.2
+CHECK: RED
+COMMAND: bun test
+EXIT: 1
+OUTPUT:
+bun test v1.4.2 (744846f84)
+{"level":50,"time":1790796636283,"pid":129172,"hostname":"note","msg":"e"}
+{"level":30,"time":1790796636450,"pid":129172,"hostname":"note","count":0,"msg":"migrations applied"}
+{"level":40,"time":1790796636451,"pid":129172,"hostname":"note","count":1,"msg":"stale studies marked as failed on boot"}
+
+tests/repositories.test.ts:
+32 | describe("migracao da coluna idea_id", () => {
+33 |   test("a coluna idea_id existe depois das migracoes", () => {
+34 |     const handle = openDatabase(":memory:");
+35 |     runMigrations(handle, "drizzle");
+36 | 
+37 |     expect(columnsOf(handle.sqlite, "evaluations")).toContain("idea_id");
+                                                         ^
+error: expect(received).toContain(expected)
+
+Expected to contain: "idea_id"
+Received: [ "study_id", "rank", "name", "sector", "description", "index", "tier", "payload_json" ]
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/repositories.test.ts:37:53)
+(fail) migracao da coluna idea_id > a coluna idea_id existe depois das migracoes [0.73ms]
+56 | 
+57 |       // Agora a migracao nova entra.
+58 |       runMigrations(handle, "drizzle");
+59 | 
+60 |       const rows = handle.sqlite
+61 |         .query("SELECT study_id, idea_id, payload_json FROM evaluations ORDER BY study_id, rank")
+              ^
+SQLiteError: no such column: idea_id
+      at [prepareOwned] (bun:sqlite:330:37)
+      at query (bun:sqlite:347:31)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/repositories.test.ts:61:10)
+(fail) migracao da coluna idea_id > linhas gravadas antes da migrancao recebem um id preenchido e distinto [2.73ms]
+103 |     const handle = openDatabase(":memory:");
+104 |     try {
+105 |       runMigrations(handle, "drizzle");
+106 |       // Rodar de novo nao pode falhar nem duplicar.
+107 |       expect(() => runMigrations(handle, "drizzle")).not.toThrow();
+108 |       expect(columnsOf(handle.sqlite, "evaluations")).toContain("idea_id");
+                                                            ^
+error: expect(received).toContain(expected)
+
+Expected to contain: "idea_id"
+Received: [ "study_id", "rank", "name", "sector", "description", "index", "tier", "payload_json" ]
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/repositories.test.ts:108:55)
+(fail) migracao da coluna idea_id > a migracao e idempotente quando o banco ja tem a coluna [0.54ms]
+-------------------------------------------|---------|---------|-------------------
+File                                       | % Funcs | % Lines | Uncovered Line #s
+-------------------------------------------|---------|---------|-------------------
+All files                                  |   98.17 |   98.12 |
+ src/application/artifacts.ts              |  100.00 |  100.00 | 
+ src/application/cache.ts                  |  100.00 |  100.00 | 
+ src/application/costs.ts                  |  100.00 |  100.00 | 
+ src/application/dados.ts                  |  100.00 |  100.00 | 
+ src/application/diagnose.ts               |  100.00 |   95.65 | 146-150
+ src/application/evaluate.ts               |  100.00 |   96.98 | 127,197-198,201-203
+ src/application/failures.ts               |  100.00 |   92.98 | 70-73
+ src/application/generate-study.ts         |  100.00 |  100.00 | 
+ src/application/generation.ts             |  100.00 |  100.00 | 
+ src/application/pain-algorithm.ts         |   91.30 |   95.21 | 90-94,245-246,268-269
+ src/application/pain-choice.ts            |  100.00 |   97.94 | 78-79
+ src/application/pdf.ts                    |  100.00 |   97.92 | 47
+ src/application/prompts.ts                |  100.00 |  100.00 | 
+ src/application/recalibrate.ts            |  100.00 |   94.74 | 104-105,146,166,170-172,212
+ src/application/render.ts                 |  100.00 |   99.30 | 191
+ src/application/reports.ts                |  100.00 |  100.00 | 
+ src/application/settings.ts               |  100.00 |  100.00 | 
+ src/application/study-service.ts          |   97.30 |   99.49 | 90
+ src/application/summary.ts                |   92.31 |   97.96 | 33
+ src/application/verification.ts           |  100.00 |   94.62 | 48,68-71
+ src/cli.ts                                |   91.67 |   90.38 | 84-85,96,101,107-108,112,132-134,143,159-160,308-309,325-330,332,334-335,346,396-400,478-479,520-524,527,534,583
+ src/config/env.ts                         |  100.00 |  100.00 | 
+ src/config/providers.ts                   |  100.00 |  100.00 | 
+ src/config/redact.ts                      |  100.00 |  100.00 | 
+ src/config/runtime.ts                     |  100.00 |   98.21 | 93
+ src/domain/errors.ts                      |  100.00 |  100.00 | 
+ src/domain/hash.ts                        |  100.00 |  100.00 | 
+ src/domain/pain.ts                        |  100.00 |  100.00 | 
+ src/infrastructure/cache-repository.ts    |  100.00 |  100.00 | 
+ src/infrastructure/db.ts                  |  100.00 |   97.96 | 45
+ src/infrastructure/decider-mock.ts        |  100.00 |  100.00 | 
+ src/infrastructure/decider.ts             |   86.67 |   95.73 | 101-104,109-111
+ src/infrastructure/http/api.ts            |   83.78 |   94.86 | 130-131,136-139,231-233
+ src/infrastructure/http/app.ts            |  100.00 |  100.00 | 
+ src/infrastructure/http/errors.ts         |  100.00 |   94.74 | 25
+ src/infrastructure/http/health.ts         |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/layout.tsx     |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/pages.tsx      |   97.14 |   99.66 | 89-90,113
+ src/infrastructure/http/ui/routes.tsx     |   96.15 |   93.91 | 149,162,176,189-192,210,214,225-228,239
+ src/infrastructure/http/ui/security.ts    |  100.00 |   93.22 | 47,75-76,86
+ src/infrastructure/json.ts                |  100.00 |   92.00 | 31-32
+ src/infrastructure/llm-mock.ts            |   87.50 |  100.00 | 
+ src/infrastructure/llm.ts                 |  100.00 |  100.00 | 
+ src/infrastructure/repositories.ts        |  100.00 |  100.00 | 
+ src/infrastructure/routing.ts             |   90.00 |   98.31 | 97
+ src/infrastructure/schema.ts              |  100.00 |  100.00 | 
+ src/infrastructure/settings-repository.ts |  100.00 |  100.00 | 
+-------------------------------------------|---------|---------|-------------------
+
+ 269 pass
+ 3 fail
+ 1068 expect() calls
+Ran 272 tests across 31 files. [3.90s]
+
+VERDICT: PASS
+CHAIN_HASH: c7e974a1296b40e0dcce26c276c78c122b48f893ce38e62d0ec82559a4788f72

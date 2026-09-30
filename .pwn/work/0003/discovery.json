@@ -1,0 +1,33 @@
+{
+  "work_id": "0003",
+  "title": "Adicionar e remover ideias em um estudo existente, com ranking e artefatos regerados",
+  "grilling_depth": "deep",
+  "problem": "Nao existe caminho incremental de ideias. Um estudo so pode ser criado do zero (POST /api/studies) ou executado inteiro de novo (POST /api/studies/:id/run, que regenera brief, ideias, avaliacao, documentos e artefatos). O operador que avaliou um estudo e decidiu que quer mais 5 ideias, ou que quer descartar a ideia de rank 3, nao tem nenhuma acao: nao ha botao por ideia na tabela de ranking (src/infrastructure/http/ui/pages.tsx:1210-1261 so tem o link do plano) e o PATCH do estudo so aceita `niche` (src/infrastructure/http/api.ts:49). Pior, PATCH /api/studies/:id/run reescreve as avaliacoes com saveEvaluations, que faz DELETE + INSERT (src/infrastructure/repositories.ts:274), e o writeFiles so escreve em disco (src/application/study-service.ts:299), entao um re-run deixa pastas NN-slug orfas de ideias que ja nao existem, com os numeros de rank trocados no nome (folderName usa a posicao, src/application/reports.ts:20).",
+  "actors": [
+    "ACT-001",
+    "ACT-002"
+  ],
+  "objectives": [
+    "Remover uma ideia do estudo apaga a linha do ranking, a pasta NN-slug dela em disco e recalcula o ranking das restantes, com todos os artefatos agregados regerados",
+    "Adicionar N ideias novas preserva as antigas, gera e avalia as novas, gera o documento de cada nova, recalcula o ranking e regera os artefatos agregados, em background com progresso visivel",
+    "O ranking, a tabela de ideas e o indice do estudo ficam coerentes com os artefatos em disco depois de qualquer operacao, sem pasta orfa e sem numero de rank divergente",
+    "Cada ideia tem identidade estavel, para que remover uma ideia nao afete outra de mesmo nome"
+  ],
+  "constraints": [
+    "Manter a suite de testes existente verde (sem regressoes)",
+    "src/domain nao importa src/infrastructure",
+    "Nenhuma operacao pode deixar o estudo com avaliacoes e summary divergentes: as duas persistencias estao em saveEvaluations, que e transacional (src/infrastructure/repositories.ts:271-293)",
+    "Remover e adicionar sao rejeitados com 409 enquanto o pipeline do estudo roda, como delete ja faz (src/application/study-service.ts:224-226)",
+    "O pipeline novo nao pode chamar o LLM para regenerar brief nem reavaliar ideias que ja tem avaliacao",
+    "Teto de 40 ideias por estudo mantido (StudyInput, src/infrastructure/http/api.ts:23)"
+  ],
+  "out_of_scope": [
+    "Streaming de tokens nas geracoes longas",
+    "Reavaliar do zero ideias que ja possuem avaliacao",
+    "Reordenar ideas manualmente por arraste",
+    "Excluir o estudo inteiro (ja existe DELETE /api/studies/:id)",
+    "Tornar vps/k3s/goodbizz/ rastreado no repo fleet",
+    "Corrigir o teto de 600 s do campo timeout em POST /api/studies (src/infrastructure/http/api.ts:30), que ficou abaixo do GOODBIZZ_LLM_TIMEOUT de 1200 s em producao"
+  ],
+  "legacy_spec": null
+}

@@ -1,0 +1,153 @@
+{
+  "$schema": "../../../schemas/prd.schema.json",
+  "id": "PRD-0003",
+  "meta": {
+    "version": "1.0",
+    "created_at": "2026-09-30T19:12:00.000Z",
+    "author": "pwn"
+  },
+  "title": "PRD — Adicionar e remover ideias de um estudo, com ranking e artefatos regerados",
+  "status": "draft",
+  "scenario": "brownfield",
+  "problem": {
+    "statement": "Um estudo so pode ser criado do zero ou reexecutado inteiro. O operador nao tem como descartar uma ideia do ranking nem como pedir mais ideias a um estudo ja pronto: a tabela de ranking nao tem acao por ideia e o PATCH do estudo so aceita o nicho. Como o rank entra no nome da pasta em disco (NN-slug) e saveEvaluations reescreve todas as linhas, qualquer manipulacao de ideias por fora do pipeline deixa ranking, disco e agregados divergentes."
+  },
+  "solution": {
+    "statement": "Dar identidade estavel a cada ideia e dois caminhos incrementais no servico — remover uma ideia e adicionar N — que reutilizam o brief e as avaliacoes existentes, recalculam o ranking sobre o conjunto resultante e reconciliam o disco com os artefatos agregados, expondo os dois caminhos por API e por acoes na tabela de ranking."
+  },
+  "decisions": [
+    {
+      "id": "DEC-001",
+      "statement": "Adotar contrato V4 congelado (risco L2) como fronteira de execucao do Work 0003.",
+      "status": "accepted",
+      "made_by": "pwn"
+    },
+    {
+      "id": "DEC-002",
+      "statement": "A identidade da ideia passa a ser um `id` estavel em IdeaEvaluation, e nao o `name`. Hoje o nome e a chave em folders, documents, byName e painGroups (src/application/generate-study.ts:157,189), entao colisao de nome e silenciosa e a remocao por nome apagaria a pasta da ideia errada.",
+      "status": "accepted",
+      "made_by": "pwn"
+    },
+    {
+      "id": "DEC-003",
+      "statement": "Ao adicionar, as ideias antigas nao sao reavaliadas e o brief nao e regerado: o operador pediu mais ideias, nao refazer o estudo. As avaliacoes velhas sao reaproveitadas do record.",
+      "status": "accepted",
+      "made_by": "operator"
+    },
+    {
+      "id": "DEC-004",
+      "statement": "Adicionar gera o documento de cada ideia nova no mesmo fluxo, em background com progresso. No tier gratuito em producao isso custa ~725 s por plano (27,6 tok/s medidos), e o operador aceitou esse custo ao pedir as ideias.",
+      "status": "accepted",
+      "made_by": "operator"
+    },
+    {
+      "id": "DEC-005",
+      "statement": "Remover apaga a pasta NN-slug da ideia. O operador escolheu a destruicao em vez de preservar o arquivo, para que o ZIP e o indice nunca oferecam um plano que nao esta no ranking.",
+      "status": "accepted",
+      "made_by": "operator"
+    },
+    {
+      "id": "DEC-006",
+      "statement": "Depois de remover ou adicionar, os artefatos agregados sao regerados: 00-brief.md, 00-tabelao.md, 00-tabelao.csv, dados.json, README.md (indice) e o HTML completo. O operador escolheu 'regerar tudo', entao tambem o PDF e regerado sempre que ele ja existir em disco; o PDF so deixa de ser produced quando nao ha artefato anterior, porque sua geracao depende de chromium.",
+      "status": "accepted",
+      "made_by": "pwn"
+    },
+    {
+      "id": "DEC-007",
+      "statement": "A reconciliacao de disco passa a remover o que ficou orfao. writeFiles so escreve (src/application/study-service.ts:299), mas como o rank esta no nome da pasta, qualquer reordenacao muda o nome de todas as pastas abaixo da posicao alterada — sem reconciliar, o estudo accumulate pastas com numeros divergentes do ranking.",
+      "status": "accepted",
+      "made_by": "pwn"
+    },
+    {
+      "id": "DEC-008",
+      "statement": "Remover e adicionar sao recusados com ConflictError enquanto o estudo roda, reaproveitando o guard que delete e run ja aplicam. Sem isso, um estudo em execucao teria as avaliacoes sobrescritas por saveEvaluations no meio do pipeline.",
+      "status": "accepted",
+      "made_by": "pwn"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "FR-001",
+      "type": "functional",
+      "statement": "Cada ideia carrega um id estavel, persistido e preservado por reordenacao."
+    },
+    {
+      "id": "FR-002",
+      "type": "functional",
+      "statement": "Remover uma ideia tira a linha, apaga a pasta, recalcula o ranking e regera os agregados."
+    },
+    {
+      "id": "FR-003",
+      "type": "functional",
+      "statement": "Adicionar N ideias preserva as antigas, avalia e documenta so as novas, recalcula o ranking e regera os agregados."
+    },
+    {
+      "id": "FR-004",
+      "type": "functional",
+      "statement": "As duas operacoes sao recusadas com 409 enquanto o estudo esta em execucao."
+    },
+    {
+      "id": "FR-005",
+      "type": "functional",
+      "statement": "Rotas HTTP dedicadas para remover ideia e para adicionar ideias, com validacao de entrada."
+    },
+    {
+      "id": "FR-006",
+      "type": "functional",
+      "statement": "Acoes de remover e adicionar na tabela de ranking da interface."
+    },
+    {
+      "id": "FR-007",
+      "type": "functional",
+      "statement": "As ideias novas sao distintas das existentes, com chave de cache propria por pedido."
+    }
+  ],
+  "stakeholders": [
+    {
+      "name": "Operador/consultor (UI e CLI)",
+      "role": "ACT-001"
+    },
+    {
+      "name": "Cliente da API HTTP",
+      "role": "ACT-002"
+    },
+    {
+      "name": "Provedor LLM externo",
+      "role": "ACT-004"
+    },
+    {
+      "name": "Decisor Jev (TypeSafe)",
+      "role": "ACT-005"
+    }
+  ],
+  "scope": {
+    "in_scope": [
+      "src/domain/types.ts — id estavel em IdeaEvaluation",
+      "src/domain/ports.ts — addIdeas e removeIdea no StudyService/port",
+      "src/application/study-service.ts — os dois caminhos incrementais e a reconciliacao de disco",
+      "src/application/generate-study.ts — pipeline incremental de ideias (sem brief, sem reavaliacao)",
+      "src/application/generation.ts — prompt de ideias distintas e chave de cache incremental",
+      "src/infrastructure/repositories.ts e drizzle — persistir o id da ideia",
+      "src/infrastructure/http/api.ts — DELETE /studies/:id/ideas/:ideaId e POST /studies/:id/ideas",
+      "src/infrastructure/http/ui/pages.tsx e routes.tsx — acoes na tabela de ranking",
+      "tests/ — evidencia RED/GREEN de FR-001 a FR-007"
+    ],
+    "out_of_scope": [
+      "Streaming de tokens",
+      "Reavaliar do zero ideias que ja tem avaliacao",
+      "Reordenar ideias por arraste",
+      "Regerar o PDF completo (DEC-006)",
+      "Corrigir o teto de 600 s do campo timeout em POST /api/studies (src/infrastructure/http/api.ts:30)",
+      "Tornar vps/k3s/goodbizz/ rastreado no repo fleet"
+    ]
+  },
+  "accepted_requirements": [
+    "FR-001",
+    "FR-002",
+    "FR-003",
+    "FR-004",
+    "FR-005",
+    "FR-006",
+    "FR-007"
+  ]
+}

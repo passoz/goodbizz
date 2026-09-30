@@ -10,6 +10,9 @@
 import { afterEach, describe, expect, test } from "bun:test";
 
 import { StudyCache } from "../src/application/cache.ts";
+import { evaluationToJson } from "../src/application/dados.ts";
+import { evaluateIdea } from "../src/application/evaluate.ts";
+import { generateStudy } from "../src/application/generate-study.ts";
 import { StudyService } from "../src/application/study-service.ts";
 import { loadEnv, resetEnv } from "../src/config/env.ts";
 import { resolveStudyConfig } from "../src/config/runtime.ts";
@@ -122,5 +125,85 @@ describe("limite por chamada de IA na execução do estudo", () => {
     db.sqlite.close();
 
     expect(captured[0]!.timeout).toBe(900);
+  });
+});
+
+/**
+ * FR-001 / SCENARIO-1.1: cada ideia precisa de identidade propria, porque `name` nao distingue
+ * duas ideias homonimas. Sem um id, "remover exatamente a ideia que escolhi" seria impossivel.
+ *
+ * O `id` nasce em `evaluateIdea` e atravessa o pipeline; a persistencia dele e da task 1.3.
+ */
+describe("identidade estavel por ideia", () => {
+  test("cada ideia avaliada recebe um id preenchido", async () => {
+    const cfg = resolveStudyConfig({ niche: "clinicas", numIdeas: 1, mock: true });
+    const evaluated = await evaluateIdea(
+      { name: "Agenda Vazada", sector: "s", description: "d" },
+      new DeciderMock(),
+      cfg,
+    );
+
+    expect(typeof evaluated.id).toBe("string");
+    expect(evaluated.id.length).toBeGreaterThan(0);
+  });
+
+  test("ids sao distintos entre si mesmo com names iguais", async () => {
+    const cfg = resolveStudyConfig({ niche: "clinicas", numIdeas: 1, mock: true });
+    const decider = new DeciderMock();
+
+    const first = await evaluateIdea({ name: "Agenda Vazada", sector: "s", description: "d" }, decider, cfg);
+    const second = await evaluateIdea({ name: "Agenda Vazada", sector: "s", description: "d" }, decider, cfg);
+
+    // Mesmo name: so o id separa as duas linhas.
+    expect(first.name).toBe(second.name);
+    expect(first.id).not.toBe(second.id);
+  });
+
+  test("o id atravessa o pipeline e nao se repete dentro do estudo", async () => {
+    const { handle, cache } = (() => {
+      const h = openMigratedDatabase(":memory:");
+      return { handle: h, cache: new StudyCache(new SqliteCacheStore(h.db)) };
+    })();
+
+    const cfg: StudyConfig = {
+      ...resolveStudyConfig({ niche: "clinicas", numIdeas: 4, mock: true }),
+      outputDir: tempDir("goodbizz-ideias-"),
+      evaluateOnly: true,
+    };
+    const result = await generateStudy(cfg, {
+      llm: new LlmMock(),
+      decider: new DeciderMock(),
+      cache,
+      logger: silentLogger(),
+    });
+
+    const ids = result.evaluations.map((e) => e.id);
+    expect(ids).toHaveLength(4);
+    for (const id of ids) expect(id).toBeTruthy();
+    expect(new Set(ids).size).toBe(ids.length);
+
+    handle.sqlite.close();
+  });
+
+  test("o id nao entra na forma do dados.json (CON-006)", async () => {
+    const cfg: StudyConfig = {
+      ...resolveStudyConfig({ niche: "clinicas", numIdeas: 2, mock: true }),
+      outputDir: tempDir("goodbizz-forma-"),
+      evaluateOnly: true,
+    };
+    const handle = openMigratedDatabase(":memory:");
+    const result = await generateStudy(cfg, {
+      llm: new LlmMock(),
+      decider: new DeciderMock(),
+      cache: new StudyCache(new SqliteCacheStore(handle.db)),
+      logger: silentLogger(),
+    });
+
+    // O baseline Python casa por chave: a forma nao pode ganhar `id`.
+    const json = evaluationToJson(result.evaluations[0]!);
+    expect(Object.keys(json)).not.toContain("id");
+    expect(json["nome"]).toBe(result.evaluations[0]!.name);
+
+    handle.sqlite.close();
   });
 });
