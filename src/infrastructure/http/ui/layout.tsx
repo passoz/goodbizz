@@ -150,7 +150,8 @@ html[data-theme="light"] .btn-primary {
 }
 html[data-theme="light"] .btn-ghost { background: transparent; box-shadow: inset 0 0 0 1px oklch(0 0 0 / 0.16); }
 html[data-theme="light"] .field input[type="text"],
-html[data-theme="light"] .field input[type="number"] {
+html[data-theme="light"] .field input[type="number"],
+html[data-theme="light"] .field input[type="password"] {
   background: rgb(255 255 255 / 0.8);
   border-color: oklch(0 0 0 / 0.14);
   color: var(--paper);
@@ -484,7 +485,7 @@ h3 { font-size: var(--fs-h3); color: var(--paper); font-weight: 620; margin: 28p
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 20px; }
 .field { display: flex; flex-direction: column; gap: 7px; }
 .field label { font-size: var(--fs-small); color: var(--paper); font-weight: 580; }
-.field input[type="text"], .field input[type="number"] {
+.field input[type="text"], .field input[type="number"], .field input[type="password"] {
   width: 100%; padding: 13px 15px; color: var(--paper); font: var(--fs-body)/1.4 var(--sans);
   background: rgb(10 8 8 / 0.42); border: 1px solid oklch(1 0 0 / 0.16);
   border-radius: var(--r-control);
@@ -893,6 +894,7 @@ export const Layout: FC<PropsWithChildren<{ title: string }>> = (props) => (
             <nav class="nav">
               <a href="/">Estudos</a>
               <a href="/como-ler">Como ler</a>
+              <a href="/settings">Configurações</a>
               <a href="/about">API</a>
               <a class="nav-cta" href="/new">
                 Novo estudo

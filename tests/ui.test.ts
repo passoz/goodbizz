@@ -2,15 +2,16 @@
  * Interface web: lista, formulario, detalhe e a pagina sobre a API.
  * Tudo offline: SQLite em memoria, mocks deterministicos e `app.request` (sem porta).
  */
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Hono } from "hono";
 
 import { StudyCache } from "../src/application/cache.ts";
+import { ProviderSettingsStore } from "../src/application/settings.ts";
 import { StudyService } from "../src/application/study-service.ts";
-import { loadEnv } from "../src/config/env.ts";
+import { loadEnv, resetEnv } from "../src/config/env.ts";
 import { createLogger, resolveStudyConfig } from "../src/config/runtime.ts";
 import type { IdeaEvaluation, StudySummary } from "../src/domain/types.ts";
 import { SqliteCacheStore } from "../src/infrastructure/cache-repository.ts";
@@ -20,11 +21,13 @@ import { buildUiApp } from "../src/infrastructure/http/ui/routes.tsx";
 import { CSRF_COOKIE } from "../src/infrastructure/http/ui/security.ts";
 import { LlmMock } from "../src/infrastructure/llm-mock.ts";
 import { SqliteStudyRepository } from "../src/infrastructure/repositories.ts";
+import { SqliteSettingsRepository } from "../src/infrastructure/settings-repository.ts";
 
 interface UiHarness {
   app: Hono;
   service: StudyService;
   repo: SqliteStudyRepository;
+  settings: ProviderSettingsStore;
   artifactsRoot: string;
   close: () => void;
 }
@@ -33,6 +36,7 @@ function makeUiHarness(): UiHarness {
   const db: DatabaseHandle = openMigratedDatabase(":memory:");
   const repo = new SqliteStudyRepository(db.db);
   const artifactsRoot = mkdtempSync(join(tmpdir(), "goodbizz-ui-"));
+  const settings = new ProviderSettingsStore(new SqliteSettingsRepository(db.db));
   const service = new StudyService({
     repo,
     cache: new StudyCache(new SqliteCacheStore(db.db)),
@@ -40,9 +44,10 @@ function makeUiHarness(): UiHarness {
     decider: new DeciderMock(),
     logger: createLogger("error"),
     artifactsRoot,
+    settings,
   });
   const app = buildUiApp({ service, sessionSecret: loadEnv().SESSION_SECRET, production: false });
-  return { app, service, repo, artifactsRoot, close: () => db.sqlite.close() };
+  return { app, service, repo, settings, artifactsRoot, close: () => db.sqlite.close() };
 }
 
 let harness: UiHarness;
@@ -108,6 +113,46 @@ beforeEach(() => {
 afterEach(() => {
   harness.close();
 });
+
+/**
+ * Ambiente deterministico para a pagina de configuracoes: duas origens (`env`) e duas ausencias
+ * (`vazio`), deixando os outros campos livres para a sobreposicao salva em cada teste.
+ */
+const PROVIDER_ENV: Record<string, string> = {
+  LLM_API_URL: "https://api.llm.test/v1",
+  LLM_API_KEY: "sk-env-chave-secreta-1234",
+  LLM_API_MODEL: "modelo-do-ambiente",
+  DECISION_API_URL: "",
+  DECISION_API_KEY: "",
+  DECISION_API_MODEL: "systemone-do-ambiente",
+};
+
+const savedEnv: Record<string, string | undefined> = {};
+
+beforeAll(() => {
+  for (const [key, value] of Object.entries(PROVIDER_ENV)) {
+    savedEnv[key] = Bun.env[key];
+    Bun.env[key] = value;
+  }
+  resetEnv();
+});
+
+afterAll(() => {
+  for (const key of Object.keys(PROVIDER_ENV)) {
+    if (savedEnv[key] === undefined) delete Bun.env[key];
+    else Bun.env[key] = savedEnv[key];
+  }
+  resetEnv();
+});
+
+/** Fatia o HTML de uma linha da tabela de configuracao (`data-setting="<key>"` ate a proxima). */
+function settingRow(body: string, key: string): string {
+  const marker = `data-setting="${key}"`;
+  const start = body.indexOf(marker);
+  expect(start).toBeGreaterThanOrEqual(0);
+  const next = body.indexOf(`class="field" data-setting="`, start + marker.length);
+  return next === -1 ? body.slice(start) : body.slice(start, next);
+}
 
 describe("paginas da interface", () => {
   test("a pagina inicial mostra o estado vazio com uma acao clara", async () => {
@@ -487,5 +532,106 @@ describe("marca, renomear, progresso humano, falha e consumo", () => {
     // Dois cartoes na lista, mas so o estudo com consumo medido ganha o chip.
     expect(body.match(/class="study-card/g)?.length).toBe(2);
     expect(body.match(/custo estimado do consumo medido/g)?.length).toBe(1);
+  });
+});
+
+describe("configuracao dos provedores", () => {
+  test("o topbar oferece o link para as configuracoes", async () => {
+    const body = await (await harness.app.request("/")).text();
+    expect(body).toContain('<a href="/settings">Configurações</a>');
+  });
+
+  test("a pagina de configuracoes mostra cada campo com a origem e a chave mascarada", async () => {
+    await harness.settings.patch({ llmBaseUrl: "https://salvo.test/v1", deciderApiKey: "chave-salva-9999" });
+
+    const response = await harness.app.request("/settings");
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toContain("text/html");
+    const body = await response.text();
+
+    expect(body).toContain("Configuração dos provedores");
+    expect(body).toContain("A configuração vale para os próximos estudos.");
+    expect(body).toContain('action="/ui/settings"');
+    expect(body).toContain("Salvar");
+
+    // Sobreposicao salva: origem "definido aqui" e a opcao de limpar.
+    const saved = settingRow(body, "llmBaseUrl");
+    expect(saved).toContain("URL do LLM");
+    expect(saved).toContain("definido aqui");
+    expect(saved).toContain("salvo.test");
+    expect(saved).toContain('name="clear_llmBaseUrl"');
+
+    // Chave vinda do ambiente: mascara no lugar do valor cru e campo de senha.
+    const envKey = settingRow(body, "llmApiKey");
+    expect(envKey).toContain("Chave do LLM");
+    expect(envKey).toContain("do ambiente");
+    expect(envKey).toContain("sk-…1234");
+    expect(envKey).toContain('type="password"');
+    expect(envKey).toContain('autocomplete="off"');
+    expect(envKey).not.toContain('name="clear_llmApiKey"');
+
+    // Chave salva: continua mascarada, nunca em claro.
+    const savedKey = settingRow(body, "deciderApiKey");
+    expect(savedKey).toContain("definido aqui");
+    expect(savedKey).toContain("cha…9999");
+    expect(savedKey).toContain('name="clear_deciderApiKey"');
+
+    // Campo sem ambiente e sem sobreposicao: "nao definido".
+    expect(settingRow(body, "deciderUrl")).toContain("não definido");
+    expect(settingRow(body, "llmModel")).toContain("do ambiente");
+
+    // Nem a chave do ambiente nem a salva podem aparecer em claro no HTML.
+    expect(body).not.toContain("sk-env-chave-secreta-1234");
+    expect(body).not.toContain("chave-salva-9999");
+  });
+
+  test("salvar sem JS aplica o patch e volta para a pagina de configuracoes", async () => {
+    const { cookiePair, token } = await csrfToken();
+    const response = await harness.app.request("/ui/settings", {
+      method: "POST",
+      headers: { ...FORM, Origin: "http://localhost", Cookie: cookiePair },
+      body: `llmModel=modelo-escolhido&_csrf=${token}`,
+    });
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe("/settings");
+    expect(await harness.service.providerSettings()).toEqual({ llmModel: "modelo-escolhido" });
+
+    const body = await (await harness.app.request("/settings")).text();
+    const row = settingRow(body, "llmModel");
+    expect(row).toContain("definido aqui");
+    expect(row).toContain("modelo-escolhido");
+    expect(row).toContain('name="clear_llmModel"');
+  });
+
+  test("limpar remove a sobreposicao e o campo volta a herdar o ambiente", async () => {
+    await harness.settings.patch({ llmBaseUrl: "https://salvo.test/v1" });
+
+    const { cookiePair, token } = await csrfToken();
+    const response = await harness.app.request("/ui/settings", {
+      method: "POST",
+      headers: { ...FORM, Origin: "http://localhost", Cookie: cookiePair },
+      body: `clear_llmBaseUrl=1&_csrf=${token}`,
+    });
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe("/settings");
+    expect(await harness.service.providerSettings()).toEqual({});
+
+    const body = await (await harness.app.request("/settings")).text();
+    const row = settingRow(body, "llmBaseUrl");
+    expect(row).toContain("do ambiente");
+    expect(row).toContain("api.llm.test");
+    expect(row).not.toContain("salvo.test");
+    expect(row).not.toContain('name="clear_llmBaseUrl"');
+  });
+
+  test("um campo fora do contrato e recusado e nada muda", async () => {
+    const { cookiePair, token } = await csrfToken();
+    const response = await harness.app.request("/ui/settings", {
+      method: "POST",
+      headers: { ...FORM, Origin: "http://localhost", Cookie: cookiePair },
+      body: `desconhecido=1&_csrf=${token}`,
+    });
+    expect(response.status).toBe(422);
+    expect(await harness.service.providerSettings()).toEqual({});
   });
 });

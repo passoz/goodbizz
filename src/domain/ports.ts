@@ -4,6 +4,8 @@
 import type {
   DeciderAnswers,
   IdeaEvaluation,
+  ProviderSettings,
+  ProviderSettingsPatch,
   ProviderUsage,
   QuestionSet,
   StudyListItem,
@@ -42,6 +44,13 @@ export interface CacheStore {
   put(key: string, value: unknown): Promise<void>;
   count(): Promise<number>;
   hits(): number;
+}
+
+/** Persistência da configuração de provedores (linha única). */
+export interface SettingsRepository {
+  get(): Promise<ProviderSettings>;
+  /** Aplica o remendo (string define, `null` limpa) e devolve o estado final. */
+  patch(patch: ProviderSettingsPatch): Promise<ProviderSettings>;
 }
 
 export interface StudyRepository {

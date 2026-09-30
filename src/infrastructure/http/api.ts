@@ -7,6 +7,8 @@ import { z } from "zod";
 
 import { buildErrorHandler } from "./errors.ts";
 import { resolveStudyConfig } from "../../config/runtime.ts";
+import { loadEnv } from "../../config/env.ts";
+import { providerSettingsView } from "../../config/providers.ts";
 import { estimateCost } from "../../application/costs.ts";
 import { ValidationError } from "../../domain/errors.ts";
 import type { Logger } from "../../domain/ports.ts";
@@ -28,6 +30,21 @@ const StudyInput = z.object({
 });
 
 /** Renomear: só o título exibido (o nicho). */
+/**
+ * Configuração dos provedores de IA: o que for salvo aqui sobrepõe as variáveis de ambiente;
+ * `null` limpa o campo e volta a herdar o ambiente.
+ */
+const ProviderSettingsPatchInput = z
+  .object({
+    llmBaseUrl: z.string().trim().max(500).nullable().optional(),
+    llmModel: z.string().trim().max(200).nullable().optional(),
+    llmApiKey: z.string().trim().max(500).nullable().optional(),
+    deciderUrl: z.string().trim().max(500).nullable().optional(),
+    deciderModel: z.string().trim().max(200).nullable().optional(),
+    deciderApiKey: z.string().trim().max(500).nullable().optional(),
+  })
+  .strict();
+
 const RenameInput = z.object({
   niche: z.string().trim().min(2, "o nicho precisa de pelo menos 2 caracteres"),
 });
@@ -105,6 +122,19 @@ export function buildApiApp(deps: ApiDeps): Hono {
     const record = await deps.service.create(cfg);
     deps.service.start(record.id);
     return c.json(publicStudy(record), 201);
+  });
+
+  api.get("/settings", async (c) => {
+    const env = loadEnv();
+    return c.json({ fields: providerSettingsView(env, await deps.service.providerSettings()) });
+  });
+
+  /** `null` limpa o campo e volta a herdar o ambiente. */
+  api.patch("/settings", async (c) => {
+    const patch = parseOrThrow(ProviderSettingsPatchInput, await c.req.json());
+    const settings = await deps.service.updateProviderSettings(patch);
+    const env = loadEnv();
+    return c.json({ fields: providerSettingsView(env, settings) });
   });
 
   api.get("/studies", async (c) => {

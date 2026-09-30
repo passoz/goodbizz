@@ -141,6 +141,23 @@ export interface StudyProgress {
   error: string | null;
 }
 
+/**
+ * Configuração de provedores definida em runtime (aba `/settings`).
+ * Campo ausente (ou string vazia) = herda o ambiente; por isso a precedência é sempre
+ * `settings ?? env`.
+ */
+export interface ProviderSettings {
+  llmBaseUrl?: string;
+  llmApiKey?: string;
+  llmModel?: string;
+  deciderUrl?: string;
+  deciderApiKey?: string;
+  deciderModel?: string;
+}
+
+/** Remendo de configuração: `null` limpa o campo e volta a herdar o ambiente. */
+export type ProviderSettingsPatch = { [K in keyof ProviderSettings]?: string | null };
+
 /** Consumo acumulado de um provedor. Tokens só quando o provedor informa. */
 export interface ProviderUsage {
   calls: number;

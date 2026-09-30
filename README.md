@@ -243,6 +243,24 @@ por sessao: rotacionar a cada resposta invalidaria qualquer formulario já abert
 
 ---
 
+## Configuração em runtime (`/settings`)
+
+A aba **Configurações** (`/settings`) deixa o operador definir, pela interface, o que antes só existia
+em variável de ambiente: URL, modelo e chave do LLM e do decisor.
+
+- **Precedência:** o que está salvo em `/settings` **sobrepõe** `LLM_API_*`/`DECISION_API_*` e o
+  restante do contrato de ambiente. Campo não preenchido continua herdando o ambiente; `null` (ou o
+  botão "limpar") volta a herdar. Na CLI a ordem é _flag explícita > /settings > ambiente_.
+- **Vale na hora:** os clientes releem a configuração a cada chamada (troca de URL/chave só recria o
+  cliente HTTP quando algo muda) — não precisa reiniciar o processo. O consumo medido sobrevive à troca.
+- **Chaves:** são gravadas no SQLite do serviço (`settings`) e nunca voltam em claro pela API nem pela
+  página — `GET /api/settings` e `/settings` devolvem apenas a máscara (`sk-abc…1234`) e a origem de
+  cada campo (`definido aqui`, `do ambiente`, `não definido`). Como o serviço é acessível só pela
+  tailnet e não tem autenticação própria, trate essa aba como área administrativa.
+- **API:** `GET /api/settings` e `PATCH /api/settings` com
+  `{llmBaseUrl, llmModel, llmApiKey, deciderUrl, deciderModel, deciderApiKey}` (string define,
+  `null` limpa); sem JS, o formulário posta em `/ui/settings` com CSRF.
+
 ## Consumo e custo estimado
 
 Cada estudo guarda o consumo medido no pipeline: tokens de entrada, de entrada em cache e de saída,

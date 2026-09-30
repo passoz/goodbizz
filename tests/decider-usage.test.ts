@@ -13,7 +13,7 @@ function stubFetch(body: unknown, status = 200): void {
     new Response(typeof body === "string" ? body : JSON.stringify(body), {
       status,
       headers: { "content-type": "application/json" },
-    })) as typeof fetch;
+    })) as unknown as typeof fetch;
 }
 
 afterEach(() => {

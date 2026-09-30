@@ -24,6 +24,11 @@ export const studies = sqliteTable("studies", {
   usageJson: text("usage_json"),
 });
 
+export const settings = sqliteTable("settings", {
+  id: integer("id").primaryKey(),
+  data: text("data").notNull(),
+});
+
 export const evaluations = sqliteTable(
   "evaluations",
   {

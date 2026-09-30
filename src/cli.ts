@@ -6,7 +6,7 @@
  * Exit codes: 0 ok, 1 failed run / fewer than three usable probes, 2 bad configuration or
  * unknown subcommand, 130 interrupted.
  */
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -17,15 +17,17 @@ import { parseIdeas } from "./application/generation.ts";
 import { htmlToPdf } from "./application/pdf.ts";
 import { DEFAULT_CUTOFF, formatRecalibrateReport, recalibrate } from "./application/recalibrate.ts";
 import { createLogger, resolveStudyConfig, studyContext } from "./config/runtime.ts";
+import { loadEnv } from "./config/env.ts";
 import { scrub } from "./config/redact.ts";
 import { ArtifactError, ConfigError, ValidationError } from "./domain/errors.ts";
 import { createDeciderClient } from "./infrastructure/decider.ts";
 import { openMigratedDatabase } from "./infrastructure/db.ts";
+import { SqliteSettingsRepository } from "./infrastructure/settings-repository.ts";
 import { SqliteCacheStore } from "./infrastructure/cache-repository.ts";
 import { createLlmClient } from "./infrastructure/llm.ts";
 import { startService } from "./index.ts";
 import type { ArtifactFile } from "./domain/ports.ts";
-import type { StudyConfig } from "./domain/types.ts";
+import type { ProviderSettings, StudyConfig } from "./domain/types.ts";
 
 /** Migrations ship next to the sources (`drizzle/`) and are resolved from the module, not the cwd. */
 const MIGRATIONS_DIR = fileURLToPath(new URL("../drizzle", import.meta.url));
@@ -314,6 +316,26 @@ function printSummary(cfg: StudyConfig, result: GenerateStudyResult): void {
   }
 }
 
+/**
+ * Configuração de provedores salva na aba /settings vale também para a CLI — mas só quando o banco
+ * do serviço existe nesta máquina. A ordem é: flag explícita > settings > ambiente.
+ */
+async function loadProviderSettings(databaseUrl: string): Promise<ProviderSettings> {
+  if (databaseUrl === ":memory:" || !existsSync(databaseUrl)) return {};
+  try {
+    const handle = openMigratedDatabase(databaseUrl, MIGRATIONS_DIR);
+    try {
+      return await new SqliteSettingsRepository(handle.db).get();
+    } finally {
+      handle.sqlite.close();
+    }
+  } catch (error) {
+    // Silencioso de propósito: a CLI roda fora do serviço e um banco ausente é o caso normal.
+    void error;
+    return {};
+  }
+}
+
 async function runGenerate(argv: string[]): Promise<number> {
   if (wantsHelp(argv)) {
     printGenerateHelp();
@@ -324,6 +346,8 @@ async function runGenerate(argv: string[]): Promise<number> {
     throw new ConfigError(`argumentos extras: ${positionals.slice(1).join(", ")}`);
   }
   const niche = (values["niche"] ?? positionals[0] ?? "").trim();
+  const settings = await loadProviderSettings(loadEnv().DATABASE_URL);
+
   const cfg = resolveStudyConfig({
     niche,
     city: values["city"],
@@ -339,12 +363,12 @@ async function runGenerate(argv: string[]): Promise<number> {
     pdf: flags.has("pdf"),
     concurrency: parseIntFlag(values, "concurrency", 8),
     timeout: parseFloatFlag(values, "timeout", 60),
-    llmBaseUrl: values["llm-url"],
-    llmModel: values["llm-model"],
-    llmKey: values["llm-key"],
-    deciderUrl: values["decider-url"],
-    deciderModel: values["decider-model"],
-    deciderKey: values["decider-key"],
+    llmBaseUrl: values["llm-url"] ?? settings.llmBaseUrl,
+    llmModel: values["llm-model"] ?? settings.llmModel,
+    llmKey: values["llm-key"] ?? settings.llmApiKey,
+    deciderUrl: values["decider-url"] ?? settings.deciderUrl,
+    deciderModel: values["decider-model"] ?? settings.deciderModel,
+    deciderKey: values["decider-key"] ?? settings.deciderApiKey,
   });
 
   mkdirSync(cfg.outputDir, { recursive: true });
@@ -403,14 +427,15 @@ async function runDiagnose(argv: string[]): Promise<number> {
   }
   const ideas = parseIdeas(payload);
 
+  const settings = await loadProviderSettings(loadEnv().DATABASE_URL);
   const cfg = resolveStudyConfig({
     niche: values["niche"] ?? "o nicho em uma frase",
     city: values["city"],
     mockLlm: true,
     mockDecider: flags.has("mock"),
-    deciderUrl: values["decider-url"],
-    deciderModel: values["decider-model"],
-    deciderKey: values["decider-key"],
+    deciderUrl: values["decider-url"] ?? settings.deciderUrl,
+    deciderModel: values["decider-model"] ?? settings.deciderModel,
+    deciderKey: values["decider-key"] ?? settings.deciderApiKey,
   });
 
   const report = await diagnoseProbes(ideas, createDeciderClient(cfg), studyContext(cfg), threshold);
@@ -494,7 +519,7 @@ async function runServe(argv: string[]): Promise<number> {
     return 0;
   }
   try {
-    startService();
+    void startService();
   } catch (error) {
     return reportError(error);
   }

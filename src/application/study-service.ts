@@ -10,6 +10,7 @@ import { join, relative, resolve, sep } from "node:path";
 import { diagnoseProbes, diagnoseExitCode, type DiagnoseReport } from "./diagnose.ts";
 import { buildZip } from "./artifacts.ts";
 import { explainFailure } from "./failures.ts";
+import type { ProviderSettingsStore } from "./settings.ts";
 import { generateStudy } from "./generate-study.ts";
 import { htmlToPdf } from "./pdf.ts";
 import { recalibrate, type RecalibrateReport } from "./recalibrate.ts";
@@ -18,6 +19,7 @@ import { scrub } from "../config/redact.ts";
 import { resolveStudyConfig, studyContext } from "../config/runtime.ts";
 import { ConflictError, NotFoundError, ValidationError } from "../domain/errors.ts";
 import type { ArtifactFile, DeciderClient, LlmClient, Logger, StudyRepository } from "../domain/ports.ts";
+import type { ProviderSettings, ProviderSettingsPatch } from "../domain/types.ts";
 import type { Idea, StudyConfig, StudyListItem, StudyRecord } from "../domain/types.ts";
 import type { StudyCache } from "./cache.ts";
 
@@ -36,6 +38,8 @@ export interface StudyServiceOptions {
   /** Providers configured as simulated at the service level; a study inherits them. */
   mockLlm?: boolean;
   mockDecider?: boolean;
+  /** Configuração de provedores vinda da aba `/settings` (sobrepõe o ambiente). */
+  settings?: ProviderSettingsStore;
 }
 
 export interface DiagnoseInput {
@@ -173,6 +177,19 @@ export class StudyService {
     const record = await this.options.repo.get(id);
     if (!record) throw new NotFoundError(`study ${id} not found`);
     return record;
+  }
+
+  /** Configuração de provedores salva em runtime (vazio = tudo do ambiente). */
+  async providerSettings(): Promise<ProviderSettings> {
+    return this.options.settings ? this.options.settings.current() : {};
+  }
+
+  /** Aplica um remendo na configuração de provedores; os clientes passam a usá-la já na próxima chamada. */
+  async updateProviderSettings(patch: ProviderSettingsPatch): Promise<ProviderSettings> {
+    if (!this.options.settings) throw new ValidationError("configuração de provedores indisponível");
+    const next = await this.options.settings.patch(patch);
+    this.options.logger.info("provider settings updated", { fields: Object.keys(patch) });
+    return next;
   }
 
   /**

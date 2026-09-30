@@ -11,21 +11,21 @@ import type { Hono } from "hono";
 import { inArray } from "drizzle-orm";
 
 import { StudyCache } from "./application/cache.ts";
+import { ProviderSettingsStore } from "./application/settings.ts";
 import { StudyService } from "./application/study-service.ts";
 import { createLogger } from "./config/runtime.ts";
 import { loadEnv, type Env } from "./config/env.ts";
+import { effectiveProviders } from "./config/providers.ts";
 import { ConfigError } from "./domain/errors.ts";
 import { SqliteCacheStore } from "./infrastructure/cache-repository.ts";
 import { openDatabase, runMigrations, studies, type DatabaseHandle } from "./infrastructure/db.ts";
-import { DeciderHttp } from "./infrastructure/decider.ts";
-import { DeciderMock } from "./infrastructure/decider-mock.ts";
 import { buildApiApp } from "./infrastructure/http/api.ts";
 import { buildHealthApp } from "./infrastructure/http/health.ts";
 import { buildHttpApp } from "./infrastructure/http/app.ts";
 import { buildUiApp } from "./infrastructure/http/ui/routes.tsx";
-import { LlmHttp } from "./infrastructure/llm.ts";
-import { LlmMock } from "./infrastructure/llm-mock.ts";
 import { SqliteStudyRepository } from "./infrastructure/repositories.ts";
+import { SqliteSettingsRepository } from "./infrastructure/settings-repository.ts";
+import { RoutingDeciderClient, RoutingLlmClient } from "./infrastructure/routing.ts";
 import type { Logger } from "./domain/ports.ts";
 import type { Server } from "bun";
 
@@ -45,7 +45,7 @@ export interface ServiceBundle {
  * Build the whole service in memory: environment, clients, database, repositories and routes.
  * Fails fast when a real provider is selected without its credentials.
  */
-export function buildService(env: Env = loadEnv()): ServiceBundle {
+export async function buildService(env: Env = loadEnv()): Promise<ServiceBundle> {
   const logger = createLogger(env.LOG_LEVEL);
   const mockAll = env.GOODBIZZ_MOCK;
   // Modo misto, igual a CLI: da para rodar texto simulado com decisor real (e vice-versa), o que
@@ -53,21 +53,27 @@ export function buildService(env: Env = loadEnv()): ServiceBundle {
   const mockLlm = mockAll || env.GOODBIZZ_MOCK_LLM;
   const mockDecider = mockAll || env.GOODBIZZ_MOCK_DECIDER;
 
-  if (!mockLlm && env.LLM_API_KEY === "") {
-    throw new ConfigError("LLM_API_KEY is required unless the LLM is mocked");
-  }
-  if (!mockDecider && env.DECISION_API_URL === "") {
-    throw new ConfigError("DECISION_API_URL is required unless the decider is mocked");
-  }
-
-  const llm = mockLlm ? new LlmMock() : new LlmHttp(env.LLM_API_URL, env.LLM_API_MODEL, env.LLM_API_KEY, 60);
-  const decider = mockDecider
-    ? new DeciderMock()
-    : new DeciderHttp(env.DECISION_API_URL, env.DECISION_API_MODEL, env.DECISION_API_KEY, 60);
-
   const handle = openDatabase(env.DATABASE_URL);
   const applied = runMigrations(handle, MIGRATIONS_DIR);
   logger.info("migrations applied", { count: applied.length });
+
+  // A configuração salva na aba /settings sobrepõe o ambiente: precisa ser lida ANTES de validar
+  // as credenciais, senão o serviço recusaria subir num banco que já tem as URLs/chaves.
+  const settingsStore = new ProviderSettingsStore(new SqliteSettingsRepository(handle.db));
+  await settingsStore.load();
+  const effective = effectiveProviders(env, settingsStore.current());
+
+  if (!mockLlm && effective.llmApiKey === "") {
+    throw new ConfigError("LLM_API_KEY is required unless the LLM is mocked");
+  }
+  if (!mockDecider && effective.deciderUrl === "") {
+    throw new ConfigError("DECISION_API_URL is required unless the decider is mocked");
+  }
+
+  // Clientes que releem a configuração a cada chamada: salvar na aba /settings vale na hora.
+  const resolveProviders = () => effectiveProviders(env, settingsStore.current());
+  const llm = new RoutingLlmClient({ resolve: resolveProviders, mock: mockLlm, timeout: 60 });
+  const decider = new RoutingDeciderClient({ resolve: resolveProviders, mock: mockDecider, timeout: 60 });
 
   const repo = new SqliteStudyRepository(handle.db);
   const cache = new StudyCache(new SqliteCacheStore(handle.db));
@@ -107,6 +113,7 @@ export function buildService(env: Env = loadEnv()): ServiceBundle {
     pdf: false,
     mockLlm,
     mockDecider,
+    settings: settingsStore,
   });
 
   const production = env.APP_ENV === "production";
@@ -139,8 +146,8 @@ export interface RunningService {
  * Serve the composed app. The returned `shutdown` drains in-flight requests, closes SQLite and
  * is idempotent; signals install a force-exit timer só a hung drain cannot wedge the process.
  */
-export function startService(env: Env = loadEnv()): RunningService {
-  const { app, handle, logger } = buildService(env);
+export async function startService(env: Env = loadEnv()): Promise<RunningService> {
+  const { app, handle, logger } = await buildService(env);
   const server = Bun.serve({ port: env.PORT, fetch: app.fetch });
   logger.info("service listening", { url: String(server.url) });
 
@@ -169,5 +176,5 @@ export function startService(env: Env = loadEnv()): RunningService {
 }
 
 if (import.meta.main) {
-  startService();
+  void startService();
 }

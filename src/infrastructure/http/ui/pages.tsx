@@ -12,6 +12,7 @@ import { html, raw } from "hono/html";
 import { estimateCost } from "../../../application/costs.ts";
 import { tierOf } from "../../../application/evaluate.ts";
 import { folderName } from "../../../application/reports.ts";
+import type { ProviderSettingRow, ProviderSource } from "../../../config/providers.ts";
 import type {
   IdeaEvaluation,
   StudyListItem,
@@ -913,6 +914,123 @@ export const HelpPage: FC = () => (
     </section>
     <Legend />
   </>
+);
+
+/** Vocabulario e selos da origem de cada campo da configuracao (mesma escala do resto da UI). */
+const SOURCE_LABEL: Record<ProviderSource, string> = {
+  settings: "definido aqui",
+  env: "do ambiente",
+  vazio: "não definido",
+};
+
+const SOURCE_TONE: Record<ProviderSource, string> = {
+  settings: "b-green",
+  env: "b-yellow",
+  vazio: "b-red",
+};
+
+/**
+ * Configuracao dos provedores: com JS intercepta o `submit`, envia `PATCH /api/settings` e recarrega,
+ * mostrando o erro inline; sem JS o form posta em `/ui/settings` (mesma origem + CSRF), que responde
+ * 303 para ca. Campo preenchido define, "limpar" volta a herdar o ambiente e campo vazio nao mexe.
+ */
+const SETTINGS_SCRIPT = `
+(function () {
+  var form = document.getElementById("settings-form");
+  if (!form) return;
+  form.addEventListener("submit", function (event) {
+    event.preventDefault();
+    var error = document.getElementById("settings-error");
+    var button = form.querySelector("button[type=submit]");
+    var token = form.elements["_csrf"].value;
+    var patch = {};
+    Array.prototype.slice.call(form.querySelectorAll("[data-setting]")).forEach(function (row) {
+      var key = row.getAttribute("data-setting");
+      var clear = row.querySelector("input[data-clear]");
+      var input = row.querySelector("input[data-value]");
+      if (clear && clear.checked) { patch[key] = null; return; }
+      var value = input ? input.value.trim() : "";
+      if (value) patch[key] = value;
+    });
+    error.textContent = "";
+    button.disabled = true;
+    button.textContent = "Salvando...";
+    fetch("/api/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", "X-CSRF-Token": token },
+      body: JSON.stringify(patch),
+    })
+      .then(function (response) {
+        if (response.ok) { window.location.reload(); return null; }
+        return response.json().then(
+          function (body) { throw new Error(body.message || "não foi possível salvar"); },
+          function () { throw new Error("não foi possível salvar"); },
+        );
+      })
+      .catch(function (failure) {
+        error.textContent = failure.message || "não foi possível salvar";
+        button.disabled = false;
+        button.textContent = "Salvar";
+      });
+  });
+})();`;
+
+/**
+ * Configuracao dos provedores de IA, na pagina `/settings`. Cada linha traz o valor efetivo (chave
+ * sempre mascarada), a origem e um campo que, vazio, nao mexe em nada. O que for salvo sobrepoe as
+ * variaveis de ambiente e vale para os proximos estudos.
+ */
+export const SettingsPage: FC<{ rows: ProviderSettingRow[]; token: string }> = (props) => (
+  <section>
+    <div class="page-head">
+      <div>
+        <h2>Configuração dos provedores</h2>
+        <p class="sub">
+          O que você salvar aqui sobrepõe as variáveis de ambiente e passa a valer na hora, sem reiniciar o
+          serviço. A configuração vale para os próximos estudos. Deixe o campo vazio para não mexer.
+        </p>
+      </div>
+      <a class="btn btn-ghost" href="/">
+        Voltar para os estudos
+      </a>
+    </div>
+
+    <form id="settings-form" method="post" action="/ui/settings" class="panel glass">
+      <input type="hidden" name="_csrf" value={props.token} />
+      <div class="form-grid">
+        {props.rows.map((row) => (
+          <div class="field" data-setting={row.key}>
+            <label for={`setting-${row.key}`}>{row.label}</label>
+            <p class="hint">
+              atual: <code>{row.value || "não definido"}</code>{" "}
+              <span class={`badge ${SOURCE_TONE[row.source]}`}>{SOURCE_LABEL[row.source]}</span>
+            </p>
+            <input
+              id={`setting-${row.key}`}
+              name={row.key}
+              data-value
+              type={row.secret ? "password" : "text"}
+              autocomplete={row.secret ? "off" : undefined}
+              placeholder={row.secret ? "••••••" : "vazio = não mexer"}
+            />
+            {row.source === "settings" ? (
+              <label class="check">
+                <input type="checkbox" name={`clear_${row.key}`} value="1" data-clear />
+                Limpar <Hint>voltar a usar o ambiente</Hint>
+              </label>
+            ) : null}
+          </div>
+        ))}
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" type="submit">
+          Salvar
+        </button>
+        <p id="settings-error" role="alert" />
+      </div>
+    </form>
+    <script>{raw(SETTINGS_SCRIPT)}</script>
+  </section>
 );
 
 /** Abre o plano da ideia em modal: busca o fragmento ja renderizado no servidor e injeta. */

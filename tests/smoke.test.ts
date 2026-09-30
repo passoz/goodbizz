@@ -250,7 +250,7 @@ describe("migrations", () => {
     expect(created.progress.state).toBe("pending");
     handle.sqlite.close();
 
-    const bundle = buildService({
+    const bundle = await buildService({
       ...loadEnv(),
       DATABASE_URL: url,
       GOODBIZZ_MOCK: true,
