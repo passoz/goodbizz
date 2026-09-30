@@ -596,8 +596,12 @@ describe("adicao de ideias por quantidade", () => {
 });
 
 describe("regeracao do HTML completo (DEC-006)", () => {
-  /** Estudo com PDF ligado, onde o HTML completo e produzido junto. */
-  async function pdfStudy(numIdeas: number) {
+  /**
+   * Estudo concluido SEM pdf ligado: o HTML completo e plantado a mao como "antigo", e a operacao
+   * tem de regrava-lo. Nada aqui depende de chromium — o CI tem um Chrome de verdade e renderizar
+   * PDF nele estoura o timeout de 5 s do teste, sem provar nada a mais.
+   */
+  async function htmlStudy(numIdeas: number) {
     withCredentials();
     const db = openMigratedDatabase(":memory:");
     const dir = tempDir("goodbizz-html-");
@@ -608,22 +612,31 @@ describe("regeracao do HTML completo (DEC-006)", () => {
       decider: new DeciderMock(),
       logger: silentLogger(),
       artifactsRoot: dir,
-      pdf: true,
     });
     const record = await service.create(
-      resolveStudyConfig({ niche: "clinicas", numIdeas, mock: true, outputDir: dir, pdf: true }),
+      resolveStudyConfig({ niche: "clinicas", numIdeas, mock: true, outputDir: dir }),
     );
     await service.run(record.id);
     return { service, db, dir, id: record.id };
   }
 
+  /** Planta um HTML "da versao anterior" no diretorio de artefatos do estudo. */
+  async function seedStaleHtml(service: StudyService, id: string, marker: string): Promise<void> {
+    const record = await service.get(id);
+    writeFileSync(
+      join(record.artifactDir, "estudo-completo.html"),
+      `<html><body>${marker}</body></html>`,
+      "utf8",
+    );
+  }
+
   test("adicionar regrava o HTML com as ideias novas", async () => {
-    const { service, db, id } = await pdfStudy(2);
+    const { service, db, id } = await htmlStudy(2);
     try {
-      const before = await service.readArtifact(id, "estudo-completo.html");
+      await seedStaleHtml(service, id, "HTML ANTIGO sem as novas");
       const after = await service.addIdeas(id, 2);
       const html = await service.readArtifact(id, "estudo-completo.html");
-      expect(html).not.toBe(before);
+      expect(html).not.toContain("HTML ANTIGO");
       for (const idea of after.evaluations.slice(2)) expect(html).toContain(idea.name);
     } finally {
       db.sqlite.close();
@@ -631,10 +644,11 @@ describe("regeracao do HTML completo (DEC-006)", () => {
   });
 
   test("remover regrava o HTML sem a ideia que saiu", async () => {
-    const { service, db, id } = await pdfStudy(3);
+    const { service, db, id } = await htmlStudy(3);
     try {
       const before = await service.get(id);
       const removed = before.evaluations[1]!;
+      await seedStaleHtml(service, id, `HTML ANTIGO com ${removed.name}`);
       await service.removeIdea(id, removed.id);
       const html = await service.readArtifact(id, "estudo-completo.html");
       expect(html).not.toContain(removed.name);
@@ -647,7 +661,7 @@ describe("regeracao do HTML completo (DEC-006)", () => {
   });
 
   test("remover a ultima ideia zera o estudo sem quebrar", async () => {
-    const { service, db, id } = await pdfStudy(1);
+    const { service, db, id } = await htmlStudy(1);
     try {
       const before = await service.get(id);
       const after = await service.removeIdea(id, before.evaluations[0]!.id);
