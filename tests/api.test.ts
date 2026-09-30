@@ -286,15 +286,15 @@ describe("consumo e custo estimado", () => {
     };
     expect(body.usage.llm.inputTokens).toBe(1_000_000);
     expect(body.usage.decider.calls).toBe(7);
-    // 1M de entrada * US$ 0,14/1M (padrão do ambiente) + decisor grátis.
-    expect(body.cost.usd).toBe(0.14);
+    // 1M de entrada * US$ 0,15/1M (padrão do ambiente, tabela off-peak do deepseek-flash) + decisor grátis.
+    expect(body.cost.usd).toBe(0.15);
     expect(body.cost.brl).toBeNull();
-    expect(body.cost.note).toContain("0.14/1M entrada");
+    expect(body.cost.note).toContain("0.15/1M entrada");
 
     const listed = (await (await api().request("/studies")).json()) as {
       studies: Array<{ id: string; cost: { usd: number } | null }>;
     };
-    expect(listed.studies.find((study) => study.id === record.id)?.cost?.usd).toBe(0.14);
+    expect(listed.studies.find((study) => study.id === record.id)?.cost?.usd).toBe(0.15);
   });
 
   test("estudo sem medição devolve usage e cost nulos", async () => {

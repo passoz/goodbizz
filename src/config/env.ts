@@ -64,12 +64,15 @@ function buildEnv() {
       /** Simula apenas o decisor (números deterministicos) mantendo o LLM real. */
       GOODBIZZ_MOCK_DECIDER: booleanFlag("0"),
 
-      // Preços para a estimativa de custo por estudo (US$ por 1M de tokens). Os padrões são o preço
-      // de tabela do deepseek-v4-flash; o decisor (motor jev do 9router) é grátis por padrão.
-      GOODBIZZ_PRICE_LLM_INPUT_PER_MTOK: z.coerce.number().min(0).default(0.14),
-      GOODBIZZ_PRICE_LLM_CACHED_INPUT_PER_MTOK: z.coerce.number().min(0).default(0.0028),
-      GOODBIZZ_PRICE_LLM_OUTPUT_PER_MTOK: z.coerce.number().min(0).default(0.28),
-      GOODBIZZ_PRICE_DECIDER_INPUT_PER_MTOK: z.coerce.number().min(0).default(0),
+      // Preços para a estimativa de custo por estudo (US$ por 1M de tokens). Padrões = tabelas
+      // OFICIAIS: decisor Jev 1.13 da TypeSafe (api.typesafe.ai — US$ 0,042/1M de entrada, saída
+      // grátis) e LLM `deepseek-flash` em horário off-peak (api-docs.deepseek.com/quick_start/pricing):
+      // $0.15 entrada, $0.003 entrada em cache, $0.60 saída. Em horário de pico os três dobram —
+      // ajuste aqui (ou na aba /settings, quando o preço for de outro provedor).
+      GOODBIZZ_PRICE_LLM_INPUT_PER_MTOK: z.coerce.number().min(0).default(0.15),
+      GOODBIZZ_PRICE_LLM_CACHED_INPUT_PER_MTOK: z.coerce.number().min(0).default(0.003),
+      GOODBIZZ_PRICE_LLM_OUTPUT_PER_MTOK: z.coerce.number().min(0).default(0.6),
+      GOODBIZZ_PRICE_DECIDER_INPUT_PER_MTOK: z.coerce.number().min(0).default(0.042),
       GOODBIZZ_PRICE_DECIDER_OUTPUT_PER_MTOK: z.coerce.number().min(0).default(0),
       /** Cotação US$->R$ só para exibir; 0 desliga a conversão. */
       GOODBIZZ_USD_BRL: z.coerce.number().min(0).default(0),

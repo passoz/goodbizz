@@ -83,7 +83,7 @@ export function estimateCost(
     usd,
     brl,
     note:
-      `estimativa com preços de tabela: US$ ${prices.llmInputPerMTok}/1M entrada, ` +
+      `estimativa com preços de tabela (off-peak do deepseek-flash): US$ ${prices.llmInputPerMTok}/1M entrada, ` +
       `US$ ${prices.llmCachedInputPerMTok}/1M entrada em cache, US$ ${prices.llmOutputPerMTok}/1M saída` +
       (deciderFree
         ? "; decisor a custo zero"
