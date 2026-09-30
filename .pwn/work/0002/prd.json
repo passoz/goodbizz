@@ -1,0 +1,96 @@
+{
+  "$schema": "../../../schemas/prd.schema.json",
+  "id": "PRD-0002",
+  "meta": {
+    "version": "1.0",
+    "created_at": "2026-09-30T11:18:10.566Z",
+    "author": "pwn-scaffold"
+  },
+  "title": "PRD — Falha de provedor LLM chega como LlmError, nao como erro de parsing",
+  "status": "draft",
+  "scenario": "brownfield",
+  "problem": {
+    "statement": "O cliente LLM nao checa response.ok, entao um 402 por saldo zerado vira 'response missing choices[0].message.content' e e retentado tres vezes. A mensagem real do provedor se perde e o operador nao descobre que a conta esta zerada."
+  },
+  "solution": {
+    "statement": "Checar response.ok antes do extrator de conteudo, classificar o status em retentavel e nao retentavel como o DeciderHttp ja faz, e levantar LlmError com o status e a mensagem do provedor depois de passar por scrub."
+  },
+  "decisions": [
+    {
+      "id": "DEC-001",
+      "statement": "Adotar contrato V4 congelado (risco L2) como fronteira de execucao do Work 0002.",
+      "status": "accepted",
+      "made_by": "pwn-scaffold"
+    },
+    {
+      "id": "DEC-002",
+      "statement": "Alem dos 400/401/403 que CON-005 ja declara, 402 e nao retentavel: saldo zerado e estado estavel do lado do provedor, nao instabilidade. 404 e 422 entram pela mesma razao (request invalido, nada a esperar do reenvio).",
+      "status": "accepted",
+      "made_by": "operator"
+    },
+    {
+      "id": "DEC-003",
+      "statement": "A decisao de retentavel fica em src/infrastructure/llm.ts e nao no dominio: o dominio nao conhece HTTP nem codigos de status, e o teste de contrato ja prova a paridade com DeciderHttp.",
+      "status": "accepted",
+      "made_by": "operator"
+    },
+    {
+      "id": "DEC-004",
+      "statement": "Escopo de um unico arquivo de producao. Os dois defeitos de delete observados na mesma sessao ficam para work proprio, para que o RED deste work meca apenas o cliente LLM.",
+      "status": "accepted",
+      "made_by": "operator"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "FR-001",
+      "type": "functional",
+      "statement": "O cliente LLM checa response.ok e inclui status e mensagem do provedor na falha."
+    },
+    {
+      "id": "FR-002",
+      "type": "functional",
+      "statement": "O cliente LLM nao retenta status deterministico e retenta 429 e 5xx com backoff."
+    },
+    {
+      "id": "FR-003",
+      "type": "functional",
+      "statement": "Corpo que nao e JSON vira erro com o status, sem propagar SyntaxError cru."
+    }
+  ],
+  "stakeholders": [
+    {
+      "name": "Operador/consultor (CLI)",
+      "role": "ACT-001"
+    },
+    {
+      "name": "Cliente da API HTTP",
+      "role": "ACT-002"
+    },
+    {
+      "name": "Provedor LLM externo",
+      "role": "ACT-004"
+    }
+  ],
+  "scope": {
+    "in_scope": [
+      "src/infrastructure/llm.ts — checagem de response.ok, classificacao de status, mensagem com status e texto do provedor, scrub",
+      "tests/llm.test.ts — evidencia RED/GREEN de FR-001, FR-002, FR-003, QR-001 e QR-002"
+    ],
+    "out_of_scope": [
+      "Os dois defeitos de delete observados na mesma sessao (ConflictError como 500 e Error nao-Domain sem throw site)",
+      "GAP-001 e GAP-002, que sao de work 0001",
+      "Validacao do nome do modelo em LLM_API_MODEL, bloqueada pelo 402",
+      "Troca de provedor ou camada de degradacao para saldo insuficiente",
+      "src/infrastructure/decider.ts, que e apenas a referencia de padrao"
+    ]
+  },
+  "accepted_requirements": [
+    "FR-001",
+    "FR-002",
+    "FR-003",
+    "QR-001",
+    "QR-002",
+    "QR-003"
+  ]
+}

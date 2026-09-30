@@ -1,0 +1,65 @@
+{
+  "$schema": "../../../schemas/plan.schema.json",
+  "work_id": "0002",
+  "title": "Tratar erro do provedor LLM como falha tipada em vez de erro de parsing",
+  "components": [
+    {
+      "name": "llm",
+      "purpose": "Cliente HTTP de chat/completions: politica de erro por classe de status e reenvio"
+    }
+  ],
+  "global_gates": [
+    "`bun test` — a suíte completa passa com exit 0.",
+    "`bun run check` — typecheck estrito passa com exit 0."
+  ],
+  "tasks": [
+    {
+      "id": "1.1",
+      "title": "Checar response.ok, classificar o status e preservar a mensagem do provedor",
+      "requirement_id": "FR-001",
+      "depends_on": [],
+      "behavior": "com um provedor que responde 402 e corpo JSON de erro, o cliente LLM levanta LlmError(LLM_FAILED, 502) em uma unica chamada, e a mensagem contem o status HTTP mais o texto devolvido; status deterministico aborta sem reenvio, enquanto 429 e 5xx sao, com o status citado na falha final quando as tentativas acabam",
+      "components": [
+        "llm"
+      ],
+      "files": [
+        "src/infrastructure/llm.ts",
+        "tests/llm.test.ts"
+      ],
+      "implementation_files": [
+        "src/infrastructure/llm.ts"
+      ],
+      "test_files": [
+        "tests/llm.test.ts"
+      ],
+      "red": {
+        "command": "bun test",
+        "description": "o cliente nao checa response.ok, entao a mensagem do provedor se perde e o teste que exige 'Insufficient Balance' falha com 'response missing choices[0].message.content'"
+      },
+      "implementation_steps": [
+        "Escrever os testes que falham (RED): 402 com mensagem do provedor, corpo nao-JSON, contagem de chamadas em 402 e 401, 429 persistente e segredo no corpo de erro",
+        "Checar response.ok antes do extrator, ler o corpo com guarda de parse, classificar o status retentavel no adapter e montar a mensagem com status mais texto do provedor depois de scrub (GREEN), preservando o backoff para transitorio e erro de rede"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test",
+          "description": "a suite completa passa com os novos testes de status, reenvio e segredo"
+        },
+        {
+          "command": "bun run check",
+          "description": "o typecheck estrito passa"
+        },
+        {
+          "command": "bunx eslint src/infrastructure/llm.ts tests/llm.test.ts && bunx prettier --check src/infrastructure/llm.ts tests/llm.test.ts",
+          "description": "o lint e a formatacao dos arquivos tocados passam"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-001",
+      "contract_id": "CTR-001",
+      "complexity": "standard",
+      "status": "pending"
+    }
+  ]
+}

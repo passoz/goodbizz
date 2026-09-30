@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { ValidationError } from "../src/domain/errors.ts";
+import { LlmError, ValidationError } from "../src/domain/errors.ts";
 import type { Idea, StudyConfig } from "../src/domain/types.ts";
 import { extractJson } from "../src/infrastructure/json.ts";
 import { createLlmClient, LlmHttp } from "../src/infrastructure/llm.ts";
@@ -199,6 +199,118 @@ describe("LlmHttp over loopback", () => {
         message = error instanceof Error ? error.message : String(error);
       }
       expect(message).toContain("LLM failed after 1 attempts");
+      expect(message).not.toContain(secret);
+    } finally {
+      await server.stop(true);
+    }
+  });
+
+  test("reports the provider message when the account is out of credit", async () => {
+    let calls = 0;
+    const server = Bun.serve({
+      port: 0,
+      fetch: () => {
+        calls += 1;
+        return Response.json(
+          {
+            error: {
+              message: "Insufficient Balance (request_id: 551da750)",
+              type: "unknown_error",
+              param: null,
+              code: "invalid_request_error",
+            },
+          },
+          { status: 402 },
+        );
+      },
+    });
+    try {
+      const client = new LlmHttp(`http://127.0.0.1:${server.port}/v1`, "m", "k", 5, 3);
+      let error: unknown = null;
+      try {
+        await client.generateText("s", "u");
+      } catch (caught) {
+        error = caught;
+      }
+      expect(error).toBeInstanceOf(LlmError);
+      const message = error instanceof Error ? error.message : String(error);
+      expect(message).toContain("Insufficient Balance");
+      expect(message).toContain("402");
+      expect(message).not.toContain("missing choices");
+      // Saldo zerado nao melhora com reenvio: uma unica chamada, como o DeciderHttp faz em 401.
+      expect(calls).toBe(1);
+    } finally {
+      await server.stop(true);
+    }
+  });
+
+  test("does not retry a rejected credential", async () => {
+    let calls = 0;
+    const server = Bun.serve({
+      port: 0,
+      fetch: () => {
+        calls += 1;
+        return Response.json({ error: { message: "invalid api key" } }, { status: 401 });
+      },
+    });
+    try {
+      const client = new LlmHttp(`http://127.0.0.1:${server.port}/v1`, "m", "k", 5, 3);
+      let message = "";
+      try {
+        await client.generateText("s", "u");
+      } catch (error) {
+        message = error instanceof Error ? error.message : String(error);
+      }
+      expect(message).toContain("401");
+      expect(message).toContain("invalid api key");
+      expect(calls).toBe(1);
+    } finally {
+      await server.stop(true);
+    }
+  });
+
+  test("reports the status when the provider error body is not json", async () => {
+    const server = Bun.serve({
+      port: 0,
+      fetch: () => new Response("<html>gateway timeout</html>", { status: 502 }),
+    });
+    try {
+      const client = new LlmHttp(`http://127.0.0.1:${server.port}/v1`, "m", "k", 5, 1);
+      let message = "";
+      try {
+        await client.generateText("s", "u");
+      } catch (error) {
+        message = error instanceof Error ? error.message : String(error);
+      }
+      expect(message).toContain("response not json");
+      expect(message).toContain("502");
+    } finally {
+      await server.stop(true);
+    }
+  });
+
+  test("retries a rate limit and reports the status when it persists", async () => {
+    const secret = "sk-leaked-in-error-body-999";
+    let calls = 0;
+    const server = Bun.serve({
+      port: 0,
+      fetch: () => {
+        calls += 1;
+        return Response.json({ error: { message: `slow down, key=${secret}` } }, { status: 429 });
+      },
+    });
+    try {
+      const client = new LlmHttp(`http://127.0.0.1:${server.port}/v1`, "m", secret, 5, 2);
+      let message = "";
+      try {
+        await client.generateText("s", "u");
+      } catch (error) {
+        message = error instanceof Error ? error.message : String(error);
+      }
+      // 429 e instabilidade do provedor: o reenvio continua valendo.
+      expect(calls).toBe(2);
+      expect(message).toContain("429");
+      expect(message).toContain("LLM failed after 2 attempts");
       expect(message).not.toContain(secret);
     } finally {
       await server.stop(true);

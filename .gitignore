@@ -19,6 +19,8 @@ coverage/
 .pwn/RUN-*.jsonl
 .pwn/learnings.json
 .pwn/gate-cache/
+# chave de assinatura do cache de gates (ver docs/MANUAL.md): local e secreta
+.pwn/.verifier_key
 .piwerness
 
 # Ambientes virtuais Python (baseline de referencia)

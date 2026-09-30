@@ -1,0 +1,57 @@
+{
+  "work_id": "0002",
+  "requirements": [
+    {
+      "id": "FR-001",
+      "title": "Checar response.ok e preservar status e mensagem do provedor",
+      "user_story": "Como operador, quero que a falha do provedor carregue o status HTTP e o texto que ele devolveu, para saber a causa real em vez de depurar 'missing choices'",
+      "acceptance_criteria": [
+        "bun test tests/llm.test.ts — com 402 e corpo JSON de erro, a falha e LlmError(LLM_FAILED, 502) e a mensagem contem 'provider error 402' e o texto do provedor",
+        "bun test tests/llm.test.ts — com corpo nao-JSON, a falha contem 'response not json' e o status, e nenhum SyntaxError cru escapa"
+      ]
+    },
+    {
+      "id": "FR-002",
+      "title": "Policy de retentativa por classe de status, espelhando DeciderHttp",
+      "user_story": "Como operador, quero que o cliente pare de tentar quando o provedor recusou a chamada, e continue tentando quando o provedor esta instavel, para nao queimar tempo e saldo sem chance de sucesso",
+      "acceptance_criteria": [
+        "bun test tests/llm.test.ts — em 400, 401, 402, 403, 404 e 422 o servidor de teste registra uma unica chamada",
+        "bun test tests/llm.test.ts — em 503 seguido de sucesso o conteudo volta e o servidor registra duas chamadas",
+        "bun test tests/llm.test.ts — em 429 persistente a falha final contem '429' e o numero de tentativas"
+      ]
+    },
+    {
+      "id": "FR-003",
+      "title": "Corpo nao-JSON vira erro com status, sem SyntaxError cru",
+      "user_story": "Como operador, quero saber o status devolvido por um gateway que responde HTML, para distinguir falha de provedor de falha de parse",
+      "acceptance_criteria": [
+        "bun test tests/llm.test.ts — resposta de erro com corpo HTML produz falha contendo 'response not json' e o status"
+      ]
+    },
+    {
+      "id": "QR-001",
+      "title": "Segredo nunca aparece na mensagem de falha",
+      "user_story": "Como operador, quero que a chave e o cabecalho de autorizacao fiquem fora dos logs, para que eu possa compartilhar a falha sem vazar credencial",
+      "acceptance_criteria": [
+        "bun test tests/llm.test.ts — com o segredo no corpo de erro em texto livre, a mensagem final nao contem a chave nem o cabecalho de autorizacao"
+      ]
+    },
+    {
+      "id": "QR-002",
+      "title": "Paridade de policy entre os dois clientes do mesmo padrao de falha",
+      "user_story": "Como operador, quero a mesma politica de retentativa no LLM e no decisor, para que eu aprenda uma regra e aplica-la aos dois",
+      "acceptance_criteria": [
+        "bun test tests/llm.test.ts — a tabela de status nao retentavel do cliente LLM coincide com a do DeciderHttp, acrescida de 402"
+      ]
+    },
+    {
+      "id": "QR-003",
+      "title": "A distincao de status retentavel fica no adapter",
+      "user_story": "Como mantenedor, quero que src/domain continue independente de src/infrastructure, para que o dominio possa ser testado sem HTTP",
+      "acceptance_criteria": [
+        "bun run check — typecheck estrito passa com exit 0",
+        "bun test — suite completa passa com exit 0, sem novo import de src/infrastructure em src/domain"
+      ]
+    }
+  ]
+}

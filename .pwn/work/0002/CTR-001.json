@@ -1,0 +1,118 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.1",
+  "work_id": "0002",
+  "title": "Checar response.ok, classificar o status e preservar a mensagem do provedor",
+  "risk": {
+    "level": "L2",
+    "reasons": [
+      "Task 1.1 classificada como L2: mexe no único cliente que fala com o provedor pago, então erro de parsing mascarado já custou um incidente de diagnóstico em produção",
+      "A task altera a política de reenvio, então classificar um status como transitório errado custa chamadas pagas sem chance de sucesso"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.1-01",
+        "given": "Dado um provedor que responde 402 com corpo JSON contendo error.message igual a Insufficient Balance",
+        "when": "Quando o cliente LLM executa a chamada",
+        "then": "Então a falha é LlmError com código LLM_FAILED e status 502, a mensagem contém o status 402 e o texto do provedor em vez de response missing choices[0].message.content, e o servidor registra uma única chamada porque saldo zerado não melhora com reenvio"
+      },
+      {
+        "id": "SCENARIO-1.1-02",
+        "given": "Dado um gateway que responde 502 com corpo HTML, que não é JSON",
+        "when": "Quando o cliente LLM tenta parsear o corpo de erro",
+        "then": "Então a falha cita response not json e o status 502, e nenhum SyntaxError cru escapa do adapter"
+      },
+      {
+        "id": "SCENARIO-1.1-03",
+        "given": "Dado um provedor que responde 401 por credencial recusada",
+        "when": "Quando o cliente LLM executa a chamada",
+        "then": "Então a falha cita o status 401 e o servidor registra uma única chamada, igual ao DeciderHttp, que já aborta sem reenvio em 400, 401 e 403"
+      },
+      {
+        "id": "SCENARIO-1.1-04",
+        "given": "Dado um provedor que responde 503 na primeira chamada e sucesso na segunda",
+        "when": "Quando o cliente LLM executa a chamada",
+        "then": "Então a segunda tentativa devolve o conteúdo e o servidor registra duas chamadas, provando que a tolerância a instabilidade foi preservada"
+      },
+      {
+        "id": "SCENARIO-1.1-05",
+        "given": "Dado um provedor que responde 429 de forma persistente e inclui a chave da API em texto livre no corpo de erro",
+        "when": "Quando o cliente LLM esgota as tentativas",
+        "then": "Então a falha final cita 429 e o número de tentativas, e a mensagem não contém a chave nem o cabeçalho de autorização"
+      },
+      {
+        "id": "SCENARIO-1.1-06",
+        "given": "Dado que src/domain não conhece código de status HTTP",
+        "when": "Quando a classificação de status retentável é decidida",
+        "then": "Então a decisão fica em src/infrastructure/llm.ts, src/domain não ganha import de src/infrastructure e src/infrastructure/decider.ts não é alterado"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/infrastructure/llm.ts",
+      "tests/llm.test.ts"
+    ],
+    "affected_components": [
+      "llm"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "Não quebrar retrocompatibilidade nem expor dados sensíveis",
+      "Manter cobertura de testes existente",
+      "src/domain não importa src/infrastructure",
+      "src/infrastructure/decider.ts permanece inalterado: é a referência de padrão, não o alvo"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun test",
+      "bun run check"
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/infrastructure/llm.ts",
+      "tests/llm.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env*",
+      ".pwn/**",
+      ".specs/**",
+      ".prompts/**",
+      "src/infrastructure/decider.ts",
+      "src/domain/**",
+      "src/infrastructure/http/**",
+      "src/application/**"
+    ],
+    "out_of_scope": [
+      "Mudanças de infraestrutura ou banco não especificadas",
+      "Os dois defeitos de delete observados na mesma sessão: ConflictError saindo como 500 e Error não-Domain sem throw site identificado",
+      "Validar se LLM_API_MODEL referencia um modelo existente, bloqueado pelo 402",
+      "Trocar de provedor de LLM ou criar camada de degradação para saldo insuficiente"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 50000,
+    "max_cost_usd": 0.5,
+    "max_duration_minutes": 15,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 30,
+    "max_tool_calls": 60,
+    "max_shell_executions": 15
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

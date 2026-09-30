@@ -1,0 +1,90 @@
+{
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bun",
+        "run",
+        "check"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0002/1.1-ac-1.log",
+      "log_sha256": "371937c3540ebfa4cdd0c7ba85506bbe8281676aca295e6a00e7868eac30e9da",
+      "recorded_at": "2026-09-30T11:32:22.167Z"
+    },
+    "AC-2": {
+      "command": [
+        "bunx",
+        "eslint",
+        "src/infrastructure/llm.ts",
+        "tests/llm.test.ts"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0002/1.1-ac-2.log",
+      "log_sha256": "4186fd8ddca6487921024520803c5fd003aec1ea013a47efd9ab018111992225",
+      "recorded_at": "2026-09-30T11:32:22.951Z"
+    },
+    "AC-3": {
+      "command": [
+        "bunx",
+        "prettier",
+        "--check",
+        "src/infrastructure/llm.ts",
+        "tests/llm.test.ts"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0002/1.1-ac-3.log",
+      "log_sha256": "91cb10a53ad3d42fba2e06ac64985459879acf7790c31409f176ad275f048bf6",
+      "recorded_at": "2026-09-30T11:32:23.273Z"
+    }
+  },
+  "baseline_implementation": {
+    "src/infrastructure/llm.ts": {
+      "exists": true,
+      "sha256": "a24498b8a930f568eee753461973c4d8018c873088bc7d293dbd17aac701c0fa"
+    }
+  },
+  "baseline_tests": {
+    "tests/llm.test.ts": {
+      "exists": true,
+      "sha256": "bee3284041fc0054ead050fb6100424b73a23dd3040c275fa7fd567c37419ad7"
+    }
+  },
+  "created_at": "2026-09-30T11:31:12.755Z",
+  "green_expect": null,
+  "green_implementation": {
+    "src/infrastructure/llm.ts": {
+      "exists": true,
+      "sha256": "2add8d923b7f7855975cfe24b56bba64a4879f81d1ef81b59684ec394f4b988e"
+    }
+  },
+  "green_tests": {
+    "tests/llm.test.ts": {
+      "exists": true,
+      "sha256": "b5be22abc7612096580f9e87737d1c46ca0956397a495900f1308cb41dbde008"
+    }
+  },
+  "implementation_files": [
+    "src/infrastructure/llm.ts"
+  ],
+  "red_command": [
+    "bun",
+    "test"
+  ],
+  "red_expect": "Insufficient Balance",
+  "red_tests": {
+    "tests/llm.test.ts": {
+      "exists": true,
+      "sha256": "b5be22abc7612096580f9e87737d1c46ca0956397a495900f1308cb41dbde008"
+    }
+  },
+  "task": "1.1",
+  "test_files": [
+    "tests/llm.test.ts"
+  ]
+}

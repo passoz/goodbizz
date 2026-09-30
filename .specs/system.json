@@ -434,9 +434,9 @@
       "consumers": ["ACT-004"],
       "inputs": "POST {LLM_API_URL}/chat/completions com mensagens system e user",
       "outputs": "choices[0].message.content em texto",
-      "errors": "retentativa com backoff; erro apos 3 tentativas",
+      "errors": "400/401/402/403/404/422 abortam sem retentativa, preservando status e mensagem do provedor; 429 e 5xx repetem com backoff; erro apos as tentativas",
       "compatibility": "qualquer endpoint compativel com a API da OpenAI",
-      "evidence": "src/infrastructure/llm/http.ts"
+      "evidence": "src/infrastructure/llm.ts"
     },
     {
       "id": "CON-005",
@@ -601,6 +601,12 @@
         "type": "Drift",
         "evidence": "variaveis GOODBIZZ_* do baseline foram substituidas por LLM_* e DECISION_*",
         "observation": "documentacao precisa ser reescrita para o novo contrato de ambiente"
+      },
+      {
+        "id": "GAP-003",
+        "type": "Drift",
+        "evidence": "CON-004 descrevia \"retentativa com backoff; erro apos 3 tentativas\" para o cliente LLM enquanto CON-005 descrevia \"400/401/403 abortam sem retentativa\" para o cliente do decisor",
+        "observation": "o mesmo padrao de falha de provedor tinha duas politicas declaradas, e o cliente LLM nao checava response.ok: um 402 de saldo zerado virava \"response missing choices[0].message.content\" e era retentado 3 vezes. Work 0002 alinha CON-004 ao padrao de CON-005"
       }
     ]
   },

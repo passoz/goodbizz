@@ -18,6 +18,62 @@ interface ChatCompletion {
   };
 }
 
+/** Corpo de erro no formato OpenAI; o `message` é o que o operador precisa ler. */
+interface ProviderErrorBody {
+  error?: { message?: string } | string;
+}
+
+/**
+ * Política de reenvio, na mesma forma do `DeciderHttp`: status determinístico
+ * (400, 401, 402, 403, 404 e 422 — recusa do pedido, credencial, saldo, modelo)
+ * não melhora com uma segunda tentativa; 429 e 5xx são instabilidade do provedor.
+ * Qualquer outro status também aborta: reenviar para status desconhecido foi
+ * exatamente o que queimou tentativas no incidente de saldo zerado.
+ */
+function isRetryableStatus(status: number): boolean {
+  return status === 429 || status >= 500;
+}
+
+/** Falha de status transitório: carrega o status para a mensagem final de exaustão. */
+class ProviderStatusError extends Error {
+  constructor(
+    readonly status: number,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
+/**
+ * Extrai a mensagem do corpo de erro do provedor.
+ * Corpo não-JSON (HTML de gateway, texto puro) vira `null` em vez de `SyntaxError`.
+ */
+async function readProviderError(response: Response): Promise<string | null> {
+  let raw: string;
+  try {
+    raw = await response.text();
+  } catch {
+    return null;
+  }
+  const trimmed = raw.trim();
+  if (trimmed === "") return null;
+  try {
+    const parsed = JSON.parse(trimmed) as ProviderErrorBody;
+    const detail = parsed.error;
+    if (typeof detail === "string") return detail;
+    return detail?.message ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Monta a mensagem de falha preservando o status e o texto do provedor, sem vazar segredo. */
+async function providerErrorMessage(response: Response): Promise<string> {
+  const detail = await readProviderError(response);
+  if (detail !== null) return `provider error ${response.status}: ${detail}`;
+  return `provider error ${response.status}: response not json: status=${response.status}`;
+}
+
 /** Soma consumo informado pelo provedor no formato OpenAI (`usage`). */
 function addUsage(target: ProviderUsage, usage: ChatCompletion["usage"]): void {
   target.calls += 1;
@@ -70,19 +126,37 @@ export class LlmHttp implements LlmClient {
           body: payload,
           signal: AbortSignal.timeout(this.timeout * 1000),
         });
+        // Sem esta checagem, um corpo de erro sem `choices` cai no extrator de conteudo e a
+        // mensagem real do provedor (saldo, credencial, modelo) se perde num erro de parsing.
+        if (!response.ok) {
+          const message = scrub(await providerErrorMessage(response));
+          if (!isRetryableStatus(response.status)) throw new LlmError(message);
+          throw new ProviderStatusError(response.status, message);
+        }
         const data = (await response.json()) as ChatCompletion;
         addUsage(this.consumed, data.usage);
         const content = data.choices?.[0]?.message?.content;
         if (typeof content !== "string") throw new Error("response missing choices[0].message.content");
         return content;
       } catch (error) {
+        // Falha de status não retentável sobe direto: reenviar seria chamar de novo um
+        // provedor que já recusou, gastando tempo sem chance de sucesso.
+        if (error instanceof LlmError) throw error;
         lastError = error;
-        const { promise, resolve } = Promise.withResolvers<void>();
-        setTimeout(resolve, 1_500 * (attempt + 1));
-        await promise;
+        if (attempt < this.retries - 1) {
+          const { promise, resolve } = Promise.withResolvers<void>();
+          setTimeout(resolve, 1_500 * (attempt + 1));
+          await promise;
+        }
       }
     }
-    throw new LlmError(`LLM failed after ${this.retries} attempts: ${scrub(String(lastError))}`);
+    throw new LlmError(
+      scrub(
+        lastError instanceof ProviderStatusError
+          ? `LLM failed after ${this.retries} attempts: ${lastError.message}`
+          : `LLM failed after ${this.retries} attempts: ${String(lastError)}`,
+      ),
+    );
   }
 
   /** Consumo acumulado desde o início do processo (tokens vêm do `usage` do provedor). */

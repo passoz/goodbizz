@@ -1,0 +1,7 @@
+{
+  "work_id": "0002",
+  "created_at": "2026-09-30T11:18:10.566Z",
+  "objective": "Tratar erro do provedor LLM como falha tipada (LlmError com status e mensagem do provedor) em vez de erro de parsing, com politica de retentativa por classe de status espelhando o DeciderHttp",
+  "requester": "operator",
+  "status": "draft"
+}

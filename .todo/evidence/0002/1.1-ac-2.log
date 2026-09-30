@@ -1,0 +1,8 @@
+TASK: 1.1
+CHECK: AC-2
+COMMAND: bunx eslint src/infrastructure/llm.ts tests/llm.test.ts
+EXIT: 0
+OUTPUT:
+
+VERDICT: PASS
+CHAIN_HASH: 15978490449d45224a586dd64844a42664d49efcb76e7b2e5afa3b088e1bd5b1

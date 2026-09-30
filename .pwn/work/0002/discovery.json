@@ -1,0 +1,29 @@
+{
+  "work_id": "0002",
+  "title": "Tratar erro do provedor LLM como falha tipada em vez de erro de parsing",
+  "grilling_depth": "deep",
+  "problem": "O cliente LLM (src/infrastructure/llm.ts) nao checa response.ok. Um provedor que responde 402 por saldo zerado devolve um corpo sem choices, o cliente cai no extrator de conteudo e levanta 'response missing choices[0].message.content', destruindo a mensagem real do provedor. Como 402 e deterministico, as tres tentativas falham do mesmo jeito. Observado em producao em 2026-09-29 no namespace goodbizz.",
+  "actors": [
+    "ACT-001",
+    "ACT-002",
+    "ACT-004"
+  ],
+  "objectives": [
+    "Falha de provedor chega ao operador como LlmError com status e mensagem do provedor, em vez de erro de parsing interno",
+    "Policy de retentativa do cliente LLM passa a ser identica a do cliente do decisor, divergindo apenas onde o provedor cobra (402)",
+    "A chave e o cabecalho de autorizacao nunca aparecem na mensagem de falha"
+  ],
+  "constraints": [
+    "Manter a suite de testes existente verde (sem regressoes)",
+    "Permanecer dentro da write_allow do contrato V4",
+    "src/domain nao importa src/infrastructure: a distincao de status retentavel fica no adapter",
+    "Nenhum arquivo de producao alem de src/infrastructure/llm.ts pode ser tocado"
+  ],
+  "out_of_scope": [
+    "routes.tsx:189-194 so captura NotFoundError, deixando ConflictError sair como 500",
+    "Error nao-Domain com mensagem vazia que escapa do handler sem throw site identificado",
+    "Validar se LLM_API_MODEL referencia um modelo existente, porque o 402 responde antes da validacao do modelo",
+    "Trocar de provedor de LLM ou criar camada de degradacao para saldo insuficiente"
+  ],
+  "legacy_spec": "legacy-spec.md"
+}

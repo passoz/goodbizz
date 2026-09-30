@@ -1,0 +1,10 @@
+TASK: 1.1
+CHECK: AC-3
+COMMAND: bunx prettier --check src/infrastructure/llm.ts tests/llm.test.ts
+EXIT: 0
+OUTPUT:
+Checking formatting...
+All matched files use Prettier code style!
+
+VERDICT: PASS
+CHAIN_HASH: 1b53f710b727bae1336bcb0c5f9371a251146f57a3a13ebbc146841500d2eb3d

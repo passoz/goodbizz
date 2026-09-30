@@ -1,0 +1,38 @@
+{
+  "work_id": "0002",
+  "title": "Falha de provedor LLM chega como LlmError, nao como erro de parsing",
+  "capabilities": [
+    {
+      "id": "CAP-001",
+      "name": "Classificacao de falha do provedor LLM por classe de status",
+      "description": "Capacidade em src/infrastructure/llm.ts que decide entre abortar, reenviar e reportar, e que carrega status e mensagem do provedor para dentro de LlmError.",
+      "rules": ["BR-001", "BR-002", "BR-003", "BR-004"]
+    }
+  ],
+  "rules": [
+    {
+      "id": "BR-001",
+      "statement": "A decisao de retentavel vive no adapter: src/domain nao importa src/infrastructure e nao conhece codigo de status HTTP.",
+      "coverage": ["CAP-001"],
+      "evidence": "bun run check e bun test"
+    },
+    {
+      "id": "BR-002",
+      "statement": "Status deterministico (400, 401, 402, 403, 404 e 422) aborta na primeira chamada; 429 e 5xx reenviam com backoff linear; erro de rede ou timeout reenvia.",
+      "coverage": ["CAP-001"],
+      "evidence": "tests/llm.test.ts contando chamadas ao servidor em loopback"
+    },
+    {
+      "id": "BR-003",
+      "statement": "A mensagem de falha passa por scrub antes de virar LlmError e cita o status HTTP alem do texto do provedor; corpo nao-JSON vira response not json com o status, em vez de SyntaxError cru.",
+      "coverage": ["CAP-001"],
+      "evidence": "tests/llm.test.ts com segredo no corpo de erro e com corpo HTML"
+    },
+    {
+      "id": "BR-004",
+      "statement": "Nenhuma regressao: a suite existente permanece verde e a write_allow do contrato V4 nao e excedida.",
+      "coverage": ["CAP-001"],
+      "evidence": "bun test com exit 0 e diff guard do contrato V4"
+    }
+  ]
+}
