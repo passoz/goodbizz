@@ -253,6 +253,33 @@ Métricas de uso, de conversão e de churn.
 `;
 }
 
+/**
+ * Ideias do mock respeitando o que o prompt proibe repetir.
+ *
+ * O pipeline de adicao lista as ideias que o estudo ja tem e pede outras. Um mock que devolvesse
+ * `MOCK_IDEAS` inteiro faria o teste da adicao medir um cenario que nenhum provedor real produz -- e
+ * ainda criaria nomes duplicados, que a UI resolve por nome.
+ */
+function distinctIdeas(user: string): Idea[] {
+  const forbidden = new Set(
+    (user.match(/Ideias que já existem e NÃO podem ser repetidas: ([^\n]+)\./)?.[1] ?? "")
+      .split(";")
+      .map((name) => name.trim())
+      .filter((name) => name !== ""),
+  );
+  const wanted = Number(user.match(/Gere exatamente (\d+) ideias/)?.[1] ?? String(MOCK_IDEAS.length));
+  const ideas = MOCK_IDEAS.filter((idea) => !forbidden.has(idea.name));
+  // O conjunto fixo acaba: completa com nomes proprios para o mock cobrir pedidos grandes.
+  for (let position = 1; ideas.length < wanted; position += 1) {
+    ideas.push({
+      name: `Ideia Extra ${position}`,
+      sector: "operacao",
+      description: "ideia adicional do modo simulado, distinta das que ja existem",
+    });
+  }
+  return ideas.slice(0, wanted);
+}
+
 export class LlmMock implements LlmClient {
   private calls = 0;
 
@@ -266,7 +293,7 @@ export class LlmMock implements LlmClient {
     void system;
     void user;
     if (system.includes("PALAVRA-CHAVE: IDEIAS") || system.includes("KEYWORD: IDEAS")) {
-      return Promise.resolve(JSON.stringify(MOCK_IDEAS));
+      return Promise.resolve(JSON.stringify(distinctIdeas(user)));
     }
     if (system.includes("PALAVRA-CHAVE: BRIEF") || system.includes("KEYWORD: BRIEF")) {
       return Promise.resolve(MOCK_BRIEF);

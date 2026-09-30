@@ -20,7 +20,7 @@ import { diagnoseProbes, diagnoseExitCode, type DiagnoseReport } from "./diagnos
 import { buildArtifactFiles, buildZip } from "./artifacts.ts";
 import { explainFailure } from "./failures.ts";
 import type { ProviderSettingsStore } from "./settings.ts";
-import { generateStudy } from "./generate-study.ts";
+import { generateAddition, generateStudy } from "./generate-study.ts";
 import { htmlToPdf } from "./pdf.ts";
 import { recalibrate, type RecalibrateReport } from "./recalibrate.ts";
 import { folderName, slug } from "./reports.ts";
@@ -67,6 +67,9 @@ export interface DiagnoseInput {
   city?: string;
   threshold?: number;
 }
+
+/** Teto de ideias por estudo. Acima disso o operador nao consegue usar o ranking na tela. */
+export const MAX_IDEAS_PER_STUDY = 40;
 
 export class StudyService {
   /** One in-flight run per study: a concurrent request awaits the same execution. */
@@ -278,6 +281,56 @@ export class StudyService {
   }
 
   /**
+   * Faz `NN-slug/` casar com o ranking novo, sem perder o documento de quem continua no estudo.
+   *
+   * `previous` e a ordem antiga (o rank persistido diz qual pasta cada ideia ocupava) e `folders` o
+   * destino de cada nome. A renomeacao e em duas fases porque renomear direto encolheria `02-x`
+   * para `01-x` e depois a `01-x` voltaria para `02-x`, sobrescrevendo a pasta que acabou de
+   * receber o documento. `freshNames` sao as ideias cujo documento chega agora: elas nao sao
+   * renomeadas, sao escritas.
+   */
+  private reconcileFolders(
+    record: StudyRecord,
+    previous: readonly StudyIdea[],
+    folders: Record<string, string>,
+    freshNames: ReadonlySet<string>,
+    freshFiles: readonly ArtifactFile[],
+  ): void {
+    const root = record.artifactDir;
+    if (!existsSync(root)) return;
+
+    const staged = new Map<string, string>();
+    previous.forEach((idea, position) => {
+      // Ideia homonima de uma que vem nova: as duas disputam a mesma pasta, e a que chega
+      // agora vence. Sem esse desempate o documento novo seria sobrescrito pelo antigo.
+      if (freshNames.has(idea.name)) return;
+      const current = folderName(position + 1, idea.name);
+      if (!existsSync(join(root, current))) return;
+      const temporary = `.pwn-reconciliando-${idea.id}`;
+      rmSync(join(root, temporary), { recursive: true, force: true });
+      renameSync(join(root, current), join(root, temporary));
+      staged.set(idea.id, temporary);
+    });
+
+    this.writeFiles(root, freshFiles);
+
+    for (const idea of previous) {
+      const temporary = staged.get(idea.id);
+      if (temporary === undefined) continue;
+      const target = folders[idea.name];
+      if (target === undefined) continue;
+      rmSync(join(root, target), { recursive: true, force: true });
+      renameSync(join(root, temporary), join(root, target));
+    }
+
+    // Rede de seguranca do contrato "nenhum orfao": qualquer `NN-slug` fora do ranking novo sai.
+    const expected = new Set(Object.values(folders));
+    for (const folder of this.ideaFoldersOnDisk(root)) {
+      if (!expected.has(folder)) rmSync(join(root, folder), { recursive: true, force: true });
+    }
+  }
+
+  /**
    * Reconcilia `NN-slug/` com o ranking novo. A renomeacao e em duas fases porque renomear direto
    * encolheria `02-x` para `01-x` e depois a `01-x` voltaria para `02-x`, sobrescrevendo a pasta
    * que acabou de receber o documento. Documentos das ideias preservadas nao sao regerados (isso
@@ -390,6 +443,105 @@ export class StudyService {
       concurrency: this.options.concurrency ?? 8,
       paraphrases: this.options.paraphrases ?? 3,
       timeout: this.options.timeout,
+    });
+  }
+
+  /**
+   * Acrescenta `count` ideias novas, preservando as que ja existem.
+   *
+   * Deliberadamente nao `async`: a rota de API precisa receber o 409/422/404 na chamada, e nao
+   * como promessa rejeitada, para responder 201 e so entao deixar a execucao em background. A
+   * promessa devolvida resolve quando a adicao termina, o que e o que o CLI e os testes esperam.
+   */
+  addIdeas(id: string, count: number): Promise<StudyRecord> {
+    if (this.inFlight.has(id)) {
+      throw new ConflictError(`study ${id} is still running`);
+    }
+    const work = this.get(id).then((record) => {
+      if (!Number.isInteger(count) || count < 1) {
+        throw new ValidationError(
+          `count precisa ser um inteiro de 1 a ${MAX_IDEAS_PER_STUDY}; veio ${count}`,
+        );
+      }
+      const total = record.evaluations.length + count;
+      if (total > MAX_IDEAS_PER_STUDY) {
+        throw new ValidationError(
+          `o estudo tem ${record.evaluations.length} de ${MAX_IDEAS_PER_STUDY} ideias; ` +
+            `${count} novas passaria de ${MAX_IDEAS_PER_STUDY}`,
+        );
+      }
+      return this.executeAddition(record, count);
+    });
+    // A vaga e tomada antes do primeiro await: duas adicoes simultaneas nao podem passar.
+    this.inFlight.set(id, work);
+    return work.finally(() => {
+      if (this.inFlight.get(id) === work) this.inFlight.delete(id);
+    });
+  }
+
+  private async executeAddition(record: StudyRecord, count: number): Promise<StudyRecord> {
+    const id = record.id;
+    const setProgress = async (
+      state: StudyRecord["progress"]["state"],
+      step: string,
+      error: string | null,
+    ) => {
+      await this.options.repo.update(id, { progress: { state, step, error } });
+    };
+
+    await setProgress("running", `adicionando ${count} ideias`, null);
+    try {
+      const cfg = this.configForRecord(record, record.evaluations.length + count);
+      const clients = this.options.clientsFor?.(cfg) ?? {
+        llm: this.options.llm,
+        decider: this.options.decider,
+      };
+      const result = await generateAddition(
+        cfg,
+        { brief: record.brief ?? "", existing: record.evaluations },
+        count,
+        // Uma chave de cache por pedido: dois pedidos iguais no mesmo estudo sao operacoes distintas.
+        Bun.randomUUIDv7(),
+        {
+          llm: clients.llm,
+          decider: clients.decider,
+          cache: this.options.cache,
+          logger: this.options.logger,
+          onProgress: (step) => {
+            void setProgress("running", step, null);
+          },
+        },
+      );
+
+      await this.options.repo.saveEvaluations(id, result.evaluations, result.summary);
+      // As pastas que sobraram de antes sao renomeadas para o indice novo e as novas vao pro disco.
+      const freshNames = new Set(
+        result.evaluations.slice(record.evaluations.length).map((idea) => idea.name),
+      );
+      this.reconcileFolders(record, record.evaluations, result.folders, freshNames, result.files);
+      this.rebuildPdf(record, cfg, id);
+
+      await setProgress("done", "concluído", null);
+      this.options.logger.info("ideas added", { id, added: count, total: result.evaluations.length });
+
+      const updated = await this.get(id);
+      if (!updated) throw new NotFoundError(`study ${id} disappeared during the addition`);
+      return updated;
+    } catch (error) {
+      const raw = scrub(error instanceof Error ? error.message : String(error));
+      this.options.logger.error("idea addition failed", { id, error: raw });
+      await setProgress("failed", "erro", explainFailure(error));
+      throw error;
+    }
+  }
+
+  /** Regera o PDF quando o estudo o produz: o `dados.json` e o HTML acabaram de mudar. */
+  private rebuildPdf(record: StudyRecord, cfg: StudyConfig, id: string): void {
+    if (!cfg.pdf) return;
+    const htmlPath = join(record.artifactDir, "estudo-completo.html");
+    if (!existsSync(htmlPath)) return;
+    void htmlToPdf(htmlPath, join(record.artifactDir, "estudo-completo.pdf")).then((result) => {
+      this.options.logger.info("pdf compilation", { id, message: result.message, ok: result.ok });
     });
   }
 

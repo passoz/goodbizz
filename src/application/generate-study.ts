@@ -139,11 +139,15 @@ export async function generateAddition(
   progress(`[2/6] ${ideas.length} ideias novas geradas sem repetir as ${existing.length} existentes`);
 
   const newEvaluations = await mapLimit(ideas, cfg.concurrency, async (idea) => {
+    // O `requestId` entra na chave: uma ideia que reapareça num pedido novo precisa de um id novo.
+    // Reaproveitar a avaliacao em cache traria de volta o id ja gravado da ideia existente e o
+    // indice unico (study_id, idea_id) derrubaria a gravacao.
     const key = cacheKeyFor(
-      "aval",
+      "aval-adicao",
       cfg.niche,
       cfg.city,
       String(cfg.monthlyTicket),
+      requestId,
       idea.name,
       idea.description,
     );

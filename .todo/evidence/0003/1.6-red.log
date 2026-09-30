@@ -1,0 +1,137 @@
+TASK: 1.6
+CHECK: RED
+COMMAND: bun test
+EXIT: 1
+OUTPUT:
+bun test v1.4.2 (744846f84)
+{"level":50,"time":1790798680150,"pid":155795,"hostname":"note","msg":"e"}
+{"level":30,"time":1790798680574,"pid":155795,"hostname":"note","count":0,"msg":"migrations applied"}
+{"level":40,"time":1790798680574,"pid":155795,"hostname":"note","count":1,"msg":"stale studies marked as failed on boot"}
+
+tests/study-service.test.ts:
+455 |       // `evaluations` vem no rank gravado, entao a posicao e o numero da pasta.
+456 |       const oldDocs = before.evaluations.map((idea, position) =>
+457 |         readFileSync(join(before.artifactDir, folderName(position + 1, idea.name), "README.md"), "utf8"),
+458 |       );
+459 | 
+460 |       const after = await service.addIdeas(id, 5);
+                                        ^
+TypeError: service.addIdeas is not a function. (In 'service.addIdeas(id, 5)', 'service.addIdeas' is undefined)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/study-service.test.ts:460:35)
+(fail) adicao de ideias por quantidade > acrescenta 5 ideias e preserva as 3 antigas com seus documentos [16.30ms]
+489 |     const { service, db, id } = await studyReadyToGrow(3);
+490 |     try {
+491 |       const before = await service.get(id);
+492 |       expect(ideaFolders(before.artifactDir)).toHaveLength(3);
+493 | 
+494 |       const after = await service.addIdeas(id, 5);
+                                        ^
+TypeError: service.addIdeas is not a function. (In 'service.addIdeas(id, 5)', 'service.addIdeas' is undefined)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/study-service.test.ts:494:35)
+(fail) adicao de ideias por quantidade > uma pasta por ideia, com o indice novo, e nenhum orfao [11.77ms]
+510 |   test("recusa com ValidationError antes de qualquer chamada de LLM", async () => {
+511 |     const { service, db, id, state } = await studyReadyToGrow(3);
+512 |     try {
+513 |       for (const count of [0, -1, 1.5, Number.NaN]) {
+514 |         const before = state.llmCalls;
+515 |         await expect(service.addIdeas(id, count)).rejects.toBeInstanceOf(ValidationError);
+                                   ^
+TypeError: service.addIdeas is not a function. (In 'service.addIdeas(id, count)', 'service.addIdeas' is undefined)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/study-service.test.ts:515:30)
+(fail) adicao de ideias por quantidade > recusa com ValidationError antes de qualquer chamada de LLM [10.34ms]
+523 |   test("recusa acima do teto de 40 ideias antes de qualquer chamada de LLM", async () => {
+524 |     const { service, db, id, state } = await studyReadyToGrow(3);
+525 |     try {
+526 |       const before = state.llmCalls;
+527 |       // 3 existentes + 38 novas = 41, uma acima do teto planejado.
+528 |       await expect(service.addIdeas(id, 38)).rejects.toBeInstanceOf(ValidationError);
+                                 ^
+TypeError: service.addIdeas is not a function. (In 'service.addIdeas(id, 38)', 'service.addIdeas' is undefined)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/study-service.test.ts:528:28)
+(fail) adicao de ideias por quantidade > recusa acima do teto de 40 ideias antes de qualquer chamada de LLM [17.81ms]
+566 |         await Bun.sleep(5);
+567 |       }
+568 | 
+569 |       // Sincrono de proposito: a rota de API precisa do 409 na chamada, e nao de uma promessa
+570 |       // rejeitada que ela teria que distinguir de um 201.
+571 |       expect(() => service.addIdeas(record.id, 2)).toThrow(ConflictError);
+                                                         ^
+error: expect(received).toThrow(expected)
+
+Expected constructor: ConflictError
+Received constructor: TypeError
+
+Received message: "service.addIdeas is not a function. (In 'service.addIdeas(record.id, 2)', 'service.addIdeas' is undefined)"
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/study-service.test.ts:571:52)
+(fail) adicao de ideias por quantidade > lança ConflictError enquanto o estudo roda [11.39ms]
+578 | 
+579 |   test("os agregados passam a descrever as 8 ideias", async () => {
+580 |     const { service, db, id } = await studyReadyToGrow(3);
+581 |     try {
+582 |       const before = await service.get(id);
+583 |       await service.addIdeas(id, 5);
+                          ^
+TypeError: service.addIdeas is not a function. (In 'service.addIdeas(id, 5)', 'service.addIdeas' is undefined)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/study-service.test.ts:583:21)
+(fail) adicao de ideias por quantidade > os agregados passam a descrever as 8 ideias [13.37ms]
+-------------------------------------------|---------|---------|-------------------
+File                                       | % Funcs | % Lines | Uncovered Line #s
+-------------------------------------------|---------|---------|-------------------
+All files                                  |   98.14 |   98.08 |
+ src/application/artifacts.ts              |  100.00 |  100.00 | 
+ src/application/cache.ts                  |  100.00 |  100.00 | 
+ src/application/costs.ts                  |  100.00 |  100.00 | 
+ src/application/dados.ts                  |  100.00 |  100.00 | 
+ src/application/diagnose.ts               |  100.00 |   95.65 | 146-150
+ src/application/evaluate.ts               |  100.00 |   96.98 | 127,197-198,201-203
+ src/application/failures.ts               |  100.00 |   92.98 | 70-73
+ src/application/generate-study.ts         |  100.00 |   95.92 | 171-183
+ src/application/generation.ts             |  100.00 |  100.00 | 
+ src/application/pain-algorithm.ts         |   91.30 |   95.21 | 90-94,245-246,268-269
+ src/application/pain-choice.ts            |  100.00 |   97.94 | 78-79
+ src/application/pdf.ts                    |  100.00 |   97.92 | 47
+ src/application/prompts.ts                |  100.00 |  100.00 | 
+ src/application/recalibrate.ts            |  100.00 |   94.74 | 104-105,146,166,170-172,212
+ src/application/render.ts                 |  100.00 |   99.30 | 191
+ src/application/reports.ts                |  100.00 |  100.00 | 
+ src/application/settings.ts               |  100.00 |  100.00 | 
+ src/application/study-service.ts          |   96.08 |   99.66 | 107
+ src/application/summary.ts                |   92.31 |  100.00 | 
+ src/application/verification.ts           |  100.00 |   94.62 | 48,68-71
+ src/cli.ts                                |   91.67 |   90.38 | 84-85,96,101,107-108,112,132-134,143,159-160,308-309,325-330,332,334-335,346,396-400,478-479,520-524,527,534,583
+ src/config/env.ts                         |  100.00 |  100.00 | 
+ src/config/providers.ts                   |  100.00 |  100.00 | 
+ src/config/redact.ts                      |  100.00 |  100.00 | 
+ src/config/runtime.ts                     |  100.00 |   98.21 | 93
+ src/domain/errors.ts                      |  100.00 |  100.00 | 
+ src/domain/hash.ts                        |  100.00 |  100.00 | 
+ src/domain/pain.ts                        |  100.00 |  100.00 | 
+ src/infrastructure/cache-repository.ts    |  100.00 |  100.00 | 
+ src/infrastructure/db.ts                  |  100.00 |   97.96 | 45
+ src/infrastructure/decider-mock.ts        |  100.00 |  100.00 | 
+ src/infrastructure/decider.ts             |   86.67 |   95.73 | 101-104,109-111
+ src/infrastructure/http/api.ts            |   83.78 |   94.86 | 130-131,136-139,231-233
+ src/infrastructure/http/app.ts            |  100.00 |  100.00 | 
+ src/infrastructure/http/errors.ts         |  100.00 |   94.74 | 25
+ src/infrastructure/http/health.ts         |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/layout.tsx     |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/pages.tsx      |   97.14 |   99.66 | 89-90,113
+ src/infrastructure/http/ui/routes.tsx     |   96.15 |   93.91 | 149,162,176,189-192,210,214,225-228,239
+ src/infrastructure/http/ui/security.ts    |  100.00 |   93.22 | 47,75-76,86
+ src/infrastructure/json.ts                |  100.00 |   92.00 | 31-32
+ src/infrastructure/llm-mock.ts            |   87.50 |  100.00 | 
+ src/infrastructure/llm.ts                 |  100.00 |  100.00 | 
+ src/infrastructure/repositories.ts        |  100.00 |  100.00 | 
+ src/infrastructure/routing.ts             |   90.00 |   98.31 | 97
+ src/infrastructure/schema.ts              |  100.00 |  100.00 | 
+ src/infrastructure/settings-repository.ts |  100.00 |  100.00 | 
+-------------------------------------------|---------|---------|-------------------
+
+ 286 pass
+ 6 fail
+ 1128 expect() calls
+Ran 292 tests across 31 files. [4.41s]
+
+VERDICT: PASS
+CHAIN_HASH: dcb55ad7830c39414adfe69ffedc7b5bd0a36a0305c750c24a75d53689bc3708

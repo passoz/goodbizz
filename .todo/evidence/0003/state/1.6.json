@@ -1,0 +1,116 @@
+{
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bun",
+        "test"
+      ],
+      "expect": "0 fail",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.6-ac-1.log",
+      "log_sha256": "6e707dc52530a77a656fcdfd00c942975ac295107843059166c8ec8d00d36053",
+      "recorded_at": "2026-09-30T20:05:03.211Z"
+    },
+    "AC-2": {
+      "command": [
+        "bun",
+        "run",
+        "check"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.6-ac-2.log",
+      "log_sha256": "973bfa6cb81bf4cd672854dad1cecfb879ed2e7bace3d118ba70c1115bcc3eea",
+      "recorded_at": "2026-09-30T20:05:08.123Z"
+    },
+    "AC-3": {
+      "command": [
+        "bash",
+        "-c",
+        "bunx eslint src/application/study-service.ts src/application/generate-study.ts src/infrastructure/llm-mock.ts && bunx prettier --check src/application/study-service.ts src/application/generate-study.ts src/infrastructure/llm-mock.ts"
+      ],
+      "expect": "Prettier code style",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.6-ac-3.log",
+      "log_sha256": "185ff188a1a079eba1ecba0f8c232038e4c0b91f91118eaca2f19a07daf2a18a",
+      "recorded_at": "2026-09-30T20:05:09.803Z"
+    },
+    "REGRESSION": {
+      "command": [
+        "bun",
+        "test"
+      ],
+      "expect": "0 fail",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.6-regression.log",
+      "log_sha256": "e5739c4e6cde57abc1671205582407025e03cc84b46b35af89f233361641cdc3",
+      "recorded_at": "2026-09-30T20:05:14.364Z"
+    }
+  },
+  "baseline_implementation": {
+    "src/application/study-service.ts": {
+      "exists": true,
+      "sha256": "b0f4f3880242156bc23753a29c022c4a8c593101a9dc14a76c13459091e1782d"
+    },
+    "src/application/generate-study.ts": {
+      "exists": true,
+      "sha256": "b4201f920dc2d11f3a5267cf19c2216fd667c1f1d0e6e4fd757992143dd494b0"
+    },
+    "src/infrastructure/llm-mock.ts": {
+      "exists": true,
+      "sha256": "f6cb9040ab513b2eb5d674fa5f4ff3fdce828f7be7946c502846acf3aca4ab38"
+    }
+  },
+  "baseline_tests": {
+    "tests/study-service.test.ts": {
+      "exists": true,
+      "sha256": "de9492dc71db2ee39a2772beb0795e60625577378dedc4cb7c55a1c98145ea97"
+    }
+  },
+  "created_at": "2026-09-30T20:04:39.623Z",
+  "green_expect": null,
+  "green_implementation": {
+    "src/application/study-service.ts": {
+      "exists": true,
+      "sha256": "e935c2a88e794e1a42f4354e7b34cbe63094195cfeace34635a46f9e0a8937f1"
+    },
+    "src/application/generate-study.ts": {
+      "exists": true,
+      "sha256": "67f1013889aa0a23ba637bcec322d2a6af8b7cf49c0c5d60d6867008331576bc"
+    },
+    "src/infrastructure/llm-mock.ts": {
+      "exists": true,
+      "sha256": "b02a4fc3915e6b0bd473c8897e624b4bdf526054c43f779a1fd9c5a6a391240c"
+    }
+  },
+  "green_tests": {
+    "tests/study-service.test.ts": {
+      "exists": true,
+      "sha256": "478b4ead3251ba6241023eec07505f9ba098e62e8c44bbd4c422b0d51bdde0ae"
+    }
+  },
+  "implementation_files": [
+    "src/application/study-service.ts",
+    "src/application/generate-study.ts",
+    "src/infrastructure/llm-mock.ts"
+  ],
+  "red_command": [
+    "bun",
+    "test"
+  ],
+  "red_expect": "acrescenta 5 ideias e preserva as 3 antigas com seus documentos",
+  "red_tests": {
+    "tests/study-service.test.ts": {
+      "exists": true,
+      "sha256": "478b4ead3251ba6241023eec07505f9ba098e62e8c44bbd4c422b0d51bdde0ae"
+    }
+  },
+  "task": "1.6",
+  "test_files": [
+    "tests/study-service.test.ts"
+  ]
+}

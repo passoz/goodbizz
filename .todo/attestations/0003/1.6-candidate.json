@@ -1,0 +1,88 @@
+{
+  "version": 2,
+  "kind": "task-acceptance-candidate",
+  "harness_version": "0.1.0",
+  "gate_version": "1",
+  "work_id": "0003",
+  "task_id": "1.6",
+  "result": "pass",
+  "plan": {
+    "path": ".todo/0003-tasks.md",
+    "sha256": "61da6dd4553c281db2eff401bc6ea69ae24a0f7efd39b81160b2b37ab97a619c"
+  },
+  "implementation": {
+    "src/application/study-service.ts": {
+      "exists": true,
+      "sha256": "e935c2a88e794e1a42f4354e7b34cbe63094195cfeace34635a46f9e0a8937f1"
+    },
+    "src/application/generate-study.ts": {
+      "exists": true,
+      "sha256": "67f1013889aa0a23ba637bcec322d2a6af8b7cf49c0c5d60d6867008331576bc"
+    },
+    "src/infrastructure/llm-mock.ts": {
+      "exists": true,
+      "sha256": "b02a4fc3915e6b0bd473c8897e624b4bdf526054c43f779a1fd9c5a6a391240c"
+    }
+  },
+  "tests": {
+    "tests/study-service.test.ts": {
+      "exists": true,
+      "sha256": "478b4ead3251ba6241023eec07505f9ba098e62e8c44bbd4c422b0d51bdde0ae"
+    }
+  },
+  "evidence_sha256": "1b38ea48dc2c82b79fb9354dbab2896df32adb1a6994dd45aed75bcf92fe5f85",
+  "evidence_chain_head": "f5fa6f42ca9a4419ce34442521ab8e2b349d9563661a838b523372e7714dd014",
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bun",
+        "test"
+      ],
+      "expect": "0 fail",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.6-ac-1.log",
+      "log_sha256": "6e707dc52530a77a656fcdfd00c942975ac295107843059166c8ec8d00d36053",
+      "recorded_at": "2026-09-30T20:05:03.211Z"
+    },
+    "AC-2": {
+      "command": [
+        "bun",
+        "run",
+        "check"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.6-ac-2.log",
+      "log_sha256": "973bfa6cb81bf4cd672854dad1cecfb879ed2e7bace3d118ba70c1115bcc3eea",
+      "recorded_at": "2026-09-30T20:05:08.123Z"
+    },
+    "AC-3": {
+      "command": [
+        "bash",
+        "-c",
+        "bunx eslint src/application/study-service.ts src/application/generate-study.ts src/infrastructure/llm-mock.ts && bunx prettier --check src/application/study-service.ts src/application/generate-study.ts src/infrastructure/llm-mock.ts"
+      ],
+      "expect": "Prettier code style",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.6-ac-3.log",
+      "log_sha256": "185ff188a1a079eba1ecba0f8c232038e4c0b91f91118eaca2f19a07daf2a18a",
+      "recorded_at": "2026-09-30T20:05:09.803Z"
+    },
+    "REGRESSION": {
+      "command": [
+        "bun",
+        "test"
+      ],
+      "expect": "0 fail",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.6-regression.log",
+      "log_sha256": "e5739c4e6cde57abc1671205582407025e03cc84b46b35af89f233361641cdc3",
+      "recorded_at": "2026-09-30T20:05:14.364Z"
+    }
+  },
+  "generated_at": "2026-09-30T20:05:18.748Z"
+}

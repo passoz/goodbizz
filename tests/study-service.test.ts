@@ -20,7 +20,7 @@ import { folderName } from "../src/application/reports.ts";
 import { StudyService } from "../src/application/study-service.ts";
 import { loadEnv, resetEnv } from "../src/config/env.ts";
 import { resolveStudyConfig } from "../src/config/runtime.ts";
-import { ConflictError, NotFoundError } from "../src/domain/errors.ts";
+import { ConflictError, NotFoundError, ValidationError } from "../src/domain/errors.ts";
 import type { StudyConfig } from "../src/domain/types.ts";
 import { DeciderMock } from "../src/infrastructure/decider-mock.ts";
 import { openMigratedDatabase } from "../src/infrastructure/db.ts";
@@ -411,6 +411,184 @@ describe("remocao de ideia por id", () => {
         folderName(2, third!.name),
       ]);
       void second;
+    } finally {
+      db.sqlite.close();
+    }
+  });
+});
+
+describe("adicao de ideias por quantidade", () => {
+  /** Estudo concluido e servico pronto, contando chamadas de LLM. */
+  async function studyReadyToGrow(numIdeas: number) {
+    withCredentials();
+    const db = openMigratedDatabase(":memory:");
+    const dir = tempDir("goodbizz-add-");
+    const repo = new SqliteStudyRepository(db.db);
+    const state = { llmCalls: 0 };
+    const inner = new LlmMock();
+    const countingLlm = {
+      generateText: async (system: string, user: string) => {
+        state.llmCalls += 1;
+        return inner.generateText(system, user);
+      },
+    };
+    const service = new StudyService({
+      repo,
+      cache: new StudyCache(new SqliteCacheStore(db.db)),
+      llm: countingLlm,
+      decider: new DeciderMock(),
+      logger: silentLogger(),
+      artifactsRoot: dir,
+    });
+    const cfg = resolveStudyConfig({ niche: "clinicas", numIdeas, mock: true, outputDir: dir });
+    const record = await service.create(cfg);
+    await service.run(record.id);
+    return { service, repo, db, dir, id: record.id, state };
+  }
+
+  test("acrescenta 5 ideias e preserva as 3 antigas com seus documentos", async () => {
+    const { service, db, id } = await studyReadyToGrow(3);
+    try {
+      const before = await service.get(id);
+      const oldIds = before.evaluations.map((e) => e.id);
+      const oldNames = before.evaluations.map((e) => e.name);
+      // `evaluations` vem no rank gravado, entao a posicao e o numero da pasta.
+      const oldDocs = before.evaluations.map((idea, position) =>
+        readFileSync(join(before.artifactDir, folderName(position + 1, idea.name), "README.md"), "utf8"),
+      );
+
+      const after = await service.addIdeas(id, 5);
+
+      expect(after.evaluations).toHaveLength(8);
+      expect(oldDocs.every((text) => text.trim().length > 0)).toBe(true);
+      // Adicionar re-ranqueia o conjunto, entao a posicao antiga nao sobrevive; o id e o nome sim.
+      // Nenhum id antigo foi redefinido pelas novas: sao 8 distintos.
+      expect(new Set(after.evaluations.map((e) => e.id)).size).toBe(8);
+      const byId = new Map(after.evaluations.map((e) => [e.id, e]));
+      before.evaluations.forEach((old, position) => {
+        const still = byId.get(old.id);
+        expect(still?.name).toBe(old.name);
+        // O documento antigo continua na pasta que o rank novo deu a ideia.
+        const moved = after.evaluations.findIndex((e) => e.id === old.id);
+        expect(moved).toBeGreaterThanOrEqual(0);
+        expect(
+          readFileSync(join(before.artifactDir, folderName(moved + 1, old.name), "README.md"), "utf8").trim()
+            .length,
+        ).toBeGreaterThan(0);
+        void position;
+      });
+      expect(after.evaluations.map((e) => e.name)).toEqual(expect.arrayContaining(oldNames));
+      expect(oldIds).toHaveLength(3);
+      expect(after.summary?.ordered).toHaveLength(8);
+    } finally {
+      db.sqlite.close();
+    }
+  });
+
+  test("uma pasta por ideia, com o indice novo, e nenhum orfao", async () => {
+    const { service, db, id } = await studyReadyToGrow(3);
+    try {
+      const before = await service.get(id);
+      expect(ideaFolders(before.artifactDir)).toHaveLength(3);
+
+      const after = await service.addIdeas(id, 5);
+
+      const folders = ideaFolders(before.artifactDir);
+      expect(folders).toHaveLength(8);
+      expect(folders.map((f) => f.slice(0, 2))).toEqual(["01", "02", "03", "04", "05", "06", "07", "08"]);
+      // O ranking persistido e a numeração das pastas contam a mesma história.
+      const names = after.summary!.ordered.map((e) => e.name);
+      expect(folders).toEqual(names.map((name, position) => folderName(position + 1, name)));
+      for (const folder of folders) {
+        expect(existsSync(join(before.artifactDir, folder, "README.md"))).toBe(true);
+      }
+    } finally {
+      db.sqlite.close();
+    }
+  });
+
+  test("recusa com ValidationError antes de qualquer chamada de LLM", async () => {
+    const { service, db, id, state } = await studyReadyToGrow(3);
+    try {
+      for (const count of [0, -1, 1.5, Number.NaN]) {
+        const before = state.llmCalls;
+        await expect(service.addIdeas(id, count)).rejects.toBeInstanceOf(ValidationError);
+        expect(state.llmCalls).toBe(before);
+      }
+    } finally {
+      db.sqlite.close();
+    }
+  });
+
+  test("recusa acima do teto de 40 ideias antes de qualquer chamada de LLM", async () => {
+    const { service, db, id, state } = await studyReadyToGrow(3);
+    try {
+      const before = state.llmCalls;
+      // 3 existentes + 38 novas = 41, uma acima do teto planejado.
+      await expect(service.addIdeas(id, 38)).rejects.toBeInstanceOf(ValidationError);
+      expect(state.llmCalls).toBe(before);
+      expect((await service.get(id)).evaluations).toHaveLength(3);
+    } finally {
+      db.sqlite.close();
+    }
+  });
+
+  test("lança ConflictError enquanto o estudo roda", async () => {
+    withCredentials();
+    const db = openMigratedDatabase(":memory:");
+    const dir = tempDir("goodbizz-add-busy-");
+    let release = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const inner = new LlmMock();
+    const blockingLlm = {
+      generateText: async (system: string, user: string) => {
+        await gate;
+        return inner.generateText(system, user);
+      },
+    };
+    const service = new StudyService({
+      repo: new SqliteStudyRepository(db.db),
+      cache: new StudyCache(new SqliteCacheStore(db.db)),
+      llm: blockingLlm,
+      decider: new DeciderMock(),
+      logger: silentLogger(),
+      artifactsRoot: dir,
+    });
+    try {
+      const record = await service.create(
+        resolveStudyConfig({ niche: "clinicas", numIdeas: 2, mock: true, outputDir: dir }),
+      );
+      const running = service.run(record.id);
+      for (let attempt = 0; attempt < 200; attempt += 1) {
+        if ((await service.get(record.id)).progress.state === "running") break;
+        await Bun.sleep(5);
+      }
+
+      // Sincrono de proposito: a rota de API precisa do 409 na chamada, e nao de uma promessa
+      // rejeitada que ela teria que distinguir de um 201.
+      expect(() => service.addIdeas(record.id, 2)).toThrow(ConflictError);
+      release();
+      await running;
+    } finally {
+      db.sqlite.close();
+    }
+  });
+
+  test("os agregados passam a descrever as 8 ideias", async () => {
+    const { service, db, id } = await studyReadyToGrow(3);
+    try {
+      const before = await service.get(id);
+      await service.addIdeas(id, 5);
+
+      const read = (file: string) => readFileSync(join(before.artifactDir, file), "utf8");
+      const dados = JSON.parse(read("dados.json")) as { config: { n_ideias: number }; ideias: unknown[] };
+      expect(dados.ideias).toHaveLength(8);
+      expect(dados.config.n_ideias).toBe(8);
+      for (const name of (await service.get(id)).evaluations.map((e) => e.name)) {
+        expect(read("00-tabelao.md")).toContain(name);
+      }
     } finally {
       db.sqlite.close();
     }

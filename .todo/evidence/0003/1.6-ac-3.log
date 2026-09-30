@@ -1,0 +1,10 @@
+TASK: 1.6
+CHECK: AC-3
+COMMAND: bash -c 'bunx eslint src/application/study-service.ts src/application/generate-study.ts src/infrastructure/llm-mock.ts && bunx prettier --check src/application/study-service.ts src/application/generate-study.ts src/infrastructure/llm-mock.ts'
+EXIT: 0
+OUTPUT:
+Checking formatting...
+All matched files use Prettier code style!
+
+VERDICT: PASS
+CHAIN_HASH: 346faae4bf967115c0b60dddb5e4725cf6653d67ec0be1e1064e0d8a9715584c

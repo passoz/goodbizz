@@ -143,7 +143,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.6] Orquestrar addIdeas preservando as antigas e recalculando o ranking
+### [x] [1.6] Orquestrar addIdeas preservando as antigas e recalculando o ranking
 
 **Requirement:** FR-009
 **Depends on:** 1.3, 1.5
