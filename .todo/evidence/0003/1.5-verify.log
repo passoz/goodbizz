@@ -1,63 +1,16 @@
 TASK: 1.5
-CHECK: RED
+CHECK: VERIFY
 COMMAND: bun test
-EXIT: 1
+EXIT: 0
 OUTPUT:
 bun test v1.4.2 (744846f84)
-{"level":50,"time":1790798341370,"pid":152108,"hostname":"note","msg":"e"}
-{"level":30,"time":1790798341773,"pid":152108,"hostname":"note","count":0,"msg":"migrations applied"}
-{"level":40,"time":1790798341774,"pid":152108,"hostname":"note","count":1,"msg":"stale studies marked as failed on boot"}
-
-tests/generation.test.ts:
-313 |       existingEvaluation("Agenda Vazada", "id-1", 1.2),
-314 |       existingEvaluation("Ficha Repetida", "id-2", 1),
-315 |       existingEvaluation("Cobranca Manual", "id-3", 0.8),
-316 |     ];
-317 | 
-318 |     const result = await generateAddition(
-                               ^
-TypeError: generateAddition is not a function. (In 'generateAddition(makeConfig({ numIdeas: 5 }), { brief: "BRIEF JA GRAVADO", existing }, 5, "lote-1", { llm, decider, cache, logger: silentLogger() })', 'generateAddition' is undefined)
-      at <anonymous> (/home/passoz/dev/goodbizz/tests/generation.test.ts:318:26)
-(fail) pipeline incremental > nao chama o gerador de brief e escreve documento so para as novas [0.67ms]
-349 |       existingEvaluation("Agenda Vazada", "id-1", 1.2),
-350 |       existingEvaluation("Ficha Repetida", "id-2", 1),
-351 |       existingEvaluation("Cobranca Manual", "id-3", 0.8),
-352 |     ];
-353 | 
-354 |     await generateAddition(makeConfig({ numIdeas: 5 }), { brief: "brief", existing }, 5, "lote-1", {
-                ^
-TypeError: generateAddition is not a function. (In 'generateAddition(makeConfig({ numIdeas: 5 }), { brief: "brief", existing }, 5, "lote-1", {
-      llm,
-      decider: new DeciderMock,
-      cache: new StudyCache(new MemoryCacheStore),
-      logger: silentLogger()
-    })', 'generateAddition' is undefined)
-      at <anonymous> (/home/passoz/dev/goodbizz/tests/generation.test.ts:354:11)
-(fail) pipeline incremental > o prompt lista os nomes ja existentes e pede ideias distintas [0.37ms]
-372 |     const { llm } = recordingLlm();
-373 |     const deps = { llm, decider: new DeciderMock(), cache, logger: silentLogger() };
-374 |     const existing = [existingEvaluation("Agenda Vazada", "id-1", 1.2)];
-375 |     const cfg = makeConfig({ numIdeas: 5 });
-376 | 
-377 |     await generateAddition(cfg, { brief: "brief", existing }, 5, "lote-1", deps);
-                ^
-TypeError: generateAddition is not a function. (In 'generateAddition(cfg, { brief: "brief", existing }, 5, "lote-1", deps)', 'generateAddition' is undefined)
-      at <anonymous> (/home/passoz/dev/goodbizz/tests/generation.test.ts:377:11)
-(fail) pipeline incremental > a chave de cache da adicao difere da do estudo original e da de um segundo pedido [0.31ms]
-392 |     const { llm, prompts } = recordingLlm();
-393 |     const deps = { llm, decider: new DeciderMock(), cache, logger: silentLogger() };
-394 |     const existing = [existingEvaluation("Agenda Vazada", "id-1", 1.2)];
-395 |     const cfg = makeConfig({ numIdeas: 5 });
-396 | 
-397 |     await generateAddition(cfg, { brief: "brief", existing }, 5, "lote-1", deps);
-                ^
-TypeError: generateAddition is not a function. (In 'generateAddition(cfg, { brief: "brief", existing }, 5, "lote-1", deps)', 'generateAddition' is undefined)
-      at <anonymous> (/home/passoz/dev/goodbizz/tests/generation.test.ts:397:11)
-(fail) pipeline incremental > o mesmo pedido reaproveita a chave e nao chama o LLM de novo [0.22ms]
+{"level":50,"time":1790798405819,"pid":152724,"hostname":"note","msg":"e"}
+{"level":30,"time":1790798406112,"pid":152724,"hostname":"note","count":0,"msg":"migrations applied"}
+{"level":40,"time":1790798406113,"pid":152724,"hostname":"note","count":1,"msg":"stale studies marked as failed on boot"}
 -------------------------------------------|---------|---------|-------------------
 File                                       | % Funcs | % Lines | Uncovered Line #s
 -------------------------------------------|---------|---------|-------------------
-All files                                  |   98.14 |   98.17 |
+All files                                  |   98.14 |   98.08 |
  src/application/artifacts.ts              |  100.00 |  100.00 | 
  src/application/cache.ts                  |  100.00 |  100.00 | 
  src/application/costs.ts                  |  100.00 |  100.00 | 
@@ -65,7 +18,7 @@ All files                                  |   98.14 |   98.17 |
  src/application/diagnose.ts               |  100.00 |   95.65 | 146-150
  src/application/evaluate.ts               |  100.00 |   96.98 | 127,197-198,201-203
  src/application/failures.ts               |  100.00 |   92.98 | 70-73
- src/application/generate-study.ts         |  100.00 |  100.00 | 
+ src/application/generate-study.ts         |  100.00 |   95.92 | 171-183
  src/application/generation.ts             |  100.00 |  100.00 | 
  src/application/pain-algorithm.ts         |   91.30 |   95.21 | 90-94,245-246,268-269
  src/application/pain-choice.ts            |  100.00 |   97.94 | 78-79
@@ -107,10 +60,10 @@ All files                                  |   98.14 |   98.17 |
  src/infrastructure/settings-repository.ts |  100.00 |  100.00 | 
 -------------------------------------------|---------|---------|-------------------
 
- 282 pass
- 4 fail
- 1110 expect() calls
-Ran 286 tests across 31 files. [4.37s]
+ 286 pass
+ 0 fail
+ 1126 expect() calls
+Ran 286 tests across 31 files. [4.33s]
 
 VERDICT: PASS
-CHAIN_HASH: d2f5a0d3e208a1efb5cf9c5cabb0ae251c9ce6148a3dfe08567c8ceb1b118abf
+CHAIN_HASH: 584c5477ac107c611e95b07f952392cd264c7bedf04cbcab94d735aacff957b4

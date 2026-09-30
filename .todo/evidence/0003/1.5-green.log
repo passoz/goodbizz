@@ -1,12 +1,76 @@
 TASK: 1.5
-CHECK: RED
+CHECK: GREEN
 COMMAND: bun test
-EXIT: 1
+EXIT: 0
 OUTPUT:
 bun test v1.4.2 (744846f84)
-{"level":50,"time":1790798341370,"pid":152108,"hostname":"note","msg":"e"}
-{"level":30,"time":1790798341773,"pid":152108,"hostname":"note","count":0,"msg":"migrations applied"}
-{"level":40,"time":1790798341774,"pid":152108,"hostname":"note","count":1,"msg":"stale studies marked as failed on boot"}
+{"level":50,"time":1790798367536,"pid":152335,"hostname":"note","msg":"e"}
+{"level":30,"time":1790798367821,"pid":152335,"hostname":"note","count":0,"msg":"migrations applied"}
+{"level":40,"time":1790798367822,"pid":152335,"hostname":"note","count":1,"msg":"stale studies marked as failed on boot"}
+-------------------------------------------|---------|---------|-------------------
+File                                       | % Funcs | % Lines | Uncovered Line #s
+-------------------------------------------|---------|---------|-------------------
+All files                                  |   98.14 |   98.08 |
+ src/application/artifacts.ts              |  100.00 |  100.00 | 
+ src/application/cache.ts                  |  100.00 |  100.00 | 
+ src/application/costs.ts                  |  100.00 |  100.00 | 
+ src/application/dados.ts                  |  100.00 |  100.00 | 
+ src/application/diagnose.ts               |  100.00 |   95.65 | 146-150
+ src/application/evaluate.ts               |  100.00 |   96.98 | 127,197-198,201-203
+ src/application/failures.ts               |  100.00 |   92.98 | 70-73
+ src/application/generate-study.ts         |  100.00 |   95.92 | 171-183
+ src/application/generation.ts             |  100.00 |  100.00 | 
+ src/application/pain-algorithm.ts         |   91.30 |   95.21 | 90-94,245-246,268-269
+ src/application/pain-choice.ts            |  100.00 |   97.94 | 78-79
+ src/application/pdf.ts                    |  100.00 |   97.92 | 47
+ src/application/prompts.ts                |  100.00 |  100.00 | 
+ src/application/recalibrate.ts            |  100.00 |   94.74 | 104-105,146,166,170-172,212
+ src/application/render.ts                 |  100.00 |   99.30 | 191
+ src/application/reports.ts                |  100.00 |  100.00 | 
+ src/application/settings.ts               |  100.00 |  100.00 | 
+ src/application/study-service.ts          |   96.08 |   99.66 | 107
+ src/application/summary.ts                |   92.31 |  100.00 | 
+ src/application/verification.ts           |  100.00 |   94.62 | 48,68-71
+ src/cli.ts                                |   91.67 |   90.38 | 84-85,96,101,107-108,112,132-134,143,159-160,308-309,325-330,332,334-335,346,396-400,478-479,520-524,527,534,583
+ src/config/env.ts                         |  100.00 |  100.00 | 
+ src/config/providers.ts                   |  100.00 |  100.00 | 
+ src/config/redact.ts                      |  100.00 |  100.00 | 
+ src/config/runtime.ts                     |  100.00 |   98.21 | 93
+ src/domain/errors.ts                      |  100.00 |  100.00 | 
+ src/domain/hash.ts                        |  100.00 |  100.00 | 
+ src/domain/pain.ts                        |  100.00 |  100.00 | 
+ src/infrastructure/cache-repository.ts    |  100.00 |  100.00 | 
+ src/infrastructure/db.ts                  |  100.00 |   97.96 | 45
+ src/infrastructure/decider-mock.ts        |  100.00 |  100.00 | 
+ src/infrastructure/decider.ts             |   86.67 |   95.73 | 101-104,109-111
+ src/infrastructure/http/api.ts            |   83.78 |   94.86 | 130-131,136-139,231-233
+ src/infrastructure/http/app.ts            |  100.00 |  100.00 | 
+ src/infrastructure/http/errors.ts         |  100.00 |   94.74 | 25
+ src/infrastructure/http/health.ts         |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/layout.tsx     |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/pages.tsx      |   97.14 |   99.66 | 89-90,113
+ src/infrastructure/http/ui/routes.tsx     |   96.15 |   93.91 | 149,162,176,189-192,210,214,225-228,239
+ src/infrastructure/http/ui/security.ts    |  100.00 |   93.22 | 47,75-76,86
+ src/infrastructure/json.ts                |  100.00 |   92.00 | 31-32
+ src/infrastructure/llm-mock.ts            |   87.50 |  100.00 | 
+ src/infrastructure/llm.ts                 |  100.00 |  100.00 | 
+ src/infrastructure/repositories.ts        |  100.00 |  100.00 | 
+ src/infrastructure/routing.ts             |   90.00 |   98.31 | 97
+ src/infrastructure/schema.ts              |  100.00 |  100.00 | 
+ src/infrastructure/settings-repository.ts |  100.00 |  100.00 | 
+-------------------------------------------|---------|---------|-------------------
+
+ 286 pass
+ 0 fail
+ 1126 expect() calls
+Ran 286 tests across 31 files. [4.38s]
+
+MUTATION_EXIT: 1
+MUTATION_OUTPUT:
+bun test v1.4.2 (744846f84)
+{"level":50,"time":1790798371929,"pid":152372,"hostname":"note","msg":"e"}
+{"level":30,"time":1790798372231,"pid":152372,"hostname":"note","count":0,"msg":"migrations applied"}
+{"level":40,"time":1790798372232,"pid":152372,"hostname":"note","count":1,"msg":"stale studies marked as failed on boot"}
 
 tests/generation.test.ts:
 313 |       existingEvaluation("Agenda Vazada", "id-1", 1.2),
@@ -18,7 +82,7 @@ tests/generation.test.ts:
                                ^
 TypeError: generateAddition is not a function. (In 'generateAddition(makeConfig({ numIdeas: 5 }), { brief: "BRIEF JA GRAVADO", existing }, 5, "lote-1", { llm, decider, cache, logger: silentLogger() })', 'generateAddition' is undefined)
       at <anonymous> (/home/passoz/dev/goodbizz/tests/generation.test.ts:318:26)
-(fail) pipeline incremental > nao chama o gerador de brief e escreve documento so para as novas [0.67ms]
+(fail) pipeline incremental > nao chama o gerador de brief e escreve documento so para as novas [0.78ms]
 349 |       existingEvaluation("Agenda Vazada", "id-1", 1.2),
 350 |       existingEvaluation("Ficha Repetida", "id-2", 1),
 351 |       existingEvaluation("Cobranca Manual", "id-3", 0.8),
@@ -33,7 +97,7 @@ TypeError: generateAddition is not a function. (In 'generateAddition(makeConfig(
       logger: silentLogger()
     })', 'generateAddition' is undefined)
       at <anonymous> (/home/passoz/dev/goodbizz/tests/generation.test.ts:354:11)
-(fail) pipeline incremental > o prompt lista os nomes ja existentes e pede ideias distintas [0.37ms]
+(fail) pipeline incremental > o prompt lista os nomes ja existentes e pede ideias distintas [0.41ms]
 372 |     const { llm } = recordingLlm();
 373 |     const deps = { llm, decider: new DeciderMock(), cache, logger: silentLogger() };
 374 |     const existing = [existingEvaluation("Agenda Vazada", "id-1", 1.2)];
@@ -43,7 +107,7 @@ TypeError: generateAddition is not a function. (In 'generateAddition(makeConfig(
                 ^
 TypeError: generateAddition is not a function. (In 'generateAddition(cfg, { brief: "brief", existing }, 5, "lote-1", deps)', 'generateAddition' is undefined)
       at <anonymous> (/home/passoz/dev/goodbizz/tests/generation.test.ts:377:11)
-(fail) pipeline incremental > a chave de cache da adicao difere da do estudo original e da de um segundo pedido [0.31ms]
+(fail) pipeline incremental > a chave de cache da adicao difere da do estudo original e da de um segundo pedido [0.38ms]
 392 |     const { llm, prompts } = recordingLlm();
 393 |     const deps = { llm, decider: new DeciderMock(), cache, logger: silentLogger() };
 394 |     const existing = [existingEvaluation("Agenda Vazada", "id-1", 1.2)];
@@ -53,7 +117,7 @@ TypeError: generateAddition is not a function. (In 'generateAddition(cfg, { brie
                 ^
 TypeError: generateAddition is not a function. (In 'generateAddition(cfg, { brief: "brief", existing }, 5, "lote-1", deps)', 'generateAddition' is undefined)
       at <anonymous> (/home/passoz/dev/goodbizz/tests/generation.test.ts:397:11)
-(fail) pipeline incremental > o mesmo pedido reaproveita a chave e nao chama o LLM de novo [0.22ms]
+(fail) pipeline incremental > o mesmo pedido reaproveita a chave e nao chama o LLM de novo [0.25ms]
 -------------------------------------------|---------|---------|-------------------
 File                                       | % Funcs | % Lines | Uncovered Line #s
 -------------------------------------------|---------|---------|-------------------
@@ -110,7 +174,8 @@ All files                                  |   98.14 |   98.17 |
  282 pass
  4 fail
  1110 expect() calls
-Ran 286 tests across 31 files. [4.37s]
+Ran 286 tests across 31 files. [4.30s]
 
+MUTATION_VERDICT: PASS
 VERDICT: PASS
-CHAIN_HASH: d2f5a0d3e208a1efb5cf9c5cabb0ae251c9ce6148a3dfe08567c8ceb1b118abf
+CHAIN_HASH: 641b7aeab60ad97910c7455d37e3bfc73bcceefc602cf51ed7185efe97de65ed

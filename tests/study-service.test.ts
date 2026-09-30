@@ -7,15 +7,20 @@
  * produção isso cortava documentos de 20 mil tokens do `deepseek-flash` e do tier gratuito do
  * tokenharbor (27,6 tok/s medidos), com 3 tentativas de 60 s = 184,5 s e falha garantida.
  */
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+
 import { afterEach, describe, expect, test } from "bun:test";
 
 import { StudyCache } from "../src/application/cache.ts";
 import { evaluationToJson } from "../src/application/dados.ts";
 import { evaluateIdea } from "../src/application/evaluate.ts";
 import { generateStudy } from "../src/application/generate-study.ts";
+import { folderName } from "../src/application/reports.ts";
 import { StudyService } from "../src/application/study-service.ts";
 import { loadEnv, resetEnv } from "../src/config/env.ts";
 import { resolveStudyConfig } from "../src/config/runtime.ts";
+import { ConflictError, NotFoundError } from "../src/domain/errors.ts";
 import type { StudyConfig } from "../src/domain/types.ts";
 import { DeciderMock } from "../src/infrastructure/decider-mock.ts";
 import { openMigratedDatabase } from "../src/infrastructure/db.ts";
@@ -205,5 +210,209 @@ describe("identidade estavel por ideia", () => {
     expect(json["nome"]).toBe(result.evaluations[0]!.name);
 
     handle.sqlite.close();
+  });
+});
+
+/** Estudo concluido de N ideias, com artefatos reais em disco, pronto para remocao. */
+async function completedStudy(numIdeas: number) {
+  withCredentials();
+  const db = openMigratedDatabase(":memory:");
+  const dir = tempDir("goodbizz-remove-");
+  const repo = new SqliteStudyRepository(db.db);
+  const service = new StudyService({
+    repo,
+    cache: new StudyCache(new SqliteCacheStore(db.db)),
+    llm: new LlmMock(),
+    decider: new DeciderMock(),
+    logger: silentLogger(),
+    artifactsRoot: dir,
+  });
+  const cfg = resolveStudyConfig({ niche: "clinicas", numIdeas, mock: true, outputDir: dir });
+  const record = await service.create(cfg);
+  await service.run(record.id);
+  return { service, repo, db, dir, id: record.id };
+}
+
+/** Pastas `NN-slug` presentes na raiz do estudo, ordenadas. */
+function ideaFolders(root: string): string[] {
+  return Array.from(new Bun.Glob("*/").scanSync({ cwd: root, onlyFiles: false }))
+    .map((entry) => entry.replace(/\/$/, ""))
+    .filter((entry) => /^\d\d-/.test(entry))
+    .sort();
+}
+
+describe("remocao de ideia por id", () => {
+  test("remove a ideia do meio e zera o ranking a partir de 1", async () => {
+    const { service, db, id } = await completedStudy(3);
+    try {
+      const before = await service.get(id);
+      const middle = before.evaluations[1]!;
+
+      const after = await service.removeIdea(id, middle.id);
+
+      expect(after.evaluations).toHaveLength(2);
+      expect(after.evaluations.map((e) => e.id)).toEqual([
+        before.evaluations[0]!.id,
+        before.evaluations[2]!.id,
+      ]);
+      // O rank gravado recomeca em 1: e o que a UI usa para numerar as pastas.
+      const ranks = db.sqlite
+        .query("SELECT rank FROM evaluations WHERE study_id = ? ORDER BY rank")
+        .all(id) as { rank: number }[];
+      expect(ranks.map((r) => r.rank)).toEqual([1, 2]);
+      expect(after.summary?.ordered.map((e) => e.id)).toEqual([
+        before.evaluations[0]!.id,
+        before.evaluations[2]!.id,
+      ]);
+    } finally {
+      db.sqlite.close();
+    }
+  });
+
+  test("apaga a pasta da ideia removida e renomeia as seguintes, sem orfao", async () => {
+    const { service, db, id } = await completedStudy(3);
+    try {
+      const before = await service.get(id);
+      const [first, middle, last] = before.evaluations as [
+        (typeof before.evaluations)[number],
+        (typeof before.evaluations)[number],
+        (typeof before.evaluations)[number],
+      ];
+      expect(ideaFolders(before.artifactDir)).toEqual([
+        folderName(1, first!.name),
+        folderName(2, middle!.name),
+        folderName(3, last!.name),
+      ]);
+
+      await service.removeIdea(id, middle!.id);
+
+      // Sobram 2 pastas, renumeradas pelo ranking novo; a da ideia do meio sumiu e nada ficou orfao.
+      expect(ideaFolders(before.artifactDir)).toEqual([
+        folderName(1, first!.name),
+        folderName(2, last!.name),
+      ]);
+      expect(existsSync(join(before.artifactDir, folderName(2, middle!.name)))).toBe(false);
+      expect(ideaFolders(before.artifactDir).every((folder) => /^\d\d-/.test(folder))).toBe(true);
+    } finally {
+      db.sqlite.close();
+    }
+  });
+
+  test("regera os agregados com exatamente as ideias restantes", async () => {
+    const { service, db, id } = await completedStudy(3);
+    try {
+      const before = await service.get(id);
+      const removed = before.evaluations[1]!;
+      const kept = [before.evaluations[0]!, before.evaluations[2]!];
+
+      await service.removeIdea(id, removed.id);
+
+      const root = before.artifactDir;
+      const read = (file: string) => readFileSync(join(root, file), "utf8");
+      const dados = JSON.parse(read("dados.json")) as { ideias: { nome: string }[] };
+      expect(dados.ideias.map((i) => i.nome)).toEqual(kept.map((e) => e.name));
+      expect(dados.ideias.map((i) => i.nome)).not.toContain(removed.name);
+      for (const file of ["00-tabelao.md", "00-tabelao.csv", "README.md"]) {
+        expect(read(file)).not.toContain(removed.name);
+        for (const idea of kept) expect(read(file)).toContain(idea.name);
+      }
+    } finally {
+      db.sqlite.close();
+    }
+  });
+
+  test("lança NotFoundError para id de ideia inexistente e não toca no disco", async () => {
+    const { service, db, id } = await completedStudy(3);
+    try {
+      const before = await service.get(id);
+      const snapshot = ideaFolders(before.artifactDir);
+
+      await expect(service.removeIdea(id, "id-que-nao-existe")).rejects.toBeInstanceOf(NotFoundError);
+      expect(ideaFolders(before.artifactDir)).toEqual(snapshot);
+      expect((await service.get(id)).evaluations).toHaveLength(3);
+    } finally {
+      db.sqlite.close();
+    }
+  });
+
+  test("lança ConflictError enquanto o estudo roda e não toca no disco", async () => {
+    withCredentials();
+    const db = openMigratedDatabase(":memory:");
+    const dir = tempDir("goodbizz-remove-busy-");
+    let release = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    // Segura a primeira chamada sem invalidar o pipeline: o mock ainda responde por tras do gate.
+    const inner = new LlmMock();
+    const blockingLlm = {
+      generateText: async (system: string, user: string) => {
+        await gate;
+        return inner.generateText(system, user);
+      },
+    };
+    const service = new StudyService({
+      repo: new SqliteStudyRepository(db.db),
+      cache: new StudyCache(new SqliteCacheStore(db.db)),
+      llm: blockingLlm,
+      decider: new DeciderMock(),
+      logger: silentLogger(),
+      artifactsRoot: dir,
+    });
+    try {
+      const record = await service.create(
+        resolveStudyConfig({ niche: "clinicas", numIdeas: 2, mock: true, outputDir: dir }),
+      );
+      const running = service.run(record.id);
+      // Espera o pipeline marcar o estudo como em execucao antes de tentar remover.
+      for (let attempt = 0; attempt < 200; attempt += 1) {
+        if ((await service.get(record.id)).progress.state === "running") break;
+        await Bun.sleep(5);
+      }
+
+      await expect(service.removeIdea(record.id, "qualquer")).rejects.toBeInstanceOf(ConflictError);
+      release();
+      await running;
+    } finally {
+      db.sqlite.close();
+    }
+  });
+
+  test("nomes iguais: remove so a escolhida e preserva a outra", async () => {
+    const { service, repo, db, id } = await completedStudy(3);
+    try {
+      const before = await service.get(id);
+      const [first, second, third] = before.evaluations as [
+        (typeof before.evaluations)[number],
+        (typeof before.evaluations)[number],
+        (typeof before.evaluations)[number],
+      ];
+      // Gemea: mesmo nome, id novo. E o par que so a remocao por id distingue.
+      const twin = { ...first!, id: "id-gemeo" };
+      await repo.saveEvaluations(id, [twin, first!, third!], (await service.get(id)).summary);
+      // As duas ocupam 01 e 02 com o mesmo slug; a gêmea precisa de pasta propria.
+      const slugA = folderName(1, first!.name);
+      const twinDoc = readFileSync(join(before.artifactDir, slugA, "README.md"), "utf8");
+      mkdirSync(join(before.artifactDir, folderName(2, first!.name)), { recursive: true });
+      writeFileSync(join(before.artifactDir, folderName(2, first!.name), "README.md"), twinDoc, "utf8");
+
+      const after = await service.removeIdea(id, first!.id);
+
+      expect(after.evaluations.map((e) => e.id)).toEqual(["id-gemeo", third!.id]);
+      // A pasta da gêmea sobrevive com o documento: apagar por nome teria levar as duas.
+      expect(existsSync(join(before.artifactDir, folderName(1, first!.name)))).toBe(true);
+      expect(readFileSync(join(before.artifactDir, folderName(1, first!.name), "README.md"), "utf8")).toBe(
+        twinDoc,
+      );
+      // E a da removida sumiu, sem orfao com o mesmo slug.
+      expect(existsSync(join(before.artifactDir, folderName(2, first!.name)))).toBe(false);
+      expect(ideaFolders(before.artifactDir)).toEqual([
+        folderName(1, first!.name),
+        folderName(2, third!.name),
+      ]);
+      void second;
+    } finally {
+      db.sqlite.close();
+    }
   });
 });

@@ -1,4 +1,33 @@
 {
+  "version": 2,
+  "kind": "task-acceptance-candidate",
+  "harness_version": "0.1.0",
+  "gate_version": "1",
+  "work_id": "0003",
+  "task_id": "1.5",
+  "result": "pass",
+  "plan": {
+    "path": ".todo/0003-tasks.md",
+    "sha256": "4d42446c76f85cfda089ac58e4f0149309ef43047527c39b5ddef96b637e08fe"
+  },
+  "implementation": {
+    "src/application/generate-study.ts": {
+      "exists": true,
+      "sha256": "b4201f920dc2d11f3a5267cf19c2216fd667c1f1d0e6e4fd757992143dd494b0"
+    },
+    "src/application/generation.ts": {
+      "exists": true,
+      "sha256": "0d02b8e7e7ecd2c291f79e695990b91027f7eb58ea165fe3f41dcc54ec8d5505"
+    }
+  },
+  "tests": {
+    "tests/generation.test.ts": {
+      "exists": true,
+      "sha256": "3633260111539d581e80fcc6613f50e84c99139cf9625c245d1b9d1854f6a360"
+    }
+  },
+  "evidence_sha256": "77a36c977181144dc9cbc2af4996d94c75c656ee8e0e3942c3e299af04b77ff9",
+  "evidence_chain_head": "deece2b5dfb392d786a9097bf58c2c817ed456afe8de7fd3679b9d09fbe1b0b5",
   "audit_checks": {
     "AC-1": {
       "command": [
@@ -51,57 +80,5 @@
       "recorded_at": "2026-09-30T20:00:00.553Z"
     }
   },
-  "baseline_implementation": {
-    "src/application/generate-study.ts": {
-      "exists": true,
-      "sha256": "2a2cd0a26f017e85618530de1a1468861be73b790bea5662953c80a38d0c563f"
-    },
-    "src/application/generation.ts": {
-      "exists": true,
-      "sha256": "373867418f08bed5fccaa08946729a86a6a37e180d23790051f741fdd831120d"
-    }
-  },
-  "baseline_tests": {
-    "tests/generation.test.ts": {
-      "exists": true,
-      "sha256": "9c097820e47d51bb91e94b6cb69dd6834979d2c5e99cf5ad37686d617c6fc641"
-    }
-  },
-  "created_at": "2026-09-30T19:59:00.767Z",
-  "green_expect": null,
-  "green_implementation": {
-    "src/application/generate-study.ts": {
-      "exists": true,
-      "sha256": "b4201f920dc2d11f3a5267cf19c2216fd667c1f1d0e6e4fd757992143dd494b0"
-    },
-    "src/application/generation.ts": {
-      "exists": true,
-      "sha256": "0d02b8e7e7ecd2c291f79e695990b91027f7eb58ea165fe3f41dcc54ec8d5505"
-    }
-  },
-  "green_tests": {
-    "tests/generation.test.ts": {
-      "exists": true,
-      "sha256": "3633260111539d581e80fcc6613f50e84c99139cf9625c245d1b9d1854f6a360"
-    }
-  },
-  "implementation_files": [
-    "src/application/generate-study.ts",
-    "src/application/generation.ts"
-  ],
-  "red_command": [
-    "bun",
-    "test"
-  ],
-  "red_expect": "nao chama o gerador de brief e escreve documento so para as novas",
-  "red_tests": {
-    "tests/generation.test.ts": {
-      "exists": true,
-      "sha256": "3633260111539d581e80fcc6613f50e84c99139cf9625c245d1b9d1854f6a360"
-    }
-  },
-  "task": "1.5",
-  "test_files": [
-    "tests/generation.test.ts"
-  ]
+  "generated_at": "2026-09-30T20:00:05.228Z"
 }

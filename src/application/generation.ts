@@ -59,17 +59,29 @@ export async function generateBrief(llm: LlmClient, cfg: StudyConfig): Promise<s
 }
 
 /** Asks the LLM for `count` product ideas grounded on the brief. */
+/**
+ * Ideias novas para o nicho. `existingNames` são as que o estudo já tem: elas entram no prompt
+ * porque pedir N ideias sem dizer quais já existem devolve as mesmas de novo, e o operador
+ * receberia um pedido que ele acabou de pagar para não receber.
+ */
 export async function generateIdeas(
   llm: LlmClient,
   cfg: StudyConfig,
   brief: string,
   count: number,
+  existingNames: readonly string[] = [],
 ): Promise<Idea[]> {
+  const avoid =
+    existingNames.length > 0
+      ? `Ideias que já existem e NÃO podem ser repetidas: ${existingNames.join("; ")}.\n` +
+        "Gere ideias distintas das existentes, inclusive no nome.\n\n"
+      : "";
   const user =
     `Nicho: ${cfg.niche}\n` +
     `Cidade ou região alvo: ${cfg.city || "não informada"}\n` +
     `Ticket mensal considerado: R$ ${cfg.monthlyTicket}\n\n` +
     `Brief de mercado:\n${brief}\n\n` +
+    avoid +
     `Gere exatamente ${count} ideias em JSON. Retorne apenas o array.`;
   const text = await llm.generateText(IDEAS_SYSTEM_PROMPT, user);
   const raw = extractJson(text);

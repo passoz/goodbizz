@@ -118,7 +118,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.5] Gerar apenas as ideias novas no pipeline incremental
+### [x] [1.5] Gerar apenas as ideias novas no pipeline incremental
 
 **Requirement:** FR-003
 **Depends on:** 1.1

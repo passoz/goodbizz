@@ -93,6 +93,161 @@ function usageDelta(before: ProviderUsage | undefined, after: ProviderUsage | un
   };
 }
 
+/** O que a adição conhece do estudo: o brief já pago e as ideias que já existem. */
+export interface GenerateAdditionInput {
+  /** Brief já gravado. Reutilizado sem chamar o LLM: o estudo já o pagou. */
+  brief: string;
+  existing: readonly StudyIdea[];
+}
+
+/**
+ * Gera `count` ideias novas para um estudo existente, sem reavaliar nem reescrever o que já está lá.
+ *
+ * Três garantias: o brief não é regerado, as ideias existentes não passam pelo decisor nem pelo
+ * gerador de documento (o operador não paga duas vezes pela mesma análise), e a chave de cache leva
+ * o `requestId` para que um segundo pedido não sirva as ideias do primeiro.
+ */
+export async function generateAddition(
+  cfg: StudyConfig,
+  input: GenerateAdditionInput,
+  count: number,
+  requestId: string,
+  deps: GenerateStudyDeps,
+): Promise<GenerateStudyResult> {
+  const { llm, decider, cache } = deps;
+  const usageBefore = { llm: llm.usage?.(), decider: decider.usage?.() };
+  const progress = deps.onProgress ?? (() => {});
+  const brief = input.brief;
+  const existing = [...input.existing];
+  const existingNames = existing.map((idea) => idea.name);
+  progress(`[1/6] Reaproveitando o brief ja gravado (${brief.length} caracteres)`);
+
+  // O `kind` diferente ja separa a adicao do estudo original; o `requestId` separa um pedido do outro.
+  const ideasKey = cacheKeyFor(
+    "ideias-adicao",
+    cfg.niche,
+    cfg.city,
+    String(count),
+    requestId,
+    ...existingNames,
+  );
+  let ideas = await cache.get<Idea[]>(ideasKey);
+  if (ideas === null) {
+    ideas = await generateIdeas(llm, cfg, brief, count, existingNames);
+    await cache.put(ideasKey, ideas);
+  }
+  progress(`[2/6] ${ideas.length} ideias novas geradas sem repetir as ${existing.length} existentes`);
+
+  const newEvaluations = await mapLimit(ideas, cfg.concurrency, async (idea) => {
+    const key = cacheKeyFor(
+      "aval",
+      cfg.niche,
+      cfg.city,
+      String(cfg.monthlyTicket),
+      idea.name,
+      idea.description,
+    );
+    const cached = await cache.get<StudyIdea>(key);
+    if (cached !== null) return cached;
+    const evaluated = await evaluateIdea(idea, decider, cfg);
+    await cache.put(key, evaluated);
+    return evaluated;
+  });
+  progress(`[3/6] Avaliei as ${newEvaluations.length} ideias novas com o decisor`);
+
+  const evaluations = [...existing, ...newEvaluations];
+  const summary = summarizeStudy(evaluations);
+  const folders: Record<string, string> = {};
+  summary.ordered.forEach((evaluation, position) => {
+    folders[evaluation.name] = folderName(position + 1, evaluation.name);
+  });
+
+  const usageNow = (): StudyUsage => ({
+    llm: usageDelta(usageBefore.llm, llm.usage?.()),
+    decider: usageDelta(usageBefore.decider, decider.usage?.()),
+  });
+
+  if (cfg.evaluateOnly) {
+    return {
+      brief,
+      ideas,
+      evaluations,
+      summary,
+      usage: usageNow(),
+      folders: {},
+      documents: {},
+      files: [],
+      issues: [],
+      cacheHits: cache.hits,
+      cacheCount: await cache.count(),
+    };
+  }
+
+  const byId = new Map(newEvaluations.map((evaluation) => [evaluation.id, evaluation]));
+  const issues: string[] = [];
+  const documents: Record<string, string> = {};
+
+  // Só as novas ideias ganham documento: reescrever as antigas custaria o mesmo token de novo.
+  const written = await mapLimit(newEvaluations, cfg.concurrency, async (evaluation) => {
+    const key = cacheKeyFor(
+      "doc",
+      cfg.niche,
+      String(cfg.monthlyTicket),
+      evaluation.name,
+      String(evaluation.index),
+    );
+    let text = await cache.get<string>(key);
+    if (text === null) {
+      text = await generateDocument(llm, evaluation, cfg, brief);
+      await cache.put(key, text);
+    }
+    text = `${text.replace(/\r\n/g, "\n").trim()}\n`;
+    const findings = checkDocument(
+      text,
+      [
+        evaluation.index,
+        evaluation.indicators.fit,
+        evaluation.indicators.sale,
+        evaluation.indicators.disruption,
+        evaluation.indicators.solo,
+        evaluation.algorithm.painScore,
+        evaluation.business.wtp,
+        cfg.monthlyTicket,
+      ],
+      DOC_LITERALS,
+    );
+    const folder = folders[evaluation.name] as string;
+    progress(`[5/6] Escrevendo o plano de "${folder}" (${Math.floor(text.length / 1024)} KB)`);
+    if (findings.length > 0) issues.push(`${folder}: ${findings.join("; ")}`);
+    return { name: evaluation.name, folder, text };
+  });
+  void byId;
+  for (const item of written) documents[item.name] = item.text;
+
+  // Os agregados descrevem o ranking inteiro; os `NN-slug/README.md` sao só das ideias novas, e as
+  // pastas antigas continuam no disco com o documento que ja tinham. O filtro casa pela pasta e nao
+  // pelo slug: `documents` e indexado por nome, e o caminho da pasta e `NN-slug`.
+  const newFolders = new Set(newEvaluations.map((idea) => folders[idea.name]));
+  const files = buildArtifactFiles(cfg, brief, summary, evaluations, folders, documents).filter(
+    (file) => !file.path.includes("/") || newFolders.has(file.path.split("/")[0] as string),
+  );
+  progress(`[6/6] Montando os artefatos do estudo (${files.length} arquivos)`);
+
+  return {
+    brief,
+    ideas,
+    evaluations,
+    summary,
+    folders,
+    documents,
+    files,
+    issues,
+    cacheHits: cache.hits,
+    cacheCount: await cache.count(),
+    usage: usageNow(),
+  };
+}
+
 export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): Promise<GenerateStudyResult> {
   const { llm, decider, cache } = deps;
   const usageBefore = { llm: llm.usage?.(), decider: decider.usage?.() };
