@@ -10,7 +10,7 @@ import {
 } from "../src/application/reports.ts";
 import type {
   BusinessBlock,
-  IdeaEvaluation,
+  StudyIdea,
   Indicators,
   PainBlock,
   StudyConfig,
@@ -50,8 +50,9 @@ interface EvaluationInit {
   algorithm?: Partial<PainBlock>;
 }
 
-function evaluation(init: EvaluationInit): IdeaEvaluation {
+function evaluation(init: EvaluationInit): StudyIdea {
   return {
+    id: `id-${init.name}`,
     name: init.name,
     sector: init.sector ?? "",
     description: `desc de ${init.name}`,
@@ -91,7 +92,7 @@ function evaluation(init: EvaluationInit): IdeaEvaluation {
 }
 
 /** Mesma amostra usada para conferir o baseline Python linha a linha. */
-function sampleData(): IdeaEvaluation[] {
+function sampleData(): StudyIdea[] {
   return [
     evaluation({
       name: "Clinica Sorriso",

@@ -13,7 +13,7 @@ import { ProviderSettingsStore } from "../src/application/settings.ts";
 import { StudyService } from "../src/application/study-service.ts";
 import { loadEnv, resetEnv } from "../src/config/env.ts";
 import { createLogger, resolveStudyConfig } from "../src/config/runtime.ts";
-import type { IdeaEvaluation, StudySummary } from "../src/domain/types.ts";
+import type { StudyIdea, StudySummary } from "../src/domain/types.ts";
 import { SqliteCacheStore } from "../src/infrastructure/cache-repository.ts";
 import { openMigratedDatabase, type DatabaseHandle } from "../src/infrastructure/db.ts";
 import { DeciderMock } from "../src/infrastructure/decider-mock.ts";
@@ -63,8 +63,9 @@ async function csrfToken(): Promise<{ cookiePair: string; token: string }> {
 }
 
 /** Ideia de exemplo com todos os indicadores preenchidos. */
-function makeEvaluation(): IdeaEvaluation {
+function makeEvaluation(): StudyIdea {
   return {
+    id: "id-triagem",
     name: "Triagem de WhatsApp",
     sector: "atendimento",
     description: "separa duvida simples de intencao real",
@@ -95,7 +96,7 @@ function makeEvaluation(): IdeaEvaluation {
   };
 }
 
-function makeSummary(evaluation: IdeaEvaluation): StudySummary {
+function makeSummary(evaluation: StudyIdea): StudySummary {
   return {
     ordered: [evaluation],
     painGroups: { forte: [evaluation.name], mista: [], fraca: [] },

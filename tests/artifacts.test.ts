@@ -17,6 +17,7 @@ import { folderName, indexMarkdown, scopeNotice } from "../src/application/repor
 import type {
   BusinessBlock,
   IdeaEvaluation,
+  StudyIdea,
   Indicators,
   PainBlock,
   StudyConfig,
@@ -56,8 +57,16 @@ interface EvaluationInit {
   algorithm?: Partial<PainBlock>;
 }
 
-function evaluation(init: EvaluationInit): IdeaEvaluation {
+/** Mesma forma do baseline, sem o `id`: ele vive na coluna `idea_id` (CON-006). */
+function baselineShape(idea: StudyIdea): IdeaEvaluation {
+  const copy = { ...idea } as IdeaEvaluation;
+  delete (copy as Partial<StudyIdea>).id;
+  return copy;
+}
+
+function evaluation(init: EvaluationInit): StudyIdea {
   return {
+    id: `id-${init.name}`,
     name: init.name,
     sector: init.sector ?? "",
     description: `desc de ${init.name}`,
@@ -96,7 +105,7 @@ function evaluation(init: EvaluationInit): IdeaEvaluation {
   };
 }
 
-const data: IdeaEvaluation[] = [
+const data: StudyIdea[] = [
   evaluation({ name: "Clinica Sorriso", sector: "Odontologia", index: 1 }),
   evaluation({
     name: "Oficina Rapida",
@@ -202,7 +211,10 @@ describe("evaluation <-> json", () => {
   test("round-trip preserva todos os campos numericos", () => {
     for (const idea of data) {
       const restored = evaluationFromJson(evaluationToJson(idea));
-      expect(restored).toEqual(idea);
+      // O `id` nao faz parte da forma do baseline: ele vive na coluna `idea_id`, nao no JSON
+      // lido pelas ferramentas Python (CON-006). O round-trip compara a forma, sem a identidade.
+      expect(restored).toEqual(baselineShape(idea));
+      expect(Object.keys(evaluationToJson(idea))).not.toContain("id");
       expect(restored.index).toBe(idea.index);
       expect(restored.indicators.disruptionConf).toBe(0.125);
       expect(restored.business.priceConf).toBe(idea.business.priceConf);

@@ -15,6 +15,7 @@ import type {
   StudyListItem,
   StudyProgress,
   StudyRecord,
+  StudyIdea,
   StudyState,
   StudySummary,
   StudyUsage,
@@ -237,7 +238,11 @@ export class SqliteStudyRepository implements StudyRepository {
         step: row.step,
         error: row.error,
       },
-      evaluations: evalRows.map((r) => ideaJsonToEvaluation(JSON.parse(r.payloadJson) as IdeaJson)),
+      evaluations: evalRows.map((r) => ({
+        ...ideaJsonToEvaluation(JSON.parse(r.payloadJson) as IdeaJson),
+        // O id vem da coluna; o payload_json continua sendo a fonte da forma do baseline (CON-006).
+        id: r.ideaId ?? `legacy-${r.studyId}-${String(r.rank).padStart(8, "0")}`,
+      })),
       summary: row.summaryJson ? (JSON.parse(row.summaryJson) as StudySummary) : null,
       usage: row.usageJson ? (JSON.parse(row.usageJson) as StudyUsage) : null,
     };
@@ -266,7 +271,7 @@ export class SqliteStudyRepository implements StudyRepository {
 
   async saveEvaluations(
     studyId: string,
-    evaluations_: IdeaEvaluation[],
+    evaluations_: StudyIdea[],
     summary: StudyRecord["summary"],
   ): Promise<void> {
     const ordered = [...evaluations_].sort((a, b) => b.index - a.index);
@@ -284,6 +289,7 @@ export class SqliteStudyRepository implements StudyRepository {
               index: e.index,
               tier: e.tier,
               payloadJson: JSON.stringify(evaluationToIdeaJson(e)),
+              ideaId: e.id,
             })),
           )
           .run();

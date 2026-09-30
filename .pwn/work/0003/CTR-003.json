@@ -7,7 +7,8 @@
     "level": "L3",
     "reasons": [
       "saveEvaluations apaga e reinsere todas as linhas do estudo: se o id nao for gravado e lido, a identidade se perde a cada gravacao e a remocao por id fica impossivel",
-      "A leitura monta IdeaEvaluation a partir de payload_json e so pode acrescentar o id vindo da coluna nova; uma confusao entre a ordem por indice e a identidade trocaria o id entre ideias"
+      "A leitura monta IdeaEvaluation a partir de payload_json e so pode acrescentar o id vindo da coluna nova; uma confusao entre a ordem por indice e a identidade trocaria o id entre ideias",
+      "Tipar ordered como StudyIdea chega as fixtures compartilhadas de artifacts, cache, reports e ui: sao ajustes de tipo nos testes, mas tocam 4 arquivos que a task nao previa"
     ]
   },
   "validation_strategy": "tdd-strict",
@@ -45,7 +46,11 @@
       "src/infrastructure/repositories.ts",
       "src/application/summary.ts",
       "tests/repositories.test.ts",
-      "tests/study-service.test.ts"
+      "tests/study-service.test.ts",
+      "tests/artifacts.test.ts",
+      "tests/cache.test.ts",
+      "tests/reports.test.ts",
+      "tests/ui.test.ts"
     ],
     "affected_components": [
       "idea-identity"
@@ -75,7 +80,11 @@
       "src/infrastructure/repositories.ts",
       "src/application/summary.ts",
       "tests/repositories.test.ts",
-      "tests/study-service.test.ts"
+      "tests/study-service.test.ts",
+      "tests/artifacts.test.ts",
+      "tests/cache.test.ts",
+      "tests/reports.test.ts",
+      "tests/ui.test.ts"
     ],
     "write_deny": [
       ".git/**",

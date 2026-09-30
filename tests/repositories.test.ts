@@ -9,7 +9,15 @@ import { cpSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { openDatabase, runMigrations } from "../src/infrastructure/db.ts";
+import {
+  openDatabase,
+  openMigratedDatabase,
+  runMigrations,
+  type DatabaseHandle,
+} from "../src/infrastructure/db.ts";
+import { SqliteStudyRepository } from "../src/infrastructure/repositories.ts";
+import { summarizeStudy } from "../src/application/summary.ts";
+import type { StudyIdea } from "../src/domain/types.ts";
 import type { Database } from "bun:sqlite";
 
 /** Copia as migracoes existentes sem a 0003, para simular um banco gravado antes da mudanca. */
@@ -109,5 +117,118 @@ describe("migracao da coluna idea_id", () => {
     } finally {
       handle.sqlite.close();
     }
+  });
+});
+
+describe("identidade na persistencia", () => {
+  /** Estudo minimo gravado direto, para nao depender do pipeline. */
+  function seedStudy(repo: SqliteStudyRepository, db: DatabaseHandle, id: string): void {
+    db.sqlite
+      .query(
+        "INSERT INTO studies (id, created_at, updated_at, niche, city, monthly_ticket, num_ideas, pain_method, mock, artifact_dir) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      )
+      .run(id, "2026-01-01", "2026-01-01", "clinicas", "", 300, 3, "mean", 0, `/tmp/${id}`);
+    void repo;
+  }
+
+  function evaluation(id: string, name: string, index: number): StudyIdea {
+    return {
+      id,
+      name,
+      sector: "s",
+      description: "d",
+      indicators: {
+        fit: 1,
+        fitConf: 0.9,
+        sale: 1,
+        saleConf: 0.9,
+        disruption: 1,
+        disruptionConf: 0.9,
+        pain: "p",
+        painProbs: {},
+        painConf: 0.9,
+        solo: 1,
+      },
+      business: { wtp: 10, meta30: 5, price: 300, priceConf: 0.9 },
+      algorithm: {
+        label: "FORTE",
+        painScore: 1,
+        internalScore: 1,
+        margin: 1,
+        deviation: 0,
+        probes: {},
+        byParaphrase: {},
+      },
+      index,
+      tier: "A",
+    };
+  }
+
+  test("o id gravado volta na leitura", async () => {
+    const db = openMigratedDatabase(":memory:");
+    const repo = new SqliteStudyRepository(db.db);
+    try {
+      seedStudy(repo, db, "estudo-id");
+      await repo.saveEvaluations("estudo-id", [evaluation("id-a", "A", 0.9)], null);
+
+      const record = await repo.get("estudo-id");
+      expect(record?.evaluations.map((e) => e.id)).toEqual(["id-a"]);
+    } finally {
+      db.sqlite.close();
+    }
+  });
+
+  test("duas ideias de mesmo name coexistem com ids distintos", async () => {
+    const db = openMigratedDatabase(":memory:");
+    const repo = new SqliteStudyRepository(db.db);
+    try {
+      seedStudy(repo, db, "estudo-homonimas");
+      await repo.saveEvaluations(
+        "estudo-homonimas",
+        [evaluation("id-1", "Agenda Vazada", 0.9), evaluation("id-2", "Agenda Vazada", 0.8)],
+        null,
+      );
+
+      const record = await repo.get("estudo-homonimas");
+      // Mesmos nomes, identidades distintas: e isso que permite remover uma e nao a outra.
+      expect(record?.evaluations.map((e) => e.name)).toEqual(["Agenda Vazada", "Agenda Vazada"]);
+      expect(record?.evaluations.map((e) => e.id)).toEqual(["id-1", "id-2"]);
+    } finally {
+      db.sqlite.close();
+    }
+  });
+
+  test("o id acompanha a ideia quando a ordem muda", async () => {
+    const db = openMigratedDatabase(":memory:");
+    const repo = new SqliteStudyRepository(db.db);
+    try {
+      seedStudy(repo, db, "estudo-ordem");
+      await repo.saveEvaluations(
+        "estudo-ordem",
+        [evaluation("id-a", "A", 0.5), evaluation("id-b", "B", 0.9), evaluation("id-c", "C", 0.7)],
+        null,
+      );
+
+      // Reordena: C passa a primeiro. O id tem de seguir a ideia, nao a posicao antiga.
+      await repo.saveEvaluations(
+        "estudo-ordem",
+        [evaluation("id-a", "A", 0.9), evaluation("id-b", "B", 0.5), evaluation("id-c", "C", 0.7)],
+        null,
+      );
+
+      const record = await repo.get("estudo-ordem");
+      const byName = new Map(record?.evaluations.map((e) => [e.name, e.id]));
+      expect(byName.get("A")).toBe("id-a");
+      expect(byName.get("B")).toBe("id-b");
+      expect(byName.get("C")).toBe("id-c");
+    } finally {
+      db.sqlite.close();
+    }
+  });
+
+  test("summary.ordered expoe o id de cada ideia", () => {
+    const summary = summarizeStudy([evaluation("id-x", "X", 0.4), evaluation("id-y", "Y", 0.9)]);
+
+    expect(summary.ordered.map((e) => e.id)).toEqual(["id-y", "id-x"]);
   });
 });

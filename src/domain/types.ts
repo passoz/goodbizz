@@ -114,7 +114,7 @@ export interface StudyMeans {
 }
 
 export interface StudySummary {
-  ordered: IdeaEvaluation[];
+  ordered: StudyIdea[];
   painGroups: PainGroups;
   means: StudyMeans;
   tiers: Record<Tier, string[]>;
@@ -198,7 +198,7 @@ export interface StudyRecord {
   artifactDir: string;
   brief: string;
   progress: StudyProgress;
-  evaluations: IdeaEvaluation[];
+  evaluations: StudyIdea[];
   summary: StudySummary | null;
   /** Consumo medido no pipeline; `null` em estudos gerados antes desta versão. */
   usage: StudyUsage | null;

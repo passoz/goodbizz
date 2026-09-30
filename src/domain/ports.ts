@@ -3,7 +3,7 @@
  */
 import type {
   DeciderAnswers,
-  IdeaEvaluation,
+  StudyIdea,
   ProviderSettings,
   ProviderSettingsPatch,
   ProviderUsage,
@@ -60,11 +60,7 @@ export interface StudyRepository {
   list(): Promise<StudyListItem[]>;
   /** Remove o estudo e as avaliações dele. Os artefatos em disco sao do chamador. */
   delete(id: string): Promise<void>;
-  saveEvaluations(
-    studyId: string,
-    evaluations: IdeaEvaluation[],
-    summary: StudyRecord["summary"],
-  ): Promise<void>;
+  saveEvaluations(studyId: string, evaluations: StudyIdea[], summary: StudyRecord["summary"]): Promise<void>;
 }
 
 export interface ArtifactFile {

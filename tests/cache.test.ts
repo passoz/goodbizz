@@ -7,10 +7,11 @@ import { StudyCache, cacheKeyFor } from "../src/application/cache.ts";
 import { SqliteCacheStore } from "../src/infrastructure/cache-repository.ts";
 import { cacheEntries, openMigratedDatabase } from "../src/infrastructure/db.ts";
 import { SqliteStudyRepository } from "../src/infrastructure/repositories.ts";
-import type { IdeaEvaluation, StudyRecord, StudySummary, Tier } from "../src/domain/types.ts";
+import type { StudyIdea, StudyRecord, StudySummary, Tier } from "../src/domain/types.ts";
 
-function makeEvaluation(name: string, index: number, tier: Tier): IdeaEvaluation {
+function makeEvaluation(name: string, index: number, tier: Tier): StudyIdea {
   return {
+    id: `id-${name}`,
     name,
     sector: "servicos",
     description: `descricao ${name}`,
@@ -61,7 +62,7 @@ function makeRecord(): StudyRecord {
   };
 }
 
-function makeSummary(ordered: IdeaEvaluation[]): StudySummary {
+function makeSummary(ordered: StudyIdea[]): StudySummary {
   return {
     ordered,
     painGroups: { forte: [ordered[0]!.name], mista: [], fraca: [ordered[1]!.name] },

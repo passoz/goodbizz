@@ -154,7 +154,11 @@
         "src/infrastructure/repositories.ts",
         "src/application/summary.ts",
         "tests/repositories.test.ts",
-        "tests/study-service.test.ts"
+        "tests/study-service.test.ts",
+        "tests/artifacts.test.ts",
+        "tests/cache.test.ts",
+        "tests/reports.test.ts",
+        "tests/ui.test.ts"
       ],
       "implementation_files": [
         "src/domain/ports.ts",
@@ -163,7 +167,11 @@
       ],
       "test_files": [
         "tests/repositories.test.ts",
-        "tests/study-service.test.ts"
+        "tests/study-service.test.ts",
+        "tests/artifacts.test.ts",
+        "tests/cache.test.ts",
+        "tests/reports.test.ts",
+        "tests/ui.test.ts"
       ],
       "red": {
         "command": "bun test",

@@ -1,0 +1,108 @@
+{
+  "version": 2,
+  "kind": "task-acceptance-candidate",
+  "harness_version": "0.1.0",
+  "gate_version": "1",
+  "work_id": "0003",
+  "task_id": "1.3",
+  "result": "pass",
+  "plan": {
+    "path": ".todo/0003-tasks.md",
+    "sha256": "ab1cd974e3e2214db6b42f51bee5583be234a9ad380e67a7a0caa0dbf48dc2a3"
+  },
+  "implementation": {
+    "src/domain/ports.ts": {
+      "exists": true,
+      "sha256": "bdcfbb82000b1be3455137e6042a94da39fd8a880e98a241dbf1285ae5db1d74"
+    },
+    "src/infrastructure/repositories.ts": {
+      "exists": true,
+      "sha256": "f4a88b7ebd7b128f4363409c985b39d8120250c38b8c0ebb36a52f2c13dbc13d"
+    },
+    "src/application/summary.ts": {
+      "exists": true,
+      "sha256": "cdd25ae36f5b426ec5df4f083bffb915958a3350b953671ee63a8e28e967ff28"
+    }
+  },
+  "tests": {
+    "tests/repositories.test.ts": {
+      "exists": true,
+      "sha256": "010a7132dca86f460c281021e7dad6838e716afeb004c1fe61b5bc72694e1249"
+    },
+    "tests/study-service.test.ts": {
+      "exists": true,
+      "sha256": "2d842c8988fdd1511646afef7bfd94fd52f35f2949099412668e4e7994d351fd"
+    },
+    "tests/artifacts.test.ts": {
+      "exists": true,
+      "sha256": "da0937bdcd42e1ab2a6cd03ac36aa3d35c340be0eb9649baff87bff71b8bdce5"
+    },
+    "tests/cache.test.ts": {
+      "exists": true,
+      "sha256": "4e9c3bdc7a41ab00396de3f525b6e35bbfd2a8ecde9fcf103d7030c4ddf8e288"
+    },
+    "tests/reports.test.ts": {
+      "exists": true,
+      "sha256": "63aa9ee6bbf2dadcccb8f8f046a006c6946d9b1cee27a532d827ac3930f7c86f"
+    },
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "d16acd5afdfa70331e5aa8395c548d5f69183cbc6d2c3c6b66c16ea6a2570371"
+    }
+  },
+  "evidence_sha256": "fb79fcf84d1799b1b583ada935a3ea2b242b60805b4e2ea43e92ec2b5cd2a243",
+  "evidence_chain_head": "bbb98a90e2bb0a6832ed5db4e383cf5b80e2c0b38c1dcd3efd52f193e7feefdd",
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bun",
+        "test"
+      ],
+      "expect": "0 fail",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.3-ac-1.log",
+      "log_sha256": "a90388d8b673640712f0b49ff6e75e60c2723214930cd4257294a29b5c13c081",
+      "recorded_at": "2026-09-30T19:48:10.428Z"
+    },
+    "AC-2": {
+      "command": [
+        "bun",
+        "run",
+        "check"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.3-ac-2.log",
+      "log_sha256": "d4b2385ffabe14a76ba783bdba3d7ada2eeed6ba3e6af1a65c6c5d9d95f6d47d",
+      "recorded_at": "2026-09-30T19:48:13.056Z"
+    },
+    "AC-3": {
+      "command": [
+        "bash",
+        "-c",
+        "bunx eslint src/domain/ports.ts src/infrastructure/repositories.ts src/application/summary.ts tests/repositories.test.ts tests/artifacts.test.ts tests/cache.test.ts tests/reports.test.ts tests/ui.test.ts && bunx prettier --check src/domain/ports.ts src/infrastructure/repositories.ts src/application/summary.ts tests/repositories.test.ts tests/artifacts.test.ts tests/cache.test.ts tests/reports.test.ts tests/ui.test.ts"
+      ],
+      "expect": "Prettier code style",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.3-ac-3.log",
+      "log_sha256": "f005a6ce5b0a9c894ed009de387d65c69a1e60a28a1e4859f39b8c587cda8376",
+      "recorded_at": "2026-09-30T19:48:14.150Z"
+    },
+    "REGRESSION": {
+      "command": [
+        "bun",
+        "test"
+      ],
+      "expect": "0 fail",
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0003/1.3-regression.log",
+      "log_sha256": "694ed928c9b546caab8aa9f417bc754f4d7a1199a4a907e3bdf31fbd8a46ae62",
+      "recorded_at": "2026-09-30T19:48:17.961Z"
+    }
+  },
+  "generated_at": "2026-09-30T19:48:21.752Z"
+}

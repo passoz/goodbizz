@@ -4,7 +4,14 @@
  * Portado de `goodbizz/evaluation.py` (`group_by_pain` e `summary`).
  */
 import { populationMean, roundTo } from "./pain-algorithm.ts";
-import type { IdeaEvaluation, PainGroups, StudyMeans, StudySummary, Tier } from "../domain/types.ts";
+import type {
+  IdeaEvaluation,
+  PainGroups,
+  StudyIdea,
+  StudyMeans,
+  StudySummary,
+  Tier,
+} from "../domain/types.ts";
 
 /** Agrupa as ideias pela natureza da dor dominante medida para cada uma. */
 export function groupByPain(data: IdeaEvaluation[]): PainGroups {
@@ -39,7 +46,7 @@ export function groupByPain(data: IdeaEvaluation[]): PainGroups {
 }
 
 /** Ordena por índice decrescente e resume médias, tiers, alvos e revisoes. */
-export function summarizeStudy(data: IdeaEvaluation[]): StudySummary {
+export function summarizeStudy(data: StudyIdea[]): StudySummary {
   const ordered = [...data].sort((left, right) => right.index - left.index);
 
   const means: StudyMeans = {

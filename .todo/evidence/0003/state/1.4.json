@@ -1,0 +1,33 @@
+{
+  "baseline_implementation": {
+    "src/application/study-service.ts": {
+      "exists": true,
+      "sha256": "fa9bfca8dc62794d36eb0acb05ccc252c83f59d7dda8544c26624f8fd1ff95a7"
+    }
+  },
+  "baseline_tests": {
+    "tests/study-service.test.ts": {
+      "exists": true,
+      "sha256": "2d842c8988fdd1511646afef7bfd94fd52f35f2949099412668e4e7994d351fd"
+    }
+  },
+  "created_at": "2026-09-30T19:52:54.620Z",
+  "implementation_files": [
+    "src/application/study-service.ts"
+  ],
+  "red_command": [
+    "bun",
+    "test"
+  ],
+  "red_expect": "remove a ideia do meio e zera o ranking a partir de 1",
+  "red_tests": {
+    "tests/study-service.test.ts": {
+      "exists": true,
+      "sha256": "de9492dc71db2ee39a2772beb0795e60625577378dedc4cb7c55a1c98145ea97"
+    }
+  },
+  "task": "1.4",
+  "test_files": [
+    "tests/study-service.test.ts"
+  ]
+}
