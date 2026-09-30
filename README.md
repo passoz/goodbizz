@@ -71,30 +71,30 @@ bun test             # suite offline
 
 Segredos vivem **apenas** no ambiente. O contrato das chaves esta versionado em `.env.example`.
 
-| Variavel                                   | Padrao                      | Descrição                                                                |
-| ------------------------------------------ | --------------------------- | ------------------------------------------------------------------------ |
-| `LLM_API_URL`                              | `https://api.openai.com/v1` | base URL compativel com `/chat/completions`                              |
-| `LLM_API_KEY`                              | —                           | chave do provedor LLM (obrigatoria fora do modo mock)                    |
-| `LLM_API_MODEL`                            | `gpt-4o-mini`               | modelo do LLM                                                            |
-| `DECISION_API_URL`                         | —                           | endpoint System One (Jev, Laya, runtime local)                           |
-| `DECISION_API_KEY`                         | —                           | chave do decisor (Bearer e `x-api-key`)                                  |
-| `DECISION_API_MODEL`                       | `systemone-latest`          | modelo do decisor                                                        |
-| `PORT`                                     | `3000`                      | porta do servico HTTP                                                    |
-| `DATABASE_URL`                             | `app.db`                    | SQLite (`:memory:` aceito)                                               |
-| `LOG_LEVEL`                                | `info`                      | `debug` \| `info` \| `warn` \| `error`                                   |
-| `APP_ENV`                                  | `development`               | `production` liga HTTPS/HSTS e cookies `secure`                          |
-| `SESSION_SECRET`                           | placeholder de dev          | >= 32 caracteres, assina o cookie de CSRF                                |
-| `GOODBIZZ_STUDIES_DIR`                     | `estudo`                    | raiz dos artefatos por estudo                                            |
-| `GOODBIZZ_MOCK`                            | `0`                         | `1` simula LLM e decisor                                                 |
-| `GOODBIZZ_MOCK_LLM`                        | `0`                         | `1` simula apenas o texto, mantendo o decisor real                       |
-| `GOODBIZZ_MOCK_DECIDER`                    | `0`                         | `1` simula apenas os numeros, mantendo o LLM real                        |
-| `GOODBIZZ_LLM_TIMEOUT` | `300` | segundos por chamada de IA (5–3600); o default antigo (60) cortava os documentos longos |
-| `GOODBIZZ_PRICE_LLM_INPUT_PER_MTOK`        | `0.15`                      | US$/1M de tokens de entrada, tabela oficial off-peak do `deepseek-flash` |
-| `GOODBIZZ_PRICE_LLM_CACHED_INPUT_PER_MTOK` | `0.0028`                    | US$/1M de tokens de entrada servidos do cache                            |
-| `GOODBIZZ_PRICE_LLM_OUTPUT_PER_MTOK`       | `0.28`                      | US$/1M de tokens de saída                                                |
-| `GOODBIZZ_PRICE_DECIDER_INPUT_PER_MTOK`    | `0`                         | US$/1M de tokens de entrada do decisor (0 = grátis)                      |
-| `GOODBIZZ_PRICE_DECIDER_OUTPUT_PER_MTOK`   | `0`                         | US$/1M de tokens de saída do decisor                                     |
-| `GOODBIZZ_USD_BRL`                         | `0`                         | Cotação só para exibir o custo também em R$ (0 desliga)                  |
+| Variavel                                   | Padrao                      | Descrição                                                                               |
+| ------------------------------------------ | --------------------------- | --------------------------------------------------------------------------------------- |
+| `LLM_API_URL`                              | `https://api.openai.com/v1` | base URL compativel com `/chat/completions`                                             |
+| `LLM_API_KEY`                              | —                           | chave do provedor LLM (obrigatoria fora do modo mock)                                   |
+| `LLM_API_MODEL`                            | `gpt-4o-mini`               | modelo do LLM                                                                           |
+| `DECISION_API_URL`                         | —                           | endpoint System One (Jev, Laya, runtime local)                                          |
+| `DECISION_API_KEY`                         | —                           | chave do decisor (Bearer e `x-api-key`)                                                 |
+| `DECISION_API_MODEL`                       | `systemone-latest`          | modelo do decisor                                                                       |
+| `PORT`                                     | `3000`                      | porta do servico HTTP                                                                   |
+| `DATABASE_URL`                             | `app.db`                    | SQLite (`:memory:` aceito)                                                              |
+| `LOG_LEVEL`                                | `info`                      | `debug` \| `info` \| `warn` \| `error`                                                  |
+| `APP_ENV`                                  | `development`               | `production` liga HTTPS/HSTS e cookies `secure`                                         |
+| `SESSION_SECRET`                           | placeholder de dev          | >= 32 caracteres, assina o cookie de CSRF                                               |
+| `GOODBIZZ_STUDIES_DIR`                     | `estudo`                    | raiz dos artefatos por estudo                                                           |
+| `GOODBIZZ_MOCK`                            | `0`                         | `1` simula LLM e decisor                                                                |
+| `GOODBIZZ_MOCK_LLM`                        | `0`                         | `1` simula apenas o texto, mantendo o decisor real                                      |
+| `GOODBIZZ_MOCK_DECIDER`                    | `0`                         | `1` simula apenas os numeros, mantendo o LLM real                                       |
+| `GOODBIZZ_LLM_TIMEOUT`                     | `300`                       | segundos por chamada de IA (5–3600); o default antigo (60) cortava os documentos longos |
+| `GOODBIZZ_PRICE_LLM_INPUT_PER_MTOK`        | `0.15`                      | US$/1M de tokens de entrada, tabela oficial off-peak do `deepseek-flash`                |
+| `GOODBIZZ_PRICE_LLM_CACHED_INPUT_PER_MTOK` | `0.0028`                    | US$/1M de tokens de entrada servidos do cache                                           |
+| `GOODBIZZ_PRICE_LLM_OUTPUT_PER_MTOK`       | `0.28`                      | US$/1M de tokens de saída                                                               |
+| `GOODBIZZ_PRICE_DECIDER_INPUT_PER_MTOK`    | `0`                         | US$/1M de tokens de entrada do decisor (0 = grátis)                                     |
+| `GOODBIZZ_PRICE_DECIDER_OUTPUT_PER_MTOK`   | `0`                         | US$/1M de tokens de saída do decisor                                                    |
+| `GOODBIZZ_USD_BRL`                         | `0`                         | Cotação só para exibir o custo também em R$ (0 desliga)                                 |
 
 Modo misto: o serviço aceita simular um provedor e usar o outro de verdade, igual a CLI
 (`--mock-llm`, `--mock-decider`). A pagina `/new` mostra o que esta ativo. Provedores reais
