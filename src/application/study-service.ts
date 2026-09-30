@@ -132,7 +132,10 @@ export class StudyService {
         pdf: this.options.pdf ?? false,
         concurrency: this.options.concurrency ?? 8,
         paraphrases: this.options.paraphrases ?? 3,
-        timeout: this.options.timeout ?? 60,
+        // Sem `?? 60` aqui: o fallback de `GOODBIZZ_LLM_TIMEOUT` mora em
+        // `resolveStudyConfig`, e um literal nunca deixa esse fallback rodar. Com o `60` fixo,
+        // todo estudo nascia com 60 s por chamada, ignorando a configuracao do servico.
+        timeout: this.options.timeout,
       });
 
       const clients = this.options.clientsFor?.(cfg) ?? {
