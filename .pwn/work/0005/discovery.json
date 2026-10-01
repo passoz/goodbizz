@@ -1,0 +1,19 @@
+{
+  "work_id": "0005",
+  "title": "A exclusao precisa dizer por que falhou",
+  "imported_from": ".todo/0005-tasks.md",
+  "problem": "as duas exclusões da interface falham em silêncio ou de forma ilegível. Na exclusão do estudo, o diálogo troca a pergunta pela mensagem de erro no mesmo parágrafo: quando a recusa chega, o texto vira `study <id> is still running`, em inglês e sem instrução, e o diálogo continua aberto com o mesmo botão \"Excluir\". Na exclusão de ideia, o erro só vai para o `console.error` — a tela não muda em nada. Nos dois casos o operador conclui que o clique não fez nada, que foi exatamente o relato registrado.",
+  "actors": [
+    "ACT-001 Usuário da interface web",
+    "ACT-003 Operador/consultor"
+  ],
+  "objectives": [
+    "SC-001: o teste de UI prova os dois elementos de aviso no HTML servido, vazios e com `role=\"alert\"` (FR-001, FR-002).",
+    "SC-002: a verificação visual prova que a recusa 409 escreve o motivo no aviso e mantém a pergunta do diálogo (FR-001)."
+  ],
+  "constraints": [
+    "QR-001: a exclusão que funciona continua idêntica: 204 do servidor, volta para a lista no estudo e recarga da página na ideia.",
+    "QR-002: a mudança vive em `src/infrastructure/http/ui`, é HTML e um script de página, sem tocar em domínio, casos de uso ou API.",
+    "QR-003: a suíte existente permanece verde e o caminho sem JavaScript continua postando nas mesmas rotas."
+  ]
+}

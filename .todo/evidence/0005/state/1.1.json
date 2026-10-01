@@ -1,0 +1,99 @@
+{
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun test"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0005/1.1-ac-1.log",
+      "log_sha256": "6dff9e7e525c8db5e48ab6b8d55b643b5cbc6bebdcafdbefeafd421c362ea419",
+      "recorded_at": "2026-10-01T22:01:30.155Z"
+    },
+    "AC-2": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun run check"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0005/1.1-ac-2.log",
+      "log_sha256": "5d46b82660de46bfe5f79b42509bb265c56d08d775b87d20c5073f6f3bf2863a",
+      "recorded_at": "2026-10-01T22:01:34.075Z"
+    },
+    "AC-3": {
+      "command": [
+        "bash",
+        "-lc",
+        "bunx eslint src/infrastructure/http/ui/pages.tsx tests/ui.test.ts && bunx prettier --check src/infrastructure/http/ui/pages.tsx tests/ui.test.ts"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0005/1.1-ac-3.log",
+      "log_sha256": "8311adb870f6d696bdd66d8c290bb01d8f33ff748c197b97b3fc511e0c5c5b14",
+      "recorded_at": "2026-10-01T22:01:35.658Z"
+    },
+    "REGRESSION": {
+      "command": [
+        "bun",
+        "test"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0005/1.1-regression.log",
+      "log_sha256": "8cbed1e70063dcb21a0552e62b500f1599902e61c440796526600136bb6bdc1b",
+      "recorded_at": "2026-10-01T22:02:34.849Z"
+    }
+  },
+  "baseline_implementation": {
+    "src/infrastructure/http/ui/pages.tsx": {
+      "exists": true,
+      "sha256": "36a92b8d717b5479460a900982c20aeffaab92e6c1296af76eaf597597b09f6c"
+    }
+  },
+  "baseline_tests": {
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "7e15e0dc04b305c8a492b20fd6cb1b3fc17847f20cc5f3e273a5d92cf6555043"
+    }
+  },
+  "created_at": "2026-10-01T21:54:12.325Z",
+  "green_expect": null,
+  "green_implementation": {
+    "src/infrastructure/http/ui/pages.tsx": {
+      "exists": true,
+      "sha256": "0afc73c965eb2184a69ab048260daeeea7a168fba3be2085f8293f5cf07746f6"
+    }
+  },
+  "green_tests": {
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "17822934a76a901b8a36ec6041202f131846063b92d5c93b85ba5f9498b42cd8"
+    }
+  },
+  "implementation_files": [
+    "src/infrastructure/http/ui/pages.tsx"
+  ],
+  "red_command": [
+    "bun",
+    "test"
+  ],
+  "red_expect": "delete-error",
+  "red_tests": {
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "17822934a76a901b8a36ec6041202f131846063b92d5c93b85ba5f9498b42cd8"
+    }
+  },
+  "task": "1.1",
+  "test_files": [
+    "tests/ui.test.ts"
+  ]
+}

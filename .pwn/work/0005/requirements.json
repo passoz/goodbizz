@@ -1,0 +1,23 @@
+{
+  "work_id": "0005",
+  "requirements": [
+    {
+      "id": "FR-001",
+      "title": "Mostrar a falha da exclusao do estudo num aviso proprio",
+      "acceptance_criteria": [
+        "bun test — a suite passa com a assercao do aviso de erro no dialogo do estudo",
+        "bun run check — o typecheck estrito passa",
+        "bunx eslint src/infrastructure/http/ui/pages.tsx tests/ui.test.ts && bunx prettier --check src/infrastructure/http/ui/pages.tsx tests/ui.test.ts — o lint e a formatacao dos arquivos tocados passam"
+      ]
+    },
+    {
+      "id": "FR-002",
+      "title": "Mostrar a falha da exclusao de ideia num aviso proprio",
+      "acceptance_criteria": [
+        "bun test — a suite passa com a assercao do aviso de erro no dialogo de ideia",
+        "bun run check — o typecheck estrito passa",
+        "bunx eslint src/infrastructure/http/ui/pages.tsx tests/ui.test.ts && bunx prettier --check src/infrastructure/http/ui/pages.tsx tests/ui.test.ts — o lint e a formatacao dos arquivos tocados passam"
+      ]
+    }
+  ]
+}

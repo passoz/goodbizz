@@ -363,10 +363,10 @@ const DELETE_MODAL_SCRIPT = `
   var modal = document.getElementById("delete-modal");
   if (!modal || typeof modal.showModal !== "function") return;
   var text = document.getElementById("delete-modal-text");
+  var error = document.getElementById("delete-error");
   var confirmButton = document.getElementById("delete-confirm");
   var cancelButton = document.getElementById("delete-cancel");
   var current = null;
-  function close() { modal.close(); }
   Array.prototype.slice.call(document.querySelectorAll(".delete-form")).forEach(function (form) {
     form.addEventListener("submit", function (event) {
       event.preventDefault();
@@ -376,29 +376,42 @@ const DELETE_MODAL_SCRIPT = `
         text.textContent =
           "Excluir " + name + "? Os arquivos e o estudo são apagados do disco. Não há como desfazer.";
       }
+      if (error) error.textContent = "";
       if (confirmButton) confirmButton.disabled = false;
       modal.showModal();
     });
   });
-  if (cancelButton) cancelButton.addEventListener("click", close);
+  if (cancelButton) cancelButton.addEventListener("click", function () { modal.close(); });
   modal.addEventListener("click", function (event) {
-    if (event.target === modal) close();
+    if (event.target === modal) modal.close();
   });
   if (confirmButton) {
     confirmButton.addEventListener("click", function () {
       if (!current) return;
       confirmButton.disabled = true;
-      fetch(current.dataset.deleteApi, { method: "DELETE" })
-        .then(function (response) {
-          if (response.ok) { window.location.href = "/"; return null; }
-          return response.json().then(function (body) {
-            throw new Error(body.message || "falha ao excluir o estudo");
-          });
-        })
-        .catch(function (failure) {
-          if (text) text.textContent = failure.message || "falha ao excluir o estudo";
-          confirmButton.disabled = false;
-        });
+      // A falha vai para o aviso proprio: a pergunta do dialogo continua visivel, e a recusa por
+      // estudo em execucao ganha a frase que diz o que fazer em vez do texto cru do dominio.
+      (async function () {
+        var status = 0;
+        var message = "";
+        try {
+          var response = await fetch(current.dataset.deleteApi, { method: "DELETE" });
+          if (response.ok) { window.location.href = "/"; return; }
+          status = response.status;
+          try {
+            var body = await response.json();
+            message = body && body.message ? body.message : "";
+          } catch (ignored) { message = ""; }
+        } catch (failure) {
+          message = failure && failure.message ? failure.message : "";
+        }
+        if (error) {
+          error.textContent = status === 409
+            ? "O estudo ainda está em execução — aguarde terminar para excluir."
+            : message || "falha ao excluir o estudo";
+        }
+        confirmButton.disabled = false;
+      })();
     });
   }
 })();`;
@@ -431,6 +444,7 @@ const DeleteDialog: FC = () => (
       </div>
       <div class="modal-body">
         <p id="delete-modal-text">Os arquivos e o estudo são apagados do disco. Não há como desfazer.</p>
+        <p id="delete-error" class="alert" role="alert" />
         <div class="form-actions">
           <button type="button" class="btn btn-ghost" id="delete-cancel">
             Cancelar

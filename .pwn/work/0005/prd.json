@@ -1,0 +1,75 @@
+{
+  "$schema": "../../../schemas/prd.schema.json",
+  "id": "PRD-0005",
+  "meta": {
+    "version": "1.0",
+    "created_at": "2026-10-01T21:49:58.522Z",
+    "author": "pwn-import"
+  },
+  "title": "A exclusao precisa dizer por que falhou",
+  "status": "draft",
+  "scenario": "brownfield",
+  "problem": {
+    "statement": "as duas exclusões da interface falham em silêncio ou de forma ilegível. Na exclusão do estudo, o diálogo troca a pergunta pela mensagem de erro no mesmo parágrafo: quando a recusa chega, o texto vira `study <id> is still running`, em inglês e sem instrução, e o diálogo continua aberto com o mesmo botão \"Excluir\". Na exclusão de ideia, o erro só vai para o `console.error` — a tela não muda em nada. Nos dois casos o operador conclui que o clique não fez nada, que foi exatamente o relato registrado."
+  },
+  "solution": {
+    "statement": "toda exclusão que falha mostra, na própria tela, um aviso com o motivo em português e o que fazer; a pergunta do diálogo continua visível e distinta do aviso; e a exclusão que funciona continua idêntica."
+  },
+  "decisions": [
+    {
+      "id": "DEC-001",
+      "statement": "Governar o Work 0005 pelo PWN com contratos V4 congelados derivados do plano v3.",
+      "status": "accepted",
+      "made_by": "pwn-import"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "FR-001",
+      "type": "functional",
+      "statement": "FR-001: Mostrar a falha da exclusao do estudo num aviso proprio",
+      "acceptance_criteria": [
+        "bun test — a suite passa com a assercao do aviso de erro no dialogo do estudo",
+        "bun run check — o typecheck estrito passa",
+        "bunx eslint src/infrastructure/http/ui/pages.tsx tests/ui.test.ts && bunx prettier --check src/infrastructure/http/ui/pages.tsx tests/ui.test.ts — o lint e a formatacao dos arquivos tocados passam"
+      ]
+    },
+    {
+      "id": "FR-002",
+      "type": "functional",
+      "statement": "FR-002: Mostrar a falha da exclusao de ideia num aviso proprio",
+      "acceptance_criteria": [
+        "bun test — a suite passa com a assercao do aviso de erro no dialogo de ideia",
+        "bun run check — o typecheck estrito passa",
+        "bunx eslint src/infrastructure/http/ui/pages.tsx tests/ui.test.ts && bunx prettier --check src/infrastructure/http/ui/pages.tsx tests/ui.test.ts — o lint e a formatacao dos arquivos tocados passam"
+      ]
+    }
+  ],
+  "stakeholders": [
+    {
+      "name": "ACT-001 Usuário da interface web",
+      "role": "stakeholder"
+    },
+    {
+      "name": "ACT-003 Operador/consultor",
+      "role": "stakeholder"
+    }
+  ],
+  "scope": {
+    "in_scope": [
+      "Um aviso próprio de erro nos dois diálogos de exclusão (estudo e ideia), com `role=\"alert\"` e separado do texto da pergunta.",
+      "Tradução da recusa por estudo em execução (409) para uma frase em português que diz o que fazer.",
+      "Exibição do motivo de qualquer outra falha da exclusão de ideia na tela, em vez de só no console."
+    ],
+    "out_of_scope": [
+      "Cancelar ou interromper um estudo em execução: a recusa do serviço continua valendo.",
+      "Esconder o botão de excluir enquanto o estudo roda (um estudo preso em `running` depois de um reinicio continuaria excluível).",
+      "Mudar o corpo do 409 da API, o texto do domínio ou o contrato CON-002.",
+      "Qualquer mudança na exclusão aplicada no servidor para o caminho sem JavaScript."
+    ]
+  },
+  "accepted_requirements": [
+    "FR-001",
+    "FR-002"
+  ]
+}

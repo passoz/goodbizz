@@ -375,6 +375,20 @@ describe("paginas da interface", () => {
     expect(detail).toContain('id="delete-modal"');
   });
 
+  test("o dialogo de exclusao separa a pergunta do aviso de falha", async () => {
+    const study = await harness.service.create(resolveStudyConfig({ niche: "oficinas", mock: true }));
+
+    for (const body of [
+      await (await harness.app.request("/")).text(),
+      await (await harness.app.request(`/studies/${study.id}`)).text(),
+    ]) {
+      // A falha nao pode sobrescrever a pergunta: o aviso vive num paragrafo proprio, vazio no
+      // HTML servido, com o mesmo papel de alerta usado nos outros erros da pagina.
+      expect(body).toMatch(/<p id="delete-error"[^>]*role="alert"[^>]*><\/p>/);
+      expect(body).toContain('id="delete-modal-text"');
+    }
+  });
+
   test("a exclusao recusa POST sem token CSRF", async () => {
     const study = await harness.service.create(resolveStudyConfig({ niche: "oficinas", mock: true }));
     const response = await harness.app.request(`/ui/studies/${study.id}/delete`, {
