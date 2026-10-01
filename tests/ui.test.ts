@@ -742,6 +742,15 @@ describe("gestao de ideias na pagina do estudo", () => {
     expect(html).toContain("<dialog");
   });
 
+  test("o dialogo de exclusao de ideia tem um aviso proprio para a falha", async () => {
+    const { html } = await rendered(2);
+
+    // A falha da exclusao nao pode morrer no console: o dialogo tem um paragrafo proprio, vazio no
+    // HTML servido, para o motivo ficar na tela enquanto a ideia continua no estudo.
+    expect(html).toMatch(/<p id="idea-delete-error"[^>]*role="alert"[^>]*><\/p>/);
+    expect(html).toContain('id="idea-delete-text"');
+  });
+
   test("o botao de excluir carrega o id da ideia, nao o nome nem a posicao", async () => {
     const { html, evaluations } = await rendered();
     for (const idea of evaluations) {

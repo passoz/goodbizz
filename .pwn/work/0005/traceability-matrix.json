@@ -9,7 +9,7 @@
       "task_id": "1.1",
       "contract_id": "CTR-001",
       "evidence_id": "EVD-001",
-      "status": "planned"
+      "status": "done"
     },
     {
       "origin": "DISC-001",
@@ -19,7 +19,7 @@
       "task_id": "1.2",
       "contract_id": "CTR-002",
       "evidence_id": "EVD-002",
-      "status": "planned"
+      "status": "done"
     }
   ]
 }

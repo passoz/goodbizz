@@ -60,7 +60,7 @@
       "spec_reference": "CAP-014",
       "contract_id": "CTR-001",
       "complexity": "standard",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "1.2",
@@ -110,7 +110,7 @@
       "spec_reference": "CAP-014",
       "contract_id": "CTR-002",
       "complexity": "standard",
-      "status": "pending"
+      "status": "done"
     }
   ]
 }

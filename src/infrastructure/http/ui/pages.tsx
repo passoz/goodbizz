@@ -1151,6 +1151,7 @@ const IDEA_DELETE_SCRIPT = `
   var modal = document.getElementById("idea-delete-modal");
   if (!modal || typeof modal.showModal !== "function") return;
   var text = document.getElementById("idea-delete-text");
+  var error = document.getElementById("idea-delete-error");
   var cancel = document.getElementById("idea-delete-cancel");
   var confirm = document.getElementById("idea-delete-confirm");
   var pending = null;
@@ -1160,6 +1161,8 @@ const IDEA_DELETE_SCRIPT = `
       event.preventDefault();
       pending = form;
       if (text) text.textContent = "Excluir " + (form.getAttribute("data-delete-name") || "esta ideia") + "? O ranking inteiro e renumerado.";
+      if (error) error.textContent = "";
+      if (confirm) confirm.disabled = false;
       modal.showModal();
     });
   });
@@ -1168,18 +1171,33 @@ const IDEA_DELETE_SCRIPT = `
     confirm.addEventListener("click", function () {
       if (!pending) return close();
       var form = pending;
-      close();
+      confirm.disabled = true;
       var button = form.querySelector("button");
       if (button) { button.disabled = true; button.textContent = "Excluindo..."; }
-      fetch(form.getAttribute("data-delete-api"), { method: "DELETE", headers: { Accept: "application/json" } })
-        .then(function (response) {
-          if (!response.ok) throw new Error("falhou com " + response.status);
-          location.reload();
-        })
-        .catch(function (error) {
-          if (button) { button.disabled = false; button.textContent = "Excluir"; }
-          console.error(error);
-        });
+      // O dialogo so sai de cena quando a exclusao conclui: se falhar, a ideia continua no estudo e
+      // o motivo precisa ficar na tela em vez de morrer no console.
+      (async function () {
+        var status = 0;
+        var message = "";
+        try {
+          var response = await fetch(form.getAttribute("data-delete-api"), { method: "DELETE", headers: { Accept: "application/json" } });
+          if (response.ok) { location.reload(); return; }
+          status = response.status;
+          try {
+            var body = await response.json();
+            message = body && body.message ? body.message : "";
+          } catch (ignored) { message = ""; }
+        } catch (failure) {
+          message = failure && failure.message ? failure.message : "";
+        }
+        if (error) {
+          error.textContent = status === 409
+            ? "O estudo ainda está em execução — aguarde terminar para excluir."
+            : message || "falha ao excluir a ideia";
+        }
+        confirm.disabled = false;
+        if (button) { button.disabled = false; button.textContent = "Excluir"; }
+      })();
     });
   }
   modal.addEventListener("cancel", close);
@@ -1194,6 +1212,7 @@ const IdeaDeleteDialog: FC = () => (
     </div>
     <div class="modal-body">
       <p id="idea-delete-text">Excluir esta ideia? O ranking inteiro e renumerado.</p>
+      <p id="idea-delete-error" class="alert" role="alert" />
       <div class="form-actions">
         <button type="button" class="btn btn-ghost" id="idea-delete-cancel">
           Cancelar

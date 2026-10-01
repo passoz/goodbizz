@@ -10,11 +10,11 @@
 | `delete-feedback` | Aviso proprio de falha nos dialogos de exclusao de estudo e de ideia, separado do texto da pergunta |
 
 ## Global gates
-- [ ] `bun test` — a suite completa passa com exit 0.
-- [ ] `bun run check` — typecheck estrito passa com exit 0.
-- [ ] `bunx eslint . && bunx prettier --check .` — lint e formatacao passam.
+- [x] `bun test` — a suite completa passa com exit 0.
+- [x] `bun run check` — typecheck estrito passa com exit 0.
+- [x] `bunx eslint . && bunx prettier --check .` — lint e formatacao passam.
 
-### [ ] [1.1] Mostrar a falha da exclusao do estudo num aviso proprio
+### [x] [1.1] Mostrar a falha da exclusao do estudo num aviso proprio
 
 **Requirement:** FR-001
 **Depends on:** none
@@ -32,14 +32,14 @@
 2. Acrescentar o paragrafo de aviso ao dialogo e passar a escrever a falha nele, traduzindo 409 para uma frase em portugues que diz que o estudo esta rodando (GREEN)
 
 **ACs:**
-- [ ] `bun test` — a suite passa com a assercao do aviso de erro no dialogo do estudo
-- [ ] `bun run check` — o typecheck estrito passa
-- [ ] `bunx eslint src/infrastructure/http/ui/pages.tsx tests/ui.test.ts && bunx prettier --check src/infrastructure/http/ui/pages.tsx tests/ui.test.ts` — o lint e a formatacao dos arquivos tocados passam
+- [x] `bun test` — a suite passa com a assercao do aviso de erro no dialogo do estudo
+- [x] `bun run check` — o typecheck estrito passa
+- [x] `bunx eslint src/infrastructure/http/ui/pages.tsx tests/ui.test.ts && bunx prettier --check src/infrastructure/http/ui/pages.tsx tests/ui.test.ts` — o lint e a formatacao dos arquivos tocados passam
 
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.2] Mostrar a falha da exclusao de ideia num aviso proprio
+### [x] [1.2] Mostrar a falha da exclusao de ideia num aviso proprio
 
 **Requirement:** FR-002
 **Depends on:** 1.1
@@ -57,9 +57,9 @@
 2. Acrescentar o paragrafo de aviso ao dialogo de ideia e escrever o motivo da falha nele quando a exclusao nao conclui (GREEN)
 
 **ACs:**
-- [ ] `bun test` — a suite passa com a assercao do aviso de erro no dialogo de ideia
-- [ ] `bun run check` — o typecheck estrito passa
-- [ ] `bunx eslint src/infrastructure/http/ui/pages.tsx tests/ui.test.ts && bunx prettier --check src/infrastructure/http/ui/pages.tsx tests/ui.test.ts` — o lint e a formatacao dos arquivos tocados passam
+- [x] `bun test` — a suite passa com a assercao do aviso de erro no dialogo de ideia
+- [x] `bun run check` — o typecheck estrito passa
+- [x] `bunx eslint src/infrastructure/http/ui/pages.tsx tests/ui.test.ts && bunx prettier --check src/infrastructure/http/ui/pages.tsx tests/ui.test.ts` — o lint e a formatacao dos arquivos tocados passam
 
 **Visual:** N/A
 **Documentation:** N/A

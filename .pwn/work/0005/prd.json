@@ -7,7 +7,7 @@
     "author": "pwn-import"
   },
   "title": "A exclusao precisa dizer por que falhou",
-  "status": "draft",
+  "status": "approved",
   "scenario": "brownfield",
   "problem": {
     "statement": "as duas exclusões da interface falham em silêncio ou de forma ilegível. Na exclusão do estudo, o diálogo troca a pergunta pela mensagem de erro no mesmo parágrafo: quando a recusa chega, o texto vira `study <id> is still running`, em inglês e sem instrução, e o diálogo continua aberto com o mesmo botão \"Excluir\". Na exclusão de ideia, o erro só vai para o `console.error` — a tela não muda em nada. Nos dois casos o operador conclui que o clique não fez nada, que foi exatamente o relato registrado."
