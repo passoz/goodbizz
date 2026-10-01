@@ -1,0 +1,94 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.5",
+  "work_id": "0004",
+  "title": "Dar escopo ao cache no port e no adaptador SQLite",
+  "risk": {
+    "level": "L3",
+    "reasons": [
+      "Operacao destrutiva em dados persistidos: a purga remove linhas da tabela cache_entries e um prefixo mal delimitado apagaria o cache de outro estudo",
+      "O formato da chave de cache e compartilhado por geracao, adicao incremental e leitura, entao um erro de composicao invalida todos os hits"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.5-01",
+        "given": "Dado duas sementes de estudo diferentes e os mesmos parametros de chamada",
+        "when": "Quando as chaves de cache sao compostas",
+        "then": "Então as duas chaves sao distintas e a busca de uma nunca encontra a resposta da outra"
+      },
+      {
+        "id": "SCENARIO-1.5-02",
+        "given": "Dado um cache com entradas de duas sementes",
+        "when": "Quando a purga e chamada para a primeira semente",
+        "then": "Então so as entradas daquela semente somem e as da segunda permanecem"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/domain/ports.ts",
+      "src/infrastructure/cache-repository.ts",
+      "src/application/cache.ts",
+      "tests/cache.test.ts"
+    ],
+    "affected_components": [
+      "cache-scope"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "Nenhum codigo de acesso a dados escreve SQL cru: a remocao por prefixo passa pelo query builder do Drizzle",
+      "src/domain nao importa src/infrastructure",
+      "Manter a suite de testes existente verde (sem regressoes)",
+      "Nenhuma operacao limpa o cache do estudo que esta sendo reexecutado"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun test",
+      "bun run check"
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/domain/ports.ts",
+      "src/infrastructure/cache-repository.ts",
+      "src/application/cache.ts",
+      "tests/cache.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env*",
+      ".pwn/**",
+      ".specs/**",
+      ".prompts/**",
+      ".todo/**",
+      "drizzle/meta/*"
+    ],
+    "out_of_scope": [
+      "Limpeza global do cache ou expurgo por tempo",
+      "Alterar o esquema dos artefatos em disco"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 100000,
+    "max_cost_usd": 2.0,
+    "max_duration_minutes": 30,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 50,
+    "max_tool_calls": 100,
+    "max_shell_executions": 30
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

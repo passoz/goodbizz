@@ -1,0 +1,100 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.10",
+  "work_id": "0004",
+  "title": "Agrupar as configuracoes por provedor com legenda",
+  "risk": {
+    "level": "L2",
+    "reasons": [
+      "A pagina de configuracao salva credenciais de provedor: um nome de campo alterado por engano no reagrupamento faria o patch ir para a chave errada",
+      "O formulario sem JavaScript depende dos nomes de campo e da allowlist de validacao da rota"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.10-01",
+        "given": "Dado a pagina de configuracoes com os dois provedores configurados",
+        "when": "Quando ela e renderizada",
+        "then": "Então existem dois grupos com legenda, um do provedor de texto e um do provedor de decisao"
+      },
+      {
+        "id": "SCENARIO-1.10-02",
+        "given": "Dado um campo de cada grupo",
+        "when": "Quando a pagina e renderizada",
+        "then": "Então cada campo aparece sob o grupo do provedor a que pertence, com o mesmo nome de campo de antes"
+      },
+      {
+        "id": "SCENARIO-1.10-03",
+        "given": "Dado a pagina renderizada",
+        "when": "Quando o texto de ajuda de um campo e conferido",
+        "then": "Então o campo aponta para o texto de ajuda pelo atributo de descricao"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/config/providers.ts",
+      "src/infrastructure/http/ui/pages.tsx",
+      "src/infrastructure/http/ui/layout.tsx",
+      "tests/ui.test.ts"
+    ],
+    "affected_components": [
+      "settings-ui"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "Os nomes de campo do formulario nao mudam, para nao quebrar o envio sem JavaScript",
+      "Nenhuma acao mutavel dispensa CSRF",
+      "Manter a suite de testes existente verde (sem regressoes)"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun test",
+      "bun run check"
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/config/providers.ts",
+      "src/infrastructure/http/ui/pages.tsx",
+      "src/infrastructure/http/ui/layout.tsx",
+      "tests/ui.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env*",
+      ".pwn/**",
+      ".specs/**",
+      ".prompts/**",
+      ".todo/**",
+      "drizzle/meta/*"
+    ],
+    "out_of_scope": [
+      "Criar campo de configuracao novo",
+      "Expor chave em claro",
+      "Alterar a logica de precedencia entre settings e ambiente"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 50000,
+    "max_cost_usd": 0.5,
+    "max_duration_minutes": 15,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 30,
+    "max_tool_calls": 60,
+    "max_shell_executions": 15
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

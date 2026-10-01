@@ -1,0 +1,92 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.7",
+  "work_id": "0004",
+  "title": "Provar a retomada do estudo incompleto e corrigir o texto do painel de falha",
+  "risk": {
+    "level": "L2",
+    "reasons": [
+      "O texto do painel de falha e a unica orientacao que o operador tem sobre reexecucao: um texto errado induz a desperdicar chamadas pagas",
+      "A prova de retomada depende do comportamento de cache de outra task e precisa falhar se a purga alcancar o estudo reexecutado"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.7-01",
+        "given": "Dado um estudo que falha ao gerar o primeiro documento e ja tem brief, ideias e avaliacoes em cache",
+        "when": "Quando o operador manda concluir o estudo",
+        "then": "Então o estudo termina com state done e o provedor de texto e chamado apenas para o documento que faltava"
+      },
+      {
+        "id": "SCENARIO-1.7-02",
+        "given": "Dado um estudo em state failed",
+        "when": "Quando a pagina do estudo e renderizada",
+        "then": "Então o painel de falha informa que a reexecucao retoma de onde parou"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/infrastructure/http/ui/pages.tsx",
+      "tests/study-service.test.ts",
+      "tests/ui.test.ts"
+    ],
+    "affected_components": [
+      "cache-scope"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "Manter a suite de testes existente verde (sem regressoes)",
+      "Nenhuma acao mutavel nova dispensa CSRF",
+      "src/domain nao importa src/infrastructure"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun test",
+      "bun run check"
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/infrastructure/http/ui/pages.tsx",
+      "tests/study-service.test.ts",
+      "tests/ui.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env*",
+      ".pwn/**",
+      ".specs/**",
+      ".prompts/**",
+      ".todo/**",
+      "drizzle/meta/*"
+    ],
+    "out_of_scope": [
+      "Criar rota nova de reexecucao",
+      "Limpeza global do cache de respostas",
+      "Streaming de tokens"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 50000,
+    "max_cost_usd": 0.5,
+    "max_duration_minutes": 15,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 30,
+    "max_tool_calls": 60,
+    "max_shell_executions": 15
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

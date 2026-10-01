@@ -1,0 +1,105 @@
+{
+  "work_id": "0004",
+  "requirements": [
+    {
+      "id": "FR-001",
+      "title": "Titulo capitalizado com limite de 50 caracteres",
+      "user_story": "Como operador, quero que o nicho digitado vire um titulo capitalizado por palavra e limitado a 50 caracteres, para que o titulo caiba no cartao da lista e no cabecalho do estudo",
+      "acceptance_criteria": [
+        "deve gravar o titulo com cada palavra capitalizada, preservando espacos e acentos",
+        "deve recusar com 422 quando o texto digitado passa de 50 caracteres, citando o limite na mensagem",
+        "deve recusar com 422 quando o titulo tem menos de 2 caracteres"
+      ]
+    },
+    {
+      "id": "FR-002",
+      "title": "Descricao de contexto gravada no estudo",
+      "user_story": "Como operador, quero informar uma pequena descricao junto do nicho, para registrar o contexto que orienta o decisor sem poluir o titulo",
+      "acceptance_criteria": [
+        "deve aceitar description na criacao e na renomeacao do estudo",
+        "deve gravar a descricao no registro e devolve-la na leitura e no payload publico",
+        "deve recusar com 422 quando a descricao passa do teto do contrato"
+      ]
+    },
+    {
+      "id": "FR-003",
+      "title": "Descricao concatenada ao titulo antes do processamento",
+      "user_story": "Como operador, quero que a descricao entre junto do titulo no brief, nas ideias, no bloco de dados e no contexto do decisor, para que a medicao use o detalhe que eu informei",
+      "acceptance_criteria": [
+        "deve concatenar a descricao ao titulo nos prompts de brief, ideias e documento",
+        "deve concatenar a descricao ao titulo no contexto enviado ao decisor",
+        "deve manter o prompt identico ao atual quando a descricao estiver vazia"
+      ]
+    },
+    {
+      "id": "FR-004",
+      "title": "Cache de respostas com dono por estudo",
+      "user_story": "Como operador, quero que cada estudo tenha o seu proprio namespace de cache, para que criar, excluir e recriar o mesmo titulo gere conteudo novo",
+      "acceptance_criteria": [
+        "deve incluir o id do estudo na chave de cache de brief, ideias, avaliacao e documento",
+        "deve produzir chaves distintas para dois estudos criados com o mesmo titulo",
+        "deve manter a retomada do mesmo estudo, porque a semente dele sobrevive a reexecucao"
+      ]
+    },
+    {
+      "id": "FR-005",
+      "title": "Exclusao do estudo purga o cache dele",
+      "user_story": "Como operador, quero que excluir um estudo apague tambem as respostas em cache que pertencem a ele, para nao deixar lixo no banco nem servir resposta de um estudo excluido",
+      "acceptance_criteria": [
+        "deve remover as entradas de cache cujo prefixo e o id do estudo excluido",
+        "deve preservar as entradas de cache dos demais estudos",
+        "deve contar zero entradas do estudo excluido apos a operacao"
+      ]
+    },
+    {
+      "id": "FR-006",
+      "title": "Retomada do estudo incompleto",
+      "user_story": "Como operador, quero concluir um estudo que falhou no meio reaproveitando o que ja foi gerado, para nao pagar de novo pelas fases que ja terminaram",
+      "acceptance_criteria": [
+        "deve reexecutar o estudo com a mesma semente de cache, sem limpar o que esta gravado",
+        "deve chamar o provedor de texto apenas para o documento ausente quando o estudo falhou no passo 5",
+        "deve terminar com state done e com todas as avaliacoes persistidas"
+      ]
+    },
+    {
+      "id": "FR-007",
+      "title": "Configuracoes agrupadas por provedor",
+      "user_story": "Como operador, quero os campos de configuracao agrupados por provedor com legenda, para saber quais campos pertencem ao LLM e quais pertencem ao decisor",
+      "acceptance_criteria": [
+        "deve renderizar um grupo por provedor, com legenda que nomeia o provedor de texto e o de decisao",
+        "deve manter os mesmos nomes de campo no formulario, para o envio sem JavaScript continuar funcionando",
+        "deve associar o texto de ajuda de cada campo ao input correspondente"
+      ]
+    },
+    {
+      "id": "FR-009",
+      "title": "Titulo normalizado e descricao no registro do estudo",
+      "user_story": "Como operador, quero que a criacao e a renomeacao gravem o titulo normalizado e a descricao, para que o estudo guardado ja esteja na forma exibida",
+      "acceptance_criteria": [
+        "deve gravar o titulo capitalizado no registro criado",
+        "deve gravar a descricao informada junto do registro",
+        "deve recusar com erro de validacao a renomeacao com titulo acima de 50 caracteres"
+      ]
+    },
+    {
+      "id": "FR-010",
+      "title": "Campo de descricao e limite do titulo no formulario de criacao",
+      "user_story": "Como operador, quero digitar o contexto no formulario de criacao e ver o limite do titulo, para nao descobrir a regra depois de errar",
+      "acceptance_criteria": [
+        "deve renderizar o campo de descricao no formulario de criacao",
+        "deve limitar o campo do nicho a 50 caracteres e anunciar o limite",
+        "deve enviar a descricao no POST do formulario sem JavaScript e no corpo da chamada com JavaScript"
+      ]
+    },
+    {
+      "id": "FR-008",
+      "title": "Superficie do campo de descricao e do limite do titulo",
+      "user_story": "Como operador, quero encontrar o campo de descricao e o limite de caracteres nas superficies que uso (interface, API e CLI), para saber as regras antes de errar",
+      "acceptance_criteria": [
+        "deve expor o campo de descricao no formulario de criacao da interface",
+        "deve aceitar description no corpo de POST /api/studies e expor description no payload publico do estudo",
+        "deve expor a flag --description na CLI e anunciar o limite de 50 caracteres na ajuda"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,205 @@
+{
+  "work_id": "0004",
+  "title": "Titulo curto e descricao do estudo, cache por estudo e configuracoes agrupadas",
+  "capabilities": [
+    {
+      "id": "CAP-019",
+      "name": "Identidade do estudo: titulo curto e descricao de contexto",
+      "description": "Capacidade que normaliza o titulo do estudo (capitalizado por palavra, com espacos e acentos preservados e no maximo 50 caracteres digitados), aceita e persiste uma descricao de contexto e concatena essa descricao ao titulo antes de toda chamada ao provedor de texto ou ao decisor.",
+      "actors": [
+        "ACT-001",
+        "ACT-002",
+        "ACT-003"
+      ],
+      "behavior": "titleCase capitaliza cada palavra preservando o resto; resolveStudyConfig valida o limite e carrega a descricao; create e rename gravam o titulo normalizado e a descricao; generation, studyContext e scopeNotice usam o sujeito concatenado",
+      "failures": "422 quando o titulo digitado passa de 50 caracteres ou tem menos de 2; 422 quando a descricao passa do teto do contrato",
+      "rules": [
+        "BR-024",
+        "BR-025",
+        "BR-026",
+        "BR-027",
+        "BR-028"
+      ]
+    },
+    {
+      "id": "CAP-020",
+      "name": "Cache de respostas com dono por estudo",
+      "description": "Capacidade que da identidade ao estudo dentro da chave de cache (semente igual ao id do estudo), purga as entradas daquele estudo na exclusao e garante que a reexecucao do mesmo estudo continue retomando do ponto onde parou.",
+      "actors": [
+        "ACT-001",
+        "ACT-002",
+        "ACT-003"
+      ],
+      "behavior": "scopedKey prefixa a chave com a semente do estudo; o adaptador de cache remove por prefixo; study-service passa o id do estudo como semente e purga na exclusao",
+      "failures": "a purga nunca alcanca a entrada de outro estudo; nenhuma operacao limpa o cache do estudo que esta sendo reexecutado",
+      "rules": [
+        "BR-029",
+        "BR-030",
+        "BR-031"
+      ]
+    },
+    {
+      "id": "CAP-021",
+      "name": "Superficie do titulo e da descricao",
+      "description": "Capacidade que expoe o campo de descricao e o limite de caracteres do titulo nas superficies consumidas pelo operador: formulario de criacao da interface, corpo de POST /api/studies, payload publico do estudo e flag --description da CLI.",
+      "actors": [
+        "ACT-001",
+        "ACT-002",
+        "ACT-003"
+      ],
+      "behavior": "StudyInput aceita description; publicStudy devolve description; o formulario de criacao tem o campo e o maxlength; a CLI tem --description e anuncia o limite",
+      "failures": "422 com mensagem que cita o limite quando o nicho passa de 50 caracteres; 422 quando a descricao passa do teto",
+      "rules": [
+        "BR-032",
+        "BR-033"
+      ]
+    },
+    {
+      "id": "CAP-022",
+      "name": "Configuracao de provedores por secoes",
+      "description": "Capacidade que apresenta a configuracao dos provedores em um grupo por provedor, com legenda que nomeia o provedor e descreve a funcao dos campos do grupo, mantendo os mesmos nomes de campo do formulario.",
+      "actors": [
+        "ACT-003"
+      ],
+      "behavior": "PROVIDER_GROUPS descreve os grupos; SettingsPage renderiza um fieldset por grupo, com legenda e texto de ajuda associado ao input; a rota sem JavaScript continua aceitando o mesmo patch",
+      "failures": "nenhuma acao nova; o formulario sem script segue recusando campo fora do contrato com 422",
+      "rules": [
+        "BR-034",
+        "BR-035"
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "BR-024",
+      "statement": "O titulo do estudo e capitalizado por palavra com os espacos e os acentos preservados, e o texto digitado e limitado a 50 caracteres antes de qualquer gravacao. A normalizacao vive em src/domain como funcao pura, porque a mesma regra precisa valer na API, na CLI e na interface, e src/domain nao importa src/infrastructure.",
+      "coverage": [
+        "CAP-019"
+      ],
+      "evidence": "tests/naming.test.ts com acentos, pontuacao e o limite de 50",
+      "rationale": "Sem a funcao unica, cada superficie repetiria a regra e divergiria; o operador pediu explicitamente que o titulo que vira o cabecalho do estudo tenha formato controlado e comprimento limitado."
+    },
+    {
+      "id": "BR-025",
+      "statement": "A descricao e gravada no registro do estudo e sobrevive a reexecucao. Ela nao vira titulo e nao aparece como texto na tela.",
+      "coverage": [
+        "CAP-019"
+      ],
+      "evidence": "tests/repositories.test.ts e tests/study-service.test.ts com round-trip da descricao"
+    },
+    {
+      "id": "BR-026",
+      "statement": "A descricao e concatenada ao titulo antes de toda chamada ao provedor de texto ou ao decisor. Com descricao vazia o texto enviado permanece identico ao atual, para nao invalidar o comportamento existente.",
+      "coverage": [
+        "CAP-019"
+      ],
+      "evidence": "tests/generation.test.ts capturando o prompt enviado e tests/reports.test.ts conferindo o aviso de escopo"
+    },
+    {
+      "id": "BR-027",
+      "statement": "A coluna description entra por migracao aditiva com default vazio, no padrao expand-and-contract da stack, e as linhas gravadas antes da mudanca seguem legiveis como descricao vazia.",
+      "coverage": [
+        "CAP-019"
+      ],
+      "evidence": "drizzle/0004_study_description.sql e tests/repositories.test.ts lendo um banco migrado"
+    },
+    {
+      "id": "BR-028",
+      "statement": "O esquema dos artefatos em disco nao muda (CON-006): nenhum campo novo entra no objeto serializado do dados.json e nenhum nome de arquivo ou pasta muda por causa da descricao.",
+      "coverage": [
+        "CAP-019"
+      ],
+      "evidence": "tests/artifacts.test.ts e tests/reports.test.ts conferindo a forma do dados.json"
+    },
+    {
+      "id": "BR-029",
+      "statement": "A chave de cache de um estudo inclui o identificador dele como semente, de modo que dois estudos distintos nunca compartilhem resposta, mesmo com titulo e cidade iguais.",
+      "coverage": [
+        "CAP-020"
+      ],
+      "evidence": "tests/cache.test.ts conferindo o formato da chave com escopo e tests/generate-study.test.ts com dois estudos de mesmo titulo",
+      "rationale": "Foi o defeito reportado: criar, excluir e recriar o mesmo nicho devolvia as ideias e avaliacoes do estudo anterior."
+    },
+    {
+      "id": "BR-030",
+      "statement": "Excluir um estudo remove as entradas de cache daquele id, delimitadas por prefixo proprio, e nenhuma entrada de outro estudo e removida.",
+      "coverage": [
+        "CAP-020"
+      ],
+      "evidence": "tests/study-service.test.ts contando as entradas de cache de dois estudos antes e depois da exclusao de um"
+    },
+    {
+      "id": "BR-031",
+      "statement": "Reexecutar um estudo que falhou reaproveita as respostas daquele estudo e recalcula apenas o que faltava; nenhuma operacao do Work limpa o cache do estudo que esta sendo reexecutado.",
+      "coverage": [
+        "CAP-020"
+      ],
+      "evidence": "tests/study-service.test.ts retomando um estudo que falhou no passo 5 e contando as chamadas ao provedor de texto"
+    },
+    {
+      "id": "BR-032",
+      "statement": "A API aceita description na criacao, recusa descricao acima do teto do contrato com 422 e devolve a descricao no payload publico do estudo; o limite de 50 caracteres do titulo e validado no servico e tambem no schema da borda.",
+      "coverage": [
+        "CAP-021"
+      ],
+      "evidence": "tests/api.test.ts criando estudo com descricao e recusando nicho acima de 50"
+    },
+    {
+      "id": "BR-033",
+      "statement": "A CLI expoe --description, aplica a mesma normalizacao de titulo e anuncia o limite de 50 caracteres na ajuda do comando generate.",
+      "coverage": [
+        "CAP-021"
+      ],
+      "evidence": "tests/cli.test.ts com a flag e com a ajuda do comando"
+    },
+    {
+      "id": "BR-034",
+      "statement": "A pagina de configuracoes apresenta um grupo por provedor, com legenda que nomeia o provedor e descreve a funcao dos campos, sem mudar os nomes dos campos do formulario.",
+      "coverage": [
+        "CAP-022"
+      ],
+      "evidence": "tests/ui.test.ts conferindo os dois grupos, as legendas e os nomes de campo"
+    },
+    {
+      "id": "BR-035",
+      "statement": "Cada input da pagina de configuracoes fica associado ao texto de ajuda do proprio campo, para que leitor de tela e navegacao por teclado tenham a mesma informacao que a linha exibe.",
+      "coverage": [
+        "CAP-022"
+      ],
+      "evidence": "tests/ui.test.ts conferindo o vinculo entre o texto de ajuda e o input"
+    },
+    {
+      "id": "BR-036",
+      "statement": "Nenhuma regressao: a suite existente permanece verde e a write_allow do contrato V4 nao e excedida.",
+      "coverage": [
+        "CAP-019",
+        "CAP-020",
+        "CAP-021",
+        "CAP-022"
+      ],
+      "evidence": "bun test com exit 0 e diff guard do contrato V4"
+    }
+  ],
+  "contract_reconciliation": [
+    {
+      "contract": "CON-002",
+      "action": "update",
+      "note": "POST /api/studies passa a aceitar description (texto opcional, ate 300 caracteres) e a responder 422 quando o nicho digitado passa de 50 caracteres; o payload publico do estudo passa a expor description."
+    },
+    {
+      "contract": "CON-003",
+      "action": "update",
+      "note": "O formulario de criacao ganha o campo de descricao e o maxlength do titulo; a pagina de configuracoes passa a renderizar um grupo por provedor com legenda. Os nomes de campo do formulario nao mudam."
+    },
+    {
+      "contract": "CON-001",
+      "action": "update",
+      "note": "O comando generate ganha a flag --description e a ajuda anuncia o limite de 50 caracteres do titulo."
+    },
+    {
+      "contract": "CON-006",
+      "action": "keep",
+      "note": "Sem alteracao: nomes de artefato, pastas NN-slug e chaves do dados.json permanecem iguais."
+    }
+  ]
+}

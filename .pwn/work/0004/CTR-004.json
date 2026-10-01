@@ -1,0 +1,102 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.4",
+  "work_id": "0004",
+  "title": "Concatenar a descricao ao titulo nos textos enviados aos provedores",
+  "risk": {
+    "level": "L2",
+    "reasons": [
+      "O texto enviado ao provedor de texto e ao decisor muda: um erro na concatenacao altera os numeros medidos de estudos novos",
+      "Com descricao vazia o texto precisa permanecer identico ao atual, sob pena de alterar o modo simulado deterministico"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.4-01",
+        "given": "Dado um estudo com titulo e descricao",
+        "when": "Quando o prompt de brief, o de ideias e o bloco de dados sao montados",
+        "then": "Então os tres textos carregam o titulo com a descricao concatenada"
+      },
+      {
+        "id": "SCENARIO-1.4-02",
+        "given": "Dado um estudo com titulo e descricao",
+        "when": "Quando o contexto do decisor e o aviso de escopo sao montados",
+        "then": "Então os dois carregam o titulo com a descricao concatenada"
+      },
+      {
+        "id": "SCENARIO-1.4-03",
+        "given": "Dado um estudo sem descricao",
+        "when": "Quando o prompt e o contexto sao montados",
+        "then": "Então o texto enviado e igual ao gerado antes desta mudanca"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/application/generation.ts",
+      "src/config/runtime.ts",
+      "src/application/reports.ts",
+      "tests/generation.test.ts",
+      "tests/reports.test.ts"
+    ],
+    "affected_components": [
+      "study-description"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "O layout de dados.json e do payload_json continua compativel com o baseline Python (CON-006)",
+      "src/domain nao importa src/infrastructure",
+      "Manter a suite de testes existente verde (sem regressoes)"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun test",
+      "bun run check"
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/application/generation.ts",
+      "src/config/runtime.ts",
+      "src/application/reports.ts",
+      "tests/generation.test.ts",
+      "tests/reports.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env*",
+      ".pwn/**",
+      ".specs/**",
+      ".prompts/**",
+      ".todo/**",
+      "drizzle/meta/*"
+    ],
+    "out_of_scope": [
+      "Alterar os prompts de sistema",
+      "Alterar nomes de artefato ou chaves do dados.json",
+      "Streaming de tokens"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 50000,
+    "max_cost_usd": 0.5,
+    "max_duration_minutes": 15,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 30,
+    "max_tool_calls": 60,
+    "max_shell_executions": 15
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

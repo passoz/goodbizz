@@ -1,0 +1,93 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.2",
+  "work_id": "0004",
+  "title": "Persistir a descricao na tabela studies",
+  "risk": {
+    "level": "L3",
+    "reasons": [
+      "Migracao de banco tocando a tabela studies em producao: a coluna precisa ser aditiva para a versao em execucao continuar legivel",
+      "A leitura do registro e compartilhada por API, interface e CLI, entao um campo mal mapeado aparece em todas as superficies"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.2-01",
+        "given": "Dado um estudo criado com descricao de contexto",
+        "when": "Quando o registro e lido do banco",
+        "then": "Então a descricao volta igual ao que foi gravado"
+      },
+      {
+        "id": "SCENARIO-1.2-02",
+        "given": "Dado um banco gravado antes desta mudanca",
+        "when": "Quando a migracao aditiva e aplicada e o estudo e lido",
+        "then": "Então a descricao aparece vazia e o restante do registro permanece igual"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/infrastructure/schema.ts",
+      "drizzle/0004_study_description.sql",
+      "src/infrastructure/repositories.ts",
+      "tests/repositories.test.ts"
+    ],
+    "affected_components": [
+      "study-description"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "Nenhum codigo de acesso a dados escreve SQL cru fora das migracoes geradas",
+      "A migracao e aditiva (expand): coluna com default, sem reescrever payload_json",
+      "Manter a suite de testes existente verde (sem regressoes)"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun test",
+      "bun run check"
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/infrastructure/schema.ts",
+      "drizzle/0004_study_description.sql",
+      "src/infrastructure/repositories.ts",
+      "tests/repositories.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env*",
+      ".pwn/**",
+      ".specs/**",
+      ".prompts/**",
+      ".todo/**",
+      "drizzle/meta/*"
+    ],
+    "out_of_scope": [
+      "Remover colunas existentes ou reescrever payload_json",
+      "Alterar o esquema dos artefatos em disco"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 100000,
+    "max_cost_usd": 2.0,
+    "max_duration_minutes": 30,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 50,
+    "max_tool_calls": 100,
+    "max_shell_executions": 30
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.8",
+  "work_id": "0004",
+  "title": "Expor a descricao e o limite do titulo na API e na CLI",
+  "risk": {
+    "level": "L2",
+    "reasons": [
+      "CON-002 muda: a borda publica aceita um campo novo e passa a recusar titulos que antes eram aceitos",
+      "A CLI e um contrato de linha de comando (CON-001) e a ajuda documenta as regras que o operador segue"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.8-01",
+        "given": "Dado um corpo com nicho e descricao validos",
+        "when": "Quando POST /api/studies e chamado",
+        "then": "Então o estudo e criado, a descricao fica gravada e o payload publico devolve a descricao"
+      },
+      {
+        "id": "SCENARIO-1.8-02",
+        "given": "Dado um nicho com 51 caracteres",
+        "when": "Quando POST /api/studies e chamado",
+        "then": "Então a resposta e 422 com mensagem que cita o limite de 50 caracteres"
+      },
+      {
+        "id": "SCENARIO-1.8-03",
+        "given": "Dado o comando generate com a flag --description",
+        "when": "Quando a ajuda do comando e exibida",
+        "then": "Então a ajuda lista a flag e anuncia o limite de 50 caracteres do titulo"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/infrastructure/http/api.ts",
+      "src/cli.ts",
+      "README.md",
+      "tests/api.test.ts",
+      "tests/cli.test.ts"
+    ],
+    "affected_components": [
+      "surfaces"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "A validacao do limite vive no servico; o schema da borda confere a mesma regra para o erro chegar junto da resposta",
+      "Nenhuma rota nova e criada",
+      "Manter a suite de testes existente verde (sem regressoes)"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun test",
+      "bun run check"
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/infrastructure/http/api.ts",
+      "src/cli.ts",
+      "README.md",
+      "tests/api.test.ts",
+      "tests/cli.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env*",
+      ".pwn/**",
+      ".specs/**",
+      ".prompts/**",
+      ".todo/**",
+      "drizzle/meta/*"
+    ],
+    "out_of_scope": [
+      "Alterar o teto de 600 s do campo timeout",
+      "Criar rota nova de API",
+      "Alterar o esquema dos artefatos em disco"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 50000,
+    "max_cost_usd": 0.5,
+    "max_duration_minutes": 15,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 30,
+    "max_tool_calls": 60,
+    "max_shell_executions": 15
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

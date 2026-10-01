@@ -1,0 +1,98 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.9",
+  "work_id": "0004",
+  "title": "Acrescentar o campo de descricao e o limite do titulo no formulario de criacao",
+  "risk": {
+    "level": "L2",
+    "reasons": [
+      "O formulario e a porta de entrada do operador: um campo mal ligado ao POST sem JavaScript cria estudo sem descricao ou sem o limite anunciado",
+      "A interface e um contrato observavel (CON-003) e os nomes de campo do formulario sao lidos pela rota sem script"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.9-01",
+        "given": "Dado a pagina de novo estudo",
+        "when": "Quando ela e renderizada",
+        "then": "Então o formulario tem o campo de descricao, o maxlength do nicho e o anuncio do limite"
+      },
+      {
+        "id": "SCENARIO-1.9-02",
+        "given": "Dado o formulario sem JavaScript com nicho e descricao preenchidos",
+        "when": "Quando POST /ui/studies e chamado",
+        "then": "Então o estudo e criado com o titulo normalizado e a descricao gravada, e a resposta redireciona para o estudo"
+      },
+      {
+        "id": "SCENARIO-1.9-03",
+        "given": "Dado o caminho com JavaScript",
+        "when": "Quando o formulario e enviado",
+        "then": "Então o corpo de POST /api/studies leva o campo de descricao junto do nicho"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/infrastructure/http/ui/pages.tsx",
+      "src/infrastructure/http/ui/routes.tsx",
+      "tests/ui.test.ts"
+    ],
+    "affected_components": [
+      "surfaces"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "Nenhuma acao mutavel dispensa CSRF",
+      "Os nomes de campo do formulario continuam cobertos pela validacao da rota de criacao",
+      "Manter a suite de testes existente verde (sem regressoes)"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun test",
+      "bun run check"
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/infrastructure/http/ui/pages.tsx",
+      "src/infrastructure/http/ui/routes.tsx",
+      "tests/ui.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env*",
+      ".pwn/**",
+      ".specs/**",
+      ".prompts/**",
+      ".todo/**",
+      "drizzle/meta/*"
+    ],
+    "out_of_scope": [
+      "Exibir a descricao como texto na pagina do estudo",
+      "Criar rota nova de interface",
+      "Alterar o esquema dos artefatos em disco"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 50000,
+    "max_cost_usd": 0.5,
+    "max_duration_minutes": 15,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 30,
+    "max_tool_calls": 60,
+    "max_shell_executions": 15
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

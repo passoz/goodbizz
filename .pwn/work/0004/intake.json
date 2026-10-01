@@ -1,0 +1,7 @@
+{
+  "work_id": "0004",
+  "created_at": "2026-10-01T18:09:06.572Z",
+  "objective": "Permitir um titulo curto e capitalizado para o estudo, com uma descricao de contexto que alimenta o processamento; dar dono ao cache de respostas para que excluir e recriar o mesmo titulo gere conteudo novo sem reiniciar estudo incompleto; e agrupar os campos das configuracoes por provedor.",
+  "requester": "operator",
+  "status": "confirmed"
+}

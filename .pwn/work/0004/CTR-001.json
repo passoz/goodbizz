@@ -1,0 +1,108 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.1",
+  "work_id": "0004",
+  "title": "Normalizar o titulo e acrescentar descricao e semente ao contrato do estudo",
+  "risk": {
+    "level": "L2",
+    "reasons": [
+      "A regra de titulo passa a valer em toda criacao de estudo: um erro na funcao pura muda o titulo gravado de estudos novos",
+      "Campos novos no StudyConfig atravessam o dominio, a configuracao resolvida e os chamadores que constroem a configuracao literalmente"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.1-01",
+        "given": "Dado o texto \"clinicas odontologicas em cidade media\"",
+        "when": "Quando o titulo e normalizado",
+        "then": "Então o resultado e \"Clinicas Odontologicas Em Cidade Media\", com os espacos preservados"
+      },
+      {
+        "id": "SCENARIO-1.1-02",
+        "given": "Dado um titulo com acentos e pontuacao",
+        "when": "Quando o titulo e normalizado",
+        "then": "Então a primeira letra de cada palavra fica maiuscula e os acentos e a pontuacao permanecem"
+      },
+      {
+        "id": "SCENARIO-1.1-03",
+        "given": "Dado um titulo com 51 caracteres digitados",
+        "when": "Quando resolveStudyConfig monta a configuracao",
+        "then": "Então a configuracao e recusada com erro que cita o limite de 50 caracteres"
+      },
+      {
+        "id": "SCENARIO-1.1-04",
+        "given": "Dado um estudo sem descricao",
+        "when": "Quando o sujeito do estudo e montado",
+        "then": "Então o sujeito e igual ao titulo, sem texto concatenado"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/domain/naming.ts",
+      "src/domain/types.ts",
+      "src/config/runtime.ts",
+      "tests/naming.test.ts"
+    ],
+    "affected_components": [
+      "naming-title",
+      "study-description"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "src/domain nao importa src/infrastructure",
+      "A normalizacao do titulo e funcao pura: sem rede, sem banco e sem relogio",
+      "Manter a suite de testes existente verde (sem regressoes)",
+      "O esquema dos artefatos em disco (CON-006) nao muda: nenhuma chave nova no dados.json"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun test",
+      "bun run check"
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/domain/naming.ts",
+      "src/domain/types.ts",
+      "src/config/runtime.ts",
+      "tests/naming.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env*",
+      ".pwn/**",
+      ".specs/**",
+      ".prompts/**",
+      ".todo/**",
+      "drizzle/meta/*"
+    ],
+    "out_of_scope": [
+      "Limpeza global do cache de respostas",
+      "Alterar nomes de artefato ou chaves do dados.json",
+      "Mudar o teto de 40 ideias por estudo"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 50000,
+    "max_cost_usd": 0.5,
+    "max_duration_minutes": 15,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 30,
+    "max_tool_calls": 60,
+    "max_shell_executions": 15
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

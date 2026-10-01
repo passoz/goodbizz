@@ -1,0 +1,34 @@
+{
+  "work_id": "0004",
+  "title": "Titulo curto e descricao do estudo, cache por estudo e configuracoes agrupadas",
+  "grilling_depth": "deep",
+  "problem": "Tres defeitos independentes na criacao e na operacao de um estudo. (1) O nicho digitado vira o titulo exibido sem tratamento: uma frase longa estoura o cabecalho do detalhe (src/infrastructure/http/ui/pages.tsx:1213) e o cartao da lista (:643), e nao existe campo para o contexto que alimenta o decisor, o que empurra o operador a escrever a frase inteira no campo do titulo. (2) As chaves de cache de brief, ideias, aval e doc derivam apenas de niche e city (src/application/generate-study.ts:266,279,293,354 sobre src/domain/hash.ts:12) e nao existe invalidacao em nenhum ponto: criar um estudo, excluir e criar outro com o mesmo nicho devolve as ideias e as avaliacoes do estudo anterior. Reproduzido: dois estudos do nicho 'clinicas odontologicas' produziram ideias identicas com 'cache count: 8 hits: 8'. (3) SettingsPage (src/infrastructure/http/ui/pages.tsx:985) empilha os seis campos de PROVIDER_FIELDS (src/config/providers.ts:33) em uma unica grade automatica (.form-grid, src/infrastructure/http/ui/layout.tsx:500), intercalando os dois provedores sem agrupamento nem legenda.",
+  "actors": [
+    "ACT-001",
+    "ACT-002",
+    "ACT-003"
+  ],
+  "objectives": [
+    "O titulo do estudo e gravado capitalizado por palavra, com os espacos e os acentos preservados, e recusa acima de 50 caracteres digitados",
+    "Uma descricao de contexto e aceita na criacao e na renomeacao, fica gravada no registro e entra concatenada ao titulo antes de toda chamada ao provedor de texto ou ao decisor",
+    "Cada estudo tem namespace de cache proprio derivado do seu id, de modo que dois estudos nunca compartilhem resposta, e excluir o estudo remove as entradas que sao dele sem tocar nas dos demais",
+    "Reexecutar um estudo que falhou continua retomando do ponto onde parou, reaproveitando as respostas daquele estudo e recalculando apenas o que faltava",
+    "A pagina de configuracoes apresenta os campos agrupados por provedor, cada grupo com legenda que nomeia o provedor e descreve a sua funcao"
+  ],
+  "constraints": [
+    "Manter a suite de testes existente verde (sem regressoes)",
+    "src/domain nao importa src/infrastructure, e a normalizacao do titulo e funcao pura de dominio",
+    "O esquema dos artefatos em disco (CON-006) nao muda: mesmos nomes de arquivo, mesmas pastas NN-slug e as mesmas chaves do dados.json",
+    "SQR-005: reexecutar reaproveita o cache e nao repete chamada paga; nenhuma solucao pode limpar o cache que pertence ao estudo reexecutado",
+    "A descricao nao vira titulo, nao ganha coluna no dados.json e nao aparece como texto proprio na tela do estudo",
+    "A migracao da coluna description e aditiva (coluna com default), compativel com o banco em producao"
+  ],
+  "out_of_scope": [
+    "Limpeza global do cache de respostas e qualquer expurgo por tempo",
+    "Streaming de tokens, reordenar ideias por arraste e fila distribuida de execucao",
+    "Mudar o teto de 40 ideias por estudo ou o teto de 600 s do campo timeout em POST /api/studies",
+    "Reescrever SQR-003 (artefatos sem acento), que e drift conhecido",
+    "Reavaliar do zero as ideias que ja tem avaliacao"
+  ],
+  "legacy_spec": null
+}

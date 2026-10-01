@@ -1,0 +1,293 @@
+{
+  "$schema": "../../../schemas/prd.schema.json",
+  "id": "PRD-0004",
+  "meta": {
+    "version": "1.0",
+    "created_at": "2026-10-01T18:09:06.574Z",
+    "author": "pwn",
+    "grilling_depth": "deep"
+  },
+  "title": "PRD — Titulo curto, descricao de contexto, cache por estudo e configuracoes agrupadas",
+  "status": "approved",
+  "scenario": "brownfield",
+  "problem": {
+    "statement": "O nicho digitado vira o titulo exibido sem tratamento e nao ha campo para o contexto do decisor; as chaves de cache derivam apenas de niche e city, entao excluir um estudo e recriar o mesmo titulo devolve as ideias e avaliacoes do estudo apagado; e a pagina de configuracoes empilha os seis campos dos dois provedores em uma unica grade automatica, sem agrupamento nem legenda.",
+    "context": "Reproduzido em harness isolado: dois estudos de mesmo nicho produziram ideias identicas com cache count 8 e hits 8. A retomada de um estudo que falhou ja funciona hoje (retry gerou apenas o documento ausente) e e requisito de qualidade explicito (SQR-005). As chaves de cache vivem em src/application/generate-study.ts sobre src/domain/hash.ts e nao ha invalidacao em nenhum ponto do codigo.",
+    "impact": "O operador nao consegue distinguir um estudo novo de um estudo reciclado, e escreve frases longas no campo do titulo para nao perder contexto, o que quebra a exibicao do cabecalho e do cartao.",
+    "evidence": [
+      ".sources/0004-estudo-titulo-cache.md",
+      "src/application/generate-study.ts:266,279,293,354",
+      "src/domain/hash.ts:12",
+      "src/infrastructure/http/ui/pages.tsx:985",
+      "src/config/providers.ts:33"
+    ]
+  },
+  "solution": {
+    "statement": "Dar identidade ao estudo no cache (semente igual ao id do estudo, com purga escopada na exclusao), separar o titulo curto da descricao de contexto (titulo capitalizado por palavra, limitado a 50 caracteres digitados, descricao concatenada ao titulo antes de cada chamada a provedor) e reorganizar a pagina de configuracoes em um grupo por provedor com legenda.",
+    "approach": "Funcao pura de dominio para o titulo, coluna aditiva description na tabela studies, sujeito concatenado nas chamadas de geracao e de contexto, chave de cache prefixada pelo id do estudo com purge no port de cache, e markup com fieldset por provedor na pagina de configuracoes.",
+    "alternatives_considered": [
+      {
+        "name": "Limpar o cache por nicho na exclusao",
+        "description": "Apagar todas as entradas de cache do nicho ao excluir um estudo.",
+        "reason_rejected": "Dois estudos do mesmo nicho competiriam: excluir um apagaria o cache do outro, violando QR-001 e desperdicando chamadas pagas."
+      },
+      {
+        "name": "Nao persistir a descricao e concatena-la apenas no prompt",
+        "description": "Manter a descricao so na chamada de criacao.",
+        "reason_rejected": "A reexecucao reconstroi a configuracao a partir do registro; sem a descricao gravada, retomar um estudo mudaria o prompt e invalidaria o cache daquele estudo."
+      },
+      {
+        "name": "Capitalizar o titulo apenas na renderizacao da interface",
+        "description": "Guardar o texto cru e formatar na hora de exibir.",
+        "reason_rejected": "O titulo tambem aparece na lista, no titulo da pagina e nos titulos dos artefatos; a regra duplicada divergiria, e o operador pediu o titulo em minusculas normalizadas como dado."
+      }
+    ],
+    "risks": [
+      {
+        "risk": "A concatenacao da descricao muda o prompt e poderia invalidar o cache de estudos antigos",
+        "level": "medium",
+        "description": "Estudos criados antes da mudanca nao tem descricao gravada, e a descricao entra no texto do prompt, nunca na chave de cache; o risco real e um estudo retomado apos a mudanca usar prompt diferente do cache que ja tem.",
+        "mitigation": "A chave de cache continua derivada de niche, city e demais parametros; a descricao entra no texto do prompt, nao na chave, e estudos que existiam antes da mudanca nao tem descricao gravada."
+      },
+      {
+        "risk": "A purga por prefixo poderia remover entrada de outro estudo",
+        "level": "high",
+        "description": "A remocao por prefixo e uma operacao destrutiva em dados persistidos; um separador mal escolhido faria o prefixo de um estudo casar com a chave de outro.",
+        "mitigation": "O prefixo e o UUIDv7 do estudo, delimitado por separador proprio; o teste de regressao confere que o cache do outro estudo permanece intacto."
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "id": "DEC-001",
+      "statement": "Adotar contrato V4 congelado (risco L2) como fronteira de execucao do Work 0004.",
+      "status": "accepted",
+      "made_by": "pwn"
+    },
+    {
+      "id": "DEC-002",
+      "statement": "O titulo e capitalizado por palavra mantendo os espacos e os acentos; a palavra 'camel case' do pedido foi resolvida nesta escolha, feita pelo operador na sessao de descoberta.",
+      "status": "accepted",
+      "made_by": "operator",
+      "made_at": "2026-10-01T00:00:00.000Z"
+    },
+    {
+      "id": "DEC-003",
+      "statement": "O limite de 50 caracteres vale sobre o texto digitado no campo do nicho: maxlength na interface e 422 na API.",
+      "status": "accepted",
+      "made_by": "operator",
+      "made_at": "2026-10-01T00:00:00.000Z"
+    },
+    {
+      "id": "DEC-004",
+      "statement": "A descricao nao aparece como texto na tela do estudo: ela e gravada e concatenada ao titulo apenas no processamento.",
+      "status": "accepted",
+      "made_by": "operator",
+      "made_at": "2026-10-01T00:00:00.000Z"
+    },
+    {
+      "id": "DEC-005",
+      "statement": "A semente do cache e o id do estudo. Uma unica semente resolve os dois requisitos: separa estudos distintos e preserva a retomada do mesmo estudo, porque o id sobrevive a reexecucao e so morre na exclusao.",
+      "status": "accepted",
+      "made_by": "pwn"
+    },
+    {
+      "id": "DEC-006",
+      "statement": "A exclusao do estudo purga as entradas de cache daquele id, escopadas por prefixo, sem tocar nas dos demais estudos.",
+      "status": "accepted",
+      "made_by": "pwn"
+    },
+    {
+      "id": "DEC-007",
+      "statement": "A retomada de estudo incompleto e preservada por contrato (SQR-005): nenhuma operacao do Work limpa o cache do estudo que esta sendo reexecutado.",
+      "status": "accepted",
+      "made_by": "pwn"
+    },
+    {
+      "id": "DEC-008",
+      "statement": "A pagina de configuracoes passa a ter um grupo por provedor, com legenda que nomeia o provedor e descreve a funcao dos campos do grupo.",
+      "status": "accepted",
+      "made_by": "pwn"
+    },
+    {
+      "id": "DEC-009",
+      "statement": "A normalizacao do titulo vive em src/domain como funcao pura, porque src/domain nao pode importar src/infrastructure e a regra precisa ser a mesma na API, na CLI e na interface.",
+      "status": "accepted",
+      "made_by": "pwn"
+    },
+    {
+      "id": "DEC-010",
+      "statement": "A coluna description entra por migracao aditiva com default vazio, compativel com o banco em producao, no padrao expand-and-contract da stack.",
+      "status": "accepted",
+      "made_by": "pwn"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "FR-001",
+      "type": "functional",
+      "statement": "O titulo do estudo e gravado capitalizado por palavra, com espacos e acentos preservados e no maximo 50 caracteres digitados.",
+      "priority": "must",
+      "source": "pedido do operador (2026-10-01)",
+      "acceptance_criteria": [
+        "deve gravar o titulo capitalizado preservando acentos",
+        "deve recusar com 422 acima de 50 caracteres"
+      ]
+    },
+    {
+      "id": "FR-002",
+      "type": "functional",
+      "statement": "A criacao e a renomeacao aceitam uma descricao de contexto, gravada junto do registro do estudo.",
+      "priority": "must",
+      "source": "pedido do operador (2026-10-01)",
+      "acceptance_criteria": [
+        "deve aceitar description na criacao e na renomeacao",
+        "deve devolver a descricao na leitura do estudo"
+      ]
+    },
+    {
+      "id": "FR-003",
+      "type": "functional",
+      "statement": "A descricao e concatenada ao titulo antes de toda chamada ao provedor de texto ou ao decisor.",
+      "priority": "must",
+      "source": "pedido do operador (2026-10-01)",
+      "acceptance_criteria": [
+        "deve concatenar a descricao nos prompts de brief, ideias e documento",
+        "deve concatenar a descricao no contexto do decisor"
+      ]
+    },
+    {
+      "id": "FR-004",
+      "type": "functional",
+      "statement": "A chave de cache de um estudo inclui o identificador dele, de modo que dois estudos nunca compartilhem resposta.",
+      "priority": "must",
+      "source": "pedido do operador (2026-10-01)",
+      "acceptance_criteria": [
+        "deve produzir chaves distintas para dois estudos de mesmo titulo",
+        "deve manter a retomada do mesmo estudo"
+      ]
+    },
+    {
+      "id": "FR-005",
+      "type": "functional",
+      "statement": "Excluir um estudo remove as entradas de cache que pertencem a ele, sem tocar nas dos demais estudos.",
+      "priority": "must",
+      "source": "pedido do operador (2026-10-01)",
+      "acceptance_criteria": [
+        "deve contar zero entradas do estudo excluido",
+        "deve preservar as entradas dos demais estudos"
+      ]
+    },
+    {
+      "id": "FR-006",
+      "type": "functional",
+      "statement": "Reexecutar um estudo que falhou reaproveita as respostas em cache daquele estudo e recalcula apenas o que faltava.",
+      "priority": "must",
+      "source": "pedido do operador (2026-10-01)",
+      "acceptance_criteria": [
+        "deve chamar o provedor de texto apenas para o documento ausente",
+        "deve terminar com state done"
+      ]
+    },
+    {
+      "id": "FR-009",
+      "type": "functional",
+      "statement": "A criacao e a renomeacao gravam o titulo normalizado e a descricao no registro do estudo.",
+      "priority": "must",
+      "source": "pedido do operador (2026-10-01)",
+      "acceptance_criteria": [
+        "deve gravar o titulo capitalizado no registro criado",
+        "deve recusar renomeacao com titulo acima de 50 caracteres"
+      ]
+    },
+    {
+      "id": "FR-010",
+      "type": "functional",
+      "statement": "O formulario de criacao expoe o campo de descricao e o limite de 50 caracteres do titulo.",
+      "priority": "should",
+      "source": "pedido do operador (2026-10-01)",
+      "acceptance_criteria": [
+        "deve renderizar o campo de descricao no formulario",
+        "deve enviar a descricao no POST sem JavaScript"
+      ]
+    },
+    {
+      "id": "FR-007",
+      "type": "functional",
+      "statement": "A pagina de configuracoes apresenta os campos agrupados por provedor, cada grupo com legenda que nomeia o provedor.",
+      "priority": "should",
+      "source": "pedido do operador (2026-10-01)",
+      "acceptance_criteria": [
+        "deve renderizar um grupo por provedor com legenda",
+        "deve manter os mesmos nomes de campo do formulario"
+      ]
+    },
+    {
+      "id": "FR-008",
+      "type": "functional",
+      "statement": "A interface e a CLI expoem o campo de descricao e o limite de 50 caracteres do titulo.",
+      "priority": "should",
+      "source": "pedido do operador (2026-10-01)",
+      "acceptance_criteria": [
+        "deve expor o campo de descricao no formulario de criacao",
+        "deve expor a flag --description na CLI"
+      ]
+    }
+  ],
+  "stakeholders": [
+    {
+      "name": "Operador/consultor (CLI e UI)",
+      "role": "ACT-001"
+    },
+    {
+      "name": "Cliente da API HTTP",
+      "role": "ACT-002"
+    },
+    {
+      "name": "Usuario da interface web",
+      "role": "ACT-003"
+    },
+    {
+      "name": "Provedor LLM externo",
+      "role": "ACT-004"
+    },
+    {
+      "name": "Decisor System One (externo)",
+      "role": "ACT-005"
+    }
+  ],
+  "scope": {
+    "in_scope": [
+      "src/domain/naming.ts — titulo capitalizado, limite de 50 e concatenacao do sujeito",
+      "src/domain/types.ts e src/config/runtime.ts — description e cacheSeed no contrato do estudo",
+      "src/infrastructure/schema.ts e drizzle/ — coluna description aditiva",
+      "src/infrastructure/repositories.ts — persistencia e leitura da descricao",
+      "src/application/generation.ts, src/application/reports.ts — sujeito concatenado nos prompts e no aviso de escopo",
+      "src/domain/ports.ts, src/infrastructure/cache-repository.ts, src/application/cache.ts — chave com escopo e purge",
+      "src/application/generate-study.ts, src/application/study-service.ts — semente por estudo, purga na exclusao e retomada",
+      "src/infrastructure/http/api.ts, src/infrastructure/http/ui/pages.tsx, src/infrastructure/http/ui/routes.tsx, src/infrastructure/http/ui/layout.tsx, src/config/providers.ts, src/cli.ts — superficies",
+      "README.md — documentar o campo, o limite e o cache por estudo",
+      "tests/ — evidencia RED/GREEN de FR-001 a FR-008"
+    ],
+    "out_of_scope": [
+      "Limpeza global do cache e expurgo por tempo",
+      "Streaming de tokens, reordenar ideias por arraste e fila distribuida",
+      "Alterar o esquema de artefatos em disco (CON-006)",
+      "Mudar o teto de 40 ideias por estudo ou o teto de 600 s do timeout",
+      "Reescrever SQR-003 (artefatos sem acento)",
+      "Reavaliar ideias que ja tem avaliacao"
+    ]
+  },
+  "accepted_requirements": [
+    "FR-001",
+    "FR-002",
+    "FR-003",
+    "FR-004",
+    "FR-005",
+    "FR-006",
+    "FR-007",
+    "FR-008",
+    "FR-009",
+    "FR-010"
+  ]
+}
