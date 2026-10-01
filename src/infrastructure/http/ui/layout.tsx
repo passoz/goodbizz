@@ -16,6 +16,8 @@
 import type { FC, PropsWithChildren } from "hono/jsx";
 import { raw } from "hono/html";
 
+import { markBody } from "./brand.ts";
+
 export const GLASS_CSS = `
 :root {
   --r-red: #dd5855;
@@ -149,14 +151,21 @@ html[data-theme="light"] .btn-primary {
     0 12px 26px -14px rgb(215 129 51 / 0.75);
 }
 html[data-theme="light"] .btn-ghost { background: transparent; box-shadow: inset 0 0 0 1px oklch(0 0 0 / 0.16); }
-html[data-theme="light"] .field input[type="text"],
-html[data-theme="light"] .field input[type="number"],
-html[data-theme="light"] .field input[type="password"] {
+html[data-theme="light"] .field input:not([type="checkbox"]):not([type="hidden"]) {
   background: rgb(255 255 255 / 0.8);
   border-color: oklch(0 0 0 / 0.14);
   color: var(--paper);
 }
 html[data-theme="light"] .field input:focus { background: #fff; }
+html[data-theme="light"] .field input:-webkit-autofill {
+  -webkit-text-fill-color: var(--paper);
+  caret-color: var(--paper);
+  -webkit-box-shadow: 0 0 0 1000px rgb(255 255 255 / 0.94) inset;
+}
+html[data-theme="light"] input[type="checkbox"]:not(:checked) {
+  background: rgb(255 255 255 / 0.88);
+  border-color: oklch(0 0 0 / 0.3);
+}
 html[data-theme="light"] .file-ext { background: oklch(0 0 0 / 0.09); }
 html[data-theme="light"] th,
 html[data-theme="light"] td { border-bottom-color: oklch(0 0 0 / 0.1); }
@@ -375,12 +384,18 @@ a { color: inherit; text-decoration: none; }
   backdrop-filter: var(--blur-chrome);
   -webkit-backdrop-filter: var(--blur-chrome);
 }
-.brand { display: flex; align-items: baseline; gap: 12px; }
+.brand { display: flex; align-items: center; gap: 12px; }
 .brand h1 { margin: 0; font-size: 25px; letter-spacing: -.025em; color: #fff; font-weight: 680; }
 /* A marca e a volta para a lista: link discreto (sem sublinhado, cor herdada) que nao mexe no
    alinhamento do topbar. O foco visivel continua vindo do :focus-visible global. */
-.brand h1 a { color: inherit; text-decoration: none; cursor: pointer; }
+.brand h1 a {
+  display: inline-flex; align-items: center; gap: 10px; line-height: 1;
+  color: inherit; text-decoration: none; cursor: pointer;
+}
 .brand h1 a:hover { color: var(--accent-hover); }
+.brand-mark { display: block; flex: none; transition: transform 150ms ease-out; }
+.brand h1 a:hover .brand-mark { transform: scale(1.06); }
+.brand h1 a:active .brand-mark { transform: scale(0.97); }
 .nav { display: flex; align-items: center; gap: 6px; }
 .nav a {
   padding: 9px 16px; border-radius: var(--r-pill); font-size: var(--fs-small); font-weight: 560;
@@ -485,22 +500,98 @@ h3 { font-size: var(--fs-h3); color: var(--paper); font-weight: 620; margin: 28p
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 20px; }
 .field { display: flex; flex-direction: column; gap: 7px; }
 .field label { font-size: var(--fs-small); color: var(--paper); font-weight: 580; }
-.field input[type="text"], .field input[type="number"], .field input[type="password"] {
-  width: 100%; padding: 13px 15px; color: var(--paper); font: var(--fs-body)/1.4 var(--sans);
-  background: rgb(10 8 8 / 0.42); border: 1px solid oklch(1 0 0 / 0.16);
+/* Uma caixa so, para QUALQUER type: text, password, number, email, search, date... O seletor tem
+   de cobrir todos, porque o que ficar de fora volta a ser pintado pelo SO — e foi isso que deixou
+   uns campos com cara de app e outros com cara de sistema. Checkbox tem regra propria e hidden nao
+   aparece; os dois ficam de fora. */
+.field input:not([type="checkbox"]):not([type="hidden"]) {
+  width: 100%;
+  padding: 13px 15px;
+  color: var(--paper);
+  caret-color: var(--accent);
+  font: var(--fs-body)/1.4 var(--sans);
+  background: rgb(10 8 8 / 0.42);
+  border: 1px solid oklch(1 0 0 / 0.16);
   border-radius: var(--r-control);
+  transition: border-color 150ms, box-shadow 150ms, background-color 150ms;
+}
+/* appearance: none e o que apaga a pintura do SO (cantos, borda interna e, no Safari, o
+   searchfield/date arredondado que ignora border-radius). O number fica de fora: ele tem duas
+   regras proprias abaixo, porque WebKit e Firefox escondem as setas de maneiras diferentes. */
+.field input:not([type="number"]):not([type="checkbox"]):not([type="hidden"]) {
+  appearance: none;
+  -webkit-appearance: none;
+}
+/* Setas do number nao aceitam CSS e sao a pintura mais evidente do sistema (caixa branca com duas
+   setinhas). O pseudo-seletor do WebKit resolve no Chrome e no Safari; no Firefox as setas vem do
+   -moz-appearance, e so "textfield" as remove. min/max continuam validando pelo teclado. */
+.field input[type="number"]::-webkit-inner-spin-button,
+.field input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.field input[type="number"] {
+  -moz-appearance: textfield;
+}
+/* O gerenciador de senha do navegador pinta o campo de amarelo por cima de qualquer background. */
+.field input:-webkit-autofill,
+.field input:-webkit-autofill:hover,
+.field input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--paper);
+  caret-color: var(--paper);
+  -webkit-box-shadow: 0 0 0 1000px rgb(10 8 8 / 0.72) inset;
+  transition: background-color 999999s ease-out 0s;
 }
 .field input::placeholder { color: var(--faint); }
-.field input:hover { border-color: oklch(1 0 0 / 0.24); }
-.field input:focus {
+.field input:not([type="checkbox"]):hover { border-color: oklch(1 0 0 / 0.24); }
+.field input:not([type="checkbox"]):focus {
   border-color: rgb(159 219 67 / 0.85);
   background: rgb(10 8 8 / 0.6);
   box-shadow: 0 0 0 3px rgb(159 219 67 / 0.22);
 }
 .field .hint { color: var(--muted); }
+/* Checkbox proprio: o do SO nao acompanha o raio nem a paleta e ficava como o unico item com cara
+   de sistema na tela. appearance: none + marca desenhada mudam so a pintura — o <input> real
+   (valor, form, teclado, leitor de tela) continua o mesmo. */
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin: 0;
+  display: inline-grid;
+  place-content: center;
+  border: 1px solid oklch(1 0 0 / 0.3);
+  border-radius: 6px;
+  background: rgb(10 8 8 / 0.42);
+  cursor: pointer;
+  transition: background-color 150ms, border-color 150ms, box-shadow 150ms;
+}
+input[type="checkbox"]::before {
+  content: "";
+  width: 11px;
+  height: 11px;
+  background: var(--accent-ink);
+  clip-path: polygon(14% 44%, 0 65%, 40% 100%, 100% 16%, 83% 0, 37% 66%);
+  transform: scale(0);
+  transition: transform 120ms ease-out;
+}
+input[type="checkbox"]:hover { border-color: oklch(1 0 0 / 0.55); }
+input[type="checkbox"]:checked {
+  background: var(--r-lime);
+  border-color: var(--r-lime);
+}
+input[type="checkbox"]:checked::before { transform: scale(1); }
+/* Limao sobre limao: o anel de foco precisa trocar de cor para nao some dentro do proprio selo. */
+input[type="checkbox"]:checked:focus-visible { outline-color: var(--accent); }
 .check { display: flex; align-items: center; gap: 10px; font-size: var(--fs-small); color: var(--paper); }
-.check input { width: 17px; height: 17px; accent-color: var(--r-lime); }
 .form-actions { display: flex; align-items: center; gap: 16px; margin-top: 26px; flex-wrap: wrap; }
+/* Acrescentar ideias segue o mesmo gabarito dos outros formularios (campo, depois acao). Sem as
+   duas regras abaixo o input do numero ficava fora do sistema: nenhuma regra alcancava ele. */
+.add-ideas-form { margin-top: 18px; }
+.add-ideas-form .field { max-width: 340px; }
+.add-ideas-form .form-actions { margin-top: 14px; }
 /* Form de renomear no cabecalho do estudo: com JS o campo inline fica escondido (o gatilho abre
    o dialogo); sem JS o noscript do layout o revela e ele e o campo de verdade. */
 .rename-form { display: flex; align-items: center; gap: 8px; }
@@ -856,12 +947,34 @@ const THEME_WIRE = `
   }
 })();`;
 
+/**
+ * Marca no cabecalho. Mesma geometria do favicon (`brand.ts`), desenhada inline: o topbar nao
+ * depende de rede nem de JS para mostrar a marca, e o link em volta leva para a lista.
+ */
+export const BrandMark: FC<{ size?: number }> = (props) => (
+  <svg
+    class="brand-mark"
+    viewBox="0 0 64 64"
+    width={props.size ?? 34}
+    height={props.size ?? 34}
+    aria-hidden="true"
+    focusable="false"
+  >
+    {raw(markBody())}
+  </svg>
+);
+
 export const Layout: FC<PropsWithChildren<{ title: string }>> = (props) => (
   <html lang="pt-BR">
     <head>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>{props.title}</title>
+      {/* PNG antes do SVG: Safari e crawlers ainda nao constroem icone vetorial, e o
+          `/favicon.ico` (sem link) cobre quem pedir o caminho padrao. */}
+      <link rel="icon" href="/favicon.png" sizes="64x64" type="image/png" />
+      <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+      <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
       {/* `raw` e obrigatorio: dentro de <style>/<script> o JSX escaparia `>` e `"`, quebrando
           combinadores filho e valores com aspas (ex.: content). */}
       <script>{raw(THEME_BOOT)}</script>
@@ -876,7 +989,10 @@ export const Layout: FC<PropsWithChildren<{ title: string }>> = (props) => (
         <header class="topbar glass">
           <div class="brand">
             <h1>
-              <a href="/">GoodBizz</a>
+              <a href="/">
+                <BrandMark />
+                <span>GoodBizz</span>
+              </a>
             </h1>
           </div>
           <div class="topbar-actions">

@@ -7,6 +7,7 @@ import { Hono } from "hono";
 import { secureHeaders } from "hono/secure-headers";
 
 import { buildErrorHandler, buildNotFoundHandler } from "./errors.ts";
+import { buildStaticApp } from "./static.ts";
 import type { Logger } from "../../domain/ports.ts";
 
 export interface HttpAppParts {
@@ -50,6 +51,9 @@ export function buildHttpApp(parts: HttpAppParts): Hono {
 
   app.route("/api", parts.api);
   app.route("/", parts.health);
+  // Antes da UI de proposito: a sub-app da interface emite cookie CSRF em toda requisicao, e
+  // favicon/toque nao devem criar sessao. Caminho sem rota dentro cai na UI e no 404 dela.
+  app.route("/", buildStaticApp());
   app.route("/", parts.ui);
 
   app.notFound(buildNotFoundHandler());

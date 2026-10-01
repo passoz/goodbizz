@@ -1166,22 +1166,26 @@ const IdeaDeleteDialog: FC = () => (
 const AddIdeasForm: FC<{ id: string; token: string; remaining: number }> = (props) => (
   <form class="add-ideas-form" method="post" action={`/ui/studies/${props.id}/ideas`} data-add-ideas>
     <input type="hidden" name="_csrf" value={props.token} />
-    <label for="add-ideas-count">Acrescentar ideias</label>
-    <input
-      id="add-ideas-count"
-      type="number"
-      name="count"
-      min="1"
-      max={String(props.remaining)}
-      value="1"
-      required
-    />
-    <span class="hint">
-      ate {props.remaining}; o estudo fecha em {MAX_IDEAS_PER_STUDY}
-    </span>
-    <button type="submit" class="btn btn-primary">
-      Adicionar
-    </button>
+    <div class="field">
+      <label for="add-ideas-count">Acrescentar ideias</label>
+      <input
+        id="add-ideas-count"
+        type="number"
+        name="count"
+        min="1"
+        max={String(props.remaining)}
+        value="1"
+        required
+      />
+      <span class="hint">
+        até {props.remaining}; o estudo fecha em {MAX_IDEAS_PER_STUDY}
+      </span>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">
+        Adicionar
+      </button>
+    </div>
   </form>
 );
 

@@ -398,7 +398,11 @@ describe("paginas da interface", () => {
 describe("marca, renomear, progresso humano, falha e consumo", () => {
   test("a marca no cabecalho leva de volta para a lista", async () => {
     const body = await (await harness.app.request("/")).text();
-    expect(body).toContain('<h1><a href="/">GoodBizz</a></h1>');
+    expect(body).toContain('<h1><a href="/"><svg class="brand-mark"');
+    expect(body).toContain("</svg><span>GoodBizz</span></a></h1>");
+    expect(body).toContain('<link rel="icon" href="/favicon.svg" type="image/svg+xml"/>');
+    expect(body).toContain('<link rel="icon" href="/favicon.png" sizes="64x64" type="image/png"/>');
+    expect(body).toContain('<link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180"/>');
   });
 
   test("o detalhe oferece o dialogo de renomear e a rota sem JS com CSRF", async () => {

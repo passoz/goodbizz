@@ -25,6 +25,9 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/drizzle ./drizzle
 COPY --from=build /app/package.json ./package.json
+# Rasterios da marca (favicon.ico/png, apple-touch-icon): servidos por src/infrastructure/http
+# /static.ts a partir de <cwd>/public, e o cwd da imagem e /app.
+COPY public ./public
 RUN mkdir -p /app/data && chown -R bun:bun /app
 USER bun
 EXPOSE 3000
