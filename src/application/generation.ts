@@ -7,6 +7,7 @@
  */
 import { ValidationError } from "../domain/errors.ts";
 import { extractJson } from "../infrastructure/json.ts";
+import { studySubject } from "../domain/naming.ts";
 import type { LlmClient } from "../domain/ports.ts";
 import type { Idea, IdeaEvaluation, StudyConfig } from "../domain/types.ts";
 import { BRIEF_SYSTEM_PROMPT, DOC_SYSTEM_PROMPT, IDEAS_SYSTEM_PROMPT } from "./prompts.ts";
@@ -51,7 +52,7 @@ export function parseIdeas(data: unknown): Idea[] {
 /** Writes a short market brief for the configured niche. */
 export async function generateBrief(llm: LlmClient, cfg: StudyConfig): Promise<string> {
   const user =
-    `Nicho: ${cfg.niche}\n` +
+    `Nicho: ${studySubject(cfg)}\n` +
     `Cidade ou região alvo: ${cfg.city || "não informada"}\n` +
     `Ticket mensal considerado: R$ ${cfg.monthlyTicket}\n`;
   const text = await llm.generateText(BRIEF_SYSTEM_PROMPT, user);
@@ -77,7 +78,7 @@ export async function generateIdeas(
         "Gere ideias distintas das existentes, inclusive no nome.\n\n"
       : "";
   const user =
-    `Nicho: ${cfg.niche}\n` +
+    `Nicho: ${studySubject(cfg)}\n` +
     `Cidade ou região alvo: ${cfg.city || "não informada"}\n` +
     `Ticket mensal considerado: R$ ${cfg.monthlyTicket}\n\n` +
     `Brief de mercado:\n${brief}\n\n` +
@@ -110,7 +111,7 @@ export function dataBlock(evaluation: IdeaEvaluation, cfg: StudyConfig): string 
   return [
     `Ideia: ${evaluation.name} (setor: ${evaluation.sector || "não informado"})`,
     `Descrição: ${evaluation.description}`,
-    `Nicho: ${cfg.niche}` + (cfg.city ? ` | Cidade/região: ${cfg.city}` : ""),
+    `Nicho: ${studySubject(cfg)}` + (cfg.city ? ` | Cidade/região: ${cfg.city}` : ""),
     `Ticket assumido: R$ ${cfg.monthlyTicket}/mês (R$ ${cfg.monthlyTicket * 12}/ano)`,
     "",
     `ÍNDICE DE AÇÃO: ${evaluation.index} | TIER: ${evaluation.tier}`,

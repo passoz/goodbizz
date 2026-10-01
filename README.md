@@ -3,7 +3,8 @@
 Um prompt pequeno entra, um estudo de negócio completo sai — agora como **serviço Bun/TypeScript**:
 CLI, API HTTP e interface web sobre a mesma lógica, com persistencia SQLite.
 
-Voce descreve um nicho de mercado em uma frase. A ferramenta gera ideias de produto, avalia cada uma
+Voce informa um **titulo curto** (o nicho, ate 50 caracteres, com cada palavra capitalizada) e, se quiser,
+uma **descricao de contexto** que entra no prompt junto do titulo sem aparecer no cabecalho. A ferramenta gera ideias de produto, avalia cada uma
 em um **decisor System One** (modelo probabilistico que mede chances reais em vez de alucinar texto) e
 redige planos de negócio executivos: estratégia comercial, marketing, precificação, análise SWOT,
 Business Model Canvas, 5 Forcas de Porter, matriz de risco, roadmap de implantacao e KPIs.
@@ -24,6 +25,7 @@ src/
     errors.ts        DomainError + codigo/status HTTP por classe
     pain.ts          sondas e limiares calibrados
     hash.ts          sha256 deterministico (mock e cache)
+    naming.ts        titulo do estudo (Title Case, limite de 50) e sujeito concatenado com a descricao
   application/       casos de uso
     generate-study.ts  pipeline brief -> ideias -> avaliacao -> dor -> documentos -> relatorios -> html
     study-service.ts   fachada usada pela CLI, pela API e pela web
@@ -119,7 +121,9 @@ bun run cli help
 `bin/goodbizz` e o dispatcher (pode ser linkado no `PATH`); ele aceita `generate|gerar|study|estudo`,
 `diagnose|diagnosticar`, `recalibrate|recalibrar`, `serve|serviço|server` e `help|ajuda`.
 
-Flags de `generate` (com aliases do baseline): `--niche/--nicho`, `--city/--cidade`, `--ticket`,
+Flags de `generate` (com aliases do baseline): `--niche/--nicho` (o titulo do estudo: ate 50 caracteres
+digitados, cada palavra capitalizada), `--description/--descricao` (contexto concatenado ao titulo nos
+prompts), `--city/--cidade`, `--ticket`,
 `--ideas/--ideias`, `--output/--saida`, `--ideas-file/--ideias-arquivo`,
 `--pain-method/--método-dor`, `--eval-only/--so-avaliar`, `--mock`, `--mock-llm`,
 `--mock-decider/--mock-decisor`, `--pdf`, `--concurrency/--paralelo`, `--timeout` (padrão: `GOODBIZZ_LLM_TIMEOUT`, 300 s), `--llm-url`,
@@ -138,7 +142,7 @@ estudo/
 ├── 00-tabelao.md          # tabela comparativa de todos os indicadores
 ├── 00-tabelao.csv         # a mesma tabela para planilha
 ├── dados.json             # dump completo (chaves do baseline, consumivel pelo recalibrate)
-├── .cache.db              # cache de respostas por chave hash (SQLite)
+├── .cache.db              # cache de respostas por chave hash, escopada pelo id do estudo (SQLite)
 ├── 01-<ideia-campea>/README.md   # plano completo da ideia #1 do ranking
 ├── 02-<segunda-ideia>/README.md
 ├── estudo-completo.html   # com --pdf
@@ -151,32 +155,41 @@ estudo/
 
 Prefixo `/api`. Sem CSRF (autentique no proxy, se necessário).
 
-| Método   | Rota                             | Efeito                                                                         |
-| -------- | -------------------------------- | ------------------------------------------------------------------------------ |
-| `GET`    | `/api/config`                    | quais provedores estao configurados (booleanos)                                |
-| `POST`   | `/api/studies`                   | cria um estudo e inicia a execucao (201)                                       |
-| `GET`    | `/api/studies`                   | lista os estudos com estado e topo do ranking                                  |
-| `GET`    | `/api/studies/:id`               | detalhe: avaliações ordenadas, resumo, artefatos, **consumo e custo estimado** |
-| `PATCH`  | `/api/studies/:id`               | renomeia o estudo (`{"niche":"..."}`); `422` inválido, `404` inexistente       |
-| `POST`   | `/api/studies/:id/run`           | reexecuta o pipeline do estudo                                                 |
-| `DELETE` | `/api/studies/:id`               | apaga o estudo, as avaliações e os artefatos (`204`; `409` se estiver rodando) |
-| `GET`    | `/api/studies/:id/artifacts`     | lista os caminhos relativos dos artefatos                                      |
-| `GET`    | `/api/studies/:id/artifacts.zip` | baixa tudo em um ZIP (pasta com o slug do nicho)                               |
-| `GET`    | `/api/studies/:id/artifacts/*`   | conteudo do artefato (markdown, csv, json, html, pdf)                          |
-| `POST`   | `/api/diagnose`                  | coerencia e estabilidade das sondas                                            |
-| `POST`   | `/api/recalibrate`               | busca em grade de limiares sobre `dados.json`                                  |
-| `GET`    | `/healthz`                       | liveness (nao toca o banco)                                                    |
-| `GET`    | `/readyz`                        | readiness (`select 1` no SQLite)                                               |
+| Método   | Rota                             | Efeito                                                                                            |
+| -------- | -------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `GET`    | `/api/config`                    | quais provedores estao configurados (booleanos)                                                   |
+| `POST`   | `/api/studies`                   | cria um estudo e inicia a execucao (201); aceita `description` e limita o `niche` a 50 caracteres |
+| `GET`    | `/api/studies`                   | lista os estudos com estado e topo do ranking                                                     |
+| `GET`    | `/api/studies/:id`               | detalhe: avaliações ordenadas, resumo, artefatos, **consumo e custo estimado**                    |
+| `PATCH`  | `/api/studies/:id`               | renomeia o estudo (`{"niche":"..."}`); `422` inválido, `404` inexistente                          |
+| `POST`   | `/api/studies/:id/run`           | reexecuta o pipeline do estudo                                                                    |
+| `DELETE` | `/api/studies/:id`               | apaga o estudo, as avaliações e os artefatos (`204`; `409` se estiver rodando)                    |
+| `GET`    | `/api/studies/:id/artifacts`     | lista os caminhos relativos dos artefatos                                                         |
+| `GET`    | `/api/studies/:id/artifacts.zip` | baixa tudo em um ZIP (pasta com o slug do nicho)                                                  |
+| `GET`    | `/api/studies/:id/artifacts/*`   | conteudo do artefato (markdown, csv, json, html, pdf)                                             |
+| `POST`   | `/api/diagnose`                  | coerencia e estabilidade das sondas                                                               |
+| `POST`   | `/api/recalibrate`               | busca em grade de limiares sobre `dados.json`                                                     |
+| `GET`    | `/healthz`                       | liveness (nao toca o banco)                                                                       |
+| `GET`    | `/readyz`                        | readiness (`select 1` no SQLite)                                                                  |
 
 ```bash
 curl -s localhost:3000/api/studies \
   -H 'content-type: application/json' \
-  -d '{"niche":"clinicas odontologicas em cidade media","numIdeas":3,"mock":true}'
+  -d '{"niche":"clinicas odontologicas","description":"bairro, uma cadeira, agenda no papel","numIdeas":3,"mock":true}'
 curl -s localhost:3000/api/studies/<id> | jq '.evaluations[].name, .evaluations[].tier'
 ```
 
 Erros: `422` payload invalido (com detalhes de validação), `404` estudo ou artefato inexistente,
 `500` erro interno sem stack trace. Nenhuma resposta inclui caminho de arquivo ou credencial.
+
+**Titulo e descricao.** O `niche` vira o cabecalho do estudo: o limite de 50 caracteres vale sobre o
+texto digitado (`422` acima disso) e cada palavra e capitalizada ao ser gravada. A `description`
+(ate 300 caracteres) e concatenada ao titulo antes de cada chamada a provedor — ela orienta o brief,
+as ideias, o bloco de dados e o decisor, e nao aparece como texto proprio na tela.
+
+**Cache com dono.** Cada estudo grava as respostas de API sob o proprio id (`<id>::<hash>`). Dois
+estudos com o mesmo titulo nunca compartilham resposta, excluir um estudo apaga as respostas dele, e
+reexecutar um estudo que falhou retoma do ponto onde parou, sem repetir as fases ja concluidas.
 
 ---
 

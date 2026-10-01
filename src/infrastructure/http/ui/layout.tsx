@@ -550,6 +550,51 @@ h3 { font-size: var(--fs-h3); color: var(--paper); font-weight: 620; margin: 28p
   box-shadow: 0 0 0 3px rgb(159 219 67 / 0.22);
 }
 .field .hint { color: var(--muted); }
+/* A textarea usa a mesma caixa dos inputs: sem esta regra ela volta a ser pintada pelo SO e
+   vira o unico controle com cara de sistema no formulario. */
+.field textarea {
+  width: 100%;
+  min-height: 74px;
+  resize: vertical;
+  padding: 13px 15px;
+  color: var(--paper);
+  caret-color: var(--accent);
+  font: var(--fs-body)/1.4 var(--sans);
+  background: rgb(10 8 8 / 0.42);
+  border: 1px solid oklch(1 0 0 / 0.16);
+  border-radius: var(--r-control);
+  appearance: none;
+  -webkit-appearance: none;
+  transition: border-color 150ms, box-shadow 150ms, background-color 150ms;
+}
+.field textarea::placeholder { color: var(--faint); }
+.field textarea:hover { border-color: oklch(1 0 0 / 0.24); }
+.field textarea:focus {
+  border-color: rgb(159 219 67 / 0.85);
+  background: rgb(10 8 8 / 0.6);
+  box-shadow: 0 0 0 3px rgb(159 219 67 / 0.22);
+}
+html[data-theme="light"] .field textarea {
+  background: rgb(255 255 255 / 0.8);
+  border-color: oklch(0 0 0 / 0.14);
+  color: var(--paper);
+}
+html[data-theme="light"] .field textarea:focus { background: #fff; }
+/* ── Configuracao dos provedores: um bloco por provedor ────────────────── */
+/* A legenda nomeia o PROVEDOR, nao o campo: e ela que diz a que sistema cada linha pertence.
+   O bloco separa os dois com uma linha, em vez de deixar seis linhas iguais na mesma grade. */
+.settings-group { border: 0; padding: 0; margin: 0 0 24px; min-width: 0; }
+.settings-group legend {
+  padding: 0; margin: 0 0 6px;
+  font: 620 var(--fs-h3)/1.25 var(--sans); color: #fff; letter-spacing: -0.015em;
+}
+.settings-group .group-note {
+  margin: 0 0 18px; max-width: 74ch; font-size: var(--fs-small); color: var(--muted);
+}
+.settings-group + .settings-group { padding-top: 22px; border-top: 1px solid oklch(1 0 0 / 0.12); }
+.settings-group + .settings-group legend { margin-top: 0; }
+html[data-theme="light"] .settings-group legend { color: var(--paper); }
+html[data-theme="light"] .settings-group + .settings-group { border-top-color: oklch(0 0 0 / 0.1); }
 /* Checkbox proprio: o do SO nao acompanha o raio nem a paleta e ficava como o unico item com cara
    de sistema na tela. appearance: none + marca desenhada mudam so a pintura — o <input> real
    (valor, form, teclado, leitor de tela) continua o mesmo. */

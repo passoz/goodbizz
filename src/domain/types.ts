@@ -123,7 +123,10 @@ export interface StudySummary {
 }
 
 export interface StudyConfig {
+  /** Título exibido do estudo (normalizado, no máximo 50 caracteres digitados). */
   niche: string;
+  /** Contexto do estudo, concatenado ao título antes de toda chamada a provedor. Vazio = não informado. */
+  description: string;
   city: string;
   monthlyTicket: number;
   numIdeas: number;
@@ -144,6 +147,13 @@ export interface StudyConfig {
   deciderUrl: string;
   deciderModel: string;
   deciderKey: string;
+  /**
+   * Semente do cache de respostas: o id do estudo. Vazio na CLI de tiro único.
+   *
+   * É ela que separa dois estudos de mesmo título — criar, excluir e recriar devolve conteúdo
+   * novo — e que preserva a retomada, porque o id sobrevive à reexecução e só morre na exclusão.
+   */
+  cacheSeed: string;
 }
 
 export type StudyState = "pending" | "running" | "done" | "failed";
@@ -190,6 +200,8 @@ export interface StudyRecord {
   createdAt: string;
   updatedAt: string;
   niche: string;
+  /** Contexto informado na criação; entra no prompt ao lado do título, nunca no título. */
+  description: string;
   city: string;
   monthlyTicket: number;
   numIdeas: number;

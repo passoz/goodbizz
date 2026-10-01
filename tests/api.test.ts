@@ -44,12 +44,52 @@ describe("study API", () => {
     expect(response.status).toBe(201);
     const body = (await response.json()) as { id: string; niche: string; numIdeas: number };
     expect(body.id).toBeString();
-    expect(body.niche).toBe("oficinas mecanicas de bairro");
+    // O título volta normalizado: capitalizado por palavra.
+    expect(body.niche).toBe("Oficinas Mecanicas De Bairro");
     expect(body.numIdeas).toBe(3);
 
     const listing = await api().request("/studies");
     const list = (await listing.json()) as { studies: Array<{ id: string }> };
     expect(list.studies.map((study) => study.id)).toContain(body.id);
+  });
+
+  test("aceita descricao de contexto e devolve no payload publico", async () => {
+    const response = await api().request("/studies", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        niche: "clinicas odontologicas",
+        description: "bairro, uma cadeira, agenda no papel",
+        numIdeas: 2,
+        mock: true,
+      }),
+    });
+    expect(response.status).toBe(201);
+    const body = (await response.json()) as { niche: string; description: string };
+    expect(body.niche).toBe("Clinicas Odontologicas");
+    expect(body.description).toBe("bairro, uma cadeira, agenda no papel");
+  });
+
+  test("recusa nicho acima de 50 caracteres citando o limite", async () => {
+    const response = await api().request("/studies", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ niche: "x".repeat(51), mock: true }),
+    });
+    expect(response.status).toBe(422);
+    const body = (await response.json()) as { error: string; message: string };
+    expect(body.error).toBe("VALIDATION_FAILED");
+    expect(body.message).toContain("50");
+    expect(body.message).toContain("descrição");
+  });
+
+  test("recusa descricao acima do teto do contrato", async () => {
+    const response = await api().request("/studies", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ niche: "clinicas", description: "d".repeat(301), mock: true }),
+    });
+    expect(response.status).toBe(422);
   });
 
   test("rejects an invalid payload with 422 and validation details", async () => {
@@ -239,13 +279,13 @@ describe("renomear estudo", () => {
     });
     expect(response.status).toBe(200);
     const body = (await response.json()) as { niche: string };
-    expect(body.niche).toBe("padarias artesanais do centro");
+    expect(body.niche).toBe("Padarias Artesanais Do Centro");
 
     const listing = (await (await api().request("/studies")).json()) as {
       studies: Array<{ id: string; niche: string }>;
     };
     expect(listing.studies.find((study) => study.id === record.id)?.niche).toBe(
-      "padarias artesanais do centro",
+      "Padarias Artesanais Do Centro",
     );
   });
 

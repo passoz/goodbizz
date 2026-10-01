@@ -9,6 +9,8 @@ export const studies = sqliteTable("studies", {
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
   niche: text("niche").notNull(),
+  /** Contexto do estudo, concatenado ao título nos prompts. Vazio em estudos anteriores. */
+  description: text("description").notNull().default(""),
   city: text("city").notNull().default(""),
   monthlyTicket: integer("monthly_ticket").notNull(),
   numIdeas: integer("num_ideas").notNull(),

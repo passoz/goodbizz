@@ -3,7 +3,8 @@
  * or API payload. Mirrors the validation rules of the Python baseline's Config.
  */
 import { loadEnv } from "./env.ts";
-import { ConfigError } from "../domain/errors.ts";
+import { ConfigError, ValidationError } from "../domain/errors.ts";
+import { nicheLengthError, studySubject, titleCase } from "../domain/naming.ts";
 import type { Logger } from "../domain/ports.ts";
 import type { PainMethod, StudyConfig } from "../domain/types.ts";
 import pino from "pino";
@@ -21,6 +22,8 @@ export function createLogger(level?: string): Logger {
 
 export interface StudyConfigOverrides {
   niche: string;
+  /** Contexto do estudo; entra concatenado ao título nos prompts e no contexto do decisor. */
+  description?: string;
   city?: string;
   monthlyTicket?: number;
   numIdeas?: number;
@@ -41,6 +44,8 @@ export interface StudyConfigOverrides {
   deciderUrl?: string;
   deciderModel?: string;
   deciderKey?: string;
+  /** Semente do cache: o id do estudo no serviço; vazio na CLI de tiro único. */
+  cacheSeed?: string;
 }
 
 function normalizePainMethod(value: string): PainMethod {
@@ -53,10 +58,17 @@ function normalizePainMethod(value: string): PainMethod {
  */
 export function resolveStudyConfig(overrides: StudyConfigOverrides): StudyConfig {
   const env = loadEnv();
-  const niche = (overrides.niche ?? "").trim();
-  if (!niche) {
+  const typedNiche = (overrides.niche ?? "").trim();
+  if (!typedNiche) {
     throw new ConfigError("please provide the niche (--niche)");
   }
+  // O limite vale sobre o texto digitado (mesmo `maxlength` da interface); a 422 chega antes
+  // porque o schema da borda confere a mesma regra.
+  const lengthError = nicheLengthError(typedNiche);
+  if (lengthError !== null) {
+    throw new ValidationError(lengthError);
+  }
+  const niche = titleCase(typedNiche);
 
   const mock = overrides.mock ?? false;
   const mockDecider = mock || (overrides.mockDecider ?? false);
@@ -64,6 +76,8 @@ export function resolveStudyConfig(overrides: StudyConfigOverrides): StudyConfig
 
   const cfg: StudyConfig = {
     niche,
+    description: (overrides.description ?? "").trim(),
+    cacheSeed: overrides.cacheSeed ?? "",
     city: (overrides.city ?? "").trim(),
     monthlyTicket: overrides.monthlyTicket ?? 300,
     numIdeas: overrides.numIdeas ?? 8,
@@ -99,10 +113,10 @@ export function resolveStudyConfig(overrides: StudyConfigOverrides): StudyConfig
  * Market context phrase used as the `state` of every decision question.
  * Kept byte-identical to the baseline só the decider sees the same prompt.
  */
-export function studyContext(cfg: Pick<StudyConfig, "niche" | "city">): string {
+export function studyContext(cfg: Pick<StudyConfig, "niche" | "city" | "description">): string {
   const targetCity = cfg.city ? ` Target city/region: ${cfg.city}.` : "";
   return (
-    `Contexto do mercado: ${cfg.niche}.${targetCity} ` +
+    `Contexto do mercado: ${studySubject(cfg)}.${targetCity} ` +
     "Donos operacionais, atendem no balcao, sem tempo, sem equipe de TI, " +
     "orcamento curto, o canal principal e o WhatsApp."
   );

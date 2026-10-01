@@ -289,11 +289,13 @@ export function buildUiApp(deps: UiDeps): Hono {
     if (!niche) {
       return c.json({ error: "VALIDATION_FAILED", message: "o nicho é obrigatório" }, 422);
     }
+    const description = typeof body["description"] === "string" ? body["description"].trim() : "";
     const city = typeof body["city"] === "string" ? body["city"].trim() : "";
     const ticket = Number(body["monthlyTicket"]);
     const ideas = Number(body["numIdeas"]);
     const cfg = resolveStudyConfig({
       niche,
+      description,
       city,
       mock: body["mock"] !== undefined,
       monthlyTicket: Number.isFinite(ticket) && ticket > 0 ? Math.floor(ticket) : undefined,

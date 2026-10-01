@@ -107,25 +107,28 @@ describe("study configuration", () => {
 
   test("normalises pain method and trims text fields", () => {
     const cfg = resolveStudyConfig({
-      niche: "  clinicas  ",
+      niche: "  clinicas odontologicas  ",
       city: "  Regiao dos Lagos  ",
       painMethod: "escolha",
       mock: true,
     });
-    expect(cfg.niche).toBe("clinicas");
+    // O título é a forma exibida: capitalizado por palavra, com os espaços normalizados.
+    expect(cfg.niche).toBe("Clinicas Odontologicas");
     expect(cfg.city).toBe("Regiao dos Lagos");
     expect(cfg.painMethod).toBe("choice");
 
-    const legacy = resolveStudyConfig({ niche: "x", painMethod: "noul", mock: true });
+    const legacy = resolveStudyConfig({ niche: "clinicas", painMethod: "noul", mock: true });
     expect(legacy.painMethod).toBe("noul");
   });
 
   test("builds the baseline market context phrase", () => {
-    expect(studyContext({ niche: "pousadas", city: "" })).toBe(
+    expect(studyContext({ niche: "pousadas", description: "", city: "" })).toBe(
       "Contexto do mercado: pousadas. Donos operacionais, atendem no balcao, sem tempo, " +
         "sem equipe de TI, orcamento curto, o canal principal e o WhatsApp.",
     );
-    expect(studyContext({ niche: "pousadas", city: "Paraty" })).toContain("Target city/region: Paraty.");
+    expect(studyContext({ niche: "pousadas", description: "", city: "Paraty" })).toContain(
+      "Target city/region: Paraty.",
+    );
   });
 });
 

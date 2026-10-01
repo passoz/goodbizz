@@ -25,6 +25,8 @@ import {
 function makeConfig(overrides: Partial<StudyConfig> = {}): StudyConfig {
   return {
     niche: "clinicas",
+    description: "",
+    cacheSeed: "",
     city: "",
     monthlyTicket: 300,
     numIdeas: 6,
@@ -235,6 +237,16 @@ class MemoryCacheStore implements CacheStore {
   }
   async put(key: string, value: unknown): Promise<void> {
     this.entries.set(key, value);
+  }
+  async purge(scope: string): Promise<number> {
+    let removed = 0;
+    for (const key of [...this.entries.keys()]) {
+      if (key.startsWith(`${scope}::`)) {
+        this.entries.delete(key);
+        removed += 1;
+      }
+    }
+    return removed;
   }
   async count(): Promise<number> {
     return this.entries.size;

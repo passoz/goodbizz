@@ -51,6 +51,36 @@ export const PROVIDER_FIELDS: Array<{
   },
 ];
 
+/**
+ * Agrupamento exibido na página de configurações: cada provedor tem o seu bloco, com legenda que
+ * nomeia o provedor e explica a função dos campos. Juntos, os `keys` dos grupos cobrem todos os
+ * `PROVIDER_FIELDS` — a página não pode esconder um campo por esquecimento.
+ */
+export interface ProviderGroup {
+  id: string;
+  /** Legenda do bloco: nomeia o provedor, não o campo. */
+  title: string;
+  description: string;
+  keys: Array<keyof ProviderConfig>;
+}
+
+export const PROVIDER_GROUPS: ProviderGroup[] = [
+  {
+    id: "llm",
+    title: "Provedor de texto (LLM)",
+    description:
+      "Escreve o brief e os planos de cada ideia. Todo número do texto passa pelo guardrail da medição.",
+    keys: ["llmBaseUrl", "llmModel", "llmApiKey"],
+  },
+  {
+    id: "decider",
+    title: "Provedor de decisão (System One)",
+    description:
+      "Responde as probabilidades que viram índice de ação, tier e natureza da dor. Não escreve prosa.",
+    keys: ["deciderUrl", "deciderModel", "deciderApiKey"],
+  },
+];
+
 function usesSetting(value: string | undefined): value is string {
   return typeof value === "string" && value.trim().length > 0;
 }

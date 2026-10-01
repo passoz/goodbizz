@@ -5,7 +5,7 @@
  * writes prose around the measured data block and is checked against it afterwards.
  */
 import { buildArtifactFiles } from "./artifacts.ts";
-import { cacheKeyFor } from "./cache.ts";
+import { scopedKey } from "./cache.ts";
 import type { StudyCache } from "./cache.ts";
 import { loadIdeas } from "./dados.ts";
 import { evaluateIdea } from "./evaluate.ts";
@@ -123,7 +123,8 @@ export async function generateAddition(
   progress(`[1/6] Reaproveitando o brief ja gravado (${brief.length} caracteres)`);
 
   // O `kind` diferente ja separa a adicao do estudo original; o `requestId` separa um pedido do outro.
-  const ideasKey = cacheKeyFor(
+  const ideasKey = scopedKey(
+    cfg.cacheSeed,
     "ideias-adicao",
     cfg.niche,
     cfg.city,
@@ -142,7 +143,8 @@ export async function generateAddition(
     // O `requestId` entra na chave: uma ideia que reapareça num pedido novo precisa de um id novo.
     // Reaproveitar a avaliacao em cache traria de volta o id ja gravado da ideia existente e o
     // indice unico (study_id, idea_id) derrubaria a gravacao.
-    const key = cacheKeyFor(
+    const key = scopedKey(
+      cfg.cacheSeed,
       "aval-adicao",
       cfg.niche,
       cfg.city,
@@ -193,7 +195,8 @@ export async function generateAddition(
 
   // Só as novas ideias ganham documento: reescrever as antigas custaria o mesmo token de novo.
   const written = await mapLimit(newEvaluations, cfg.concurrency, async (evaluation) => {
-    const key = cacheKeyFor(
+    const key = scopedKey(
+      cfg.cacheSeed,
       "doc",
       cfg.niche,
       String(cfg.monthlyTicket),
@@ -263,7 +266,7 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
     mockDecider: cfg.mockDecider,
   });
 
-  const briefKey = cacheKeyFor("brief", cfg.niche, cfg.city);
+  const briefKey = scopedKey(cfg.cacheSeed, "brief", cfg.niche, cfg.city);
   let brief = await cache.get<string>(briefKey);
   if (brief === null) {
     brief = await generateBrief(llm, cfg);
@@ -276,7 +279,7 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
     ideas = loadIdeas(cfg.ideasFile);
     progress(`[2/6] ${ideas.length} ideias carregadas do arquivo ${cfg.ideasFile}`);
   } else {
-    const ideasKey = cacheKeyFor("ideias", cfg.niche, cfg.city, String(cfg.numIdeas));
+    const ideasKey = scopedKey(cfg.cacheSeed, "ideias", cfg.niche, cfg.city, String(cfg.numIdeas));
     const cached = await cache.get<Idea[]>(ideasKey);
     if (cached === null) {
       ideas = await generateIdeas(llm, cfg, brief, cfg.numIdeas);
@@ -288,7 +291,8 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
   }
 
   const evaluations = await mapLimit(ideas, cfg.concurrency, async (idea) => {
-    const key = cacheKeyFor(
+    const key = scopedKey(
+      cfg.cacheSeed,
       "aval",
       cfg.niche,
       cfg.city,
@@ -351,7 +355,14 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
 
   const written = await mapLimit(summary.ordered, cfg.concurrency, async (ordered) => {
     const evaluation = byName.get(ordered.name) as StudyIdea;
-    const key = cacheKeyFor("doc", cfg.niche, String(cfg.monthlyTicket), ordered.name, String(ordered.index));
+    const key = scopedKey(
+      cfg.cacheSeed,
+      "doc",
+      cfg.niche,
+      String(cfg.monthlyTicket),
+      ordered.name,
+      String(ordered.index),
+    );
     let text = await cache.get<string>(key);
     if (text === null) {
       text = await generateDocument(llm, evaluation, cfg, brief);

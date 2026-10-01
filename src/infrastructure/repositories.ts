@@ -147,6 +147,7 @@ export class SqliteStudyRepository implements StudyRepository {
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
       niche: record.niche,
+      description: record.description,
       city: record.city,
       monthlyTicket: record.monthlyTicket,
       numIdeas: record.numIdeas,
@@ -169,6 +170,7 @@ export class SqliteStudyRepository implements StudyRepository {
           createdAt: values.createdAt,
           updatedAt: values.updatedAt,
           niche: values.niche,
+          description: values.description,
           city: values.city,
           monthlyTicket: values.monthlyTicket,
           numIdeas: values.numIdeas,
@@ -191,6 +193,7 @@ export class SqliteStudyRepository implements StudyRepository {
       updatedAt: patch.updatedAt ?? new Date().toISOString(),
     };
     if (patch.niche !== undefined) set.niche = patch.niche;
+    if (patch.description !== undefined) set.description = patch.description;
     if (patch.city !== undefined) set.city = patch.city;
     if (patch.monthlyTicket !== undefined) set.monthlyTicket = patch.monthlyTicket;
     if (patch.numIdeas !== undefined) set.numIdeas = patch.numIdeas;
@@ -226,6 +229,7 @@ export class SqliteStudyRepository implements StudyRepository {
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
       niche: row.niche,
+      description: row.description,
       city: row.city,
       monthlyTicket: row.monthlyTicket,
       numIdeas: row.numIdeas,

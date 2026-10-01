@@ -118,6 +118,24 @@ describe("generateStudy", () => {
     handle.sqlite.close();
   });
 
+  test("estudos de mesmo titulo nao compartilham cache, e o mesmo estudo retoma o dele", async () => {
+    const { handle, cache } = harness();
+    const deps = { llm: new LlmMock(), decider: new DeciderMock(), cache, logger: silentLogger() };
+
+    await generateStudy(config({ cacheSeed: "estudo-a" }), deps);
+
+    // Estudo novo com a mesma configuração: nenhuma das respostas de A pode servir B.
+    const before = cache.hits;
+    await generateStudy(config({ cacheSeed: "estudo-b" }), deps);
+    expect(cache.hits - before).toBe(0);
+
+    // Reexecutar o mesmo estudo continua reaproveitando o cache dele (retomada).
+    const beforeRerun = cache.hits;
+    await generateStudy(config({ cacheSeed: "estudo-a" }), deps);
+    expect(cache.hits - beforeRerun).toBeGreaterThan(0);
+    handle.sqlite.close();
+  });
+
   test("reports guardrail issues when the generated document breaks the contract", async () => {
     const { handle, cache } = harness();
     const broken: LlmClient = {

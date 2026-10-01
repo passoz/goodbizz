@@ -21,6 +21,8 @@ const SECTION_HEADINGS = [
 function baseConfig(overrides: Partial<StudyConfig> = {}): StudyConfig {
   return {
     niche: "oficinas mecanicas",
+    description: "",
+    cacheSeed: "",
     city: "Niteroi",
     monthlyTicket: 300,
     numIdeas: 6,

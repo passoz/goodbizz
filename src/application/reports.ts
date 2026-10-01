@@ -4,6 +4,7 @@
  *
  * Os textos e o alinhamento das colunas são copiados do baseline Python — não altere.
  */
+import { studySubject } from "../domain/naming.ts";
 import type { IdeaEvaluation, StudyConfig, StudySummary } from "../domain/types.ts";
 
 /** Normaliza um nome para pasta: NFD, sem acentos, minusculo, `-` no lugar do resto. */
@@ -23,7 +24,8 @@ export function folderName(rank: number, name: string): string {
 
 /** Aviso de escopo repetido no topo de todo relatório. */
 export function scopeNotice(cfg: StudyConfig): string {
-  const location = cfg.city ? `${cfg.niche} em ${cfg.city}` : cfg.niche;
+  const subject = studySubject(cfg);
+  const location = cfg.city ? `${subject} em ${cfg.city}` : subject;
   return (
     "> **Escopo e método:** este material foi gerado pelo goodbizz a partir do " +
     `nicho **${location}**. Os indicadores vêm de um decisor (System One) e o texto, de um ` +

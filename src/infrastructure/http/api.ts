@@ -12,12 +12,22 @@ import { providerSettingsView } from "../../config/providers.ts";
 import { estimateCost } from "../../application/costs.ts";
 import { explainFailure } from "../../application/failures.ts";
 import { ValidationError } from "../../domain/errors.ts";
+import { MAX_DESCRIPTION_LENGTH, MAX_NICHE_LENGTH, MIN_NICHE_LENGTH } from "../../domain/naming.ts";
 import type { Logger } from "../../domain/ports.ts";
 import type { StudyRecord } from "../../domain/types.ts";
 import { MAX_IDEAS_PER_STUDY, type StudyService } from "../../application/study-service.ts";
 
 const StudyInput = z.object({
-  niche: z.string().trim().min(2, "o nicho precisa de pelo menos 2 caracteres"),
+  niche: z
+    .string()
+    .trim()
+    .min(MIN_NICHE_LENGTH, `o nicho precisa de pelo menos ${MIN_NICHE_LENGTH} caracteres`)
+    .max(
+      MAX_NICHE_LENGTH,
+      `o nicho precisa ter no máximo ${MAX_NICHE_LENGTH} caracteres de título; mova o detalhe para a descrição`,
+    ),
+  /** Contexto do estudo: entra concatenado ao título nos prompts, nunca no título exibido. */
+  description: z.string().trim().max(MAX_DESCRIPTION_LENGTH).optional(),
   city: z.string().trim().optional(),
   monthlyTicket: z.number().int().positive().max(1_000_000).optional(),
   numIdeas: z.number().int().min(1).max(40).optional(),
@@ -47,7 +57,11 @@ const ProviderSettingsPatchInput = z
   .strict();
 
 const RenameInput = z.object({
-  niche: z.string().trim().min(2, "o nicho precisa de pelo menos 2 caracteres"),
+  niche: z
+    .string()
+    .trim()
+    .min(MIN_NICHE_LENGTH, `o nicho precisa de pelo menos ${MIN_NICHE_LENGTH} caracteres`)
+    .max(MAX_NICHE_LENGTH, `o nicho precisa ter no máximo ${MAX_NICHE_LENGTH} caracteres`),
 });
 
 /**
@@ -95,6 +109,7 @@ function publicStudy(record: StudyRecord) {
     createdAt: record.createdAt,
     updatedAt: record.updatedAt,
     niche: record.niche,
+    description: record.description,
     city: record.city,
     monthlyTicket: record.monthlyTicket,
     numIdeas: record.numIdeas,

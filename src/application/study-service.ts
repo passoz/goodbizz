@@ -26,6 +26,7 @@ const SEPARADOR_PAGINA = '\n<hr style="page-break-after: always">\n';
 
 import { recalibrate, type RecalibrateReport } from "./recalibrate.ts";
 import { folderName, slug } from "./reports.ts";
+import { nicheLengthError, titleCase } from "../domain/naming.ts";
 
 import { fullHtml } from "./render.ts";
 import { mdToHtml } from "./render.ts";
@@ -93,6 +94,7 @@ export class StudyService {
       createdAt: now,
       updatedAt: now,
       niche: cfg.niche,
+      description: cfg.description,
       city: cfg.city,
       monthlyTicket: cfg.monthlyTicket,
       numIdeas: cfg.numIdeas,
@@ -144,6 +146,10 @@ export class StudyService {
     try {
       const cfg = resolveStudyConfig({
         niche: record.niche,
+        description: record.description,
+        // A semente é o id do estudo: separa dois estudos de mesmo título e preserva a retomada
+        // deste, porque o id sobrevive à reexecução e só morre na exclusão.
+        cacheSeed: record.id,
         city: record.city,
         monthlyTicket: record.monthlyTicket,
         numIdeas: record.numIdeas,
@@ -231,12 +237,15 @@ export class StudyService {
    * estudo é o id e as pastas das ideias vêm do rank + nome da ideia.
    */
   async rename(id: string, niche: string): Promise<StudyRecord> {
-    const clean = niche.trim();
-    if (clean.length < 2) {
-      throw new ValidationError("o nicho precisa de pelo menos 2 caracteres");
+    const typed = niche.trim();
+    const lengthError = nicheLengthError(typed);
+    if (lengthError !== null) {
+      throw new ValidationError(lengthError);
     }
     await this.get(id);
-    await this.options.repo.update(id, { niche: clean });
+    // A renomeação passa pela mesma normalização da criação: o título exibido é sempre a forma
+    // canônica, e não o texto que o operador digitou naquele momento.
+    await this.options.repo.update(id, { niche: titleCase(typed) });
     return this.get(id);
   }
 
@@ -250,6 +259,9 @@ export class StudyService {
       throw new ConflictError(`study ${id} is still running`);
     }
     rmSync(record.artifactDir, { recursive: true, force: true });
+    // As respostas de API do estudo morrem junto dele: sem isso, criar outro com o mesmo título
+    // seria servido pelo cache do estudo excluído.
+    await this.options.cache.store.purge(id);
     await this.options.repo.delete(id);
   }
 
@@ -440,6 +452,8 @@ export class StudyService {
   private configForRecord(record: StudyRecord, numIdeas: number): StudyConfig {
     return resolveStudyConfig({
       niche: record.niche,
+      description: record.description,
+      cacheSeed: record.id,
       city: record.city,
       monthlyTicket: record.monthlyTicket,
       numIdeas,
@@ -614,7 +628,7 @@ export class StudyService {
     const report = await diagnoseProbes(
       input.ideas,
       this.options.decider,
-      studyContext({ niche: input.niche, city: input.city ?? "" }),
+      studyContext({ niche: input.niche, description: "", city: input.city ?? "" }),
       input.threshold,
     );
     return { report, exitCode: diagnoseExitCode(report) };

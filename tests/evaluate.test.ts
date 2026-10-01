@@ -56,6 +56,8 @@ function evaluationDecider(profile: IdeaProfile): DeciderClient {
 function studyConfig(painMethod: StudyConfig["painMethod"] = "choice"): StudyConfig {
   return {
     niche: "pousadas de ate 20 quartos",
+    description: "",
+    cacheSeed: "",
     city: "Gramado",
     monthlyTicket: 300,
     numIdeas: 2,

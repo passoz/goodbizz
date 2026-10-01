@@ -7,8 +7,23 @@ import { cacheKey } from "../domain/hash.ts";
 /** Re-export of the domain cache key só application code has a single import point. */
 export const cacheKeyFor = cacheKey;
 
+/** Separador entre a semente do estudo e o hash dos parâmetros. */
+export const CACHE_SCOPE_SEPARATOR = "::";
+
+/**
+ * Chave de cache escopada: `semente::hash`.
+ *
+ * A semente é o id do estudo. Sem ela a chave é o hash puro (CLI de tiro único), e é o escopo que
+ * garante que dois estudos de mesmo título nunca compartilhem resposta.
+ */
+export function scopedKey(seed: string, ...parts: string[]): string {
+  const hash = cacheKeyFor(...parts);
+  return seed === "" ? hash : `${seed}${CACHE_SCOPE_SEPARATOR}${hash}`;
+}
+
 export class StudyCache {
-  private readonly store: CacheStore;
+  /** Port exposto para as operações que não têm estado próprio, como a purga de um estudo. */
+  readonly store: CacheStore;
   private localHits = 0;
 
   constructor(store: CacheStore) {

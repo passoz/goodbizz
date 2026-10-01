@@ -2,7 +2,7 @@
  * SQLite response cache adapter. Values are stored as JSON; a corrupted row is treated as a
  * cache miss so a bad entry can never break a study.
  */
-import { count, eq } from "drizzle-orm";
+import { count, eq, like } from "drizzle-orm";
 
 import type { Db } from "./db.ts";
 import { cacheEntries } from "./schema.ts";
@@ -44,6 +44,20 @@ export class SqliteCacheStore implements CacheStore {
         set: { valueJson, createdAt },
       })
       .run();
+  }
+
+  /**
+   * Remove as entradas do escopo. O escopo é o id do estudo (UUIDv7: hexadecimal e hífens), então
+   * nenhum curinga do `LIKE` aparece nele — não há o que escapar.
+   */
+  async purge(scope: string): Promise<number> {
+    if (scope === "") return 0;
+    const matches = like(cacheEntries.key, `${scope}::%`);
+    const row = this.db.select({ total: count() }).from(cacheEntries).where(matches).get();
+    const removed = row ? row.total : 0;
+    if (removed === 0) return 0;
+    this.db.delete(cacheEntries).where(matches).run();
+    return removed;
   }
 
   async count(): Promise<number> {

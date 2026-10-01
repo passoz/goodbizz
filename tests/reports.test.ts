@@ -19,6 +19,8 @@ import type {
 
 const config: StudyConfig = {
   niche: "Clinica Odontologica",
+  description: "",
+  cacheSeed: "",
   city: "Recife",
   monthlyTicket: 300,
   numIdeas: 3,

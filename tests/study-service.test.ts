@@ -20,7 +20,8 @@ import { folderName } from "../src/application/reports.ts";
 import { StudyService } from "../src/application/study-service.ts";
 import { loadEnv, resetEnv } from "../src/config/env.ts";
 import { resolveStudyConfig } from "../src/config/runtime.ts";
-import { ConflictError, NotFoundError, ValidationError } from "../src/domain/errors.ts";
+import { ConflictError, LlmError, NotFoundError, ValidationError } from "../src/domain/errors.ts";
+import type { LlmClient } from "../src/domain/ports.ts";
 import type { StudyConfig } from "../src/domain/types.ts";
 import { DeciderMock } from "../src/infrastructure/decider-mock.ts";
 import { openMigratedDatabase } from "../src/infrastructure/db.ts";
@@ -676,6 +677,109 @@ describe("regeracao do HTML completo (DEC-006)", () => {
       };
       expect(dados.ideias).toHaveLength(0);
       expect(Object.values(dados.medias).every((value) => Number.isFinite(value))).toBe(true);
+    } finally {
+      db.sqlite.close();
+    }
+  });
+});
+
+/**
+ * PWN 0004: o cache tem dono. Excluir o estudo purga as respostas dele, e reexecutar o mesmo
+ * estudo retoma o cache — os dois comportamentos são o que separa "estudo novo" de "retomada".
+ */
+describe("cache por estudo", () => {
+  /** Serviço com um LLM que conta as chamadas, para distinguir cache hit de geração nova. */
+  function countingHarness() {
+    withCredentials();
+    const db = openMigratedDatabase(":memory:");
+    const dir = tempDir("goodbizz-cache-scope-");
+    const cache = new StudyCache(new SqliteCacheStore(db.db));
+    const calls: string[] = [];
+    const llm: LlmClient = {
+      async generateText(system: string, user: string) {
+        calls.push(system.includes("IDEIAS") ? "IDEIAS" : system.includes("BRIEF") ? "BRIEF" : "DOC");
+        return new LlmMock().generateText(system, user);
+      },
+    };
+    const service = new StudyService({
+      repo: new SqliteStudyRepository(db.db),
+      cache,
+      llm,
+      decider: new DeciderMock(),
+      logger: silentLogger(),
+      artifactsRoot: dir,
+    });
+    return { service, db, cache, calls, dir };
+  }
+
+  test("excluir purga so o cache do estudo excluido, e o mesmo titulo recriado gera de novo", async () => {
+    const { service, db, cache, calls, dir } = countingHarness();
+    const cfg = resolveStudyConfig({ niche: "clinicas", numIdeas: 2, mock: true, outputDir: dir });
+    try {
+      const first = await service.create(cfg);
+      await service.run(first.id);
+      const cacheAfterFirst = await cache.count();
+      const callsAfterFirst = calls.length;
+
+      // Mesmo título, mesmo lugar: o segundo estudo não pode ser servido pelo cache do primeiro.
+      const second = await service.create(cfg);
+      await service.run(second.id);
+      expect(second.id).not.toBe(first.id);
+      expect(calls.length).toBeGreaterThan(callsAfterFirst);
+      expect(await cache.count()).toBeGreaterThan(cacheAfterFirst);
+
+      await service.delete(second.id);
+      expect(await cache.count()).toBe(cacheAfterFirst);
+
+      await service.delete(first.id);
+      expect(await cache.count()).toBe(0);
+      expect(await service.list()).toHaveLength(0);
+    } finally {
+      db.sqlite.close();
+    }
+  });
+
+  test("retomar um estudo que falhou chama o provedor so para o que faltava", async () => {
+    withCredentials();
+    const db = openMigratedDatabase(":memory:");
+    const dir = tempDir("goodbizz-resume-");
+    const calls: string[] = [];
+    let failNextDocument = true;
+    const llm: LlmClient = {
+      async generateText(system: string, user: string) {
+        const kind = system.includes("IDEIAS") ? "IDEIAS" : system.includes("BRIEF") ? "BRIEF" : "DOC";
+        calls.push(kind);
+        if (kind === "DOC" && failNextDocument) {
+          failNextDocument = false;
+          throw new LlmError("provedor indisponivel no meio do documento");
+        }
+        return new LlmMock().generateText(system, user);
+      },
+    };
+    const service = new StudyService({
+      repo: new SqliteStudyRepository(db.db),
+      cache: new StudyCache(new SqliteCacheStore(db.db)),
+      llm,
+      decider: new DeciderMock(),
+      logger: silentLogger(),
+      artifactsRoot: dir,
+    });
+    const cfg = resolveStudyConfig({ niche: "clinicas", numIdeas: 2, mock: true, outputDir: dir });
+    try {
+      const record = await service.create(cfg);
+      await expect(service.run(record.id)).rejects.toThrow();
+      expect((await service.get(record.id)).progress.state).toBe("failed");
+
+      calls.length = 0;
+      const done = await service.run(record.id);
+
+      // Nenhuma fase concluída é refeita: brief, ideias e avaliação vêm do cache do estudo.
+      expect(calls).not.toContain("BRIEF");
+      expect(calls).not.toContain("IDEIAS");
+      expect(calls.length).toBeLessThanOrEqual(1);
+      expect(done.progress.state).toBe("done");
+      expect(done.evaluations).toHaveLength(2);
+      expect(done.summary?.ordered).toHaveLength(2);
     } finally {
       db.sqlite.close();
     }

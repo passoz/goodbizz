@@ -14,6 +14,8 @@ import { tierOf } from "../../../application/evaluate.ts";
 import { MAX_IDEAS_PER_STUDY } from "../../../application/study-service.ts";
 import { explainFailure } from "../../../application/failures.ts";
 import { folderName } from "../../../application/reports.ts";
+import { MAX_DESCRIPTION_LENGTH, MAX_NICHE_LENGTH } from "../../../domain/naming.ts";
+import { PROVIDER_GROUPS } from "../../../config/providers.ts";
 import type { ProviderSettingRow, ProviderSource } from "../../../config/providers.ts";
 import type {
   StudyIdea,
@@ -692,8 +694,8 @@ export const StudyForm: FC<{
       <div>
         <h2>Novo estudo</h2>
         <p class="sub">
-          Uma frase de nicho basta. O ticket influencia a medição de preço e o número de ideias define quantas
-          hipóteses serão avaliadas e ranqueadas.
+          O título vira o cabeçalho do estudo: no máximo {MAX_NICHE_LENGTH} caracteres, com cada palavra
+          capitalizada. O detalhe do mercado vai na descrição, que alimenta a medição sem aparecer no título.
         </p>
         {props.providers ? (
           <p id="providers" class="sub">
@@ -711,15 +713,32 @@ export const StudyForm: FC<{
       <input type="hidden" name="_csrf" value={props.token} />
       <div class="form-grid">
         <div class="field">
-          <label for="niche">Nicho</label>
+          <label for="niche">Título do estudo</label>
           <input
             id="niche"
             name="niche"
             type="text"
             required
+            minlength="2"
+            maxlength={String(MAX_NICHE_LENGTH)}
             placeholder="clínicas odontológicas em cidade média"
           />
-          <span class="hint">uma frase, do jeito que você contaria para um conhecido</span>
+          <span class="hint">
+            até {MAX_NICHE_LENGTH} caracteres; cada palavra vira maiúscula (ex.: Clínicas Odontológicas)
+          </span>
+        </div>
+        <div class="field">
+          <label for="description">Descrição do contexto</label>
+          <textarea
+            id="description"
+            name="description"
+            rows={2}
+            maxlength={String(MAX_DESCRIPTION_LENGTH)}
+            placeholder="clínicas de bairro, uma cadeira, agenda no papel"
+          />
+          <span class="hint">
+            até {MAX_DESCRIPTION_LENGTH} caracteres; entra no prompt junto do título e não é exibida
+          </span>
         </div>
         <div class="field">
           <label for="city">Cidade ou região</label>
@@ -781,6 +800,7 @@ export const StudyForm: FC<{
             headers: { "Content-Type": "application/json", "X-CSRF-Token": token },
             body: JSON.stringify({
               niche: form.elements["niche"].value,
+              description: form.elements["description"].value,
               city: form.elements["city"].value,
               monthlyTicket: Number(form.elements["monthlyTicket"].value) || undefined,
               numIdeas: Number(form.elements["numIdeas"].value) || undefined,
@@ -999,31 +1019,46 @@ export const SettingsPage: FC<{ rows: ProviderSettingRow[]; token: string }> = (
 
     <form id="settings-form" method="post" action="/ui/settings" class="panel glass">
       <input type="hidden" name="_csrf" value={props.token} />
-      <div class="form-grid">
-        {props.rows.map((row) => (
-          <div class="field" data-setting={row.key}>
-            <label for={`setting-${row.key}`}>{row.label}</label>
-            <p class="hint">
-              atual: <code>{row.value || "não definido"}</code>{" "}
-              <span class={`badge ${SOURCE_TONE[row.source]}`}>{SOURCE_LABEL[row.source]}</span>
-            </p>
-            <input
-              id={`setting-${row.key}`}
-              name={row.key}
-              data-value
-              type={row.secret ? "password" : "text"}
-              autocomplete={row.secret ? "off" : undefined}
-              placeholder={row.secret ? "••••••" : "vazio = não mexer"}
-            />
-            {row.source === "settings" ? (
-              <label class="check">
-                <input type="checkbox" name={`clear_${row.key}`} value="1" data-clear />
-                Limpar <Hint>voltar a usar o ambiente</Hint>
-              </label>
-            ) : null}
+      {PROVIDER_GROUPS.map((group) => (
+        <fieldset class="settings-group">
+          <legend>{group.title}</legend>
+          <p class="group-note">{group.description}</p>
+          <div class="form-grid">
+            {props.rows
+              .filter((row) => group.keys.includes(row.key))
+              .map((row) => {
+                // O texto de ajuda é referenciado pelo input: o leitor de tela lê o mesmo valor
+                // efetivo e a mesma origem que aparecem na linha.
+                const helpId = `setting-help-${row.key}`;
+                return (
+                  <div class="field" data-setting={row.key}>
+                    <label for={`setting-${row.key}`}>{row.label}</label>
+                    <p class="hint" id={helpId}>
+                      atual: <code>{row.value || "não definido"}</code>{" "}
+                      <span class={`badge ${SOURCE_TONE[row.source]}`}>{SOURCE_LABEL[row.source]}</span>
+                    </p>
+                    <input
+                      id={`setting-${row.key}`}
+                      name={row.key}
+                      data-value
+                      aria-describedby={helpId}
+                      spellcheck={false}
+                      type={row.secret ? "password" : "text"}
+                      autocomplete={row.secret ? "off" : undefined}
+                      placeholder={row.secret ? "••••••" : "vazio = não mexer"}
+                    />
+                    {row.source === "settings" ? (
+                      <label class="check">
+                        <input type="checkbox" name={`clear_${row.key}`} value="1" data-clear />
+                        Limpar <Hint>voltar a usar o ambiente</Hint>
+                      </label>
+                    ) : null}
+                  </div>
+                );
+              })}
           </div>
-        ))}
-      </div>
+        </fieldset>
+      ))}
       <div class="form-actions">
         <button class="btn btn-primary" type="submit">
           Salvar
@@ -1282,8 +1317,9 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; token: s
             {study.progress.error === null ? "" : explainFailure(study.progress.error)}
           </p>
           <p class="sub">
-            O que já foi gerado continua em disco: os artefatos listados abaixo seguem baixáveis. Executar de
-            novo refaz o pipeline do começo.
+            O que já foi gerado continua em disco e é reaproveitado: executar de novo retoma do ponto onde
+            parou, sem repetir as fases concluídas nem pagar de novo por elas. Os artefatos abaixo seguem
+            baixáveis.
           </p>
           <div class="form-actions">
             <RunForm id={study.id} token={props.token} />

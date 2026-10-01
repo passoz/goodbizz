@@ -232,3 +232,48 @@ describe("identidade na persistencia", () => {
     expect(summary.ordered.map((e) => e.id)).toEqual(["id-y", "id-x"]);
   });
 });
+
+describe("migracao da coluna description", () => {
+  test("a coluna description existe depois das migracoes", () => {
+    const handle = openDatabase(":memory:");
+    runMigrations(handle, "drizzle");
+
+    expect(columnsOf(handle.sqlite, "studies")).toContain("description");
+    handle.sqlite.close();
+  });
+
+  test("linha gravada antes da coluna aparece com descricao vazia", async () => {
+    const db = openMigratedDatabase(":memory:");
+    const repo = new SqliteStudyRepository(db.db);
+    try {
+      // O INSERT não cita a coluna: é o que faz uma versão antiga continuar gravando no mesmo banco.
+      db.sqlite
+        .query(
+          "INSERT INTO studies (id, created_at, updated_at, niche, city, monthly_ticket, num_ideas, pain_method, mock, artifact_dir) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        )
+        .run("estudo-antigo", "2026-01-01", "2026-01-01", "Clinicas", "", 300, 3, "choice", 0, "/tmp/x");
+
+      expect((await repo.get("estudo-antigo"))?.description).toBe("");
+    } finally {
+      db.sqlite.close();
+    }
+  });
+
+  test("grava e devolve a descricao", async () => {
+    const db = openMigratedDatabase(":memory:");
+    const repo = new SqliteStudyRepository(db.db);
+    try {
+      db.sqlite
+        .query(
+          "INSERT INTO studies (id, created_at, updated_at, niche, city, monthly_ticket, num_ideas, pain_method, mock, artifact_dir) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        )
+        .run("estudo-desc", "2026-01-01", "2026-01-01", "Clinicas", "", 300, 3, "choice", 0, "/tmp/y");
+
+      await repo.update("estudo-desc", { description: "bairro, uma cadeira, agenda no papel" });
+
+      expect((await repo.get("estudo-desc"))?.description).toBe("bairro, uma cadeira, agenda no papel");
+    } finally {
+      db.sqlite.close();
+    }
+  });
+});

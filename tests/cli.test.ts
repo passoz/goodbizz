@@ -5,7 +5,7 @@
  * end-to-end smoke test, because `src/index.ts` composes the full HTTP service.
  */
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { existsSync, mkdtempSync, readdirSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -110,7 +110,7 @@ describe("goodbizz CLI", () => {
 
   test("re-running generate reuses the cache", async () => {
     const dir = tempDir();
-    const argv = ["generate", "x", "--mock", "--ideas", "2", "--output", dir];
+    const argv = ["generate", "clinicas", "--mock", "--ideas", "2", "--output", dir];
 
     const first = capture();
     try {
@@ -131,6 +131,56 @@ describe("goodbizz CLI", () => {
     const match = /\((\d+) reaproveitadas\)/.exec(second.log.join("\n"));
     expect(match).not.toBeNull();
     expect(Number(match?.[1])).toBeGreaterThan(0);
+  });
+
+  test("generate aceita --description e a ajuda anuncia o limite do titulo", async () => {
+    const dir = tempDir();
+    const run = capture();
+    let code = 0;
+    try {
+      code = await main([
+        "generate",
+        "clinicas odontologicas",
+        "--mock",
+        "--ideas",
+        "1",
+        "--description",
+        "bairro, uma cadeira, agenda no papel",
+        "--output",
+        dir,
+      ]);
+    } finally {
+      run.restore();
+    }
+    expect(code).toBe(0);
+
+    // A descrição não vira título nem entra no dados.json: ela alimenta o prompt do brief.
+    const brief = readFileSync(join(dir, "00-brief.md"), "utf8");
+    expect(brief).toContain("bairro, uma cadeira, agenda no papel");
+    expect(brief).toContain("Clinicas Odontologicas");
+
+    const help = capture();
+    try {
+      await main(["generate", "--help"]);
+    } finally {
+      help.restore();
+    }
+    const text = help.log.join("\n");
+    expect(text).toContain("--description");
+    expect(text).toContain("50 caracteres");
+  });
+
+  test("generate recusa titulo acima de 50 caracteres com exit 2", async () => {
+    const dir = tempDir();
+    const run = capture();
+    let code = 0;
+    try {
+      code = await main(["generate", "x".repeat(51), "--mock", "--output", dir]);
+    } finally {
+      run.restore();
+    }
+    expect(code).toBe(2);
+    expect(run.error.join("\n")).toContain("50");
   });
 
   test("recalibrate prints the recommended thresholds from a generated dataset", async () => {

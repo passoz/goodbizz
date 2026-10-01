@@ -29,6 +29,13 @@
       "when": 1790796670543,
       "tag": "0003_idea_id",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1790878721555,
+      "tag": "0004_study_description",
+      "breakpoints": true
     }
   ]
 }

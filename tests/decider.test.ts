@@ -13,6 +13,8 @@ import type { DeciderAnswer, DeciderAnswers, QuestionSet, StudyConfig } from "..
 function makeConfig(overrides: Partial<StudyConfig> = {}): StudyConfig {
   return {
     niche: "barbearia",
+    description: "",
+    cacheSeed: "",
     city: "Sao Paulo",
     monthlyTicket: 300,
     numIdeas: 8,

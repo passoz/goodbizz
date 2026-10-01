@@ -3,7 +3,7 @@
  */
 import { describe, expect, test } from "bun:test";
 
-import { StudyCache, cacheKeyFor } from "../src/application/cache.ts";
+import { StudyCache, cacheKeyFor, scopedKey } from "../src/application/cache.ts";
 import { SqliteCacheStore } from "../src/infrastructure/cache-repository.ts";
 import { cacheEntries, openMigratedDatabase } from "../src/infrastructure/db.ts";
 import { SqliteStudyRepository } from "../src/infrastructure/repositories.ts";
@@ -48,6 +48,7 @@ function makeRecord(): StudyRecord {
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
     niche: "contabilidade",
+    description: "escritorio de bairro",
     city: "curitiba",
     monthlyTicket: 300,
     numIdeas: 2,
@@ -164,6 +165,34 @@ describe("SqliteCacheStore + StudyCache", () => {
 
     expect(await cache.count()).toBe(2);
     handle.sqlite.close();
+  });
+
+  test("a chave com escopo separa dois estudos e a purga remove so o escopo pedido", async () => {
+    const handle = openMigratedDatabase(":memory:");
+    const store = new SqliteCacheStore(handle.db);
+    const cache = new StudyCache(store);
+
+    await cache.put(scopedKey("estudo-a", "brief", "clinicas"), "brief de A");
+    await cache.put(scopedKey("estudo-b", "brief", "clinicas"), "brief de B");
+    expect(await cache.count()).toBe(2);
+
+    // Mesma configuração, sementes diferentes: nenhuma resposta é compartilhada.
+    expect(await cache.get<string>(scopedKey("estudo-a", "brief", "clinicas"))).toBe("brief de A");
+    expect(await cache.get<string>(scopedKey("estudo-b", "brief", "clinicas"))).toBe("brief de B");
+
+    expect(await store.purge("estudo-a")).toBe(1);
+    expect(await cache.get<string>(scopedKey("estudo-a", "brief", "clinicas"))).toBeNull();
+    expect(await cache.get<string>(scopedKey("estudo-b", "brief", "clinicas"))).toBe("brief de B");
+
+    // Sem semente nada e removido: a purga nunca e global.
+    expect(await store.purge("")).toBe(0);
+    expect(await cache.count()).toBe(1);
+    handle.sqlite.close();
+  });
+
+  test("scopedKey sem semente mantem a chave da CLI", () => {
+    expect(scopedKey("", "system", "user")).toBe(cacheKeyFor("system", "user"));
+    expect(scopedKey("estudo-a", "system", "user")).toBe(`estudo-a::${cacheKeyFor("system", "user")}`);
   });
 
   test("cacheKeyFor is deterministic and 24 hex chars", () => {

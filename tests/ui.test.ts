@@ -173,6 +173,11 @@ describe("paginas da interface", () => {
     expect(body).toContain('id="study-form"');
     expect(body).toContain('name="_csrf"');
     expect(body).toContain('name="niche"');
+    // O título tem limite anunciado e a descrição de contexto entra no mesmo formulário.
+    expect(body).toContain('maxlength="50"');
+    expect(body).toContain('name="description"');
+    expect(body).toContain('maxlength="300"');
+    expect(body).toContain('form.elements["description"].value');
     expect(body).toContain('name="mock"');
     expect(body).toContain("Voltar para os estudos");
   });
@@ -200,7 +205,8 @@ describe("paginas da interface", () => {
 
     expect(body).toContain(study.id.slice(0, 8));
     expect(body).toContain(`href="/studies/${study.id}"`);
-    expect(body).toContain("oficinas");
+    // O título é a forma normalizada: capitalizado por palavra.
+    expect(body).toContain("Oficinas");
     expect(body).not.toContain("Nenhum estudo ainda");
     // O titulo carrega o link esticado e a acao fica visivel no cartao.
     expect(body).toContain('class="stretch"');
@@ -232,7 +238,7 @@ describe("paginas da interface", () => {
     expect(response.status).toBe(200);
     const body = await response.text();
 
-    expect(body).toContain("padarias");
+    expect(body).toContain("Padarias");
     expect(body).toContain("recife");
     expect(body).toContain("Triagem de WhatsApp");
     expect(body).toContain("0.720");
@@ -415,8 +421,8 @@ describe("marca, renomear, progresso humano, falha e consumo", () => {
     expect(body).toContain("Cancelar");
     expect(body).toContain(`action="/ui/studies/${study.id}/rename"`);
     expect(body).toContain(`data-rename-api="/api/studies/${study.id}"`);
-    // O campo do fallback sem JS vem pre-preenchido com o titulo atual.
-    expect(body).toContain(`value="oficinas"`);
+    // O campo do fallback sem JS vem pre-preenchido com o titulo atual (já normalizado).
+    expect(body).toContain(`value="Oficinas"`);
   });
 
   test("renomear sem JS troca o titulo e volta para o estudo", async () => {
@@ -429,7 +435,8 @@ describe("marca, renomear, progresso humano, falha e consumo", () => {
     });
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe(`/studies/${study.id}`);
-    expect((await harness.service.get(study.id)).niche).toBe("padarias do bairro");
+    // Renomear passa pela mesma normalização da criação.
+    expect((await harness.service.get(study.id)).niche).toBe("Padarias Do Bairro");
   });
 
   test("renomear sem JS recusa titulo curto com 422", async () => {
@@ -441,7 +448,7 @@ describe("marca, renomear, progresso humano, falha e consumo", () => {
       body: `niche=a&_csrf=${token}`,
     });
     expect(response.status).toBe(422);
-    expect((await harness.service.get(study.id)).niche).toBe("oficinas");
+    expect((await harness.service.get(study.id)).niche).toBe("Oficinas");
   });
 
   test("o progresso mostra a fase em linguagem humana acima do passo tecnico", async () => {
@@ -477,7 +484,8 @@ describe("marca, renomear, progresso humano, falha e consumo", () => {
     expect(body).toContain("Executar de novo");
     expect(body).toContain(`action="/ui/studies/${study.id}/run"`);
     expect(body).toContain(`data-run-api="/api/studies/${study.id}/run"`);
-    expect(body).toContain("os artefatos listados abaixo seguem baixáveis");
+    // O painel não promete mais "refazer do começo": a reexecução retoma o que já está em cache.
+    expect(body).toContain("retoma do ponto onde parou");
   });
 
   test("executar de novo sem JS reinicia o pipeline e volta para o estudo", async () => {
@@ -540,6 +548,29 @@ describe("marca, renomear, progresso humano, falha e consumo", () => {
   });
 });
 
+describe("formulario de criacao", () => {
+  test("criar sem JS grava o titulo normalizado e a descricao", async () => {
+    const { cookiePair, token } = await csrfToken();
+    const response = await harness.app.request("/ui/studies", {
+      method: "POST",
+      headers: { ...FORM, Origin: "http://localhost", Cookie: cookiePair },
+      body:
+        "niche=clinicas+odontologicas&description=bairro%2C+uma+cadeira&mock=1" +
+        `&monthlyTicket=300&numIdeas=2&_csrf=${token}`,
+    });
+    expect(response.status).toBe(303);
+
+    const studies = await harness.service.list();
+    expect(studies).toHaveLength(1);
+    const record = await harness.service.get(studies[0]!.id);
+    expect(record.niche).toBe("Clinicas Odontologicas");
+    // A descrição fica gravada, mas não vira título nem aparece como texto próprio na página.
+    expect(record.description).toBe("bairro, uma cadeira");
+    const body = await (await harness.app.request(`/studies/${record.id}`)).text();
+    expect(body).not.toContain("bairro, uma cadeira");
+  });
+});
+
 describe("configuracao dos provedores", () => {
   test("o topbar oferece o link para as configuracoes", async () => {
     const body = await (await harness.app.request("/")).text();
@@ -588,6 +619,31 @@ describe("configuracao dos provedores", () => {
     // Nem a chave do ambiente nem a salva podem aparecer em claro no HTML.
     expect(body).not.toContain("sk-env-chave-secreta-1234");
     expect(body).not.toContain("chave-salva-9999");
+  });
+
+  test("a pagina agrupa os campos por provedor, com legenda e ajuda associada ao campo", async () => {
+    const body = await (await harness.app.request("/settings")).text();
+
+    expect(body).toContain('class="settings-group"');
+    expect(body).toContain("<legend>Provedor de texto (LLM)</legend>");
+    expect(body).toContain("<legend>Provedor de decisão (System One)</legend>");
+
+    // Cada campo sob o grupo do provedor a que pertence — e só sob ele.
+    const llmGroup = body.slice(
+      body.indexOf("<legend>Provedor de texto (LLM)</legend>"),
+      body.indexOf("<legend>Provedor de decisão (System One)</legend>"),
+    );
+    expect(llmGroup).toContain('data-setting="llmBaseUrl"');
+    expect(llmGroup).toContain('data-setting="llmApiKey"');
+    expect(llmGroup).not.toContain('data-setting="deciderUrl"');
+
+    const deciderGroup = body.slice(body.indexOf("<legend>Provedor de decisão (System One)</legend>"));
+    expect(deciderGroup).toContain('data-setting="deciderUrl"');
+    expect(deciderGroup).not.toContain('data-setting="llmModel"');
+
+    // O texto de ajuda vive no DOM e é referenciado pelo input.
+    expect(body).toContain('id="setting-help-llmBaseUrl"');
+    expect(body).toContain('aria-describedby="setting-help-llmBaseUrl"');
   });
 
   test("salvar sem JS aplica o patch e volta para a pagina de configuracoes", async () => {

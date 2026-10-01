@@ -38,10 +38,16 @@ export interface Logger {
   error(message: string, fields?: Record<string, unknown>): void;
 }
 
-/** Response cache keyed by a hash of the call parameters. */
+/** Response cache keyed by a hash of the call parameters, escopada pela semente do estudo. */
 export interface CacheStore {
   get(key: string): Promise<unknown | null>;
   put(key: string, value: unknown): Promise<void>;
+  /**
+   * Remove as entradas cujo escopo é `scope`, devolvendo quantas saíram.
+   * `scope` é o id do estudo (UUIDv7): sem separador próprio, a chave de um estudo não casa com a
+   * de outro.
+   */
+  purge(scope: string): Promise<number>;
   count(): Promise<number>;
   hits(): number;
 }

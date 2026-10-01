@@ -167,6 +167,7 @@ function wantsHelp(argv: readonly string[]): boolean {
 
 const GENERATE_SPEC: CommandSpec = {
   niche: { aliases: ["--niche", "--nicho"] },
+  description: { aliases: ["--description", "--descricao"] },
   city: { aliases: ["--city", "--cidade"] },
   ticket: { aliases: ["--ticket"] },
   ideas: { aliases: ["--ideas", "--ideias"] },
@@ -209,10 +210,12 @@ function printGenerateHelp(): void {
 Gera um estudo completo de nicho (brief, ideias, avaliação, documentos e relatórios).
 
 Argumentos:
-  nicho                              o nicho em uma frase (equivale a --niche)
+  nicho                              o titulo do estudo, ate 50 caracteres (equivale a --niche)
 
 Opcoes:
-  --niche, --nicho <texto>           o nicho (alternativa ao argumento posicional)
+  --niche, --nicho <texto>           o titulo do estudo; vira o cabecalho, entao vale o limite de
+                                     50 caracteres e cada palavra e capitalizada
+  --description, --descricao <texto> contexto do estudo; entra concatenado ao titulo nos prompts
   --city, --cidade <texto>           cidade ou região alvo
   --ticket <inteiro>                 ticket mensal em BRL (padrão: 300)
   --ideas, --ideias <inteiro>        número de ideias a gerar (padrão: 8)
@@ -350,6 +353,7 @@ async function runGenerate(argv: string[]): Promise<number> {
 
   const cfg = resolveStudyConfig({
     niche,
+    description: values["description"],
     city: values["city"],
     monthlyTicket: parseIntFlag(values, "ticket", 300),
     numIdeas: parseIntFlag(values, "ideas", 8),

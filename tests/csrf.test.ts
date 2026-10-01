@@ -100,7 +100,7 @@ describe("protecao CSRF da interface", () => {
     expect(response.status).toBe(303);
     const studies = await harness.service.list();
     expect(studies).toHaveLength(1);
-    expect(studies[0]?.niche).toBe("oficinas");
+    expect(studies[0]?.niche).toBe("Oficinas");
     expect(response.headers.get("location")).toBe(`/studies/${studies[0]?.id}`);
   });
 
@@ -148,7 +148,7 @@ describe("protecao CSRF da interface", () => {
       body: `niche=formulario antigo&mock=1&_csrf=${first.token}`,
     });
     expect(response.status).toBe(303);
-    expect((await harness.service.list()).map((study) => study.niche)).toEqual(["formulario antigo"]);
+    expect((await harness.service.list()).map((study) => study.niche)).toEqual(["Formulario Antigo"]);
   });
 
   test("nao duplica estado e etapa no cabecalho do detalhe", async () => {
