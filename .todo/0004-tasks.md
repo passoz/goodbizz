@@ -18,7 +18,7 @@
 - [ ] `bun run check` — typecheck estrito passa com exit 0.
 - [ ] `bunx eslint . && bunx prettier --check .` — lint e formatacao passam.
 
-### [ ] [1.1] Normalizar o titulo e acrescentar descricao e semente ao contrato do estudo
+### [x] [1.1] Normalizar o titulo e acrescentar descricao e semente ao contrato do estudo
 
 **Requirement:** FR-001
 **Depends on:** none
@@ -43,7 +43,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.2] Persistir a descricao na tabela studies
+### [x] [1.2] Persistir a descricao na tabela studies
 
 **Requirement:** FR-002
 **Depends on:** 1.1
@@ -68,7 +68,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.3] Gravar titulo normalizado e descricao na criacao e na renomeacao
+### [x] [1.3] Gravar titulo normalizado e descricao na criacao e na renomeacao
 
 **Requirement:** FR-009
 **Depends on:** 1.1, 1.2
@@ -93,7 +93,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.4] Concatenar a descricao ao titulo nos textos enviados aos provedores
+### [x] [1.4] Concatenar a descricao ao titulo nos textos enviados aos provedores
 
 **Requirement:** FR-003
 **Depends on:** 1.1
@@ -118,7 +118,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.5] Dar escopo ao cache no port e no adaptador SQLite
+### [x] [1.5] Dar escopo ao cache no port e no adaptador SQLite
 
 **Requirement:** FR-004
 **Depends on:** 1.1
@@ -143,7 +143,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.6] Usar o id do estudo como semente e purgar o cache na exclusao
+### [x] [1.6] Usar o id do estudo como semente e purgar o cache na exclusao
 
 **Requirement:** FR-005
 **Depends on:** 1.5
@@ -168,7 +168,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.7] Provar a retomada do estudo incompleto e corrigir o texto do painel de falha
+### [x] [1.7] Provar a retomada do estudo incompleto e corrigir o texto do painel de falha
 
 **Requirement:** FR-006
 **Depends on:** 1.6
@@ -193,7 +193,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.8] Expor a descricao e o limite do titulo na API e na CLI
+### [x] [1.8] Expor a descricao e o limite do titulo na API e na CLI
 
 **Requirement:** FR-008
 **Depends on:** 1.1, 1.2
@@ -218,7 +218,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.9] Acrescentar o campo de descricao e o limite do titulo no formulario de criacao
+### [x] [1.9] Acrescentar o campo de descricao e o limite do titulo no formulario de criacao
 
 **Requirement:** FR-010
 **Depends on:** 1.3, 1.8
@@ -243,7 +243,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.10] Agrupar as configuracoes por provedor com legenda
+### [x] [1.10] Agrupar as configuracoes por provedor com legenda
 
 **Requirement:** FR-007
 **Depends on:** 1.9

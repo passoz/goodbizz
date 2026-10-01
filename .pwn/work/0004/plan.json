@@ -81,7 +81,7 @@
       "spec_reference": "CAP-019",
       "contract_id": "CTR-001",
       "complexity": "medium",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "1.2",
@@ -135,7 +135,7 @@
       "spec_reference": "CAP-019",
       "contract_id": "CTR-002",
       "complexity": "medium",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "1.3",
@@ -186,7 +186,7 @@
       "spec_reference": "CAP-019",
       "contract_id": "CTR-003",
       "complexity": "medium",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "1.4",
@@ -242,7 +242,7 @@
       "spec_reference": "CAP-019",
       "contract_id": "CTR-004",
       "complexity": "medium",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "1.5",
@@ -296,7 +296,7 @@
       "spec_reference": "CAP-020",
       "contract_id": "CTR-005",
       "complexity": "high",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "1.6",
@@ -350,7 +350,7 @@
       "spec_reference": "CAP-020",
       "contract_id": "CTR-006",
       "complexity": "high",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "1.7",
@@ -402,7 +402,7 @@
       "spec_reference": "CAP-020",
       "contract_id": "CTR-007",
       "complexity": "medium",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "1.8",
@@ -459,7 +459,7 @@
       "spec_reference": "CAP-021",
       "contract_id": "CTR-008",
       "complexity": "medium",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "1.9",
@@ -512,7 +512,7 @@
       "spec_reference": "CAP-021",
       "contract_id": "CTR-009",
       "complexity": "medium",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "1.10",
@@ -566,7 +566,7 @@
       "spec_reference": "CAP-022",
       "contract_id": "CTR-010",
       "complexity": "medium",
-      "status": "pending"
+      "status": "done"
     }
   ]
 }
