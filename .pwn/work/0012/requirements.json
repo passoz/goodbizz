@@ -1,0 +1,14 @@
+{
+  "work_id": "0012",
+  "requirements": [
+    {
+      "id": "FR-001",
+      "title": "Ler o tipo do provedor no formulário da lista",
+      "acceptance_criteria": [
+        "bun test — a suite passa com a assercao do tipo lido do formulario",
+        "bun run check — o typecheck estrito passa",
+        "bunx eslint src/infrastructure/http/ui/pages.tsx tests/ui.test.ts && bunx prettier --check src/infrastructure/http/ui/pages.tsx tests/ui.test.ts — o lint e a formatacao dos arquivos tocados passam"
+      ]
+    }
+  ]
+}

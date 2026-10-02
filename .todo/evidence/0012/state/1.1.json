@@ -1,0 +1,100 @@
+{
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun test"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0012/1.1-ac-1.log",
+      "log_sha256": "2fa7e1ba6c8e8ff539318d4b5a4da11f3bee7cfb799fd4f9514a61604b56ac12",
+      "recorded_at": "2026-10-02T20:12:22.646Z"
+    },
+    "AC-2": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun run check"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0012/1.1-ac-2.log",
+      "log_sha256": "9919e2c4a44f2fc44087f2cf8fe17e9a8919783c0826160462f885528cb19a2e",
+      "recorded_at": "2026-10-02T20:12:26.060Z"
+    },
+    "AC-3": {
+      "command": [
+        "bash",
+        "-lc",
+        "bunx eslint src/infrastructure/http/ui/pages.tsx tests/ui.test.ts && bunx prettier --check src/infrastructure/http/ui/pages.tsx tests/ui.test.ts"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0012/1.1-ac-3.log",
+      "log_sha256": "ab2caa8feadceb931df9dbb53d42b21b63db817374490c00163feaf7f9118d34",
+      "recorded_at": "2026-10-02T20:12:27.641Z"
+    },
+    "REGRESSION": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun test"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0012/1.1-regression.log",
+      "log_sha256": "bb9f9d94871b6de7460326815e3b059d51ef04dc4e3aa639659fea95cfd49ae6",
+      "recorded_at": "2026-10-02T20:12:32.507Z"
+    }
+  },
+  "baseline_implementation": {
+    "src/infrastructure/http/ui/pages.tsx": {
+      "exists": true,
+      "sha256": "1ef982ea550b334e028481b3e8e5bf7cc0da6c19ae663f03e7c4e6579d6456f6"
+    }
+  },
+  "baseline_tests": {
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "033595206ec93787bfb2cf5b9152a29ebf334d9bce2b65cb16667715378682ec"
+    }
+  },
+  "created_at": "2026-10-02T20:11:19.496Z",
+  "green_expect": null,
+  "green_implementation": {
+    "src/infrastructure/http/ui/pages.tsx": {
+      "exists": true,
+      "sha256": "8b7a59676031088a339b8bc67cf978b6b5143559755ad603f7061bba3ec9427e"
+    }
+  },
+  "green_tests": {
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "001c80a955b54f0c667918173cef17bf1a72a2a0ab59cde17864ed4faf938734"
+    }
+  },
+  "implementation_files": [
+    "src/infrastructure/http/ui/pages.tsx"
+  ],
+  "red_command": [
+    "bun",
+    "test"
+  ],
+  "red_expect": "editar carrega o tipo do provedor a partir da lista",
+  "red_tests": {
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "001c80a955b54f0c667918173cef17bf1a72a2a0ab59cde17864ed4faf938734"
+    }
+  },
+  "task": "1.1",
+  "test_files": [
+    "tests/ui.test.ts"
+  ]
+}

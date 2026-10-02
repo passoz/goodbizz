@@ -1,0 +1,17 @@
+{
+  "work_id": "0012",
+  "title": "Editar provedor abre o modal com o tipo certo",
+  "imported_from": ".todo/0012-tasks.md",
+  "problem": "clicar em **Editar** abria o modal preenchido com nome, URL e modelo, mas sem o tipo: `readProfile` lia `data-kind` do `<select>`, e o atributo está no `<form>` da lista. O `kind` ia vazio e tanto o Testar quanto o Salvar respondiam `payload invalido: kind: Invalid enum value. Expected 'llm' | 'decider', received ''`.",
+  "actors": [
+    "ACT-003 Operador/consultor"
+  ],
+  "objectives": [
+    "SC-001: `bun test` prova que o script lê o tipo do formulário (FR-001).",
+    "SC-002: a verificação em navegador prova o Editar com Testar respondendo veredito (FR-001)."
+  ],
+  "constraints": [
+    "QR-001: a suíte cobre a leitura do tipo no HTML servido; a verificação em navegador prova o Editar.",
+    "QR-002: o contrato da API não muda e o caminho de criação continua igual."
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "$schema": "../../../schemas/plan.schema.json",
+  "work_id": "0012",
+  "title": "Editar provedor abre o modal com o tipo certo",
+  "components": [
+    {
+      "name": "provider-modal",
+      "purpose": "Script do modal de provedor: o provedor selecionado carrega o tipo da propria lista"
+    }
+  ],
+  "global_gates": [
+    "`bun test` — a suite completa passa com exit 0.",
+    "`bun run check` — typecheck estrito passa com exit 0.",
+    "`bunx eslint . && bunx prettier --check .` — lint e formatacao passam."
+  ],
+  "tasks": [
+    {
+      "id": "1.1",
+      "title": "Ler o tipo do provedor no formulário da lista",
+      "requirement_id": "FR-001",
+      "depends_on": [],
+      "behavior": "o script monta o provedor selecionado lendo o tipo do formulario da lista, entao o modal do Editar leva esse tipo para o Testar e o Salvar",
+      "components": [
+        "provider-modal"
+      ],
+      "files": [
+        "src/infrastructure/http/ui/pages.tsx",
+        "tests/ui.test.ts"
+      ],
+      "implementation_files": [
+        "src/infrastructure/http/ui/pages.tsx"
+      ],
+      "test_files": [
+        "tests/ui.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/ui.test.ts",
+        "description": "o script servido ainda le o tipo do `select`, entao a assercao nova falha"
+      },
+      "implementation_steps": [
+        "Escrever o teste que falha (RED): o HTML servido mostra o `selectedProfile` lendo o tipo do formulario da lista",
+        "Montar o provedor selecionado a partir do formulario (tipo) e da opcao (nome, URL, modelo, chave), removendo o leitor intermediario (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test",
+          "description": "a suite passa com a assercao do tipo lido do formulario"
+        },
+        {
+          "command": "bun run check",
+          "description": "o typecheck estrito passa"
+        },
+        {
+          "command": "bunx eslint src/infrastructure/http/ui/pages.tsx tests/ui.test.ts && bunx prettier --check src/infrastructure/http/ui/pages.tsx tests/ui.test.ts",
+          "description": "o lint e a formatacao dos arquivos tocados passam"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-014",
+      "contract_id": "CTR-001",
+      "complexity": "standard",
+      "status": "done"
+    }
+  ]
+}

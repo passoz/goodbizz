@@ -714,6 +714,18 @@ describe("configuracao dos provedores", () => {
     const restore = body.slice(body.indexOf("function restore(picker)"), body.indexOf("function open("));
     expect(restore).toContain('picker.getAttribute("data-kind")');
   });
+
+  test("editar carrega o tipo do provedor a partir da lista", async () => {
+    const body = await (await harness.app.request("/settings")).text();
+    // O tipo vive no formulario da lista (data-kind), nao no select: ler do select deixava o corpo
+    // do Testar/Salvar sem kind e a API respondia 422 no caminho de edicao.
+    const profile = body.slice(
+      body.indexOf("function selectedProfile(picker)"),
+      body.indexOf("Array.prototype.slice.call"),
+    );
+    expect(profile).toContain('kind: picker.getAttribute("data-kind")');
+    expect(profile).not.toContain("select.getAttribute");
+  });
 });
 
 describe("gestao de ideias na pagina do estudo", () => {

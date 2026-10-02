@@ -1,0 +1,25 @@
+{
+  "work_id": "0012",
+  "title": "Editar provedor abre o modal com o tipo certo",
+  "capabilities": [
+    {
+      "id": "CAP-014",
+      "name": "Interface web",
+      "description": "permite criar e ler estudos pelo navegador sem instalar nada renderiza no servidor com hono/jsx e consome a propria API para disparar e acompanhar estudos",
+      "rules": [
+        "BR-018",
+        "BR-022"
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "BR-018",
+      "statement": "Toda rota de UI que muda estado exige mesma origem e token CSRF em tempo constante."
+    },
+    {
+      "id": "BR-022",
+      "statement": "Cookie de sessao usa httpOnly, sameSite Lax e secure em producao."
+    }
+  ]
+}

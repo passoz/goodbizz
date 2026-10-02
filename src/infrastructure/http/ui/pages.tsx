@@ -1039,23 +1039,22 @@ const SETTINGS_SCRIPT = `
     return { kind: input.kind, url: input.url, model: input.model, apiKey: input.apiKey };
   }
 
-  function readProfile(select) {
+  /**
+   * Provedor selecionado na lista. O tipo vive no atributo data-kind do formulario, nao no select:
+   * ler do select devolvia vazio e o editar mandava kind vazio para a API.
+   */
+  function selectedProfile(picker) {
+    var select = picker.querySelector("select");
     var option = select.options[select.selectedIndex];
+    if (!option || option.getAttribute("data-profile") !== "1") return null;
     return {
       id: select.value,
-      kind: select.getAttribute("data-kind"),
+      kind: picker.getAttribute("data-kind"),
       name: option.getAttribute("data-name") || "",
       url: option.getAttribute("data-url") || "",
       model: option.getAttribute("data-model") || "",
       hasKey: option.getAttribute("data-has-key") === "1",
     };
-  }
-
-  function selectedProfile(picker) {
-    var select = picker.querySelector("select");
-    var option = select.options[select.selectedIndex];
-    if (!option || option.getAttribute("data-profile") !== "1") return null;
-    return readProfile(select);
   }
 
   Array.prototype.slice.call(document.querySelectorAll("[data-provider-picker]")).forEach(function (picker) {
