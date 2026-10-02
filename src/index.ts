@@ -149,7 +149,7 @@ export async function buildService(env: Env = loadEnv()): Promise<ServiceBundle>
     llm: mockLlm ? "texto simulado" : `texto real (${env.LLM_API_MODEL})`,
     decider: mockDecider ? "números simulados" : `numeros reais (${env.DECISION_API_MODEL})`,
   };
-  const ui = buildUiApp({ service, sessionSecret: env.SESSION_SECRET, production, providers });
+  const ui = buildUiApp({ service, sessionSecret: env.SESSION_SECRET, production, providers, logger });
   const app = buildHttpApp({ api, ui, health, logger, production });
 
   return { app, handle, service, logger, env, mock: mockAll };

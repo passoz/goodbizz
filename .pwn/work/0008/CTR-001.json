@@ -1,0 +1,95 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.1",
+  "work_id": "0008",
+  "title": "Deixar o token decidir quando o cliente não oferece sinal de origem",
+  "risk": {
+    "level": "L2",
+    "reasons": [
+      "Task 1.1 classificada como L2"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.1-01",
+        "given": "Dado o comportamento declarado: o `requireCsrf` veta qualquer sinal de origem presente que diverja, aceita o POST sem sinal quando o token confere, e registra os sinais recebidos e a presenca do token em cada recusa",
+        "when": "Quando `bun test` é executado",
+        "then": "Então a suite passa com os dois resultados por sinal e o caminho sem sinal"
+      },
+      {
+        "id": "SCENARIO-1.1-02",
+        "given": "Dado o comportamento declarado: o `requireCsrf` veta qualquer sinal de origem presente que diverja, aceita o POST sem sinal quando o token confere, e registra os sinais recebidos e a presenca do token em cada recusa",
+        "when": "Quando `bun run check` é executado",
+        "then": "Então o typecheck estrito passa"
+      },
+      {
+        "id": "SCENARIO-1.1-03",
+        "given": "Dado o comportamento declarado: o `requireCsrf` veta qualquer sinal de origem presente que diverja, aceita o POST sem sinal quando o token confere, e registra os sinais recebidos e a presenca do token em cada recusa",
+        "when": "Quando `bunx eslint src/infrastructure/http/ui/security.ts src/infrastructure/http/ui/routes.tsx src/index.ts tests/ui.test.ts tests/e2e.test.ts && bunx prettier --check src/infrastructure/http/ui/security.ts src/infrastructure/http/ui/routes.tsx src/index.ts tests/ui.test.ts tests/e2e.test.ts` é executado",
+        "then": "Então o lint e a formatacao dos arquivos tocados passam"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/infrastructure/http/ui/security.ts",
+      "src/infrastructure/http/ui/routes.tsx",
+      "src/index.ts",
+      "tests/ui.test.ts",
+      "tests/e2e.test.ts"
+    ],
+    "affected_components": [
+      "ui-csrf"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "Não quebrar retrocompatibilidade nem expor dados sensíveis",
+      "Manter cobertura de testes existente"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun test",
+      "bun run check",
+      "bunx eslint src/infrastructure/http/ui/security.ts src/infrastructure/http/ui/routes.tsx src/index.ts tests/ui.test.ts tests/e2e.test.ts && bunx prettier --check src/infrastructure/http/ui/security.ts src/infrastructure/http/ui/routes.tsx src/index.ts tests/ui.test.ts tests/e2e.test.ts",
+      "bunx eslint . && bunx prettier --check ."
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/infrastructure/http/ui/security.ts",
+      "src/infrastructure/http/ui/routes.tsx",
+      "src/index.ts",
+      "tests/ui.test.ts",
+      "tests/e2e.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env*"
+    ],
+    "out_of_scope": [
+      "Arquivos fora de: src/infrastructure/http/ui/security.ts, src/infrastructure/http/ui/routes.tsx, src/index.ts, tests/ui.test.ts, tests/e2e.test.ts"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 50000,
+    "max_cost_usd": 0.5,
+    "max_duration_minutes": 15,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 30,
+    "max_tool_calls": 60,
+    "max_shell_executions": 15
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

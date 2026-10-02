@@ -1,0 +1,94 @@
+{
+  "version": 2,
+  "kind": "task-acceptance-candidate",
+  "harness_version": "0.1.0",
+  "gate_version": "1",
+  "work_id": "0008",
+  "task_id": "1.1",
+  "result": "pass",
+  "plan": {
+    "path": ".todo/0008-tasks.md",
+    "sha256": "54ec081c50d7f60b119aceb2235a43d583e5bbccb6e701cd12dd2dd3adf87938"
+  },
+  "implementation": {
+    "src/infrastructure/http/ui/security.ts": {
+      "exists": true,
+      "sha256": "767630d8037a1bd7efc356f16549914a526b9afe698fe8aa041d654c372e88bb"
+    },
+    "src/infrastructure/http/ui/routes.tsx": {
+      "exists": true,
+      "sha256": "1d0fd06e9f8a205ade8cb0eec50eb9fa472f836aff4b6243cf58d1bb6eb58881"
+    },
+    "src/index.ts": {
+      "exists": true,
+      "sha256": "1577c0c26450e69526004d728d1cc6702f06dd40719d90dde4db55db530538e4"
+    }
+  },
+  "tests": {
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "18a1ab8b701b8272048b0f965cefda0eb407cf2debf8b16d26a79e350c754092"
+    },
+    "tests/e2e.test.ts": {
+      "exists": true,
+      "sha256": "28c01d1e48fa32afc3560f59009f2b66207bc5929922690aab2b9371cb27adb8"
+    }
+  },
+  "evidence_sha256": "e971b828cc52802dd9b4d96bbba2bbe276324910db0ca66c0002e57d08806c90",
+  "evidence_chain_head": "e15685ea2159b1c82326c31f3e0ecdcaf4f7835ae5a40de7df418230684fa003",
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun test"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0008/1.1-ac-1.log",
+      "log_sha256": "35abf8ef83399d2e5fbd1b3c5c08c166bb5c175f86d0305000c54991131752c5",
+      "recorded_at": "2026-10-02T19:13:12.302Z"
+    },
+    "AC-2": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun run check"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0008/1.1-ac-2.log",
+      "log_sha256": "6bad4e85d025dca6e737bbce40375f7ce9cd469fb20b1ae445ce580b707f525b",
+      "recorded_at": "2026-10-02T19:13:14.988Z"
+    },
+    "AC-3": {
+      "command": [
+        "bash",
+        "-lc",
+        "bunx eslint src/infrastructure/http/ui/security.ts src/infrastructure/http/ui/routes.tsx src/index.ts tests/ui.test.ts tests/e2e.test.ts && bunx prettier --check src/infrastructure/http/ui/security.ts src/infrastructure/http/ui/routes.tsx src/index.ts tests/ui.test.ts tests/e2e.test.ts"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0008/1.1-ac-3.log",
+      "log_sha256": "fc64107c95711dcb84642832fc8f524c3155f02a8c8cac291d964f865d6c2af5",
+      "recorded_at": "2026-10-02T19:13:16.063Z"
+    },
+    "REGRESSION": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun test"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0008/1.1-regression.log",
+      "log_sha256": "59c9b0338a151e1d6096a46bc4220f5fa39f003cc044f3dfb370bf40c44b89d0",
+      "recorded_at": "2026-10-02T19:13:20.317Z"
+    }
+  },
+  "generated_at": "2026-10-02T19:13:24.537Z"
+}

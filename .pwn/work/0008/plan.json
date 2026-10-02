@@ -1,0 +1,72 @@
+{
+  "$schema": "../../../schemas/plan.schema.json",
+  "work_id": "0008",
+  "title": "O formulário aceita cliente sem sinal de origem",
+  "components": [
+    {
+      "name": "ui-csrf",
+      "purpose": "Regra do CSRF do formulario: sinal de origem divergente veta, ausencia de sinal nao recusa (o token decide), e toda recusa registra o que o cliente mandou"
+    }
+  ],
+  "global_gates": [
+    "`bun test` — a suite completa passa com exit 0.",
+    "`bun run check` — typecheck estrito passa com exit 0.",
+    "`bunx eslint . && bunx prettier --check .` — lint e formatacao passam."
+  ],
+  "tasks": [
+    {
+      "id": "1.1",
+      "title": "Deixar o token decidir quando o cliente não oferece sinal de origem",
+      "requirement_id": "FR-001",
+      "depends_on": [],
+      "behavior": "o `requireCsrf` veta qualquer sinal de origem presente que diverja, aceita o POST sem sinal quando o token confere, e registra os sinais recebidos e a presenca do token em cada recusa",
+      "components": [
+        "ui-csrf"
+      ],
+      "files": [
+        "src/infrastructure/http/ui/security.ts",
+        "src/infrastructure/http/ui/routes.tsx",
+        "src/index.ts",
+        "tests/ui.test.ts",
+        "tests/e2e.test.ts"
+      ],
+      "implementation_files": [
+        "src/infrastructure/http/ui/security.ts",
+        "src/infrastructure/http/ui/routes.tsx",
+        "src/index.ts"
+      ],
+      "test_files": [
+        "tests/ui.test.ts",
+        "tests/e2e.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/ui.test.ts tests/e2e.test.ts",
+        "description": "com a regra atual o POST sem nenhum sinal de origem responde 403, entao as assercoes que exigem 303 falham"
+      },
+      "implementation_steps": [
+        "Escrever os testes que falham (RED): 303 no POST sem sinal com token, 403 de token sem token, veto para `Origin` de outro host e para `Sec-Fetch-Site: cross-site`, e o log da recusa com os sinais",
+        "Trocar a exigencia de sinal pela regra \"sinal presente e veto\", repassar o logger ao `createCsrf` e registrar as recusas (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test",
+          "description": "a suite passa com os dois resultados por sinal e o caminho sem sinal"
+        },
+        {
+          "command": "bun run check",
+          "description": "o typecheck estrito passa"
+        },
+        {
+          "command": "bunx eslint src/infrastructure/http/ui/security.ts src/infrastructure/http/ui/routes.tsx src/index.ts tests/ui.test.ts tests/e2e.test.ts && bunx prettier --check src/infrastructure/http/ui/security.ts src/infrastructure/http/ui/routes.tsx src/index.ts tests/ui.test.ts tests/e2e.test.ts",
+          "description": "o lint e a formatacao dos arquivos tocados passam"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-014",
+      "contract_id": "CTR-001",
+      "complexity": "standard",
+      "status": "done"
+    }
+  ]
+}

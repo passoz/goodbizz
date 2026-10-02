@@ -1,0 +1,131 @@
+{
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun test"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0008/1.1-ac-1.log",
+      "log_sha256": "35abf8ef83399d2e5fbd1b3c5c08c166bb5c175f86d0305000c54991131752c5",
+      "recorded_at": "2026-10-02T19:13:12.302Z"
+    },
+    "AC-2": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun run check"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0008/1.1-ac-2.log",
+      "log_sha256": "6bad4e85d025dca6e737bbce40375f7ce9cd469fb20b1ae445ce580b707f525b",
+      "recorded_at": "2026-10-02T19:13:14.988Z"
+    },
+    "AC-3": {
+      "command": [
+        "bash",
+        "-lc",
+        "bunx eslint src/infrastructure/http/ui/security.ts src/infrastructure/http/ui/routes.tsx src/index.ts tests/ui.test.ts tests/e2e.test.ts && bunx prettier --check src/infrastructure/http/ui/security.ts src/infrastructure/http/ui/routes.tsx src/index.ts tests/ui.test.ts tests/e2e.test.ts"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0008/1.1-ac-3.log",
+      "log_sha256": "fc64107c95711dcb84642832fc8f524c3155f02a8c8cac291d964f865d6c2af5",
+      "recorded_at": "2026-10-02T19:13:16.063Z"
+    },
+    "REGRESSION": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun test"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0008/1.1-regression.log",
+      "log_sha256": "59c9b0338a151e1d6096a46bc4220f5fa39f003cc044f3dfb370bf40c44b89d0",
+      "recorded_at": "2026-10-02T19:13:20.317Z"
+    }
+  },
+  "baseline_implementation": {
+    "src/infrastructure/http/ui/security.ts": {
+      "exists": true,
+      "sha256": "a6c2ce671f85dc57d28c2bb8dd879642f7da7e526e4504e69354d7cb1d28e028"
+    },
+    "src/infrastructure/http/ui/routes.tsx": {
+      "exists": true,
+      "sha256": "83f0f7f5d90839497c99714d79e1002cd7f13b4ed318420bee99fba54962a413"
+    },
+    "src/index.ts": {
+      "exists": true,
+      "sha256": "95abfe39d3f9163487e2755362c51ab83b5071fd0de627b5c4cdf57e5c252c68"
+    }
+  },
+  "baseline_tests": {
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "b27cb81eb6195da3940c0ba8c3caa2a639954d94adec02d2481a834fc982e2f9"
+    },
+    "tests/e2e.test.ts": {
+      "exists": true,
+      "sha256": "6ab70df95bef40c481c0a5b909964864e0b728b982866c2b05ace478cdf4a3f8"
+    }
+  },
+  "created_at": "2026-10-02T19:11:56.171Z",
+  "green_expect": null,
+  "green_implementation": {
+    "src/infrastructure/http/ui/security.ts": {
+      "exists": true,
+      "sha256": "767630d8037a1bd7efc356f16549914a526b9afe698fe8aa041d654c372e88bb"
+    },
+    "src/infrastructure/http/ui/routes.tsx": {
+      "exists": true,
+      "sha256": "1d0fd06e9f8a205ade8cb0eec50eb9fa472f836aff4b6243cf58d1bb6eb58881"
+    },
+    "src/index.ts": {
+      "exists": true,
+      "sha256": "1577c0c26450e69526004d728d1cc6702f06dd40719d90dde4db55db530538e4"
+    }
+  },
+  "green_tests": {
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "18a1ab8b701b8272048b0f965cefda0eb407cf2debf8b16d26a79e350c754092"
+    },
+    "tests/e2e.test.ts": {
+      "exists": true,
+      "sha256": "28c01d1e48fa32afc3560f59009f2b66207bc5929922690aab2b9371cb27adb8"
+    }
+  },
+  "implementation_files": [
+    "src/infrastructure/http/ui/security.ts",
+    "src/infrastructure/http/ui/routes.tsx",
+    "src/index.ts"
+  ],
+  "red_command": [
+    "bun",
+    "test"
+  ],
+  "red_expect": "expect(response.status).toBe(303)",
+  "red_tests": {
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "18a1ab8b701b8272048b0f965cefda0eb407cf2debf8b16d26a79e350c754092"
+    },
+    "tests/e2e.test.ts": {
+      "exists": true,
+      "sha256": "28c01d1e48fa32afc3560f59009f2b66207bc5929922690aab2b9371cb27adb8"
+    }
+  },
+  "task": "1.1",
+  "test_files": [
+    "tests/ui.test.ts",
+    "tests/e2e.test.ts"
+  ]
+}

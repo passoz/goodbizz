@@ -1,0 +1,63 @@
+{
+  "$schema": "../../../schemas/prd.schema.json",
+  "id": "PRD-0008",
+  "meta": {
+    "version": "1.0",
+    "created_at": "2026-10-02T19:11:20.908Z",
+    "author": "pwn-import"
+  },
+  "title": "O formulário aceita cliente sem sinal de origem",
+  "status": "approved",
+  "scenario": "brownfield",
+  "problem": {
+    "statement": "depois do Work 0007, o formulário continuava recusado com `CSRF_ORIGIN_INVALID` no navegador do operador. Medido com `curl --resolve vps:3000`: quando o cliente manda `Origin: http://vps:3000` a origem casa e a recusa seguinte é de token; portanto o cliente do operador não manda `Origin`, nem `Referer` (o `Referrer-Policy: no-referrer` suprime), nem `Sec-Fetch-Site: same-origin`. Exigir um sinal que o cliente não emite deixava o formulário inutilizável e, pior, o diagnóstico era impossível: a recusa não registrava o que o cliente mandou."
+  },
+  "solution": {
+    "statement": "um sinal de origem presente que diverge recusa a requisição; sem sinal nenhum, o token do double-submit decide, porque o cookie é `SameSite=Lax` e um POST cross-site não chega com ele. Toda recusa passa a registrar os sinais e a presença do token, para o próximo relato ser diagnosticável."
+  },
+  "decisions": [
+    {
+      "id": "DEC-001",
+      "statement": "Governar o Work 0008 pelo PWN com contratos V4 congelados derivados do plano v3.",
+      "status": "accepted",
+      "made_by": "pwn-import"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "FR-001",
+      "type": "functional",
+      "statement": "FR-001: Deixar o token decidir quando o cliente não oferece sinal de origem",
+      "acceptance_criteria": [
+        "bun test — a suite passa com os dois resultados por sinal e o caminho sem sinal",
+        "bun run check — o typecheck estrito passa",
+        "bunx eslint src/infrastructure/http/ui/security.ts src/infrastructure/http/ui/routes.tsx src/index.ts tests/ui.test.ts tests/e2e.test.ts && bunx prettier --check src/infrastructure/http/ui/security.ts src/infrastructure/http/ui/routes.tsx src/index.ts tests/ui.test.ts tests/e2e.test.ts — o lint e a formatacao dos arquivos tocados passam"
+      ]
+    }
+  ],
+  "stakeholders": [
+    {
+      "name": "ACT-001 Usuário da interface web",
+      "role": "stakeholder"
+    },
+    {
+      "name": "ACT-003 Operador/consultor",
+      "role": "stakeholder"
+    }
+  ],
+  "scope": {
+    "in_scope": [
+      "Veto quando um sinal de origem presente diverge.",
+      "Aceitar a ausência de sinal, mantendo o token obrigatório.",
+      "Registrar os sinais do cliente e a presença do cookie/token em cada recusa."
+    ],
+    "out_of_scope": [
+      "Remover a exigência do token ou trocar o esquema de cookie.",
+      "Proteger a API pública com CSRF.",
+      "Mudar rotas, corpos de erro aceitos ou o caminho sem JavaScript."
+    ]
+  },
+  "accepted_requirements": [
+    "FR-001"
+  ]
+}

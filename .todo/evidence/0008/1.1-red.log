@@ -1,0 +1,132 @@
+TASK: 1.1
+CHECK: RED
+COMMAND: bun test
+EXIT: 1
+OUTPUT:
+bun test v1.4.2 (744846f84)
+{"level":50,"time":1790968358516,"pid":469877,"hostname":"note","msg":"e"}
+{"level":30,"time":1790968358854,"pid":469877,"hostname":"note","count":0,"msg":"migrations applied"}
+{"level":40,"time":1790968358854,"pid":469877,"hostname":"note","count":1,"msg":"stale studies marked as failed on boot"}
+
+tests/e2e.test.ts:
+166 |     const response = await postForm(
+167 |       "/ui/studies",
+168 |       { Cookie: [REDACTED]
+169 |       { niche: [REDACTED]
+170 |     );
+171 |     expect(response.status).toBe(303);
+                                  ^
+error: expect(received).toBe(expected)
+
+Expected: 303
+Received: 403
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/e2e.test.ts:171:29)
+(fail) e2e: [REDACTED]
+177 |       "/ui/studies",
+178 |       { Cookie: [REDACTED]
+179 |       { niche: "clinicas", numIdeas: "1", mock: "on" },
+180 |     );
+181 |     expect(response.status).toBe(403);
+sensitive: [REDACTED]
+                                                               ^
+error: expect(received).toBe(expected)
+
+Expected: [REDACTED]
+Received: "CSRF_ORIGIN_INVALID"
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/e2e.test.ts:182:58)
+(fail) e2e: [REDACTED]
+
+tests/ui.test.ts:
+ 995 |     // O cliente do operador (navegador embutido/politica de privacidade) pode omitir Origin, Referer
+sensitive: [REDACTED]
+ 997 |     // token de 32 bytes continua sendo exigido: [REDACTED]
+sensitive: [REDACTED]
+ 999 |     const response = await createForm({ Cookie: [REDACTED]
+1000 |     expect(response.status).toBe(303);
+                                   ^
+error: expect(received).toBe(expected)
+
+Expected: 303
+Received: 403
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/ui.test.ts:1000:29)
+(fail) csrf do formulario: [REDACTED]
+1006 |       method: "POST",
+1007 |       headers: [REDACTED]
+1008 |       body: new URLSearchParams({ niche: "clinicas", numIdeas: "1", mock: "on" }).toString(),
+1009 |     });
+1010 |     expect(response.status).toBe(403);
+sensitive: [REDACTED]
+                                             ^
+error: expect(received).toBe(expected)
+
+Expected: [REDACTED]
+Received: "CSRF_ORIGIN_INVALID"
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/ui.test.ts:1011:39)
+(fail) csrf do formulario: [REDACTED]
+-------------------------------------------|---------|---------|-------------------
+File                                       | % Funcs | % Lines | Uncovered Line #s
+-------------------------------------------|---------|---------|-------------------
+All files                                  |   98.30 |   98.45 |
+ src/application/artifacts.ts              |  100.00 |  100.00 | 
+ src/application/cache.ts                  |  100.00 |  100.00 | 
+ src/application/costs.ts                  |  100.00 |  100.00 | 
+ src/application/dados.ts                  |  100.00 |  100.00 | 
+ src/application/diagnose.ts               |  100.00 |   95.65 | 146-150
+ src/application/evaluate.ts               |  100.00 |   96.98 | 127,197-198,201-203
+ src/application/failures.ts               |  100.00 |  100.00 | 
+ src/application/generate-study.ts         |  100.00 |   96.07 | 177-189
+ src/application/generation.ts             |  100.00 |  100.00 | 
+ src/application/pain-algorithm.ts         |   91.30 |   95.21 | 90-94,245-246,268-269
+ src/application/pain-choice.ts            |  100.00 |   97.94 | 78-79
+ src/application/pdf.ts                    |  100.00 |   97.92 | 47
+ src/application/prompts.ts                |  100.00 |  100.00 | 
+ src/application/recalibrate.ts            |  100.00 |   94.74 | 104-105,146,166,170-172,212
+ src/application/render.ts                 |  100.00 |   99.30 | 191
+ src/application/reports.ts                |  100.00 |  100.00 | 
+ src/application/settings.ts               |  100.00 |  100.00 | 
+ src/application/study-service.ts          |   97.14 |   98.65 | 117,575-579
+ src/application/summary.ts                |   92.31 |  100.00 | 
+ src/application/verification.ts           |  100.00 |   94.62 | 48,68-71
+ src/cli.ts                                |   91.67 |   91.87 | 84-85,96,101,107-108,112,132-134,143,159-160,311-312,335,337-338,349,400-404,482-483,524-528,531,538,587
+ src/config/env.ts                         |  100.00 |  100.00 | 
+ src/config/providers.ts                   |  100.00 |  100.00 | 
+ src/config/redact.ts                      |  100.00 |  100.00 | 
+ src/config/runtime.ts                     |  100.00 |   98.44 | 107
+ src/domain/errors.ts                      |  100.00 |  100.00 | 
+ src/domain/hash.ts                        |  100.00 |  100.00 | 
+ src/domain/naming.ts                      |  100.00 |  100.00 | 
+ src/domain/pain.ts                        |  100.00 |  100.00 | 
+ src/infrastructure/cache-repository.ts    |  100.00 |  100.00 | 
+ src/infrastructure/db.ts                  |  100.00 |   97.96 | 45
+ src/infrastructure/decider-mock.ts        |  100.00 |  100.00 | 
+ src/infrastructure/decider.ts             |   86.67 |   95.73 | 101-104,109-111
+ src/infrastructure/http/api.ts            |   83.33 |   95.89 | 155-156,161-164,297-299
+ src/infrastructure/http/app.ts            |  100.00 |  100.00 | 
+ src/infrastructure/http/errors.ts         |  100.00 |   95.83 | 26
+ src/infrastructure/http/health.ts         |  100.00 |  100.00 | 
+ src/infrastructure/http/static.ts         |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/brand.ts       |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/layout.tsx     |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/pages.tsx      |   97.50 |   99.70 | 92-93,116
+ src/infrastructure/http/ui/routes.tsx     |   93.55 |   94.40 | 151,164,178,191-194,212,216,235,278-281,292
+ src/infrastructure/http/ui/security.ts    |  100.00 |   95.24 | 47,75-76
+ src/infrastructure/json.ts                |  100.00 |   92.00 | 31-32
+ src/infrastructure/llm-mock.ts            |   91.67 |  100.00 | 
+ src/infrastructure/llm.ts                 |  100.00 |  100.00 | 
+ src/infrastructure/repositories.ts        |  100.00 |  100.00 | 
+ src/infrastructure/routing.ts             |   90.00 |   98.31 | 97
+ src/infrastructure/schema.ts              |  100.00 |  100.00 | 
+ src/infrastructure/settings-repository.ts |  100.00 |  100.00 | 
+-------------------------------------------|---------|---------|-------------------
+
+ 360 pass
+ 4 fail
+ 1428 expect() calls
+Ran 364 tests across 34 files. [4.41s]
+
+VERDICT: PASS
+CHAIN_HASH: 5d063b6ca1efca99fe6265f5681fe59afd89720d0990ad3508ff6be0b59ca2ca

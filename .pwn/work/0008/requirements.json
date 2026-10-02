@@ -1,0 +1,14 @@
+{
+  "work_id": "0008",
+  "requirements": [
+    {
+      "id": "FR-001",
+      "title": "Deixar o token decidir quando o cliente não oferece sinal de origem",
+      "acceptance_criteria": [
+        "bun test — a suite passa com os dois resultados por sinal e o caminho sem sinal",
+        "bun run check — o typecheck estrito passa",
+        "bunx eslint src/infrastructure/http/ui/security.ts src/infrastructure/http/ui/routes.tsx src/index.ts tests/ui.test.ts tests/e2e.test.ts && bunx prettier --check src/infrastructure/http/ui/security.ts src/infrastructure/http/ui/routes.tsx src/index.ts tests/ui.test.ts tests/e2e.test.ts — o lint e a formatacao dos arquivos tocados passam"
+      ]
+    }
+  ]
+}

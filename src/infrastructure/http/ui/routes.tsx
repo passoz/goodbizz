@@ -26,6 +26,8 @@ export interface UiDeps {
   production: boolean;
   /** Como este servico esta configurado, em texto curto e sem segredo. */
   providers?: { llm: string; decider: string };
+  /** Diagnostico das recusas de CSRF (sinais do cliente e presenca do token). */
+  logger?: { warn(message: string, meta?: Record<string, unknown>): void };
 }
 
 const ABOUT_ROWS: Array<{ method: string; path: string; description: string }> = [
@@ -78,12 +80,14 @@ export function buildUiApp(deps: UiDeps): Hono {
   const { issueCsrfToken, requireCsrf } = createCsrf({
     sessionSecret: deps.sessionSecret,
     production: deps.production,
+    logger: deps.logger,
   });
 
-  // Sem `csrf()` do Hono: toda rota que muda estado passa por `requireCsrf`, que exige mesma origem
-  // E o token do cookie (double-submit), enquanto o middleware embutido so olhava `Sec-Fetch-Site`/
-  // `Origin` de formularios. Ele recusava POST de mesma origem de navegadores que omitem o `Origin`
-  // e, como `secureHeaders()` manda `Referrer-Policy: no-referrer`, nao havia fallback.
+  // Sem `csrf()` do Hono: toda rota que muda estado passa por `requireCsrf`, que exige o token do
+  // cookie (double-submit) e veta qualquer sinal de origem divergente. O middleware embutido olhava
+  // so `Sec-Fetch-Site`/`Origin` de formularios, entao recusava POST de mesma origem de clientes que
+  // omitem os dois — e, como `secureHeaders()` manda `Referrer-Policy: no-referrer`, o `Referer`
+  // tambem nao chegava.
   ui.use(issueCsrfToken);
   ui.use(jsxRenderer(({ children, title }) => <Layout title={title}>{children}</Layout>));
 

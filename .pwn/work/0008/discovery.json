@@ -1,0 +1,19 @@
+{
+  "work_id": "0008",
+  "title": "O formulário aceita cliente sem sinal de origem",
+  "imported_from": ".todo/0008-tasks.md",
+  "problem": "depois do Work 0007, o formulário continuava recusado com `CSRF_ORIGIN_INVALID` no navegador do operador. Medido com `curl --resolve vps:3000`: quando o cliente manda `Origin: http://vps:3000` a origem casa e a recusa seguinte é de token; portanto o cliente do operador não manda `Origin`, nem `Referer` (o `Referrer-Policy: no-referrer` suprime), nem `Sec-Fetch-Site: same-origin`. Exigir um sinal que o cliente não emite deixava o formulário inutilizável e, pior, o diagnóstico era impossível: a recusa não registrava o que o cliente mandou.",
+  "actors": [
+    "ACT-001 Usuário da interface web",
+    "ACT-003 Operador/consultor"
+  ],
+  "objectives": [
+    "SC-001: `bun test` prova os dois resultados por sinal e o caminho sem sinal com token (FR-001).",
+    "SC-002: o log da recusa traz os sinais do cliente (FR-002)."
+  ],
+  "constraints": [
+    "QR-001: a suíte cobre os dois resultados por sinal e o e2e reproduz o cliente sem sinal.",
+    "QR-002: a API pública e o caminho sem JavaScript continuam iguais.",
+    "QR-003: nenhum teste antigo é apagado para acomodar a mudança; os que fixavam \"sem sinal = 403\" passam a fixar o contrato novo."
+  ]
+}

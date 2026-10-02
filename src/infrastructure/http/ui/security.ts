@@ -22,6 +22,8 @@ export interface CsrfOptions {
   sessionSecret: string;
   /** When true the cookie is marked `Secure` (TLS-only deployment). */
   production?: boolean;
+  /** Diagnostico de recusa: sem os sinais do cliente, um 403 e impossivel de explicar depois. */
+  logger?: { warn(message: string, meta?: Record<string, unknown>): void };
 }
 
 export interface CsrfMiddleware {
@@ -51,7 +53,7 @@ async function formToken(c: Context<UiEnv>): Promise<string | null> {
 
 /** Builds the double-submit middleware pair bound to one session secret. */
 export function createCsrf(options: CsrfOptions): CsrfMiddleware {
-  const { sessionSecret, production = false } = options;
+  const { sessionSecret, production = false, logger } = options;
 
   const issueCsrfToken: MiddlewareHandler<UiEnv> = async (c, next) => {
     // Emit the cookie only when it does not exist yet: rotating the token on every response would
@@ -76,20 +78,28 @@ export function createCsrf(options: CsrfOptions): CsrfMiddleware {
       return;
     }
 
-    // Mesma origem por um sinal que o navegador controla: `Origin` exato quando presente, depois
-    // `Referer` sob `${origin}/` e, por fim, `Sec-Fetch-Site: same-origin`. O ultimo cobre os
-    // navegadores que omitem `Origin` no POST de mesma origem e o `Referrer-Policy: no-referrer`
-    // que o `secureHeaders()` manda — sem ele, um formulario legitimo batia em 403.
+    // Mesma origem por qualquer sinal que o navegador controle: `Origin` exato, `Referer` sob
+    // `${origin}/` e `Sec-Fetch-Site: same-origin`. Um sinal PRESENTE que divergir e veto; sem sinal
+    // nenhum (navegador embutido, politica de privacidade, cliente que omite os tres) a defesa e o
+    // token do double-submit — o cookie e `SameSite=Lax`, entao um POST cross-site nem chega com o
+    // cookie, e o token de 32 bytes nao e adivinhavel nem legivel por outra origem.
     const own = new URL(c.req.url).origin;
     const origin = c.req.header("Origin");
     const referer = c.req.header("Referer");
-    const sameOrigin =
-      origin !== undefined
-        ? origin === own
-        : referer !== undefined
-          ? referer.startsWith(`${own}/`)
-          : c.req.header("Sec-Fetch-Site") === "same-origin";
-    if (!sameOrigin) {
+    const secFetchSite = c.req.header("Sec-Fetch-Site");
+    const signals = [
+      origin !== undefined ? origin === own : undefined,
+      referer !== undefined ? referer.startsWith(`${own}/`) : undefined,
+      secFetchSite !== undefined ? secFetchSite === "same-origin" : undefined,
+    ].filter((signal): signal is boolean => signal !== undefined);
+    if (signals.includes(false)) {
+      logger?.warn("csrf recusado: sinal de origem divergente", {
+        path: c.req.path,
+        host: c.req.header("host"),
+        origin,
+        referer,
+        secFetchSite,
+      });
       return c.json({ error: "CSRF_ORIGIN_INVALID" }, 403);
     }
 
@@ -104,6 +114,13 @@ export function createCsrf(options: CsrfOptions): CsrfMiddleware {
       expectedBytes.length !== providedBytes.length ||
       !crypto.timingSafeEqual(expectedBytes, providedBytes)
     ) {
+      // Sem segredo no log: so a presenca do cookie e do token, que e o que distingue "cliente sem
+      // cookie" de "token divergente" quando o operador relata um 403.
+      logger?.warn("csrf recusado: token ausente ou divergente", {
+        path: c.req.path,
+        hasCookie: expectedBytes !== null,
+        hasToken: providedBytes !== null,
+      });
       return c.json({ error: "CSRF_TOKEN_INVALID" }, 403);
     }
     await next();

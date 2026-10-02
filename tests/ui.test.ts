@@ -991,11 +991,24 @@ describe("csrf do formulario: quais sinais de mesma origem valem", () => {
     expect(response.status).toBe(303);
   });
 
-  test("sem nenhum sinal de mesma origem responde 403, nunca 500", async () => {
+  test("sem nenhum sinal de mesma origem, o token decide e o formulario passa", async () => {
+    // O cliente do operador (navegador embutido/politica de privacidade) pode omitir Origin, Referer
+    // e Sec-Fetch-Site. O cookie e SameSite=Lax, entao um POST cross-site nem chega com ele, e o
+    // token de 32 bytes continua sendo exigido: a ausencia de sinal nao e motivo para recusar.
     const { cookiePair, token } = await csrfToken();
     const response = await createForm({ Cookie: cookiePair }, token);
+    expect(response.status).toBe(303);
+  });
+
+  test("sem sinal de mesma origem e sem token responde 403 de token", async () => {
+    const { cookiePair } = await csrfToken();
+    const response = await harness.app.request("/ui/studies", {
+      method: "POST",
+      headers: { ...FORM, Cookie: cookiePair },
+      body: new URLSearchParams({ niche: "clinicas", numIdeas: "1", mock: "on" }).toString(),
+    });
     expect(response.status).toBe(403);
-    expect(await errorCode(response)).toBe("CSRF_ORIGIN_INVALID");
+    expect(await errorCode(response)).toBe("CSRF_TOKEN_INVALID");
   });
 
   test("Origin de outro host com token valido responde 403", async () => {

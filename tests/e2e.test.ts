@@ -159,15 +159,27 @@ describe("e2e: jornada do operador pelo HTTP real", () => {
     expect((await fetch(`${base}/api/studies/${id}`)).status).toBe(404);
   });
 
-  test("formulario sem sinal de mesma origem responde 403, e nunca 500", async () => {
+  test("formulario sem sinal de mesma origem passa com o token, e nunca 500", async () => {
+    // Reproduz o cliente do operador: nenhum `Origin`, `Referer` ou `Sec-Fetch-Site`. O token do
+    // double-submit e a defesa, e a resposta e o redirect do formulario — nunca 403 nem 500.
     const { cookiePair, token } = await csrf();
     const response = await postForm(
       "/ui/studies",
       { Cookie: cookiePair },
-      { niche: "clinicas", numIdeas: "1", _csrf: token },
+      { niche: "clinicas", numIdeas: "1", mock: "on", _csrf: token },
+    );
+    expect(response.status).toBe(303);
+  });
+
+  test("formulario sem sinal de mesma origem e sem token responde 403 de token", async () => {
+    const { cookiePair } = await csrf();
+    const response = await postForm(
+      "/ui/studies",
+      { Cookie: cookiePair },
+      { niche: "clinicas", numIdeas: "1", mock: "on" },
     );
     expect(response.status).toBe(403);
-    expect(ErrorJson.parse(await response.json()).error).toBe("CSRF_ORIGIN_INVALID");
+    expect(ErrorJson.parse(await response.json()).error).toBe("CSRF_TOKEN_INVALID");
   });
 
   test("formulario sem token responde 403 e nao cria estudo", async () => {
