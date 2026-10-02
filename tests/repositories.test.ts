@@ -17,7 +17,7 @@ import {
 } from "../src/infrastructure/db.ts";
 import { SqliteStudyRepository } from "../src/infrastructure/repositories.ts";
 import { summarizeStudy } from "../src/application/summary.ts";
-import type { StudyIdea } from "../src/domain/types.ts";
+import type { StudyIdea, StudySummary } from "../src/domain/types.ts";
 import type { Database } from "bun:sqlite";
 
 /** Copia as migracoes existentes sem a 0003, para simular um banco gravado antes da mudanca. */
@@ -230,6 +230,37 @@ describe("identidade na persistencia", () => {
     const summary = summarizeStudy([evaluation("id-x", "X", 0.4), evaluation("id-y", "Y", 0.9)]);
 
     expect(summary.ordered.map((e) => e.id)).toEqual(["id-y", "id-x"]);
+  });
+
+  test("resumo legado sem id e reconciliado com a tabela evaluations", async () => {
+    const db = openMigratedDatabase(":memory:");
+    const repo = new SqliteStudyRepository(db.db);
+    try {
+      seedStudy(repo, db, "estudo-legado");
+      const ideas = [evaluation("i-1", "A", 0.5), evaluation("i-2", "B", 0.9)];
+      // Como uma versao anterior a migration 0003 gravava o resumo: cada ideia sem `id`.
+      const summary = summarizeStudy(ideas);
+      const legacySummary: StudySummary = {
+        ...summary,
+        ordered: summary.ordered.map((item) => {
+          const legacy = { ...item } as Partial<StudyIdea>;
+          delete legacy.id;
+          return legacy as StudyIdea;
+        }),
+      };
+      await repo.saveEvaluations("estudo-legado", ideas, legacySummary);
+      // A 0003 so preenche `idea_id`; ate o backfill passar a coluna fica nula, como em producao.
+      db.sqlite.query("UPDATE evaluations SET idea_id = NULL WHERE study_id = ?").run("estudo-legado");
+
+      const record = await repo.get("estudo-legado");
+      const ids = record!.evaluations.map((e) => e.id);
+      expect(ids).toEqual(["legacy-estudo-legado-00000001", "legacy-estudo-legado-00000002"]);
+      // Sem a reconciliacao o `ordered` vinha do blob e as superficies recebiam `id` undefined.
+      expect(record!.summary!.ordered.map((e) => e.id)).toEqual(ids);
+      expect(record!.summary!.ordered.map((e) => e.name)).toEqual(["B", "A"]);
+    } finally {
+      db.sqlite.close();
+    }
   });
 });
 

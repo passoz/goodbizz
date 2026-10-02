@@ -224,6 +224,19 @@ export class SqliteStudyRepository implements StudyRepository {
       .where(eq(evaluations.studyId, id))
       .orderBy(asc(evaluations.rank))
       .all();
+    const ideas: StudyIdea[] = evalRows.map((r) => ({
+      ...ideaJsonToEvaluation(JSON.parse(r.payloadJson) as IdeaJson),
+      // O id vem da coluna; o payload_json continua sendo a fonte da forma do baseline (CON-006).
+      id: r.ideaId ?? `legacy-${r.studyId}-${String(r.rank).padStart(8, "0")}`,
+    }));
+    const summary = row.summaryJson ? (JSON.parse(row.summaryJson) as StudySummary) : null;
+    // Estudos gravados antes da migration 0003 guardaram `summary_json` sem `id` em `ordered`.
+    // A tabela `evaluations` e a fonte da identidade (o backfill preencheu `idea_id`), entao
+    // `ordered` e remontado dela — mesma ordenacao por indice decrescente que `summarizeStudy`
+    // usa — em vez do blob denormalizado, que ficaria sem id para sempre.
+    if (summary) {
+      summary.ordered = [...ideas].sort((left, right) => right.index - left.index);
+    }
     return {
       id: row.id,
       createdAt: row.createdAt,
@@ -242,12 +255,8 @@ export class SqliteStudyRepository implements StudyRepository {
         step: row.step,
         error: row.error,
       },
-      evaluations: evalRows.map((r) => ({
-        ...ideaJsonToEvaluation(JSON.parse(r.payloadJson) as IdeaJson),
-        // O id vem da coluna; o payload_json continua sendo a fonte da forma do baseline (CON-006).
-        id: r.ideaId ?? `legacy-${r.studyId}-${String(r.rank).padStart(8, "0")}`,
-      })),
-      summary: row.summaryJson ? (JSON.parse(row.summaryJson) as StudySummary) : null,
+      evaluations: ideas,
+      summary,
       usage: row.usageJson ? (JSON.parse(row.usageJson) as StudyUsage) : null,
     };
   }
