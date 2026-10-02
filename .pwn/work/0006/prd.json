@@ -1,0 +1,75 @@
+{
+  "$schema": "../../../schemas/prd.schema.json",
+  "id": "PRD-0006",
+  "meta": {
+    "version": "1.0",
+    "created_at": "2026-10-02T17:52:12.766Z",
+    "author": "pwn-import"
+  },
+  "title": "A falha da exclusão chega em português",
+  "status": "approved",
+  "scenario": "brownfield",
+  "problem": {
+    "statement": "o Work 0005 fez a falha da exclusão aparecer na tela, mas o que aparece é o texto cru do servidor. Quando a página está obsoleta e a ideia já não existe, o 404 do serviço (`NotFoundError`) chega como `idea undefined not found in study <uuid>`: inglês, com um id cru e sem instrução. O operador não sabe se deve recarregar, tentar de novo ou desistir — e o `undefined` do exemplo só existe porque o `summary_json` de estudos antigos perdia a identidade, o que já foi corrigido no commit `ce577d3`, mas o texto cru continua sendo o que qualquer 404 mostraria."
+  },
+  "solution": {
+    "statement": "toda exclusão que falha mostra uma frase em português que diz o que fazer, escolhida pelo status — estudo em execução (409), item que já não existe (404) ou falha genérica —; o texto cru do servidor vai só para o console, para diagnóstico."
+  },
+  "decisions": [
+    {
+      "id": "DEC-001",
+      "statement": "Governar o Work 0006 pelo PWN com contratos V4 congelados derivados do plano v3.",
+      "status": "accepted",
+      "made_by": "pwn-import"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "FR-001",
+      "type": "functional",
+      "statement": "FR-001: Traduzir a falha da exclusão do estudo para uma frase acionável",
+      "acceptance_criteria": [
+        "bun test — a suite passa com a assercao das frases do dialogo de estudo",
+        "bun run check — o typecheck estrito passa",
+        "bunx eslint src/infrastructure/http/ui/pages.tsx tests/ui.test.ts && bunx prettier --check src/infrastructure/http/ui/pages.tsx tests/ui.test.ts — o lint e a formatacao dos arquivos tocados passam"
+      ]
+    },
+    {
+      "id": "FR-002",
+      "type": "functional",
+      "statement": "FR-002: Traduzir a falha da exclusão de ideia para uma frase acionável",
+      "acceptance_criteria": [
+        "bun test — a suite passa com a assercao das frases do dialogo de ideia",
+        "bun run check — o typecheck estrito passa",
+        "bunx eslint src/infrastructure/http/ui/pages.tsx tests/ui.test.ts && bunx prettier --check src/infrastructure/http/ui/pages.tsx tests/ui.test.ts — o lint e a formatacao dos arquivos tocados passam"
+      ]
+    }
+  ],
+  "stakeholders": [
+    {
+      "name": "ACT-001 Usuário da interface web",
+      "role": "stakeholder"
+    },
+    {
+      "name": "ACT-003 Operador/consultor",
+      "role": "stakeholder"
+    }
+  ],
+  "scope": {
+    "in_scope": [
+      "Frase em português para o 404 (\"o item não está mais lá; recarregue a página\") nos dois diálogos.",
+      "Frase em português para a falha genérica (rede ou status desconhecido) nos dois diálogos.",
+      "Manutenção da frase de 409 já existente e do texto cru no `console.error`."
+    ],
+    "out_of_scope": [
+      "Mudar as rotas, os status ou os corpos de erro da API.",
+      "Mudar a tradução do 409, feita no Work 0005.",
+      "Mudar o caminho sem JavaScript, que posta nas mesmas rotas e redireciona.",
+      "Tratar falhas de outras ações da página (renomear, executar)."
+    ]
+  },
+  "accepted_requirements": [
+    "FR-001",
+    "FR-002"
+  ]
+}

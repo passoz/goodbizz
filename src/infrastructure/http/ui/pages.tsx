@@ -405,10 +405,15 @@ const DELETE_MODAL_SCRIPT = `
         } catch (failure) {
           message = failure && failure.message ? failure.message : "";
         }
+        // O texto cru do servidor (ingles, com id) fica no console: na tela vai a escolha por
+        // status, que o operador consegue acionar.
+        console.error("[goodbizz] exclusão do estudo recusada:", status, message);
         if (error) {
           error.textContent = status === 409
             ? "O estudo ainda está em execução — aguarde terminar para excluir."
-            : message || "falha ao excluir o estudo";
+            : status === 404
+              ? "Este estudo não está mais disponível — recarregue a página."
+              : "Não foi possível excluir o estudo agora — tente de novo.";
         }
         confirmButton.disabled = false;
       })();

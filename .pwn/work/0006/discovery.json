@@ -1,0 +1,19 @@
+{
+  "work_id": "0006",
+  "title": "A falha da exclusão chega em português",
+  "imported_from": ".todo/0006-tasks.md",
+  "problem": "o Work 0005 fez a falha da exclusão aparecer na tela, mas o que aparece é o texto cru do servidor. Quando a página está obsoleta e a ideia já não existe, o 404 do serviço (`NotFoundError`) chega como `idea undefined not found in study <uuid>`: inglês, com um id cru e sem instrução. O operador não sabe se deve recarregar, tentar de novo ou desistir — e o `undefined` do exemplo só existe porque o `summary_json` de estudos antigos perdia a identidade, o que já foi corrigido no commit `ce577d3`, mas o texto cru continua sendo o que qualquer 404 mostraria.",
+  "actors": [
+    "ACT-001 Usuário da interface web",
+    "ACT-003 Operador/consultor"
+  ],
+  "objectives": [
+    "SC-001: o teste de UI prova que o HTML servido carrega as frases de 404 e de falha genérica nos dois diálogos (FR-001, FR-002).",
+    "SC-002: a verificação em navegador prova que um 404 no `fetch` escreve a frase de recarregar no aviso e não o texto do servidor (FR-002)."
+  ],
+  "constraints": [
+    "QR-001: a exclusão que funciona continua idêntica: 204 do servidor, volta para a lista no estudo e recarga da página na ideia.",
+    "QR-002: a mudança vive em `src/infrastructure/http/ui`, é HTML e script de página, sem tocar em domínio, casos de uso ou API.",
+    "QR-003: a suíte existente permanece verde e o caminho sem JavaScript continua postando nas mesmas rotas."
+  ]
+}

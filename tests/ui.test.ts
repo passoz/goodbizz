@@ -389,6 +389,23 @@ describe("paginas da interface", () => {
     }
   });
 
+  test("a falha da exclusao do estudo chega em portugues, nao no texto do servidor", async () => {
+    const study = await harness.service.create(resolveStudyConfig({ niche: "oficinas", mock: true }));
+
+    for (const body of [
+      await (await harness.app.request("/")).text(),
+      await (await harness.app.request(`/studies/${study.id}`)).text(),
+    ]) {
+      // A frase e escolhida pelo status: o item que sumiu pede recarregar e o resto, tentar de novo.
+      expect(body).toContain("O estudo ainda está em execução — aguarde terminar para excluir.");
+      expect(body).toContain("Este estudo não está mais disponível — recarregue a página.");
+      expect(body).toContain("Não foi possível excluir o estudo agora — tente de novo.");
+      // O texto cru do servidor (ingles, com id) nao vai para a tela; vai para o console.
+      expect(body).not.toContain("falha ao excluir o estudo");
+      expect(body).toContain("console.error");
+    }
+  });
+
   test("a exclusao recusa POST sem token CSRF", async () => {
     const study = await harness.service.create(resolveStudyConfig({ niche: "oficinas", mock: true }));
     const response = await harness.app.request(`/ui/studies/${study.id}/delete`, {

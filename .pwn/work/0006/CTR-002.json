@@ -1,0 +1,89 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.2",
+  "work_id": "0006",
+  "title": "Traduzir a falha da exclusão de ideia para uma frase acionável",
+  "risk": {
+    "level": "L2",
+    "reasons": [
+      "Task 1.2 classificada como L2"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.2-01",
+        "given": "Dado o comportamento declarado: o script do diálogo de ideia escolhe a frase pelo status — 404 diz que a ideia nao esta mais no estudo e o resto diz para tentar de novo — e manda o status e o texto cru do servidor para o console",
+        "when": "Quando `bun test` é executado",
+        "then": "Então a suite passa com a assercao das frases do dialogo de ideia"
+      },
+      {
+        "id": "SCENARIO-1.2-02",
+        "given": "Dado o comportamento declarado: o script do diálogo de ideia escolhe a frase pelo status — 404 diz que a ideia nao esta mais no estudo e o resto diz para tentar de novo — e manda o status e o texto cru do servidor para o console",
+        "when": "Quando `bun run check` é executado",
+        "then": "Então o typecheck estrito passa"
+      },
+      {
+        "id": "SCENARIO-1.2-03",
+        "given": "Dado o comportamento declarado: o script do diálogo de ideia escolhe a frase pelo status — 404 diz que a ideia nao esta mais no estudo e o resto diz para tentar de novo — e manda o status e o texto cru do servidor para o console",
+        "when": "Quando `bunx eslint src/infrastructure/http/ui/pages.tsx tests/ui.test.ts && bunx prettier --check src/infrastructure/http/ui/pages.tsx tests/ui.test.ts` é executado",
+        "then": "Então o lint e a formatacao dos arquivos tocados passam"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/infrastructure/http/ui/pages.tsx",
+      "tests/ui.test.ts"
+    ],
+    "affected_components": [
+      "delete-feedback"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "Não quebrar retrocompatibilidade nem expor dados sensíveis",
+      "Manter cobertura de testes existente"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun test",
+      "bun run check",
+      "bunx eslint src/infrastructure/http/ui/pages.tsx tests/ui.test.ts && bunx prettier --check src/infrastructure/http/ui/pages.tsx tests/ui.test.ts",
+      "bunx eslint . && bunx prettier --check ."
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/infrastructure/http/ui/pages.tsx",
+      "tests/ui.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env*"
+    ],
+    "out_of_scope": [
+      "Arquivos fora de: src/infrastructure/http/ui/pages.tsx, tests/ui.test.ts"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 50000,
+    "max_cost_usd": 0.5,
+    "max_duration_minutes": 15,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 30,
+    "max_tool_calls": 60,
+    "max_shell_executions": 15
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

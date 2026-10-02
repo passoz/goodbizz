@@ -1,0 +1,100 @@
+{
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun test"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0006/1.1-ac-1.log",
+      "log_sha256": "8c5dd855628889074444a98de4436e035a34731d4a45b0e0bd155dab8e78720c",
+      "recorded_at": "2026-10-02T17:57:45.722Z"
+    },
+    "AC-2": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun run check"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0006/1.1-ac-2.log",
+      "log_sha256": "04e27da5581a3f78ed14e40462239da8c2432e2a9e31351111e33908fc3bbf88",
+      "recorded_at": "2026-10-02T17:57:48.687Z"
+    },
+    "AC-3": {
+      "command": [
+        "bash",
+        "-lc",
+        "bunx eslint src/infrastructure/http/ui/pages.tsx tests/ui.test.ts && bunx prettier --check src/infrastructure/http/ui/pages.tsx tests/ui.test.ts"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0006/1.1-ac-3.log",
+      "log_sha256": "0a2cc85e80726fad7442575e9636cf56817c27c70ad86e995faeb7dfbea6f73e",
+      "recorded_at": "2026-10-02T17:57:50.139Z"
+    },
+    "REGRESSION": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun test"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0006/1.1-regression.log",
+      "log_sha256": "9a1467680606278beb7f0bc6dde54e9fb5de121a5860474591cce3b157d936b1",
+      "recorded_at": "2026-10-02T17:57:54.293Z"
+    }
+  },
+  "baseline_implementation": {
+    "src/infrastructure/http/ui/pages.tsx": {
+      "exists": true,
+      "sha256": "a2520b1adabf6b449d07104a509b9d68df70e69346fb83e2f99c665f75b5d242"
+    }
+  },
+  "baseline_tests": {
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "4c2297b1c97fff44a4aead0a38b902d59daa4ead73acd651d1db98eda49250f3"
+    }
+  },
+  "created_at": "2026-10-02T17:55:46.235Z",
+  "green_expect": null,
+  "green_implementation": {
+    "src/infrastructure/http/ui/pages.tsx": {
+      "exists": true,
+      "sha256": "fad966f73bb0402a19d9a399054d39d873fa2f69258f97cdf6d79f74b94e7c41"
+    }
+  },
+  "green_tests": {
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "bba8954edded819e3765e23349b96ab98dd76437a9bdab5ee618968a13de2d5e"
+    }
+  },
+  "implementation_files": [
+    "src/infrastructure/http/ui/pages.tsx"
+  ],
+  "red_command": [
+    "bun",
+    "test"
+  ],
+  "red_expect": "Este estudo não está mais disponível",
+  "red_tests": {
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "bba8954edded819e3765e23349b96ab98dd76437a9bdab5ee618968a13de2d5e"
+    }
+  },
+  "task": "1.1",
+  "test_files": [
+    "tests/ui.test.ts"
+  ]
+}
