@@ -1,0 +1,42 @@
+{
+  "work_id": "0007",
+  "title": "O 500 do formulário e os testes que faltavam",
+  "capabilities": [
+    {
+      "id": "CAP-013",
+      "name": "API HTTP de estudos",
+      "description": "expõe os estudos por HTTP com validacao de payload e mapa de erros tipado",
+      "rules": [
+        "BR-017",
+        "BR-021"
+      ]
+    },
+    {
+      "id": "CAP-014",
+      "name": "Interface web",
+      "description": "permite criar e ler estudos pelo navegador sem instalar nada renderiza no servidor com hono/jsx e consome a propria API para disparar e acompanhar estudos",
+      "rules": [
+        "BR-018",
+        "BR-022"
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "BR-017",
+      "statement": "Payload de API invalido retorna 422 com o detalhe da validacao Zod."
+    },
+    {
+      "id": "BR-018",
+      "statement": "Toda rota de UI que muda estado exige mesma origem e token CSRF em tempo constante."
+    },
+    {
+      "id": "BR-021",
+      "statement": "Rotas de API publica nao entram no filtro CSRF e a UI nao compartilha o mesmo sub-app."
+    },
+    {
+      "id": "BR-022",
+      "statement": "Cookie de sessao usa httpOnly, sameSite Lax e secure em producao."
+    }
+  ]
+}

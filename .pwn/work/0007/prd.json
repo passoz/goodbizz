@@ -1,0 +1,75 @@
+{
+  "$schema": "../../../schemas/prd.schema.json",
+  "id": "PRD-0007",
+  "meta": {
+    "version": "1.0",
+    "created_at": "2026-10-02T18:36:54.807Z",
+    "author": "pwn-import"
+  },
+  "title": "O 500 do formulário e os testes que faltavam",
+  "status": "approved",
+  "scenario": "brownfield",
+  "problem": {
+    "statement": "o `POST` de qualquer formulário da interface respondia `{\"error\":\"INTERNAL_SERVER_ERROR\",\"message\":\"Erro interno\"}` em 1 ms. A interface instala o middleware `csrf()` do Hono além do `requireCsrf` próprio; quando ele rejeita, lança `HTTPException`, e o `errorHandler` do serviço só reconhece `DomainError` — o 403 dela virava 500 e o motivo sumia. Além disso o `secureHeaders()` manda `Referrer-Policy: no-referrer`, então o fallback por `Referer` do `requireCsrf` nunca existia no navegador, e o middleware do Hono recusa POST de mesma origem de clientes que omitem `Origin` e `Sec-Fetch-Site`. Não havia nenhum teste de ponta a ponta pelo HTTP real: os testes usavam `app.request` no sub-app da UI, sem o `onError` do app composto e sem socket."
+  },
+  "solution": {
+    "statement": "nenhuma recusa de middleware vira 500 — ela chega ao operador com o status real; a mesma origem é aceita por `Origin`, `Referer` ou `Sec-Fetch-Site: same-origin`, sempre com o token exigido; e existe um e2e que sobe o serviço completo num socket real e percorre a jornada do operador pelo caminho sem JavaScript."
+  },
+  "decisions": [
+    {
+      "id": "DEC-001",
+      "statement": "Governar o Work 0007 pelo PWN com contratos V4 congelados derivados do plano v3.",
+      "status": "accepted",
+      "made_by": "pwn-import"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "FR-002",
+      "type": "functional",
+      "statement": "FR-002: Preservar o status do HTTPException de middleware",
+      "acceptance_criteria": [
+        "bun test — a suite passa com a assercao do status preservado",
+        "bun run check — o typecheck estrito passa",
+        "bunx eslint src/infrastructure/http/errors.ts tests/smoke.test.ts && bunx prettier --check src/infrastructure/http/errors.ts tests/smoke.test.ts — o lint e a formatacao dos arquivos tocados passam"
+      ]
+    },
+    {
+      "id": "FR-001",
+      "type": "functional",
+      "statement": "FR-001: Aceitar os sinais de mesma origem do navegador e cobrir a jornada com e2e",
+      "acceptance_criteria": [
+        "bun test — a suite passa com os testes de sinal de origem e o e2e",
+        "bun run check — o typecheck estrito passa",
+        "bunx eslint src/infrastructure/http/ui/routes.tsx src/infrastructure/http/ui/security.ts tests/ui.test.ts tests/e2e.test.ts && bunx prettier --check src/infrastructure/http/ui/routes.tsx src/infrastructure/http/ui/security.ts tests/ui.test.ts tests/e2e.test.ts — o lint e a formatacao dos arquivos tocados passam"
+      ]
+    }
+  ],
+  "stakeholders": [
+    {
+      "name": "ACT-001 Usuário da interface web",
+      "role": "stakeholder"
+    },
+    {
+      "name": "ACT-003 Operador/consultor",
+      "role": "stakeholder"
+    }
+  ],
+  "scope": {
+    "in_scope": [
+      "Preservar o status do `HTTPException` de middleware no handler de erro.",
+      "Remover o `csrf()` do Hono do sub-app da UI, mantendo o `requireCsrf` como única barreira e documentando por quê.",
+      "Aceitar `Sec-Fetch-Site: same-origin` como sinal de mesma origem quando faltam `Origin` e `Referer`.",
+      "Teste e2e com socket real cobrindo criação, execução, adição pelo formulário, exclusão de ideia e de estudo."
+    ],
+    "out_of_scope": [
+      "Mudar rotas, corpos de erro ou o esquema de token.",
+      "Proteger a API pública com CSRF (ela não tem formulários e continua igual).",
+      "Trocar o `requireCsrf` por um middleware de terceiro."
+    ]
+  },
+  "accepted_requirements": [
+    "FR-002",
+    "FR-001"
+  ]
+}

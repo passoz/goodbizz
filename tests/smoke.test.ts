@@ -6,6 +6,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, test } from "bun:test";
 import { Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
 
 import { StudyCache } from "../src/application/cache.ts";
 import { StudyService } from "../src/application/study-service.ts";
@@ -209,6 +210,23 @@ describe("HTTP composition", () => {
     expect(response.status).toBe(404);
     const body = (await response.json()) as { error: string };
     expect(body.error).toBe("NOT_FOUND");
+  });
+
+  test("preserva o status de um HTTPException lancado por middleware", async () => {
+    // Regressao: o `csrf()` embutido do Hono sinaliza recusa com HTTPException; sem o ramo dela no
+    // error handler, um 403 de formulario virava 500 "Erro interno" e o operador nao via o motivo.
+    const app = buildHttpApp({
+      api: new Hono().get("/forbidden", () => {
+        throw new HTTPException(403, { res: new Response("Forbidden", { status: 403 }) });
+      }),
+      ui: new Hono(),
+      health: new Hono(),
+      logger: silentLogger(),
+      production: false,
+    });
+    const response = await app.request("/api/forbidden");
+    expect(response.status).toBe(403);
+    expect(await response.text()).toBe("Forbidden");
   });
 
   test("redirects to HTTPS only when a proxy reports plaintext, never for health", async () => {

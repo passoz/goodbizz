@@ -1,0 +1,122 @@
+{
+  "$schema": "../../../schemas/plan.schema.json",
+  "work_id": "0007",
+  "title": "O 500 do formulário e os testes que faltavam",
+  "components": [
+    {
+      "name": "http-error-mapping",
+      "purpose": "Status real de uma recusa de middleware: o `HTTPException` do Hono deixa de virar 500"
+    },
+    {
+      "name": "ui-csrf",
+      "purpose": "Mesma origem aceita por `Origin`, `Referer` ou `Sec-Fetch-Site`, sempre com token, sem o middleware embutido"
+    }
+  ],
+  "global_gates": [
+    "`bun test` — a suite completa passa com exit 0.",
+    "`bun run check` — typecheck estrito passa com exit 0.",
+    "`bunx eslint . && bunx prettier --check .` — lint e formatacao passam."
+  ],
+  "tasks": [
+    {
+      "id": "1.1",
+      "title": "Preservar o status do HTTPException de middleware",
+      "requirement_id": "FR-002",
+      "depends_on": [],
+      "behavior": "o handler de erro reconhece `HTTPException` e devolve o status e a resposta dela, entao uma recusa de middleware deixa de virar 500 com corpo generico",
+      "components": [
+        "http-error-mapping"
+      ],
+      "files": [
+        "src/infrastructure/http/errors.ts",
+        "tests/smoke.test.ts"
+      ],
+      "implementation_files": [
+        "src/infrastructure/http/errors.ts"
+      ],
+      "test_files": [
+        "tests/smoke.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/smoke.test.ts",
+        "description": "com o handler atual o `HTTPException` cai no ramo generico, entao a assercao que exige o status 403 do middleware falha"
+      },
+      "implementation_steps": [
+        "Escrever o teste que falha (RED): o app composto responde o status do `HTTPException` lancado por uma rota, e nao 500",
+        "Acrescentar o ramo do `HTTPException` ao `buildErrorHandler`, registrando o status no log (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test",
+          "description": "a suite passa com a assercao do status preservado"
+        },
+        {
+          "command": "bun run check",
+          "description": "o typecheck estrito passa"
+        },
+        {
+          "command": "bunx eslint src/infrastructure/http/errors.ts tests/smoke.test.ts && bunx prettier --check src/infrastructure/http/errors.ts tests/smoke.test.ts",
+          "description": "o lint e a formatacao dos arquivos tocados passam"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-013",
+      "contract_id": "CTR-001",
+      "complexity": "standard",
+      "status": "done"
+    },
+    {
+      "id": "1.2",
+      "title": "Aceitar os sinais de mesma origem do navegador e cobrir a jornada com e2e",
+      "requirement_id": "FR-001",
+      "depends_on": [],
+      "behavior": "o `requireCsrf` aceita mesma origem por `Origin`, `Referer` ou `Sec-Fetch-Site: same-origin`, o sub-app da UI nao instala mais o `csrf()` do Hono, e um e2e sobre socket real percorre a jornada do operador",
+      "components": [
+        "ui-csrf"
+      ],
+      "files": [
+        "src/infrastructure/http/ui/routes.tsx",
+        "src/infrastructure/http/ui/security.ts",
+        "tests/ui.test.ts",
+        "tests/e2e.test.ts"
+      ],
+      "implementation_files": [
+        "src/infrastructure/http/ui/routes.tsx",
+        "src/infrastructure/http/ui/security.ts"
+      ],
+      "test_files": [
+        "tests/ui.test.ts",
+        "tests/e2e.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/ui.test.ts tests/e2e.test.ts",
+        "description": "sem o sinal novo o POST so com `Sec-Fetch-Site` bate em 403 e o e2e da adicao pelo formulario falha"
+      },
+      "implementation_steps": [
+        "Escrever os testes que falham (RED): os sinais de mesma origem no sub-app e a jornada e2e sobre socket real",
+        "Remover o `csrf()` do Hono da montagem da UI e aceitar `Sec-Fetch-Site: same-origin` no `requireCsrf` (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test",
+          "description": "a suite passa com os testes de sinal de origem e o e2e"
+        },
+        {
+          "command": "bun run check",
+          "description": "o typecheck estrito passa"
+        },
+        {
+          "command": "bunx eslint src/infrastructure/http/ui/routes.tsx src/infrastructure/http/ui/security.ts tests/ui.test.ts tests/e2e.test.ts && bunx prettier --check src/infrastructure/http/ui/routes.tsx src/infrastructure/http/ui/security.ts tests/ui.test.ts tests/e2e.test.ts",
+          "description": "o lint e a formatacao dos arquivos tocados passam"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-014",
+      "contract_id": "CTR-002",
+      "complexity": "standard",
+      "status": "done"
+    }
+  ]
+}

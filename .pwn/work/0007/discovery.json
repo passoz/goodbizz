@@ -1,0 +1,19 @@
+{
+  "work_id": "0007",
+  "title": "O 500 do formulário e os testes que faltavam",
+  "imported_from": ".todo/0007-tasks.md",
+  "problem": "o `POST` de qualquer formulário da interface respondia `{\"error\":\"INTERNAL_SERVER_ERROR\",\"message\":\"Erro interno\"}` em 1 ms. A interface instala o middleware `csrf()` do Hono além do `requireCsrf` próprio; quando ele rejeita, lança `HTTPException`, e o `errorHandler` do serviço só reconhece `DomainError` — o 403 dela virava 500 e o motivo sumia. Além disso o `secureHeaders()` manda `Referrer-Policy: no-referrer`, então o fallback por `Referer` do `requireCsrf` nunca existia no navegador, e o middleware do Hono recusa POST de mesma origem de clientes que omitem `Origin` e `Sec-Fetch-Site`. Não havia nenhum teste de ponta a ponta pelo HTTP real: os testes usavam `app.request` no sub-app da UI, sem o `onError` do app composto e sem socket.",
+  "actors": [
+    "ACT-001 Usuário da interface web",
+    "ACT-003 Operador/consultor"
+  ],
+  "objectives": [
+    "SC-001: `bun test tests/e2e.test.ts` prova a jornada completa por HTTP real (QR-001).",
+    "SC-002: o teste de composição prova que um `HTTPException` de middleware mantém o status (FR-002)."
+  ],
+  "constraints": [
+    "QR-001: um e2e sobre socket real percorre criação, execução, adição pelo formulário e exclusões.",
+    "QR-002: a API pública e o caminho sem JavaScript continuam com as mesmas rotas e status.",
+    "QR-003: a suíte existente permanece verde e nenhum teste antigo é reescrito para acomodar a mudança."
+  ]
+}

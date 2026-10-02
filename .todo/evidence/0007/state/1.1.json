@@ -1,0 +1,100 @@
+{
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun test"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0007/1.1-ac-1.log",
+      "log_sha256": "28e3f2171e2996a7191172108f59b60dfa7d141001fe9ed106c3214e5031fca2",
+      "recorded_at": "2026-10-02T18:38:06.508Z"
+    },
+    "AC-2": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun run check"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0007/1.1-ac-2.log",
+      "log_sha256": "a9b93a4310d347733223a8d5db8194d2abd4d33a09da39c4aa2ecb68c7ef1649",
+      "recorded_at": "2026-10-02T18:38:09.701Z"
+    },
+    "AC-3": {
+      "command": [
+        "bash",
+        "-lc",
+        "bunx eslint src/infrastructure/http/errors.ts tests/smoke.test.ts && bunx prettier --check src/infrastructure/http/errors.ts tests/smoke.test.ts"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0007/1.1-ac-3.log",
+      "log_sha256": "72bb349cc86385902eaefa19df497338a41ebc20246668446adee28b9b1850b3",
+      "recorded_at": "2026-10-02T18:38:10.540Z"
+    },
+    "REGRESSION": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun test"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0007/1.1-regression.log",
+      "log_sha256": "e76bdcf2d04e659c554feb8cb6a8593f56e8283e47f76fa075e2a11149e77452",
+      "recorded_at": "2026-10-02T18:38:14.812Z"
+    }
+  },
+  "baseline_implementation": {
+    "src/infrastructure/http/errors.ts": {
+      "exists": true,
+      "sha256": "a26f1a2b41bccfd46e4615a403ff9b5fc938e28a6cdee7f504fda993112c7dca"
+    }
+  },
+  "baseline_tests": {
+    "tests/smoke.test.ts": {
+      "exists": true,
+      "sha256": "7ce86ac63850097aab2444106a061c0747ce451a30b365b0f84f5a9d73b7b7ee"
+    }
+  },
+  "created_at": "2026-10-02T18:37:27.840Z",
+  "green_expect": null,
+  "green_implementation": {
+    "src/infrastructure/http/errors.ts": {
+      "exists": true,
+      "sha256": "66ad472bb3d707f02a730c04950277417a205904de939ac622c0fd8dac30464e"
+    }
+  },
+  "green_tests": {
+    "tests/smoke.test.ts": {
+      "exists": true,
+      "sha256": "ae7fe6a7b58f7a450c0f63becdcdc5f476630b2c9e4074289d48329097c31c09"
+    }
+  },
+  "implementation_files": [
+    "src/infrastructure/http/errors.ts"
+  ],
+  "red_command": [
+    "bun",
+    "test"
+  ],
+  "red_expect": "preserva o status de um HTTPException",
+  "red_tests": {
+    "tests/smoke.test.ts": {
+      "exists": true,
+      "sha256": "ae7fe6a7b58f7a450c0f63becdcdc5f476630b2c9e4074289d48329097c31c09"
+    }
+  },
+  "task": "1.1",
+  "test_files": [
+    "tests/smoke.test.ts"
+  ]
+}

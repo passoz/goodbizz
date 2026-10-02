@@ -1,0 +1,23 @@
+{
+  "work_id": "0007",
+  "requirements": [
+    {
+      "id": "FR-002",
+      "title": "Preservar o status do HTTPException de middleware",
+      "acceptance_criteria": [
+        "bun test — a suite passa com a assercao do status preservado",
+        "bun run check — o typecheck estrito passa",
+        "bunx eslint src/infrastructure/http/errors.ts tests/smoke.test.ts && bunx prettier --check src/infrastructure/http/errors.ts tests/smoke.test.ts — o lint e a formatacao dos arquivos tocados passam"
+      ]
+    },
+    {
+      "id": "FR-001",
+      "title": "Aceitar os sinais de mesma origem do navegador e cobrir a jornada com e2e",
+      "acceptance_criteria": [
+        "bun test — a suite passa com os testes de sinal de origem e o e2e",
+        "bun run check — o typecheck estrito passa",
+        "bunx eslint src/infrastructure/http/ui/routes.tsx src/infrastructure/http/ui/security.ts tests/ui.test.ts tests/e2e.test.ts && bunx prettier --check src/infrastructure/http/ui/routes.tsx src/infrastructure/http/ui/security.ts tests/ui.test.ts tests/e2e.test.ts — o lint e a formatacao dos arquivos tocados passam"
+      ]
+    }
+  ]
+}

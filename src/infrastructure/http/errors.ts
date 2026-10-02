@@ -3,6 +3,7 @@
  * stack trace or internal detail can escape the process.
  */
 import type { Context, ErrorHandler, NotFoundHandler } from "hono";
+import { HTTPException } from "hono/http-exception";
 
 import { DomainError, ValidationError } from "../../domain/errors.ts";
 import { scrub } from "../../config/redact.ts";
@@ -25,6 +26,12 @@ export function buildErrorHandler(logger: Logger): ErrorHandler {
         logger.error("request failed", { code: error.code, path: c.req.path });
       }
       return c.json(body, error.status as 400);
+    }
+    // Middleware do Hono (ex.: o `csrf()` embutido) sinaliza recusa com `HTTPException`, que carrega
+    // o status real. Sem este ramo o 4xx dela virava 500 "Erro interno" e o motivo sumia do operador.
+    if (error instanceof HTTPException) {
+      logger.warn("http exception", { path: c.req.path, status: error.status });
+      return error.getResponse();
     }
     logger.error("unhandled exception", { path: c.req.path, error: scrub(String(error)) });
     const body: ErrorBody = { error: "INTERNAL_SERVER_ERROR", message: "Erro interno" };
