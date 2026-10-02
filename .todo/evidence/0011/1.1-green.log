@@ -1,0 +1,172 @@
+TASK: 1.1
+CHECK: GREEN
+COMMAND: bun test
+EXIT: 0
+OUTPUT:
+bun test v1.4.2 (744846f84)
+{"level":50,"time":1790971564760,"pid":496362,"hostname":"note","msg":"e"}
+{"level":30,"time":1790971565111,"pid":496362,"hostname":"note","count":0,"msg":"migrations applied"}
+{"level":40,"time":1790971565112,"pid":496362,"hostname":"note","count":1,"msg":"stale studies marked as failed on boot"}
+-------------------------------------------|---------|---------|-------------------
+File                                       | % Funcs | % Lines | Uncovered Line #s
+-------------------------------------------|---------|---------|-------------------
+All files                                  |   98.48 |   98.41 |
+ src/application/artifacts.ts              |  100.00 |  100.00 | 
+ src/application/cache.ts                  |  100.00 |  100.00 | 
+ src/application/costs.ts                  |  100.00 |  100.00 | 
+ src/application/dados.ts                  |  100.00 |  100.00 | 
+ src/application/diagnose.ts               |  100.00 |   95.65 | 146-150
+ src/application/evaluate.ts               |  100.00 |   96.98 | 127,197-198,201-203
+ src/application/failures.ts               |  100.00 |  100.00 | 
+ src/application/generate-study.ts         |  100.00 |   96.07 | 177-189
+ src/application/generation.ts             |  100.00 |  100.00 | 
+ src/application/pain-algorithm.ts         |   91.30 |   95.21 | 90-94,245-246,268-269
+ src/application/pain-choice.ts            |  100.00 |   97.94 | 78-79
+ src/application/pdf.ts                    |  100.00 |   97.92 | 47
+ src/application/prompts.ts                |  100.00 |  100.00 | 
+ src/application/recalibrate.ts            |  100.00 |   94.74 | 104-105,146,166,170-172,212
+ src/application/render.ts                 |  100.00 |   99.30 | 191
+ src/application/reports.ts                |  100.00 |  100.00 | 
+ src/application/settings.ts               |  100.00 |  100.00 | 
+ src/application/study-service.ts          |   97.40 |   98.70 | 117,600-604
+ src/application/summary.ts                |   92.31 |  100.00 | 
+ src/application/verification.ts           |  100.00 |   94.62 | 48,68-71
+ src/cli.ts                                |   91.67 |   92.55 | 85-86,97,102,108-109,113,133-135,144,160-161,312-313,346,397-401,479-480,521-525,528,535,584
+ src/config/env.ts                         |  100.00 |  100.00 | 
+ src/config/providers.ts                   |  100.00 |  100.00 | 
+ src/config/redact.ts                      |  100.00 |  100.00 | 
+ src/config/runtime.ts                     |  100.00 |   98.44 | 107
+ src/domain/errors.ts                      |  100.00 |  100.00 | 
+ src/domain/hash.ts                        |  100.00 |  100.00 | 
+ src/domain/naming.ts                      |  100.00 |  100.00 | 
+ src/domain/pain.ts                        |  100.00 |  100.00 | 
+ src/infrastructure/cache-repository.ts    |  100.00 |  100.00 | 
+ src/infrastructure/db.ts                  |  100.00 |   97.96 | 45
+ src/infrastructure/decider-mock.ts        |  100.00 |  100.00 | 
+ src/infrastructure/decider.ts             |   86.67 |   95.73 | 101-104,109-111
+ src/infrastructure/http/api.ts            |   90.57 |   98.89 | 358-360
+ src/infrastructure/http/app.ts            |  100.00 |  100.00 | 
+ src/infrastructure/http/errors.ts         |  100.00 |   95.83 | 26
+ src/infrastructure/http/health.ts         |  100.00 |  100.00 | 
+ src/infrastructure/http/static.ts         |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/brand.ts       |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/layout.tsx     |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/pages.tsx      |   97.56 |   99.71 | 92-93,116
+ src/infrastructure/http/ui/routes.tsx     |   93.33 |   94.23 | 140,153,167,180-183,201,205,224,267-270,281
+ src/infrastructure/http/ui/security.ts    |  100.00 |   95.77 | 49,77-78
+ src/infrastructure/json.ts                |  100.00 |   92.00 | 31-32
+ src/infrastructure/llm-mock.ts            |   91.67 |  100.00 | 
+ src/infrastructure/llm.ts                 |  100.00 |  100.00 | 
+ src/infrastructure/provider-probe.ts      |  100.00 |   92.17 | 38,51-53,91,134,175,179-183,216
+ src/infrastructure/repositories.ts        |  100.00 |  100.00 | 
+ src/infrastructure/routing.ts             |   90.00 |   98.31 | 97
+ src/infrastructure/schema.ts              |  100.00 |  100.00 | 
+ src/infrastructure/settings-repository.ts |  100.00 |  100.00 | 
+-------------------------------------------|---------|---------|-------------------
+
+ 400 pass
+ 0 fail
+ 1503 expect() calls
+Ran 400 tests across 36 files. [4.26s]
+
+MUTATION_EXIT: 1
+MUTATION_OUTPUT:
+bun test v1.4.2 (744846f84)
+{"level":50,"time":1790971569026,"pid":496398,"hostname":"note","msg":"e"}
+{"level":30,"time":1790971569361,"pid":496398,"hostname":"note","count":0,"msg":"migrations applied"}
+{"level":40,"time":1790971569362,"pid":496398,"hostname":"note","count":1,"msg":"stale studies marked as failed on boot"}
+
+tests/ui.test.ts:
+702 | 
+703 |   test("o botao de testar manda so os campos que a sonda usa", async () => {
+704 |     const body = await (await harness.app.request("/settings")).text();
+705 |     // O endpoint do teste e estrito: mandar o nome junto derrubava o teste com 422. O corpo da
+706 |     // sonda vive no script da pagina, entao a assercao olha o HTML servido.
+707 |     expect(body).toContain("var input = probePayload();");
+                       ^
+error: expect(received).toContain(expected)
+
+Expected to contain: "var input = probePayload();"
+Received: [REDACTED]
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/ui.test.ts:707:18)
+(fail) configuracao dos provedores > o botao de testar manda so os campos que a sonda usa [1.60ms]
+710 | 
+711 |   test("cancelar devolve a lista ao provedor que estava escolhido", async () => {
+712 |     const body = await (await harness.app.request("/settings")).text();
+713 |     // O mapa guarda por tipo (`llm`/`decider`); indexar pelo elemento nunca encontrava o valor.
+714 |     const restore = body.slice(body.indexOf("function restore(picker)"), body.indexOf("function open("));
+715 |     expect(restore).toContain('picker.getAttribute("data-kind")');
+                          ^
+error: expect(received).toContain(expected)
+
+Expected to contain: "picker.getAttribute(\"data-kind\")"
+Received: "function restore(picker) {\n    if (previous[picker] !== undefined) picker.querySelector(\"select\").value = previous[picker];\n  }\n\n  "
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/ui.test.ts:715:21)
+(fail) configuracao dos provedores > cancelar devolve a lista ao provedor que estava escolhido [1.64ms]
+-------------------------------------------|---------|---------|-------------------
+File                                       | % Funcs | % Lines | Uncovered Line #s
+-------------------------------------------|---------|---------|-------------------
+All files                                  |   98.48 |   98.41 |
+ src/application/artifacts.ts              |  100.00 |  100.00 | 
+ src/application/cache.ts                  |  100.00 |  100.00 | 
+ src/application/costs.ts                  |  100.00 |  100.00 | 
+ src/application/dados.ts                  |  100.00 |  100.00 | 
+ src/application/diagnose.ts               |  100.00 |   95.65 | 146-150
+ src/application/evaluate.ts               |  100.00 |   96.98 | 127,197-198,201-203
+ src/application/failures.ts               |  100.00 |  100.00 | 
+ src/application/generate-study.ts         |  100.00 |   96.07 | 177-189
+ src/application/generation.ts             |  100.00 |  100.00 | 
+ src/application/pain-algorithm.ts         |   91.30 |   95.21 | 90-94,245-246,268-269
+ src/application/pain-choice.ts            |  100.00 |   97.94 | 78-79
+ src/application/pdf.ts                    |  100.00 |   97.92 | 47
+ src/application/prompts.ts                |  100.00 |  100.00 | 
+ src/application/recalibrate.ts            |  100.00 |   94.74 | 104-105,146,166,170-172,212
+ src/application/render.ts                 |  100.00 |   99.30 | 191
+ src/application/reports.ts                |  100.00 |  100.00 | 
+ src/application/settings.ts               |  100.00 |  100.00 | 
+ src/application/study-service.ts          |   97.40 |   98.70 | 117,600-604
+ src/application/summary.ts                |   92.31 |  100.00 | 
+ src/application/verification.ts           |  100.00 |   94.62 | 48,68-71
+ src/cli.ts                                |   91.67 |   92.55 | 85-86,97,102,108-109,113,133-135,144,160-161,312-313,346,397-401,479-480,521-525,528,535,584
+ src/config/env.ts                         |  100.00 |  100.00 | 
+ src/config/providers.ts                   |  100.00 |  100.00 | 
+ src/config/redact.ts                      |  100.00 |  100.00 | 
+ src/config/runtime.ts                     |  100.00 |   98.44 | 107
+ src/domain/errors.ts                      |  100.00 |  100.00 | 
+ src/domain/hash.ts                        |  100.00 |  100.00 | 
+ src/domain/naming.ts                      |  100.00 |  100.00 | 
+ src/domain/pain.ts                        |  100.00 |  100.00 | 
+ src/infrastructure/cache-repository.ts    |  100.00 |  100.00 | 
+ src/infrastructure/db.ts                  |  100.00 |   97.96 | 45
+ src/infrastructure/decider-mock.ts        |  100.00 |  100.00 | 
+ src/infrastructure/decider.ts             |   86.67 |   95.73 | 101-104,109-111
+ src/infrastructure/http/api.ts            |   90.57 |   98.89 | 358-360
+ src/infrastructure/http/app.ts            |  100.00 |  100.00 | 
+ src/infrastructure/http/errors.ts         |  100.00 |   95.83 | 26
+ src/infrastructure/http/health.ts         |  100.00 |  100.00 | 
+ src/infrastructure/http/static.ts         |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/brand.ts       |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/layout.tsx     |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/pages.tsx      |   97.56 |   99.71 | 92-93,116
+ src/infrastructure/http/ui/routes.tsx     |   93.33 |   94.23 | 140,153,167,180-183,201,205,224,267-270,281
+ src/infrastructure/http/ui/security.ts    |  100.00 |   95.77 | 49,77-78
+ src/infrastructure/json.ts                |  100.00 |   92.00 | 31-32
+ src/infrastructure/llm-mock.ts            |   91.67 |  100.00 | 
+ src/infrastructure/llm.ts                 |  100.00 |  100.00 | 
+ src/infrastructure/provider-probe.ts      |  100.00 |   92.17 | 38,51-53,91,134,175,179-183,216
+ src/infrastructure/repositories.ts        |  100.00 |  100.00 | 
+ src/infrastructure/routing.ts             |   90.00 |   98.31 | 97
+ src/infrastructure/schema.ts              |  100.00 |  100.00 | 
+ src/infrastructure/settings-repository.ts |  100.00 |  100.00 | 
+-------------------------------------------|---------|---------|-------------------
+
+ 398 pass
+ 2 fail
+ 1502 expect() calls
+Ran 400 tests across 36 files. [4.26s]
+
+MUTATION_VERDICT: PASS
+VERDICT: PASS
+CHAIN_HASH: 85e86df7cf043b7c49e0c6d6f5d11a072253f348e159aa2f532454efb8b4fe3b

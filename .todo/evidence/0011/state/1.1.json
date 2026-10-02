@@ -1,0 +1,100 @@
+{
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun test"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0011/1.1-ac-1.log",
+      "log_sha256": "81b21d4dace56bc60a3db03b0e066b6fdaaff6a6fad90068197c411f5adaf38c",
+      "recorded_at": "2026-10-02T20:06:17.310Z"
+    },
+    "AC-2": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun run check"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0011/1.1-ac-2.log",
+      "log_sha256": "4adf42dd4c49965dd0cc118d4f247b527f1d04a57985b789a71db96c6b7b7651",
+      "recorded_at": "2026-10-02T20:06:20.260Z"
+    },
+    "AC-3": {
+      "command": [
+        "bash",
+        "-lc",
+        "bunx eslint src/infrastructure/http/ui/pages.tsx tests/ui.test.ts && bunx prettier --check src/infrastructure/http/ui/pages.tsx tests/ui.test.ts"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0011/1.1-ac-3.log",
+      "log_sha256": "6994917db0ba4f1fc446ce96b8d585fbeee39e6adcce39d484b38bdcb60dd953",
+      "recorded_at": "2026-10-02T20:06:21.380Z"
+    },
+    "REGRESSION": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun test"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0011/1.1-regression.log",
+      "log_sha256": "5f246197dedc01defaf2bfe79ea400a8de59530844cb49c1710bf71193123fe9",
+      "recorded_at": "2026-10-02T20:06:25.720Z"
+    }
+  },
+  "baseline_implementation": {
+    "src/infrastructure/http/ui/pages.tsx": {
+      "exists": true,
+      "sha256": "a73dc94fbc07e675a431920563a44c63beae9917b7b51459d2a046be9ae69548"
+    }
+  },
+  "baseline_tests": {
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "4217d61605ffc99516f1f207147f6972724f0fa5f886ea50d911dd5963960865"
+    }
+  },
+  "created_at": "2026-10-02T20:04:32.466Z",
+  "green_expect": null,
+  "green_implementation": {
+    "src/infrastructure/http/ui/pages.tsx": {
+      "exists": true,
+      "sha256": "1ef982ea550b334e028481b3e8e5bf7cc0da6c19ae663f03e7c4e6579d6456f6"
+    }
+  },
+  "green_tests": {
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "033595206ec93787bfb2cf5b9152a29ebf334d9bce2b65cb16667715378682ec"
+    }
+  },
+  "implementation_files": [
+    "src/infrastructure/http/ui/pages.tsx"
+  ],
+  "red_command": [
+    "bun",
+    "test"
+  ],
+  "red_expect": "expect(body).toContain(\"var input = probePayload();\")",
+  "red_tests": {
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "033595206ec93787bfb2cf5b9152a29ebf334d9bce2b65cb16667715378682ec"
+    }
+  },
+  "task": "1.1",
+  "test_files": [
+    "tests/ui.test.ts"
+  ]
+}

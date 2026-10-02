@@ -1003,7 +1003,8 @@ const SETTINGS_SCRIPT = `
   }
 
   function restore(picker) {
-    if (previous[picker] !== undefined) picker.querySelector("select").value = previous[picker];
+    var key = picker.getAttribute("data-kind");
+    if (previous[key] !== undefined) picker.querySelector("select").value = previous[key];
   }
 
   function open(mode, picker, data) {
@@ -1030,6 +1031,12 @@ const SETTINGS_SCRIPT = `
       model: field("model").value.trim(),
       apiKey: field("key").value.trim(),
     };
+  }
+
+  /** O teste recebe so o que a sonda usa: nome e rotulo da tela, nao vai para a API. */
+  function probePayload() {
+    var input = payload();
+    return { kind: input.kind, url: input.url, model: input.model, apiKey: input.apiKey };
   }
 
   function readProfile(select) {
@@ -1094,7 +1101,7 @@ const SETTINGS_SCRIPT = `
   });
 
   form.querySelector("[data-action=test]").addEventListener("click", function () {
-    var input = payload();
+    var input = probePayload();
     setError("");
     setStatus("testando " + input.kind + "...");
     fetch("/api/settings/test", {

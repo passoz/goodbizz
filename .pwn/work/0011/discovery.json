@@ -1,0 +1,17 @@
+{
+  "work_id": "0011",
+  "title": "O modal de provedor testa e cancela corretamente",
+  "imported_from": ".todo/0011-tasks.md",
+  "problem": "dois defeitos que só aparecem no navegador. (1) O botão **Testar** mandava o objeto inteiro do formulário, incluindo `name`; o `POST /api/settings/test` é `.strict()` e recusou o corpo com `payload invalido: (raiz): Unrecognized key(s) in object: 'name'`, então o botão nunca testava nada. (2) **Cancelar** não devolvia a lista ao provedor que estava escolhido: o `restore` indexava o mapa de valores anteriores pelo *elemento* do formulário, e a chave usada para guardar era o tipo (`llm`/`decider`), então o valor nunca era encontrado e a lista continuava mostrando \"+ adicionar provedor\".",
+  "actors": [
+    "ACT-003 Operador/consultor"
+  ],
+  "objectives": [
+    "SC-001: `bun test` prova que o script envia o corpo da sonda e restaura a lista (FR-001, FR-002).",
+    "SC-002: a verificação em navegador prova o teste contra um provedor real e o cancelamento (FR-001, FR-002)."
+  ],
+  "constraints": [
+    "QR-001: a suíte cobre as duas regras no HTML servido; a verificação em navegador prova o comportamento.",
+    "QR-002: o contrato de `/api/settings/test` continua estrito e a API pública não muda."
+  ]
+}

@@ -699,6 +699,21 @@ describe("configuracao dos provedores", () => {
     });
     expect(response.status).toBe(422);
   });
+
+  test("o botao de testar manda so os campos que a sonda usa", async () => {
+    const body = await (await harness.app.request("/settings")).text();
+    // O endpoint do teste e estrito: mandar o nome junto derrubava o teste com 422. O corpo da
+    // sonda vive no script da pagina, entao a assercao olha o HTML servido.
+    expect(body).toContain("var input = probePayload();");
+    expect(body).toContain("{ kind: input.kind, url: input.url, model: input.model, apiKey: input.apiKey }");
+  });
+
+  test("cancelar devolve a lista ao provedor que estava escolhido", async () => {
+    const body = await (await harness.app.request("/settings")).text();
+    // O mapa guarda por tipo (`llm`/`decider`); indexar pelo elemento nunca encontrava o valor.
+    const restore = body.slice(body.indexOf("function restore(picker)"), body.indexOf("function open("));
+    expect(restore).toContain('picker.getAttribute("data-kind")');
+  });
 });
 
 describe("gestao de ideias na pagina do estudo", () => {

@@ -1,0 +1,10 @@
+TASK: 1.1
+CHECK: AC-3
+COMMAND: bash -lc 'bunx eslint src/infrastructure/http/ui/pages.tsx tests/ui.test.ts && bunx prettier --check src/infrastructure/http/ui/pages.tsx tests/ui.test.ts'
+EXIT: 0
+OUTPUT:
+Checking formatting...
+All matched files use Prettier code style!
+
+VERDICT: PASS
+CHAIN_HASH: 8fdcda868c5e137facefb31bf8966e93b13fad904ff82f31b958a1741c2d0174

@@ -1,0 +1,57 @@
+{
+  "$schema": "../../../schemas/prd.schema.json",
+  "id": "PRD-0011",
+  "meta": {
+    "version": "1.0",
+    "created_at": "2026-10-02T20:03:59.385Z",
+    "author": "pwn-import"
+  },
+  "title": "O modal de provedor testa e cancela corretamente",
+  "status": "approved",
+  "scenario": "brownfield",
+  "problem": {
+    "statement": "dois defeitos que só aparecem no navegador. (1) O botão **Testar** mandava o objeto inteiro do formulário, incluindo `name`; o `POST /api/settings/test` é `.strict()` e recusou o corpo com `payload invalido: (raiz): Unrecognized key(s) in object: 'name'`, então o botão nunca testava nada. (2) **Cancelar** não devolvia a lista ao provedor que estava escolhido: o `restore` indexava o mapa de valores anteriores pelo *elemento* do formulário, e a chave usada para guardar era o tipo (`llm`/`decider`), então o valor nunca era encontrado e a lista continuava mostrando \"+ adicionar provedor\"."
+  },
+  "solution": {
+    "statement": "o Testar envia só `kind`, `url`, `model` e `apiKey` — a sonda valida a configuração de verdade — e cancelar devolve cada lista ao que estava escolhido."
+  },
+  "decisions": [
+    {
+      "id": "DEC-001",
+      "statement": "Governar o Work 0011 pelo PWN com contratos V4 congelados derivados do plano v3.",
+      "status": "accepted",
+      "made_by": "pwn-import"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "FR-001",
+      "type": "functional",
+      "statement": "FR-001: Restringir o corpo do teste e restaurar a lista ao cancelar",
+      "acceptance_criteria": [
+        "bun test — a suite passa com as assercoes do script servido",
+        "bun run check — o typecheck estrito passa",
+        "bunx eslint src/infrastructure/http/ui/pages.tsx tests/ui.test.ts && bunx prettier --check src/infrastructure/http/ui/pages.tsx tests/ui.test.ts — o lint e a formatacao dos arquivos tocados passam"
+      ]
+    }
+  ],
+  "stakeholders": [
+    {
+      "name": "ACT-003 Operador/consultor",
+      "role": "stakeholder"
+    }
+  ],
+  "scope": {
+    "in_scope": [
+      "Enviar ao teste apenas os campos que a sonda usa.",
+      "Restaurar a escolha da lista ao cancelar o modal."
+    ],
+    "out_of_scope": [
+      "Afrouxar o contrato de `POST /api/settings/test`.",
+      "Mudar o CRUD do catálogo ou a migração do formato antigo."
+    ]
+  },
+  "accepted_requirements": [
+    "FR-001"
+  ]
+}

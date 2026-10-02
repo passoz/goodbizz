@@ -1,0 +1,66 @@
+{
+  "$schema": "../../../schemas/plan.schema.json",
+  "work_id": "0011",
+  "title": "O modal de provedor testa e cancela corretamente",
+  "components": [
+    {
+      "name": "provider-modal",
+      "purpose": "Script do modal de provedor: corpo do teste restrito aos campos da sonda e cancelamento que devolve a escolha da lista"
+    }
+  ],
+  "global_gates": [
+    "`bun test` — a suite completa passa com exit 0.",
+    "`bun run check` — typecheck estrito passa com exit 0.",
+    "`bunx eslint . && bunx prettier --check .` — lint e formatacao passam."
+  ],
+  "tasks": [
+    {
+      "id": "1.1",
+      "title": "Restringir o corpo do teste e restaurar a lista ao cancelar",
+      "requirement_id": "FR-001",
+      "depends_on": [],
+      "behavior": "o botao Testar envia so `kind`, `url`, `model` e `apiKey` para a sonda, e fechar o modal devolve cada lista ao provedor que estava escolhido",
+      "components": [
+        "provider-modal"
+      ],
+      "files": [
+        "src/infrastructure/http/ui/pages.tsx",
+        "tests/ui.test.ts"
+      ],
+      "implementation_files": [
+        "src/infrastructure/http/ui/pages.tsx"
+      ],
+      "test_files": [
+        "tests/ui.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/ui.test.ts",
+        "description": "o script servido ainda manda o objeto inteiro do formulario no teste e restaura a lista pelo elemento, entao as assercoes novas falham"
+      },
+      "implementation_steps": [
+        "Escrever os testes que falham (RED): o HTML servido contem o corpo da sonda sem o nome e o `restore` indexado por `data-kind`",
+        "Acrescentar `probePayload()` ao script e trocar a indexacao do `restore` pelo tipo da lista (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test",
+          "description": "a suite passa com as assercoes do script servido"
+        },
+        {
+          "command": "bun run check",
+          "description": "o typecheck estrito passa"
+        },
+        {
+          "command": "bunx eslint src/infrastructure/http/ui/pages.tsx tests/ui.test.ts && bunx prettier --check src/infrastructure/http/ui/pages.tsx tests/ui.test.ts",
+          "description": "o lint e a formatacao dos arquivos tocados passam"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-014",
+      "contract_id": "CTR-001",
+      "complexity": "standard",
+      "status": "done"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "work_id": "0011",
+  "requirements": [
+    {
+      "id": "FR-001",
+      "title": "Restringir o corpo do teste e restaurar a lista ao cancelar",
+      "acceptance_criteria": [
+        "bun test — a suite passa com as assercoes do script servido",
+        "bun run check — o typecheck estrito passa",
+        "bunx eslint src/infrastructure/http/ui/pages.tsx tests/ui.test.ts && bunx prettier --check src/infrastructure/http/ui/pages.tsx tests/ui.test.ts — o lint e a formatacao dos arquivos tocados passam"
+      ]
+    }
+  ]
+}
