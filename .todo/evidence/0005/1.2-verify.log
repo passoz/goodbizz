@@ -4,9 +4,9 @@ COMMAND: bun test
 EXIT: 0
 OUTPUT:
 bun test v1.4.2 (744846f84)
-{"level":50,"time":1790892410102,"pid":470240,"hostname":"note","msg":"e"}
-{"level":30,"time":1790892410388,"pid":470240,"hostname":"note","count":0,"msg":"migrations applied"}
-{"level":40,"time":1790892410389,"pid":470240,"hostname":"note","count":1,"msg":"stale studies marked as failed on boot"}
+{"level":50,"time":1790892974793,"pid":472260,"hostname":"note","msg":"e"}
+{"level":30,"time":1790892975080,"pid":472260,"hostname":"note","count":0,"msg":"migrations applied"}
+{"level":40,"time":1790892975081,"pid":472260,"hostname":"note","count":1,"msg":"stale studies marked as failed on boot"}
 -------------------------------------------|---------|---------|-------------------
 File                                       | % Funcs | % Lines | Uncovered Line #s
 -------------------------------------------|---------|---------|-------------------
@@ -66,7 +66,7 @@ All files                                  |   98.30 |   98.39 |
  348 pass
  0 fail
  1377 expect() calls
-Ran 348 tests across 33 files. [4.20s]
+Ran 348 tests across 33 files. [4.23s]
 
 VERDICT: PASS
-CHAIN_HASH: a877524f52134cda244a340b7f2b8d6ca01f732d19f6ca097cb0c925823cd15a
+CHAIN_HASH: a65a715494e2c4bdd2d3f410243c26e7a67753b76910c5f904ca19ce073a6e37
