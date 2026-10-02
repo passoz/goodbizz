@@ -14,9 +14,9 @@
 | `ui-actions` | Botao de excluir por linha da tabela de ranking e controle para pedir mais ideias no cabecalho |
 
 ## Global gates
-- [x] `bun test` — a suite completa passa com exit 0.
-- [x] `bun run check` — typecheck estrito passa com exit 0.
-- [x] `bunx eslint . && bunx prettier --check .` — lint e formatacao passam.
+- [ ] `bun test` — a suite completa passa com exit 0.
+- [ ] `bun run check` — typecheck estrito passa com exit 0.
+- [ ] `bunx eslint . && bunx prettier --check .` — lint e formatacao passam.
 
 ### [x] [1.1] Declarar StudyIdea e gerar o id na avaliacao
 
@@ -49,16 +49,16 @@
 **Depends on:** 1.1
 **Behavior:** a tabela evaluations ganha a coluna idea_id e a migracao preenche um id deterministico nas linhas gravadas antes da mudanca, sem reescrever payload_json
 **Components:** idea-identity
-**Files:** `src/infrastructure/schema.ts`, `drizzle/0003_idea_id.sql`, `tests/repositories.test.ts`
-**Implementation files:** `src/infrastructure/schema.ts`, `drizzle/0003_idea_id.sql`
+**Files:** `src/infrastructure/schema.ts`, `drizzle.config.ts`, `drizzle/0003_idea_id.sql`, `tests/repositories.test.ts`
+**Implementation files:** `src/infrastructure/schema.ts`, `drizzle.config.ts`, `drizzle/0003_idea_id.sql`
 **Test files:** `tests/repositories.test.ts`
 
 **RED:**
 - `bun test` — a coluna idea_id nao existe, entao o teste que espera um id em studies gravados antes da migracao falha
 
 **Implementation:**
-1. Escrever os testes que falham (RED): coluna ausente e linhas legadas sem id apos a migracao
-2. Adicionar a coluna idea_id, gerar a migracao e aplicar o backfill deterministico preservando payload_json (GREEN)
+1. Escrever os testes que falham (RED): coluna ausente, linhas legadas sem id, payload_json intacto e segunda execucao sem efeito
+2. Adicionar a coluna idea_id, corrigir drizzle.config.ts para rodar no drizzle-kit, gerar a migracao e acrescentar o backfill deterministico (GREEN)
 
 **ACs:**
 - [ ] `bun test` — a suite passa com os testes de migracao e de backfill das linhas legadas
@@ -74,9 +74,9 @@
 **Depends on:** 1.2
 **Behavior:** saveEvaluations grava o id na coluna, a leitura o devolve junto da ideia, a reordenacao por indice mantem cada id com a sua ideia, e ordered passa a expor StudyIdea para o consumidor da UI
 **Components:** idea-identity
-**Files:** `src/domain/ports.ts`, `src/infrastructure/repositories.ts`, `src/application/summary.ts`, `tests/repositories.test.ts`, `tests/study-service.test.ts`
+**Files:** `src/domain/ports.ts`, `src/infrastructure/repositories.ts`, `src/application/summary.ts`, `tests/repositories.test.ts`, `tests/study-service.test.ts`, `tests/artifacts.test.ts`, `tests/cache.test.ts`, `tests/reports.test.ts`, `tests/ui.test.ts`
 **Implementation files:** `src/domain/ports.ts`, `src/infrastructure/repositories.ts`, `src/application/summary.ts`
-**Test files:** `tests/repositories.test.ts`, `tests/study-service.test.ts`
+**Test files:** `tests/repositories.test.ts`, `tests/study-service.test.ts`, `tests/artifacts.test.ts`, `tests/cache.test.ts`, `tests/reports.test.ts`, `tests/ui.test.ts`
 
 **RED:**
 - `bun test` — o port e o repositorio recebem IdeaEvaluation, entao o teste que espera o id gravado e devolvido, e preservado apos reordenar, falha
