@@ -1,0 +1,18 @@
+{
+  "work_id": "0009",
+  "title": "Origem opaca não veta o formulário",
+  "imported_from": ".todo/0009-tasks.md",
+  "problem": "o cliente do operador manda `Origin: null` — origem opaca, como extensão de navegador ou iframe sandbox. A regra do Work 0008 vetava qualquer sinal presente que não fosse exatamente o próprio host, então `null` vetava e o formulário seguia inutilizável. O log do próprio Work 0008 entregou o campo (`origin: \"null\"`), o que não existia antes.",
+  "actors": [
+    "ACT-001 Usuário da interface web",
+    "ACT-003 Operador/consultor"
+  ],
+  "objectives": [
+    "SC-001: `bun test` prova o caminho com `Origin: null` e os dois vetos (FR-001)."
+  ],
+  "constraints": [
+    "QR-001: a suíte cobre `Origin: null` com token, o veto de host estranho e o veto de `cross-site`.",
+    "QR-002: a API pública e o caminho sem JavaScript continuam iguais.",
+    "QR-003: nenhum teste antigo é apagado; os que fixavam veto amplo passam a fixar o contrato novo."
+  ]
+}

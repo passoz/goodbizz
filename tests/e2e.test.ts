@@ -171,6 +171,16 @@ describe("e2e: jornada do operador pelo HTTP real", () => {
     expect(response.status).toBe(303);
   });
 
+  test("Origin null com token passa (cliente de origem opaca)", async () => {
+    const { cookiePair, token } = await csrf();
+    const response = await postForm(
+      "/ui/studies",
+      { Cookie: cookiePair, Origin: "null" },
+      { niche: "clinicas", numIdeas: "1", mock: "on", _csrf: token },
+    );
+    expect(response.status).toBe(303);
+  });
+
   test("formulario sem sinal de mesma origem e sem token responde 403 de token", async () => {
     const { cookiePair } = await csrf();
     const response = await postForm(

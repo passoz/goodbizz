@@ -78,42 +78,20 @@ export function createCsrf(options: CsrfOptions): CsrfMiddleware {
       return;
     }
 
-    // Mesma origem por qualquer sinal que o navegador controle: `Origin` exato, `Referer` sob
-    // `${origin}/` e `Sec-Fetch-Site: same-origin`. Um sinal PRESENTE que divergir e veto; sem sinal
-    // nenhum (navegador embutido, politica de privacidade, cliente que omite os tres) a defesa e o
-    // token do double-submit — o cookie e `SameSite=Lax`, entao um POST cross-site nem chega com o
-    // cookie, e o token de 32 bytes nao e adivinhavel nem legivel por outra origem.
-    const own = new URL(c.req.url).origin;
-    const origin = c.req.header("Origin");
-    const referer = c.req.header("Referer");
-    const secFetchSite = c.req.header("Sec-Fetch-Site");
-    const signals = [
-      origin !== undefined ? origin === own : undefined,
-      referer !== undefined ? referer.startsWith(`${own}/`) : undefined,
-      secFetchSite !== undefined ? secFetchSite === "same-origin" : undefined,
-    ].filter((signal): signal is boolean => signal !== undefined);
-    if (signals.includes(false)) {
-      logger?.warn("csrf recusado: sinal de origem divergente", {
-        path: c.req.path,
-        host: c.req.header("host"),
-        origin,
-        referer,
-        secFetchSite,
-      });
-      return c.json({ error: "CSRF_ORIGIN_INVALID" }, 403);
-    }
-
-    // Comparacao em tempo constante: tamanho antes, como o runtime exige.
+    // O token do double-submit e a defesa principal e vem primeiro: o cookie e `SameSite=Lax`,
+    // entao um POST de outra origem nem chega com ele, e o valor assinado de 32 bytes nao e
+    // adivinhavel nem legivel por outra origem. Comparacao em tempo constante (tamanho antes,
+    // como o runtime exige).
     const expected = await getSignedCookie(c, sessionSecret, CSRF_COOKIE);
     const provided = c.req.header(CSRF_HEADER) ?? (await formToken(c));
     const expectedBytes = typeof expected === "string" ? new TextEncoder().encode(expected) : null;
     const providedBytes = provided === null ? null : new TextEncoder().encode(provided);
-    if (
-      expectedBytes === null ||
-      providedBytes === null ||
-      expectedBytes.length !== providedBytes.length ||
-      !crypto.timingSafeEqual(expectedBytes, providedBytes)
-    ) {
+    const tokenOk =
+      expectedBytes !== null &&
+      providedBytes !== null &&
+      expectedBytes.length === providedBytes.length &&
+      crypto.timingSafeEqual(expectedBytes, providedBytes);
+    if (!tokenOk) {
       // Sem segredo no log: so a presenca do cookie e do token, que e o que distingue "cliente sem
       // cookie" de "token divergente" quando o operador relata um 403.
       logger?.warn("csrf recusado: token ausente ou divergente", {
@@ -122,6 +100,26 @@ export function createCsrf(options: CsrfOptions): CsrfMiddleware {
         hasToken: providedBytes !== null,
       });
       return c.json({ error: "CSRF_TOKEN_INVALID" }, 403);
+    }
+
+    // Os sinais de origem so VETAM quando apontam inequivocamente para outro site. `Origin: null`
+    // (origem opaca: extensao, iframe sandbox, politica de privacidade) e `sec-fetch-site: none`
+    // ou `same-site` nao decidem nada — quem decide ja foi o token, e um ataque cross-site com
+    // `Origin: null` chega sem o cookie `SameSite=Lax` e morre no token acima.
+    const own = new URL(c.req.url).origin;
+    const origin = c.req.header("Origin");
+    const secFetchSite = c.req.header("Sec-Fetch-Site");
+    const crossSite =
+      (origin !== undefined && origin !== "null" && origin !== own) || secFetchSite === "cross-site";
+    if (crossSite) {
+      logger?.warn("csrf recusado: sinal de origem divergente", {
+        path: c.req.path,
+        host: c.req.header("host"),
+        origin,
+        referer: c.req.header("Referer"),
+        secFetchSite,
+      });
+      return c.json({ error: "CSRF_ORIGIN_INVALID" }, 403);
     }
     await next();
     return undefined;

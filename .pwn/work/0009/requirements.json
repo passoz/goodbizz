@@ -1,0 +1,14 @@
+{
+  "work_id": "0009",
+  "requirements": [
+    {
+      "id": "FR-001",
+      "title": "Conferir o token antes do sinal e tratar origem opaca como não decisiva",
+      "acceptance_criteria": [
+        "bun test — a suite passa com o caminho de origem opaca e os dois vetos",
+        "bun run check — o typecheck estrito passa",
+        "bunx eslint src/infrastructure/http/ui/security.ts tests/ui.test.ts tests/e2e.test.ts && bunx prettier --check src/infrastructure/http/ui/security.ts tests/ui.test.ts tests/e2e.test.ts — o lint e a formatacao dos arquivos tocados passam"
+      ]
+    }
+  ]
+}

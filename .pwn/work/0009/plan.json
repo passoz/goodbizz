@@ -1,0 +1,68 @@
+{
+  "$schema": "../../../schemas/plan.schema.json",
+  "work_id": "0009",
+  "title": "Origem opaca não veta o formulário",
+  "components": [
+    {
+      "name": "ui-csrf",
+      "purpose": "Ordem do CSRF do formulario: o token decide primeiro e o sinal de origem so veta quando aponta inequivocamente para outro site"
+    }
+  ],
+  "global_gates": [
+    "`bun test` — a suite completa passa com exit 0.",
+    "`bun run check` — typecheck estrito passa com exit 0.",
+    "`bunx eslint . && bunx prettier --check .` — lint e formatacao passam."
+  ],
+  "tasks": [
+    {
+      "id": "1.1",
+      "title": "Conferir o token antes do sinal e tratar origem opaca como não decisiva",
+      "requirement_id": "FR-001",
+      "depends_on": [],
+      "behavior": "o `requireCsrf` confere o token primeiro, aceita `Origin: null` e `Sec-Fetch-Site` nao cross-site como nao decisivos, e veta apenas `Origin` de outro host ou `cross-site`",
+      "components": [
+        "ui-csrf"
+      ],
+      "files": [
+        "src/infrastructure/http/ui/security.ts",
+        "tests/ui.test.ts",
+        "tests/e2e.test.ts"
+      ],
+      "implementation_files": [
+        "src/infrastructure/http/ui/security.ts"
+      ],
+      "test_files": [
+        "tests/ui.test.ts",
+        "tests/e2e.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/ui.test.ts tests/e2e.test.ts",
+        "description": "com a regra atual `Origin: null` veta, entao as assercoes que exigem 303 com token falham"
+      },
+      "implementation_steps": [
+        "Escrever os testes que falham (RED): `Origin: null` com token aceito, e os dois vetos com token valido",
+        "Conferir o token antes do sinal de origem e reduzir o veto a `Origin` de outro host e `cross-site` (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test",
+          "description": "a suite passa com o caminho de origem opaca e os dois vetos"
+        },
+        {
+          "command": "bun run check",
+          "description": "o typecheck estrito passa"
+        },
+        {
+          "command": "bunx eslint src/infrastructure/http/ui/security.ts tests/ui.test.ts tests/e2e.test.ts && bunx prettier --check src/infrastructure/http/ui/security.ts tests/ui.test.ts tests/e2e.test.ts",
+          "description": "o lint e a formatacao dos arquivos tocados passam"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-014",
+      "contract_id": "CTR-001",
+      "complexity": "standard",
+      "status": "done"
+    }
+  ]
+}

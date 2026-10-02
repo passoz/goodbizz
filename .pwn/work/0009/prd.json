@@ -1,0 +1,63 @@
+{
+  "$schema": "../../../schemas/prd.schema.json",
+  "id": "PRD-0009",
+  "meta": {
+    "version": "1.0",
+    "created_at": "2026-10-02T19:26:29.089Z",
+    "author": "pwn-import"
+  },
+  "title": "Origem opaca não veta o formulário",
+  "status": "approved",
+  "scenario": "brownfield",
+  "problem": {
+    "statement": "o cliente do operador manda `Origin: null` — origem opaca, como extensão de navegador ou iframe sandbox. A regra do Work 0008 vetava qualquer sinal presente que não fosse exatamente o próprio host, então `null` vetava e o formulário seguia inutilizável. O log do próprio Work 0008 entregou o campo (`origin: \"null\"`), o que não existia antes."
+  },
+  "solution": {
+    "statement": "o token é conferido primeiro e é ele quem decide; os sinais de origem só vetam quando apontam inequivocamente para outro site (`Origin` presente, diferente de `null` e do próprio host, ou `Sec-Fetch-Site: cross-site`)."
+  },
+  "decisions": [
+    {
+      "id": "DEC-001",
+      "statement": "Governar o Work 0009 pelo PWN com contratos V4 congelados derivados do plano v3.",
+      "status": "accepted",
+      "made_by": "pwn-import"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "FR-001",
+      "type": "functional",
+      "statement": "FR-001: Conferir o token antes do sinal e tratar origem opaca como não decisiva",
+      "acceptance_criteria": [
+        "bun test — a suite passa com o caminho de origem opaca e os dois vetos",
+        "bun run check — o typecheck estrito passa",
+        "bunx eslint src/infrastructure/http/ui/security.ts tests/ui.test.ts tests/e2e.test.ts && bunx prettier --check src/infrastructure/http/ui/security.ts tests/ui.test.ts tests/e2e.test.ts — o lint e a formatacao dos arquivos tocados passam"
+      ]
+    }
+  ],
+  "stakeholders": [
+    {
+      "name": "ACT-001 Usuário da interface web",
+      "role": "stakeholder"
+    },
+    {
+      "name": "ACT-003 Operador/consultor",
+      "role": "stakeholder"
+    }
+  ],
+  "scope": {
+    "in_scope": [
+      "Conferir o token antes do sinal de origem.",
+      "Tratar `Origin: null`, `Sec-Fetch-Site: none` e `same-site` como não decisivos.",
+      "Vetar apenas `Origin` presente diferente do próprio host e de `null`, ou `Sec-Fetch-Site: cross-site`."
+    ],
+    "out_of_scope": [
+      "Remover a exigência do token ou trocar o esquema de cookie.",
+      "Proteger a API pública com CSRF.",
+      "Mudar rotas, corpos de erro aceitos ou o caminho sem JavaScript."
+    ]
+  },
+  "accepted_requirements": [
+    "FR-001"
+  ]
+}

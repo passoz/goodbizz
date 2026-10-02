@@ -1000,6 +1000,14 @@ describe("csrf do formulario: quais sinais de mesma origem valem", () => {
     expect(response.status).toBe(303);
   });
 
+  test("Origin null (origem opaca) com token valido cria o estudo", async () => {
+    // `Origin: null` e o que clientes com origem opaca mandam (extensao, iframe sandbox). O token
+    // continua sendo exigido, entao o header nao pode vetar por si so.
+    const { cookiePair, token } = await csrfToken();
+    const response = await createForm({ Cookie: cookiePair, Origin: "null" }, token);
+    expect(response.status).toBe(303);
+  });
+
   test("sem sinal de mesma origem e sem token responde 403 de token", async () => {
     const { cookiePair } = await csrfToken();
     const response = await harness.app.request("/ui/studies", {
