@@ -1,0 +1,229 @@
+TASK: 1.2
+CHECK: GREEN
+COMMAND: bun test
+EXIT: 0
+OUTPUT:
+bun test v1.4.2 (744846f84)
+{"level":50,"time":1790966340829,"pid":455804,"hostname":"note","msg":"e"}
+{"level":30,"time":1790966341180,"pid":455804,"hostname":"note","count":0,"msg":"migrations applied"}
+{"level":40,"time":1790966341180,"pid":455804,"hostname":"note","count":1,"msg":"stale studies marked as failed on boot"}
+-------------------------------------------|---------|---------|-------------------
+File                                       | % Funcs | % Lines | Uncovered Line #s
+-------------------------------------------|---------|---------|-------------------
+All files                                  |   98.30 |   98.45 |
+ src/application/artifacts.ts              |  100.00 |  100.00 | 
+ src/application/cache.ts                  |  100.00 |  100.00 | 
+ src/application/costs.ts                  |  100.00 |  100.00 | 
+ src/application/dados.ts                  |  100.00 |  100.00 | 
+ src/application/diagnose.ts               |  100.00 |   95.65 | 146-150
+ src/application/evaluate.ts               |  100.00 |   96.98 | 127,197-198,201-203
+ src/application/failures.ts               |  100.00 |  100.00 | 
+ src/application/generate-study.ts         |  100.00 |   96.07 | 177-189
+ src/application/generation.ts             |  100.00 |  100.00 | 
+ src/application/pain-algorithm.ts         |   91.30 |   95.21 | 90-94,245-246,268-269
+ src/application/pain-choice.ts            |  100.00 |   97.94 | 78-79
+ src/application/pdf.ts                    |  100.00 |   97.92 | 47
+ src/application/prompts.ts                |  100.00 |  100.00 | 
+ src/application/recalibrate.ts            |  100.00 |   94.74 | 104-105,146,166,170-172,212
+ src/application/render.ts                 |  100.00 |   99.30 | 191
+ src/application/reports.ts                |  100.00 |  100.00 | 
+ src/application/settings.ts               |  100.00 |  100.00 | 
+ src/application/study-service.ts          |   97.14 |   98.65 | 117,575-579
+ src/application/summary.ts                |   92.31 |  100.00 | 
+ src/application/verification.ts           |  100.00 |   94.62 | 48,68-71
+ src/cli.ts                                |   91.67 |   91.87 | 84-85,96,101,107-108,112,132-134,143,159-160,311-312,335,337-338,349,400-404,482-483,524-528,531,538,587
+ src/config/env.ts                         |  100.00 |  100.00 | 
+ src/config/providers.ts                   |  100.00 |  100.00 | 
+ src/config/redact.ts                      |  100.00 |  100.00 | 
+ src/config/runtime.ts                     |  100.00 |   98.44 | 107
+ src/domain/errors.ts                      |  100.00 |  100.00 | 
+ src/domain/hash.ts                        |  100.00 |  100.00 | 
+ src/domain/naming.ts                      |  100.00 |  100.00 | 
+ src/domain/pain.ts                        |  100.00 |  100.00 | 
+ src/infrastructure/cache-repository.ts    |  100.00 |  100.00 | 
+ src/infrastructure/db.ts                  |  100.00 |   97.96 | 45
+ src/infrastructure/decider-mock.ts        |  100.00 |  100.00 | 
+ src/infrastructure/decider.ts             |   86.67 |   95.73 | 101-104,109-111
+ src/infrastructure/http/api.ts            |   83.33 |   95.89 | 155-156,161-164,297-299
+ src/infrastructure/http/app.ts            |  100.00 |  100.00 | 
+ src/infrastructure/http/errors.ts         |  100.00 |   95.83 | 26
+ src/infrastructure/http/health.ts         |  100.00 |  100.00 | 
+ src/infrastructure/http/static.ts         |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/brand.ts       |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/layout.tsx     |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/pages.tsx      |   97.50 |   99.70 | 92-93,116
+ src/infrastructure/http/ui/routes.tsx     |   93.55 |   94.40 | 151,164,178,191-194,212,216,235,278-281,292
+ src/infrastructure/http/ui/security.ts    |  100.00 |   95.24 | 47,75-76
+ src/infrastructure/json.ts                |  100.00 |   92.00 | 31-32
+ src/infrastructure/llm-mock.ts            |   91.67 |  100.00 | 
+ src/infrastructure/llm.ts                 |  100.00 |  100.00 | 
+ src/infrastructure/repositories.ts        |  100.00 |  100.00 | 
+ src/infrastructure/routing.ts             |   90.00 |   98.31 | 97
+ src/infrastructure/schema.ts              |  100.00 |  100.00 | 
+ src/infrastructure/settings-repository.ts |  100.00 |  100.00 | 
+-------------------------------------------|---------|---------|-------------------
+
+ 362 pass
+ 0 fail
+ 1426 expect() calls
+Ran 362 tests across 34 files. [4.32s]
+
+MUTATION_EXIT: 1
+MUTATION_OUTPUT:
+bun test v1.4.2 (744846f84)
+{"level":50,"time":1790966345194,"pid":455844,"hostname":"note","msg":"e"}
+{"level":30,"time":1790966345581,"pid":455844,"hostname":"note","count":0,"msg":"migrations applied"}
+{"level":40,"time":1790966345581,"pid":455844,"hostname":"note","count":1,"msg":"stale studies marked as failed on boot"}
+
+tests/e2e.test.ts:
+136 |     const add = await postForm(
+137 |       `/ui/studies/${id}/ideas`,
+138 |       { Cookie: [REDACTED]
+139 |       { count: [REDACTED]
+140 |     );
+141 |     expect(add.status).toBe(303);
+                             ^
+error: expect(received).toBe(expected)
+
+Expected: 303
+Received: 403
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/e2e.test.ts:141:24)
+(fail) e2e: jornada do operador pelo HTTP real > executa, adiciona ideia pelo formulario, exclui a ideia e exclui o estudo [36.86ms]
+165 |       "/ui/studies",
+166 |       { Cookie: [REDACTED]
+167 |       { niche: [REDACTED]
+168 |     );
+169 |     expect(response.status).toBe(403);
+170 |     expect(ErrorJson.parse(await response.json()).error).toBe("CSRF_ORIGIN_INVALID");
+                                                ^
+SyntaxError: JSON Parse error: Unexpected identifier "Forbidden"
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/e2e.test.ts:170:43)
+(fail) e2e: jornada do operador pelo HTTP real > formulario sem sinal de mesma origem responde 403, e nunca 500 [2.91ms]
+
+tests/ui.test.ts:
+978 |   });
+979 | 
+980 |   test("Referer do proprio host basta quando falta o Origin", async () => {
+sensitive: [REDACTED]
+982 |     const response = await createForm({ Cookie: [REDACTED]
+983 |     expect(response.status).toBe(303);
+                                  ^
+error: expect(received).toBe(expected)
+
+Expected: 303
+Received: 403
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/ui.test.ts:983:29)
+(fail) csrf do formulario: quais sinais de mesma origem valem > Referer do proprio host basta quando falta o Origin [2.42ms]
+986 |   test("Sec-Fetch-Site same-origin basta quando faltam Origin e Referer", async () => {
+987 |     // O `secureHeaders()` manda `Referrer-Policy: no-referrer` e varios navegadores omitem o
+988 |     // `Origin` no POST de mesma origem: sem este sinal o formulario legitimo batia em 403.
+sensitive: [REDACTED]
+990 |     const response = await createForm({ Cookie: [REDACTED]
+991 |     expect(response.status).toBe(303);
+                                  ^
+error: expect(received).toBe(expected)
+
+Expected: 303
+Received: 403
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/ui.test.ts:991:29)
+(fail) csrf do formulario: quais sinais de mesma origem valem > Sec-Fetch-Site same-origin basta quando faltam Origin e Referer [2.41ms]
+957 | });
+958 | 
+959 | describe("csrf do formulario: quais sinais de mesma origem valem", () => {
+960 |   /** Codigo de erro do corpo JSON, sem afirmar a forma por cast. */
+961 |   async function errorCode(response: Response): Promise<unknown> {
+962 |     const body: unknown = await response.json();
+                                               ^
+SyntaxError: JSON Parse error: Unexpected identifier "Forbidden"
+      at errorCode (/home/passoz/dev/goodbizz/tests/ui.test.ts:962:42)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/ui.test.ts:998:18)
+(fail) csrf do formulario: quais sinais de mesma origem valem > sem nenhum sinal de mesma origem responde 403, nunca 500 [2.45ms]
+957 | });
+958 | 
+959 | describe("csrf do formulario: quais sinais de mesma origem valem", () => {
+960 |   /** Codigo de erro do corpo JSON, sem afirmar a forma por cast. */
+961 |   async function errorCode(response: Response): Promise<unknown> {
+962 |     const body: unknown = await response.json();
+                                               ^
+SyntaxError: JSON Parse error: Unexpected identifier "Forbidden"
+      at errorCode (/home/passoz/dev/goodbizz/tests/ui.test.ts:962:42)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/ui.test.ts:1005:18)
+(fail) csrf do formulario: [REDACTED]
+957 | });
+958 | 
+959 | describe("csrf do formulario: quais sinais de mesma origem valem", () => {
+960 |   /** Codigo de erro do corpo JSON, sem afirmar a forma por cast. */
+961 |   async function errorCode(response: Response): Promise<unknown> {
+962 |     const body: unknown = await response.json();
+                                               ^
+SyntaxError: JSON Parse error: Unexpected identifier "Forbidden"
+      at errorCode (/home/passoz/dev/goodbizz/tests/ui.test.ts:962:42)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/ui.test.ts:1012:18)
+(fail) csrf do formulario: [REDACTED]
+-------------------------------------------|---------|---------|-------------------
+File                                       | % Funcs | % Lines | Uncovered Line #s
+-------------------------------------------|---------|---------|-------------------
+All files                                  |   98.30 |   98.44 |
+ src/application/artifacts.ts              |  100.00 |  100.00 | 
+ src/application/cache.ts                  |  100.00 |  100.00 | 
+ src/application/costs.ts                  |  100.00 |  100.00 | 
+ src/application/dados.ts                  |  100.00 |  100.00 | 
+ src/application/diagnose.ts               |  100.00 |   95.65 | 146-150
+ src/application/evaluate.ts               |  100.00 |   96.98 | 127,197-198,201-203
+ src/application/failures.ts               |  100.00 |  100.00 | 
+ src/application/generate-study.ts         |  100.00 |   96.07 | 177-189
+ src/application/generation.ts             |  100.00 |  100.00 | 
+ src/application/pain-algorithm.ts         |   91.30 |   95.21 | 90-94,245-246,268-269
+ src/application/pain-choice.ts            |  100.00 |   97.94 | 78-79
+ src/application/pdf.ts                    |  100.00 |   97.92 | 47
+ src/application/prompts.ts                |  100.00 |  100.00 | 
+ src/application/recalibrate.ts            |  100.00 |   94.74 | 104-105,146,166,170-172,212
+ src/application/render.ts                 |  100.00 |   99.30 | 191
+ src/application/reports.ts                |  100.00 |  100.00 | 
+ src/application/settings.ts               |  100.00 |  100.00 | 
+ src/application/study-service.ts          |   97.14 |   98.65 | 117,575-579
+ src/application/summary.ts                |   92.31 |  100.00 | 
+ src/application/verification.ts           |  100.00 |   94.62 | 48,68-71
+ src/cli.ts                                |   91.67 |   91.87 | 84-85,96,101,107-108,112,132-134,143,159-160,311-312,335,337-338,349,400-404,482-483,524-528,531,538,587
+ src/config/env.ts                         |  100.00 |  100.00 | 
+ src/config/providers.ts                   |  100.00 |  100.00 | 
+ src/config/redact.ts                      |  100.00 |  100.00 | 
+ src/config/runtime.ts                     |  100.00 |   98.44 | 107
+ src/domain/errors.ts                      |  100.00 |  100.00 | 
+ src/domain/hash.ts                        |  100.00 |  100.00 | 
+ src/domain/naming.ts                      |  100.00 |  100.00 | 
+ src/domain/pain.ts                        |  100.00 |  100.00 | 
+ src/infrastructure/cache-repository.ts    |  100.00 |  100.00 | 
+ src/infrastructure/db.ts                  |  100.00 |   97.96 | 45
+ src/infrastructure/decider-mock.ts        |  100.00 |  100.00 | 
+ src/infrastructure/decider.ts             |   86.67 |   95.73 | 101-104,109-111
+ src/infrastructure/http/api.ts            |   83.33 |   95.89 | 155-156,161-164,297-299
+ src/infrastructure/http/app.ts            |  100.00 |  100.00 | 
+ src/infrastructure/http/errors.ts         |  100.00 |   95.83 | 26
+ src/infrastructure/http/health.ts         |  100.00 |  100.00 | 
+ src/infrastructure/http/static.ts         |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/brand.ts       |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/layout.tsx     |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/pages.tsx      |   97.50 |   99.70 | 92-93,116
+ src/infrastructure/http/ui/routes.tsx     |   93.55 |   94.44 | 149,162,176,189-192,210,214,233,276-279,290
+ src/infrastructure/http/ui/security.ts    |  100.00 |   94.92 | 47,75-76
+ src/infrastructure/json.ts                |  100.00 |   92.00 | 31-32
+ src/infrastructure/llm-mock.ts            |   91.67 |  100.00 | 
+ src/infrastructure/llm.ts                 |  100.00 |  100.00 | 
+ src/infrastructure/repositories.ts        |  100.00 |  100.00 | 
+ src/infrastructure/routing.ts             |   90.00 |   98.31 | 97
+ src/infrastructure/schema.ts              |  100.00 |  100.00 | 
+ src/infrastructure/settings-repository.ts |  100.00 |  100.00 | 
+-------------------------------------------|---------|---------|-------------------
+
+ 355 pass
+ 7 fail
+ 1417 expect() calls
+Ran 362 tests across 34 files. [4.36s]
+
+MUTATION_VERDICT: PASS
+VERDICT: PASS
+CHAIN_HASH: 95faf308e2fe294154c81804592404a677fa8e6b0fe6128798f4a4e8352cf611

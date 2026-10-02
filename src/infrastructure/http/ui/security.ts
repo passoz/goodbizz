@@ -76,12 +76,19 @@ export function createCsrf(options: CsrfOptions): CsrfMiddleware {
       return;
     }
 
-    // Mesma origem: `Origin` exato, com queda para `Referer` sob `${origin}/`; sem header, nega.
+    // Mesma origem por um sinal que o navegador controla: `Origin` exato quando presente, depois
+    // `Referer` sob `${origin}/` e, por fim, `Sec-Fetch-Site: same-origin`. O ultimo cobre os
+    // navegadores que omitem `Origin` no POST de mesma origem e o `Referrer-Policy: no-referrer`
+    // que o `secureHeaders()` manda — sem ele, um formulario legitimo batia em 403.
     const own = new URL(c.req.url).origin;
     const origin = c.req.header("Origin");
     const referer = c.req.header("Referer");
     const sameOrigin =
-      origin !== undefined ? origin === own : referer !== undefined && referer.startsWith(`${own}/`);
+      origin !== undefined
+        ? origin === own
+        : referer !== undefined
+          ? referer.startsWith(`${own}/`)
+          : c.req.header("Sec-Fetch-Site") === "same-origin";
     if (!sameOrigin) {
       return c.json({ error: "CSRF_ORIGIN_INVALID" }, 403);
     }

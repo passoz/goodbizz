@@ -6,7 +6,6 @@
  * `POST /ui/studies`, que tambem passa pelo StudyService.
  */
 import { Hono } from "hono";
-import { csrf } from "hono/csrf";
 import { jsxRenderer } from "hono/jsx-renderer";
 
 import { resolveStudyConfig } from "../../../config/runtime.ts";
@@ -81,7 +80,10 @@ export function buildUiApp(deps: UiDeps): Hono {
     production: deps.production,
   });
 
-  ui.use(csrf());
+  // Sem `csrf()` do Hono: toda rota que muda estado passa por `requireCsrf`, que exige mesma origem
+  // E o token do cookie (double-submit), enquanto o middleware embutido so olhava `Sec-Fetch-Site`/
+  // `Origin` de formularios. Ele recusava POST de mesma origem de navegadores que omitem o `Origin`
+  // e, como `secureHeaders()` manda `Referrer-Policy: no-referrer`, nao havia fallback.
   ui.use(issueCsrfToken);
   ui.use(jsxRenderer(({ children, title }) => <Layout title={title}>{children}</Layout>));
 

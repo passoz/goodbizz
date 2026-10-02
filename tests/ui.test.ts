@@ -955,3 +955,60 @@ describe("rotas de UI para ideia", () => {
     expect(after.evaluations).toHaveLength(study.evaluations.length);
   });
 });
+
+describe("csrf do formulario: quais sinais de mesma origem valem", () => {
+  /** Codigo de erro do corpo JSON, sem afirmar a forma por cast. */
+  async function errorCode(response: Response): Promise<unknown> {
+    const body: unknown = await response.json();
+    return typeof body === "object" && body !== null && "error" in body ? body.error : undefined;
+  }
+
+  function createForm(headers: Record<string, string>, token: string) {
+    return harness.app.request("/ui/studies", {
+      method: "POST",
+      headers: { ...FORM, ...headers },
+      body: new URLSearchParams({ niche: "clinicas", numIdeas: "1", mock: "on", _csrf: token }).toString(),
+    });
+  }
+
+  test("Origin do proprio host com token valido cria o estudo", async () => {
+    const { cookiePair, token } = await csrfToken();
+    const response = await createForm({ Cookie: cookiePair, Origin: "http://localhost" }, token);
+    expect(response.status).toBe(303);
+  });
+
+  test("Referer do proprio host basta quando falta o Origin", async () => {
+    const { cookiePair, token } = await csrfToken();
+    const response = await createForm({ Cookie: cookiePair, Referer: "http://localhost/estudos" }, token);
+    expect(response.status).toBe(303);
+  });
+
+  test("Sec-Fetch-Site same-origin basta quando faltam Origin e Referer", async () => {
+    // O `secureHeaders()` manda `Referrer-Policy: no-referrer` e varios navegadores omitem o
+    // `Origin` no POST de mesma origem: sem este sinal o formulario legitimo batia em 403.
+    const { cookiePair, token } = await csrfToken();
+    const response = await createForm({ Cookie: cookiePair, "Sec-Fetch-Site": "same-origin" }, token);
+    expect(response.status).toBe(303);
+  });
+
+  test("sem nenhum sinal de mesma origem responde 403, nunca 500", async () => {
+    const { cookiePair, token } = await csrfToken();
+    const response = await createForm({ Cookie: cookiePair }, token);
+    expect(response.status).toBe(403);
+    expect(await errorCode(response)).toBe("CSRF_ORIGIN_INVALID");
+  });
+
+  test("Origin de outro host com token valido responde 403", async () => {
+    const { cookiePair, token } = await csrfToken();
+    const response = await createForm({ Cookie: cookiePair, Origin: "http://evil.example" }, token);
+    expect(response.status).toBe(403);
+    expect(await errorCode(response)).toBe("CSRF_ORIGIN_INVALID");
+  });
+
+  test("Sec-Fetch-Site cross-site com token valido responde 403", async () => {
+    const { cookiePair, token } = await csrfToken();
+    const response = await createForm({ Cookie: cookiePair, "Sec-Fetch-Site": "cross-site" }, token);
+    expect(response.status).toBe(403);
+    expect(await errorCode(response)).toBe("CSRF_ORIGIN_INVALID");
+  });
+});

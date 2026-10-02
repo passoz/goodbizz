@@ -1,0 +1,90 @@
+{
+  "version": 2,
+  "kind": "task-acceptance-candidate",
+  "harness_version": "0.1.0",
+  "gate_version": "1",
+  "work_id": "0007",
+  "task_id": "1.2",
+  "result": "pass",
+  "plan": {
+    "path": ".todo/0007-tasks.md",
+    "sha256": "2603ab09e371eacdb33baf85b3c9d9640b05250cbdb145aeb5ca5c9dd9b2018c"
+  },
+  "implementation": {
+    "src/infrastructure/http/ui/routes.tsx": {
+      "exists": true,
+      "sha256": "83f0f7f5d90839497c99714d79e1002cd7f13b4ed318420bee99fba54962a413"
+    },
+    "src/infrastructure/http/ui/security.ts": {
+      "exists": true,
+      "sha256": "a6c2ce671f85dc57d28c2bb8dd879642f7da7e526e4504e69354d7cb1d28e028"
+    }
+  },
+  "tests": {
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "b27cb81eb6195da3940c0ba8c3caa2a639954d94adec02d2481a834fc982e2f9"
+    },
+    "tests/e2e.test.ts": {
+      "exists": true,
+      "sha256": "6ab70df95bef40c481c0a5b909964864e0b728b982866c2b05ace478cdf4a3f8"
+    }
+  },
+  "evidence_sha256": "b990db3134afbe132077ca9995fc7e600f5ad22f487e595cb67309e7a0507f51",
+  "evidence_chain_head": "3097892054ec187a4d0e6866defd06bbe5953de86a4b5562f221f3463e6c1476",
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun test"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0007/1.2-ac-1.log",
+      "log_sha256": "7f1509406ecbb2949afe0600ead0049c8d76f3f84588aac9a273a3966c1b9895",
+      "recorded_at": "2026-10-02T18:39:19.501Z"
+    },
+    "AC-2": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun run check"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0007/1.2-ac-2.log",
+      "log_sha256": "be076f11a8c1c96ac75632eff7f153e7fe29b97b4b892d43a9e3375ad07dec4a",
+      "recorded_at": "2026-10-02T18:39:22.870Z"
+    },
+    "AC-3": {
+      "command": [
+        "bash",
+        "-lc",
+        "bunx eslint src/infrastructure/http/ui/routes.tsx src/infrastructure/http/ui/security.ts tests/ui.test.ts tests/e2e.test.ts && bunx prettier --check src/infrastructure/http/ui/routes.tsx src/infrastructure/http/ui/security.ts tests/ui.test.ts tests/e2e.test.ts"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0007/1.2-ac-3.log",
+      "log_sha256": "d22ef5b6fa0d55bb6f71ed66b848b2dd5bdc927187038e9defa340c51d20b446",
+      "recorded_at": "2026-10-02T18:39:24.034Z"
+    },
+    "REGRESSION": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun test"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0007/1.2-regression.log",
+      "log_sha256": "a7337cedcb879a1eb9655aa101b328a439536251d3fe3c4ab5b7d852e760652c",
+      "recorded_at": "2026-10-02T18:39:28.386Z"
+    }
+  },
+  "generated_at": "2026-10-02T18:39:32.775Z"
+}
