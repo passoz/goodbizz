@@ -768,6 +768,18 @@ describe("gestao de ideias na pagina do estudo", () => {
     expect(html).toContain('id="idea-delete-text"');
   });
 
+  test("a falha da exclusao de ideia chega em portugues, nao no texto do servidor", async () => {
+    const { html } = await rendered(2);
+
+    // A frase e escolhida pelo status: a ideia que sumiu pede recarregar e o resto, tentar de novo.
+    expect(html).toContain("O estudo ainda está em execução — aguarde terminar para excluir.");
+    expect(html).toContain("Esta ideia não está mais no estudo — recarregue a página.");
+    expect(html).toContain("Não foi possível excluir a ideia agora — tente de novo.");
+    // O texto cru do servidor (ingles, com id) nao vai para a tela; vai para o console.
+    expect(html).not.toContain("falha ao excluir a ideia");
+    expect(html).toContain("console.error");
+  });
+
   test("o botao de excluir carrega o id da ideia, nao o nome nem a posicao", async () => {
     const { html, evaluations } = await rendered();
     for (const idea of evaluations) {

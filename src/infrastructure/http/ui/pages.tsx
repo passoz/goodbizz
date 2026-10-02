@@ -1195,10 +1195,15 @@ const IDEA_DELETE_SCRIPT = `
         } catch (failure) {
           message = failure && failure.message ? failure.message : "";
         }
+        // O texto cru do servidor (ingles, com id) fica no console: na tela vai a escolha por
+        // status, que o operador consegue acionar.
+        console.error("[goodbizz] exclusão da ideia recusada:", status, message);
         if (error) {
           error.textContent = status === 409
             ? "O estudo ainda está em execução — aguarde terminar para excluir."
-            : message || "falha ao excluir a ideia";
+            : status === 404
+              ? "Esta ideia não está mais no estudo — recarregue a página."
+              : "Não foi possível excluir a ideia agora — tente de novo.";
         }
         confirm.disabled = false;
         if (button) { button.disabled = false; button.textContent = "Excluir"; }
