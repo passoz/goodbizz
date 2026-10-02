@@ -1,0 +1,14 @@
+{
+  "work_id": "0010",
+  "requirements": [
+    {
+      "id": "FR-001",
+      "title": "Trocar os campos soltos por um catálogo nomeado, com teste de conexão",
+      "acceptance_criteria": [
+        "bun test — a suite passa com os testes do catalogo e do teste de conexao",
+        "bun run check — o typecheck estrito passa",
+        "bunx eslint . && bunx prettier --check . — o lint e a formatacao passam"
+      ]
+    }
+  ]
+}

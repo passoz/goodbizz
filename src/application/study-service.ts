@@ -19,7 +19,7 @@ import { join, relative, resolve, sep } from "node:path";
 import { diagnoseProbes, diagnoseExitCode, type DiagnoseReport } from "./diagnose.ts";
 import { buildArtifactFiles, buildZip } from "./artifacts.ts";
 import { explainFailure } from "./failures.ts";
-import type { ProviderSettingsStore } from "./settings.ts";
+import type { ProviderSettingsStore, ProviderProfileInput } from "./settings.ts";
 import { generateAddition, generateStudy } from "./generate-study.ts";
 import { htmlToPdf } from "./pdf.ts";
 const SEPARADOR_PAGINA = '\n<hr style="page-break-after: always">\n';
@@ -35,7 +35,7 @@ import { scrub } from "../config/redact.ts";
 import { resolveStudyConfig, studyContext } from "../config/runtime.ts";
 import { ConflictError, NotFoundError, ValidationError } from "../domain/errors.ts";
 import type { ArtifactFile, DeciderClient, LlmClient, Logger, StudyRepository } from "../domain/ports.ts";
-import type { ProviderSettings, ProviderSettingsPatch } from "../domain/types.ts";
+import type { ProviderKind, ProviderSettings } from "../domain/types.ts";
 import type {
   Idea,
   StudyConfig,
@@ -221,14 +221,39 @@ export class StudyService {
 
   /** Configuração de provedores salva em runtime (vazio = tudo do ambiente). */
   async providerSettings(): Promise<ProviderSettings> {
-    return this.options.settings ? this.options.settings.current() : {};
+    return this.options.settings
+      ? this.options.settings.current()
+      : { profiles: [], activeLlm: null, activeDecider: null };
   }
 
-  /** Aplica um remendo na configuração de provedores; os clientes passam a usá-la já na próxima chamada. */
-  async updateProviderSettings(patch: ProviderSettingsPatch): Promise<ProviderSettings> {
+  /** O catálogo só existe quando a composição injetou o store; sem ele, a borda responde 422. */
+  private providerStore(): ProviderSettingsStore {
     if (!this.options.settings) throw new ValidationError("configuração de provedores indisponível");
-    const next = await this.options.settings.patch(patch);
-    this.options.logger.info("provider settings updated", { fields: Object.keys(patch) });
+    return this.options.settings;
+  }
+
+  async createProvider(input: ProviderProfileInput): Promise<ProviderSettings> {
+    const next = await this.providerStore().create(input);
+    this.options.logger.info("provider created", { kind: input.kind, name: input.name });
+    return next;
+  }
+
+  async updateProvider(id: string, input: Partial<ProviderProfileInput>): Promise<ProviderSettings> {
+    const next = await this.providerStore().update(id, input);
+    this.options.logger.info("provider updated", { id });
+    return next;
+  }
+
+  async deleteProvider(id: string): Promise<ProviderSettings> {
+    const next = await this.providerStore().remove(id);
+    this.options.logger.info("provider deleted", { id });
+    return next;
+  }
+
+  /** `null` volta a herdar o ambiente para aquele tipo. */
+  async setActiveProvider(kind: ProviderKind, id: string | null): Promise<ProviderSettings> {
+    const next = await this.providerStore().setActive(kind, id);
+    this.options.logger.info("active provider set", { kind, id });
     return next;
   }
 

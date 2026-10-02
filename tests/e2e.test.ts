@@ -30,6 +30,13 @@ const ErrorJson = z.object({ error: z.string() });
 
 const StudyListJson = z.object({ studies: z.array(z.object({ id: z.string() })) });
 
+const ProfileList = z.object({ profiles: z.array(z.object({ id: z.string(), name: z.string() })) });
+
+const SettingsJson = z.object({
+  profiles: z.array(z.object({ id: z.string(), name: z.string() })),
+  active: z.object({ llm: z.string().nullable(), decider: z.string().nullable() }),
+});
+
 describe("e2e: jornada do operador pelo HTTP real", () => {
   let server: Server<undefined>;
   let bundle: ServiceBundle;
@@ -204,5 +211,72 @@ describe("e2e: jornada do operador pelo HTTP real", () => {
     );
     expect(response.status).toBe(403);
     expect(await list()).toBe(before);
+  });
+});
+
+describe("e2e: catálogo de provedores pela página", () => {
+  let server: Server<undefined>;
+  let bundle: ServiceBundle;
+  let base: string;
+
+  beforeAll(async () => {
+    bundle = await buildService({
+      ...loadEnv(),
+      DATABASE_URL: join(mkdtempSync(join(tmpdir(), "goodbizz-e2e-settings-")), "app.db"),
+      GOODBIZZ_STUDIES_DIR: mkdtempSync(join(tmpdir(), "goodbizz-e2e-settings-estudos-")),
+      GOODBIZZ_MOCK: true,
+      LOG_LEVEL: "error",
+    });
+    server = Bun.serve({ port: 0, fetch: bundle.app.fetch });
+    base = `http://127.0.0.1:${server.port}`;
+  });
+
+  afterAll(async () => {
+    await server.stop(true);
+    bundle.handle.sqlite.close();
+  });
+
+  test("cadastra, lista, escolhe e exclui um provedor passando pela página", async () => {
+    const created = await fetch(`${base}/api/settings/providers`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: "Provedor E2E",
+        kind: "llm",
+        url: "http://127.0.0.1:9/v1",
+        model: "modelo",
+        apiKey: "chave-secreta-e2e",
+      }),
+    });
+    expect(created.status).toBe(201);
+    const profile = ProfileList.parse(await created.json()).profiles[0]!;
+
+    // A página lista o provedor pelo nome e nunca mostra a chave.
+    const page = await (await fetch(`${base}/settings`)).text();
+    expect(page).toContain("Provedor E2E");
+    expect(page).not.toContain("chave-secreta-e2e");
+
+    // Escolher sem JavaScript: o formulário posta e volta para a página.
+    const res = await fetch(`${base}/`, { headers: { accept: "text/html" } });
+    const cookiePair = (res.headers.get("set-cookie") ?? "").split(";")[0] ?? "";
+    const signed = decodeURIComponent(cookiePair.slice(`${CSRF_COOKIE}=`.length));
+    const token = signed.slice(0, signed.lastIndexOf("."));
+    const applied = await fetch(`${base}/ui/settings/active`, {
+      method: "POST",
+      redirect: "manual",
+      headers: { ...FORM, Cookie: cookiePair, Origin: base },
+      body: new URLSearchParams({ kind: "llm", id: profile.id, _csrf: token }).toString(),
+    });
+    expect(applied.status).toBe(303);
+
+    const settings = SettingsJson.parse(await (await fetch(`${base}/api/settings`)).json());
+    expect(settings.active.llm).toBe(profile.id);
+
+    // Excluir tira da lista e limpa o ativo.
+    const removed = await fetch(`${base}/api/settings/providers/${profile.id}`, { method: "DELETE" });
+    expect(removed.status).toBe(200);
+    const after = SettingsJson.parse(await (await fetch(`${base}/api/settings`)).json());
+    expect(after.profiles).toHaveLength(0);
+    expect(after.active.llm).toBeNull();
   });
 });

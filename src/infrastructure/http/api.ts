@@ -8,13 +8,14 @@ import { z } from "zod";
 import { buildErrorHandler } from "./errors.ts";
 import { resolveStudyConfig } from "../../config/runtime.ts";
 import { loadEnv } from "../../config/env.ts";
-import { providerSettingsView } from "../../config/providers.ts";
+import { envProviderDefaults, profileViews } from "../../config/providers.ts";
+import { probeProvider } from "../provider-probe.ts";
 import { estimateCost } from "../../application/costs.ts";
 import { explainFailure } from "../../application/failures.ts";
 import { ValidationError } from "../../domain/errors.ts";
 import { MAX_DESCRIPTION_LENGTH, MAX_NICHE_LENGTH, MIN_NICHE_LENGTH } from "../../domain/naming.ts";
 import type { Logger } from "../../domain/ports.ts";
-import type { StudyRecord } from "../../domain/types.ts";
+import type { ProviderSettings, StudyRecord } from "../../domain/types.ts";
 import { MAX_IDEAS_PER_STUDY, type StudyService } from "../../application/study-service.ts";
 
 const StudyInput = z.object({
@@ -40,22 +41,48 @@ const StudyInput = z.object({
   timeout: z.number().positive().max(600).optional(),
 });
 
-/** Renomear: só o título exibido (o nicho). */
-/**
- * Configuração dos provedores de IA: o que for salvo aqui sobrepõe as variáveis de ambiente;
- * `null` limpa o campo e volta a herdar o ambiente.
- */
-const ProviderSettingsPatchInput = z
+/** Catálogo nomeado de provedores: criar, editar, excluir, escolher o ativo e testar. */
+const ProviderKindInput = z.enum(["llm", "decider"]);
+
+const ProviderProfileInput = z
   .object({
-    llmBaseUrl: z.string().trim().max(500).nullable().optional(),
-    llmModel: z.string().trim().max(200).nullable().optional(),
-    llmApiKey: z.string().trim().max(500).nullable().optional(),
-    deciderUrl: z.string().trim().max(500).nullable().optional(),
-    deciderModel: z.string().trim().max(200).nullable().optional(),
-    deciderApiKey: z.string().trim().max(500).nullable().optional(),
+    name: z.string().trim().min(1, "o nome do provedor é obrigatório").max(60),
+    kind: ProviderKindInput,
+    url: z.string().trim().min(1, "a URL do provedor é obrigatória").max(500),
+    model: z.string().trim().min(1, "o modelo é obrigatório").max(200),
+    apiKey: z.string().trim().max(500).optional(),
   })
   .strict();
 
+const ProviderProfilePatchInput = z
+  .object({
+    name: z.string().trim().min(1, "o nome do provedor é obrigatório").max(60).optional(),
+    url: z.string().trim().min(1, "a URL do provedor é obrigatória").max(500).optional(),
+    model: z.string().trim().min(1, "o modelo é obrigatório").max(200).optional(),
+    /** Vazio mantém a chave atual: a API nunca devolve a chave em claro. */
+    apiKey: z.string().trim().max(500).optional(),
+  })
+  .strict();
+
+const ActiveProviderInput = z
+  .object({ kind: ProviderKindInput, id: z.string().trim().min(1).nullable() })
+  .strict();
+
+const ProviderTestInput = z
+  .object({
+    kind: ProviderKindInput,
+    url: z.string().trim().min(1, "a URL do provedor é obrigatória").max(500),
+    model: z.string().trim().max(200).optional(),
+    apiKey: z.string().trim().max(500).optional(),
+  })
+  .strict();
+
+/** Ativos do catálogo no formato que a UI consome. */
+function activeOf(settings: ProviderSettings): { llm: string | null; decider: string | null } {
+  return { llm: settings.activeLlm ?? null, decider: settings.activeDecider ?? null };
+}
+
+/** Renomear: só o título exibido (o nicho). */
 const RenameInput = z.object({
   niche: z
     .string()
@@ -153,16 +180,50 @@ export function buildApiApp(deps: ApiDeps): Hono {
   });
 
   api.get("/settings", async (c) => {
-    const env = loadEnv();
-    return c.json({ fields: providerSettingsView(env, await deps.service.providerSettings()) });
+    const settings = await deps.service.providerSettings();
+    return c.json({
+      profiles: profileViews(settings),
+      active: activeOf(settings),
+      defaults: envProviderDefaults(loadEnv()),
+    });
   });
 
-  /** `null` limpa o campo e volta a herdar o ambiente. */
-  api.patch("/settings", async (c) => {
-    const patch = parseOrThrow(ProviderSettingsPatchInput, await c.req.json());
-    const settings = await deps.service.updateProviderSettings(patch);
-    const env = loadEnv();
-    return c.json({ fields: providerSettingsView(env, settings) });
+  /** Cria um provedor nomeado; ele passa a ser o ativo do tipo dele. */
+  api.post("/settings/providers", async (c) => {
+    const input = parseOrThrow(ProviderProfileInput, await c.req.json());
+    const settings = await deps.service.createProvider(input);
+    return c.json({ profiles: profileViews(settings), active: activeOf(settings) }, 201);
+  });
+
+  /** Edita um provedor. `apiKey` vazio mantém a chave atual (a API nunca devolve a chave). */
+  api.patch("/settings/providers/:id", async (c) => {
+    const input = parseOrThrow(ProviderProfilePatchInput, await c.req.json());
+    const settings = await deps.service.updateProvider(c.req.param("id"), input);
+    return c.json({ profiles: profileViews(settings), active: activeOf(settings) });
+  });
+
+  api.delete("/settings/providers/:id", async (c) => {
+    const settings = await deps.service.deleteProvider(c.req.param("id"));
+    return c.json({ profiles: profileViews(settings), active: activeOf(settings) });
+  });
+
+  /** Escolhe o provedor ativo de um tipo; `null` volta a herdar o ambiente. */
+  api.put("/settings/active", async (c) => {
+    const input = parseOrThrow(ActiveProviderInput, await c.req.json());
+    const settings = await deps.service.setActiveProvider(input.kind, input.id);
+    return c.json({ profiles: profileViews(settings), active: activeOf(settings) });
+  });
+
+  /** Testa a configuração digitada contra o provedor (ping/ready), sem persistir nada. */
+  api.post("/settings/test", async (c) => {
+    const input = parseOrThrow(ProviderTestInput, await c.req.json());
+    const result = await probeProvider({
+      kind: input.kind,
+      url: input.url,
+      model: input.model ?? "",
+      apiKey: input.apiKey ?? "",
+    });
+    return c.json(result);
   });
 
   api.get("/studies", async (c) => {

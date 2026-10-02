@@ -1,0 +1,561 @@
+TASK: 1.1
+CHECK: GREEN
+COMMAND: bun test
+EXIT: 0
+OUTPUT:
+bun test v1.4.2 (744846f84)
+{"level":50,"time":1790970999842,"pid":490097,"hostname":"note","msg":"e"}
+{"level":30,"time":1790971000167,"pid":490097,"hostname":"note","count":0,"msg":"migrations applied"}
+{"level":40,"time":1790971000168,"pid":490097,"hostname":"note","count":1,"msg":"stale studies marked as failed on boot"}
+-------------------------------------------|---------|---------|-------------------
+File                                       | % Funcs | % Lines | Uncovered Line #s
+-------------------------------------------|---------|---------|-------------------
+All files                                  |   98.48 |   98.41 |
+ src/application/artifacts.ts              |  100.00 |  100.00 | 
+ src/application/cache.ts                  |  100.00 |  100.00 | 
+ src/application/costs.ts                  |  100.00 |  100.00 | 
+ src/application/dados.ts                  |  100.00 |  100.00 | 
+ src/application/diagnose.ts               |  100.00 |   95.65 | 146-150
+ src/application/evaluate.ts               |  100.00 |   96.98 | 127,197-198,201-203
+ src/application/failures.ts               |  100.00 |  100.00 | 
+ src/application/generate-study.ts         |  100.00 |   96.07 | 177-189
+ src/application/generation.ts             |  100.00 |  100.00 | 
+ src/application/pain-algorithm.ts         |   91.30 |   95.21 | 90-94,245-246,268-269
+ src/application/pain-choice.ts            |  100.00 |   97.94 | 78-79
+ src/application/pdf.ts                    |  100.00 |   97.92 | 47
+ src/application/prompts.ts                |  100.00 |  100.00 | 
+ src/application/recalibrate.ts            |  100.00 |   94.74 | 104-105,146,166,170-172,212
+ src/application/render.ts                 |  100.00 |   99.30 | 191
+ src/application/reports.ts                |  100.00 |  100.00 | 
+ src/application/settings.ts               |  100.00 |  100.00 | 
+ src/application/study-service.ts          |   97.40 |   98.70 | 117,600-604
+ src/application/summary.ts                |   92.31 |  100.00 | 
+ src/application/verification.ts           |  100.00 |   94.62 | 48,68-71
+ src/cli.ts                                |   91.67 |   92.55 | 85-86,97,102,108-109,113,133-135,144,160-161,312-313,346,397-401,479-480,521-525,528,535,584
+ src/config/env.ts                         |  100.00 |  100.00 | 
+ src/config/providers.ts                   |  100.00 |  100.00 | 
+ src/config/redact.ts                      |  100.00 |  100.00 | 
+ src/config/runtime.ts                     |  100.00 |   98.44 | 107
+ src/domain/errors.ts                      |  100.00 |  100.00 | 
+ src/domain/hash.ts                        |  100.00 |  100.00 | 
+ src/domain/naming.ts                      |  100.00 |  100.00 | 
+ src/domain/pain.ts                        |  100.00 |  100.00 | 
+ src/infrastructure/cache-repository.ts    |  100.00 |  100.00 | 
+ src/infrastructure/db.ts                  |  100.00 |   97.96 | 45
+ src/infrastructure/decider-mock.ts        |  100.00 |  100.00 | 
+ src/infrastructure/decider.ts             |   86.67 |   95.73 | 101-104,109-111
+ src/infrastructure/http/api.ts            |   90.57 |   98.89 | 358-360
+ src/infrastructure/http/app.ts            |  100.00 |  100.00 | 
+ src/infrastructure/http/errors.ts         |  100.00 |   95.83 | 26
+ src/infrastructure/http/health.ts         |  100.00 |  100.00 | 
+ src/infrastructure/http/static.ts         |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/brand.ts       |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/layout.tsx     |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/pages.tsx      |   97.56 |   99.71 | 92-93,116
+ src/infrastructure/http/ui/routes.tsx     |   93.33 |   94.23 | 140,153,167,180-183,201,205,224,267-270,281
+ src/infrastructure/http/ui/security.ts    |  100.00 |   95.77 | 49,77-78
+ src/infrastructure/json.ts                |  100.00 |   92.00 | 31-32
+ src/infrastructure/llm-mock.ts            |   91.67 |  100.00 | 
+ src/infrastructure/llm.ts                 |  100.00 |  100.00 | 
+ src/infrastructure/provider-probe.ts      |  100.00 |   92.17 | 38,51-53,91,134,175,179-183,216
+ src/infrastructure/repositories.ts        |  100.00 |  100.00 | 
+ src/infrastructure/routing.ts             |   90.00 |   98.31 | 97
+ src/infrastructure/schema.ts              |  100.00 |  100.00 | 
+ src/infrastructure/settings-repository.ts |  100.00 |  100.00 | 
+-------------------------------------------|---------|---------|-------------------
+
+ 398 pass
+ 0 fail
+ 1500 expect() calls
+Ran 398 tests across 36 files. [4.21s]
+
+MUTATION_EXIT: 1
+MUTATION_OUTPUT:
+bun test v1.4.2 (744846f84)
+{"level":50,"time":1790971004069,"pid":490131,"hostname":"note","msg":"e"}
+{"level":30,"time":1790971004381,"pid":490131,"hostname":"note","count":0,"msg":"migrations applied"}
+{"level":40,"time":1790971004381,"pid":490131,"hostname":"note","count":1,"msg":"stale studies marked as failed on boot"}
+
+tests/providers.test.ts:
+
+# Unhandled error between tests
+-------------------------------
+SyntaxError: Export named 'activeProfile' not found in module '/home/passoz/dev/goodbizz/src/config/providers.ts'.
+-------------------------------
+
+
+tests/e2e.test.ts:
+246 |         url: "http://127.0.0.1:9/v1",
+247 |         model: "modelo",
+248 |         apiKey: [REDACTED]
+249 |       }),
+250 |     });
+251 |     expect(created.status).toBe(201);
+                                 ^
+error: expect(received).toBe(expected)
+
+Expected: 201
+Received: 404
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/e2e.test.ts:251:28)
+(fail) e2e: catálogo de provedores pela página > cadastra, lista, escolhe e exclui um provedor passando pela página [3.81ms]
+
+tests/settings-api.test.ts:
+ 98 |     const body = (await response.json()) as {
+ 99 |       profiles: unknown[];
+100 |       active: { llm: string | null; decider: string | null };
+101 |       defaults: { llm: { model: string; hasKey: boolean } };
+102 |     };
+103 |     expect(body.profiles).toEqual([]);
+                                ^
+error: expect(received).toEqual(expected)
+
+Expected: []
+Received: undefined
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/settings-api.test.ts:103:27)
+(fail) API do catálogo de provedores > lista vazia devolve o catálogo, os ativos e o padrão do ambiente [3.25ms]
+111 |       kind: "llm",
+112 |       url: [REDACTED]
+113 |       model: "mimo-v2.6-flash:free",
+114 |       apiKey: [REDACTED]
+115 |     });
+116 |     expect(response.status).toBe(201);
+                                  ^
+error: expect(received).toBe(expected)
+
+Expected: 201
+Received: 404
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/settings-api.test.ts:116:29)
+(fail) API do catálogo de provedores > cria um provedor, deixa ativo e nunca devolve a chave em claro [1.10ms]
+135 |       name: "",
+136 |       kind: "llm",
+137 |       url: "https://x.test/v1",
+138 |       model: "m",
+139 |     });
+140 |     expect(missingName.status).toBe(422);
+                                     ^
+error: expect(received).toBe(expected)
+
+Expected: 422
+Received: 404
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/settings-api.test.ts:140:32)
+(fail) API do catálogo de provedores > criar sem nome, URL ou modelo é recusado [0.88ms]
+153 |       kind: "llm",
+154 |       url: "https://um.test/v1",
+155 |       model: "m1",
+156 |       apiKey: [REDACTED]
+157 |     });
+158 |     const id = ((await created.json()) as { profiles: Array<{ id: string }> }).profiles[0]?.id ?? "";
+                                     ^
+SyntaxError: JSON Parse error: Unable to parse JSON string
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/settings-api.test.ts:158:32)
+(fail) API do catálogo de provedores > edita sem chave e mantém a chave anterior [0.98ms]
+180 |       name: "Um",
+181 |       kind: "llm",
+182 |       url: "https://um.test/v1",
+183 |       model: "m",
+184 |     });
+185 |     const id = ((await created.json()) as { profiles: Array<{ id: string }> }).profiles[0]?.id ?? "";
+                                     ^
+SyntaxError: JSON Parse error: Unable to parse JSON string
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/settings-api.test.ts:185:32)
+(fail) API do catálogo de provedores > escolhe e limpa o ativo, e recusa id de outro tipo [0.96ms]
+200 |       name: "Um",
+201 |       kind: "decider",
+202 |       url: "https://um.test/v1",
+203 |       model: "m",
+204 |     });
+205 |     const id = ((await created.json()) as { profiles: Array<{ id: string }> }).profiles[0]?.id ?? "";
+                                     ^
+SyntaxError: JSON Parse error: Unable to parse JSON string
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/settings-api.test.ts:205:32)
+(fail) API do catálogo de provedores > exclui um provedor e limpa o ativo [0.91ms]
+219 |       kind: "llm",
+220 |       url: providerBase,
+221 |       model: "modelo-1",
+222 |       apiKey: [REDACTED]
+223 |     });
+224 |     expect(response.status).toBe(200);
+                                  ^
+error: expect(received).toBe(expected)
+
+Expected: 200
+Received: 404
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/settings-api.test.ts:224:29)
+(fail) teste de provedor (ping/ready) > LLM responde ao catálogo de modelos [0.80ms]
+234 |       kind: "llm",
+235 |       url: providerBase,
+236 |       model: "modelo-1",
+237 |       apiKey: [REDACTED]
+238 |     });
+239 |     const body = (await response.json()) as { ok: boolean; status: number | null; detail: string };
+                                       ^
+SyntaxError: JSON Parse error: Unable to parse JSON string
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/settings-api.test.ts:239:34)
+(fail) teste de provedor (ping/ready) > chave recusada não é sucesso [0.82ms]
+249 |       kind: "llm",
+250 |       url: providerBase,
+251 |       model: "modelo-1",
+252 |       apiKey: [REDACTED]
+253 |     });
+254 |     const body = (await response.json()) as { ok: boolean; detail: string };
+                                       ^
+SyntaxError: JSON Parse error: Unable to parse JSON string
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/settings-api.test.ts:254:34)
+sensitive: [REDACTED]
+262 |       kind: "decider",
+263 |       url: providerBase,
+264 |       model: "systemone-latest",
+265 |       apiKey: [REDACTED]
+266 |     });
+267 |     const body = (await response.json()) as { ok: boolean; status: number | null };
+                                       ^
+SyntaxError: JSON Parse error: Unable to parse JSON string
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/settings-api.test.ts:267:34)
+(fail) teste de provedor (ping/ready) > decisor responde à pergunta mínima [0.99ms]
+275 |       kind: "llm",
+276 |       url: "http://127.0.0.1:1/v1",
+277 |       model: "m",
+278 |       apiKey: [REDACTED]
+279 |     });
+280 |     expect(response.status).toBe(200);
+                                  ^
+error: expect(received).toBe(expected)
+
+Expected: 200
+Received: 404
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/settings-api.test.ts:280:29)
+(fail) teste de provedor (ping/ready) > provedor inalcançável falha sem lançar [0.89ms]
+290 |       kind: "llm",
+291 |       url: providerBase,
+292 |       model: "modelo-1",
+293 |       apiKey: [REDACTED]
+294 |     });
+295 |     const body = (await response.json()) as { ok: boolean; status: number | null; detail: string };
+                                       ^
+SyntaxError: JSON Parse error: Unable to parse JSON string
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/settings-api.test.ts:295:34)
+(fail) teste de provedor (ping/ready) > erro do provedor vira veredito com o status e a mensagem [0.92ms]
+304 |       kind: "llm",
+305 |       url: providerBase,
+306 |       model: "modelo-1",
+307 |       apiKey: [REDACTED]
+308 |     });
+309 |     const body = (await response.json()) as { ok: boolean; status: number | null; detail: string };
+                                       ^
+SyntaxError: JSON Parse error: Unable to parse JSON string
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/settings-api.test.ts:309:34)
+(fail) teste de provedor (ping/ready) > chave recusada na geração de fallback também é falha [0.95ms]
+318 |       kind: "llm",
+319 |       url: providerBase,
+320 |       model: "modelo-1",
+321 |       apiKey: [REDACTED]
+322 |     });
+323 |     const body = (await response.json()) as { ok: boolean; status: number | null; detail: string };
+                                       ^
+SyntaxError: JSON Parse error: Unable to parse JSON string
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/settings-api.test.ts:323:34)
+(fail) teste de provedor (ping/ready) > geração de fallback recusada traz a mensagem do provedor [0.98ms]
+332 |       kind: "decider",
+333 |       url: providerBase,
+334 |       model: "systemone-latest",
+335 |       apiKey: [REDACTED]
+336 |     });
+337 |     const body = (await response.json()) as { ok: boolean; status: number | null; detail: string };
+                                       ^
+SyntaxError: JSON Parse error: Unable to parse JSON string
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/settings-api.test.ts:337:34)
+(fail) teste de provedor (ping/ready) > decisor que recusa o pedido não é sucesso [0.98ms]
+346 |       kind: "decider",
+347 |       url: providerBase,
+348 |       model: "systemone-latest",
+349 |       apiKey: [REDACTED]
+350 |     });
+351 |     const body = (await response.json()) as { ok: boolean; detail: string };
+                                       ^
+SyntaxError: JSON Parse error: Unable to parse JSON string
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/settings-api.test.ts:351:34)
+(fail) teste de provedor (ping/ready) > decisor que responde algo que não é JSON não é sucesso [1.07ms]
+359 |       kind: "decider",
+360 |       url: providerBase,
+361 |       model: "systemone-latest",
+362 |       apiKey: [REDACTED]
+363 |     });
+364 |     const body = (await response.json()) as { ok: boolean; detail: string };
+                                       ^
+SyntaxError: JSON Parse error: Unable to parse JSON string
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/settings-api.test.ts:364:34)
+(fail) teste de provedor (ping/ready) > decisor que responde fora do contrato System One não é sucesso [0.86ms]
+366 |     expect(body.detail).toContain("System One");
+367 |   });
+368 | 
+369 |   test("URL vazia é recusada na borda", async () => {
+370 |     const response = await jsonRequest("/settings/test", "POST", { kind: "llm", url: "", model: "m" });
+371 |     expect(response.status).toBe(422);
+                                  ^
+error: expect(received).toBe(expected)
+
+Expected: 422
+Received: 404
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/settings-api.test.ts:371:29)
+(fail) teste de provedor (ping/ready) > URL vazia é recusada na borda [0.93ms]
+
+tests/settings.test.ts:
+29 |       llmModel: "mimo-v2.6-flash:free",
+30 |       llmApiKey: [REDACTED]
+31 |     });
+32 | 
+33 |     const settings = await store().load();
+34 |     expect(settings.profiles).toHaveLength(1);
+                                   ^
+error: Received value does not have a length property: undefined
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/settings.test.ts:34:31)
+(fail) migração do formato antigo > campos soltos viram perfis Padrão ativos [0.94ms]
+43 |   });
+44 | 
+45 |   test("formato antigo sem nada salvo não cria perfil", async () => {
+46 |     seedLegacy({});
+47 |     const settings = await store().load();
+48 |     expect(settings.profiles).toEqual([]);
+                                   ^
+error: expect(received).toEqual(expected)
+
+Expected: []
+Received: undefined
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/settings.test.ts:48:31)
+(fail) migração do formato antigo > formato antigo sem nada salvo não cria perfil [0.71ms]
+64 | });
+65 | 
+66 | describe("catálogo de provedores", () => {
+67 |   test("criar deixa o provedor ativo no tipo dele", async () => {
+68 |     const settings = await store().load();
+69 |     const created = await store().create({
+                                       ^
+TypeError: store().create is not a function. (In 'store().create({
+      name: "DeepSeek",
+      kind: "llm",
+      url: "https://api.deepseek.com/v1",
+      model: "deepseek-flash",
+      apiKey: [REDACTED]
+    })', 'store().create' is undefined)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/settings.test.ts:69:35)
+(fail) catálogo de provedores > criar deixa o provedor ativo no tipo dele [0.68ms]
+83 |   });
+84 | 
+85 |   test("editar sem chave mantém a chave anterior", async () => {
+86 |     const store1 = store();
+87 |     await store1.load();
+88 |     const created = await store1.create({
+                                      ^
+TypeError: store1.create is not a function. (In 'store1.create({
+      name: "Um",
+      kind: "llm",
+      url: "https://um.test/v1",
+      model: "m1",
+      apiKey: [REDACTED]
+    })', 'store1.create' is undefined)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/settings.test.ts:88:34)
+(fail) catálogo de provedores > editar sem chave mantém a chave anterior [0.65ms]
+102 |   });
+103 | 
+104 |   test("editar com chave troca a chave", async () => {
+105 |     const store1 = store();
+106 |     await store1.load();
+107 |     const created = await store1.create({ name: [REDACTED]
+                                       ^
+TypeError: [REDACTED]
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/settings.test.ts:107:34)
+(fail) catálogo de provedores > editar com chave troca a chave [0.58ms]
+111 |   });
+112 | 
+113 |   test("excluir limpa o ativo quando era ele", async () => {
+114 |     const store1 = store();
+115 |     await store1.load();
+116 |     const created = await store1.create({ name: "Um", kind: "decider", url: "u", model: "m" });
+                                       ^
+TypeError: store1.create is not a function. (In 'store1.create({ name: "Um", kind: "decider", url: "u", model: "m" })', 'store1.create' is undefined)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/settings.test.ts:116:34)
+(fail) catálogo de provedores > excluir limpa o ativo quando era ele [0.60ms]
+123 |   });
+124 | 
+125 |   test("escolher o ativo valida o tipo do perfil", async () => {
+126 |     const store1 = store();
+127 |     await store1.load();
+128 |     const created = await store1.create({ name: "Um", kind: "llm", url: "u", model: "m" });
+                                       ^
+TypeError: store1.create is not a function. (In 'store1.create({ name: "Um", kind: "llm", url: "u", model: "m" })', 'store1.create' is undefined)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/settings.test.ts:128:34)
+(fail) catálogo de provedores > escolher o ativo valida o tipo do perfil [0.61ms]
+138 |   });
+139 | 
+140 |   test("nome, URL e modelo são obrigatórios", async () => {
+141 |     const store1 = store();
+142 |     await store1.load();
+143 |     await expect(store1.create({ name: "  ", kind: "llm", url: "u", model: "m" })).rejects.toThrow();
+                              ^
+TypeError: store1.create is not a function. (In 'store1.create({ name: "  ", kind: "llm", url: "u", model: "m" })', 'store1.create' is undefined)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/settings.test.ts:143:25)
+(fail) catálogo de provedores > nome, URL e modelo são obrigatórios [0.69ms]
+146 |   });
+147 | 
+148 |   test("editar provedor inexistente responde não encontrado", async () => {
+149 |     const store1 = store();
+150 |     await store1.load();
+151 |     await expect(store1.update("nao-existe", { name: "x" })).rejects.toThrow();
+                              ^
+TypeError: store1.update is not a function. (In 'store1.update("nao-existe", { name: "x" })', 'store1.update' is undefined)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/settings.test.ts:151:25)
+(fail) catálogo de provedores > editar provedor inexistente responde não encontrado [0.56ms]
+152 |   });
+153 | 
+154 |   test("o catálogo sobrevive a um novo processo (persistência)", async () => {
+155 |     const store1 = store();
+156 |     await store1.load();
+157 |     await store1.create({ name: [REDACTED]
+                       ^
+TypeError: [REDACTED]
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/settings.test.ts:157:18)
+(fail) catálogo de provedores > o catálogo sobrevive a um novo processo (persistência) [0.66ms]
+
+tests/ui.test.ts:
+614 |     const body = await response.text();
+615 | 
+616 |     expect(body).toContain("Configuração dos provedores");
+617 |     expect(body).toContain("<legend>Provedor de texto (LLM)</legend>");
+618 |     expect(body).toContain("<legend>Provedor de decisão (System One)</legend>");
+619 |     expect(body).toContain('action="/ui/settings/active"');
+                       ^
+error: expect(received).toContain(expected)
+
+Expected to contain: "action=\"/ui/settings/active\""
+Received: [REDACTED]
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/ui.test.ts:619:18)
+(fail) configuracao dos provedores > a pagina mostra uma lista por funcao, com o padrao do ambiente e a opcao de adicionar no fim [1.87ms]
+627 |       expect(select.indexOf("+ adicionar provedor")).toBeGreaterThan(select.indexOf("padrão do ambiente"));
+628 |     }
+629 |   });
+630 | 
+631 |   test("o provedor aparece na lista pelo nome, com editar, excluir e o modal de teste", async () => {
+632 |     await harness.settings.create({
+                                 ^
+TypeError: harness.settings.create is not a function. (In 'harness.settings.create({
+      name: [REDACTED]
+      kind: "llm",
+      url: "https://salvo.test/v1",
+      model: "mimo-v2.6-flash:free",
+      apiKey: [REDACTED]
+    })', 'harness.settings.create' is undefined)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/ui.test.ts:632:28)
+(fail) configuracao dos provedores > o provedor aparece na lista pelo nome, com editar, excluir e o modal de teste [0.80ms]
+sensitive: [REDACTED]
+657 |     expect(body).toContain("ativo:");
+658 |   });
+659 | 
+660 |   test("escolher um provedor sem JS aplica e volta para a pagina", async () => {
+661 |     const created = await harness.settings.create({
+                                                 ^
+TypeError: harness.settings.create is not a function. (In 'harness.settings.create({
+      name: "Escolhido",
+      kind: "llm",
+      url: "https://escolhido.test/v1",
+      model: "modelo"
+    })', 'harness.settings.create' is undefined)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/ui.test.ts:661:44)
+(fail) configuracao dos provedores > escolher um provedor sem JS aplica e volta para a pagina [0.83ms]
+677 |     expect(response.headers.get("location")).toBe("/settings");
+678 |     expect((await harness.service.providerSettings()).activeLlm).toBe(id);
+679 |   });
+680 | 
+681 |   test("escolher o padrao do ambiente limpa o ativo daquele tipo", async () => {
+682 |     await harness.settings.create({ name: "Um", kind: "decider", url: "u", model: "m" });
+                                 ^
+TypeError: harness.settings.create is not a function. (In 'harness.settings.create({ name: "Um", kind: "decider", url: "u", model: "m" })', 'harness.settings.create' is undefined)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/ui.test.ts:682:28)
+(fail) configuracao dos provedores > escolher o padrao do ambiente limpa o ativo daquele tipo [0.82ms]
+695 |     const response = await harness.app.request("/ui/settings/active", {
+696 |       method: "POST",
+697 |       headers: [REDACTED]
+698 |       body: [REDACTED]
+699 |     });
+700 |     expect(response.status).toBe(422);
+                                  ^
+error: expect(received).toBe(expected)
+
+Expected: 422
+Received: 404
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/ui.test.ts:700:29)
+(fail) configuracao dos provedores > tipo de provedor desconhecido no formulario e recusado [1.70ms]
+-------------------------------------------|---------|---------|-------------------
+File                                       | % Funcs | % Lines | Uncovered Line #s
+-------------------------------------------|---------|---------|-------------------
+All files                                  |   96.79 |   96.21 |
+ src/application/artifacts.ts              |  100.00 |  100.00 | 
+ src/application/cache.ts                  |  100.00 |  100.00 | 
+ src/application/costs.ts                  |  100.00 |  100.00 | 
+ src/application/dados.ts                  |  100.00 |  100.00 | 
+ src/application/diagnose.ts               |  100.00 |   95.65 | 146-150
+ src/application/evaluate.ts               |  100.00 |   96.98 | 127,197-198,201-203
+ src/application/failures.ts               |  100.00 |  100.00 | 
+ src/application/generate-study.ts         |  100.00 |   96.07 | 177-189
+ src/application/generation.ts             |  100.00 |  100.00 | 
+ src/application/pain-algorithm.ts         |   91.30 |   95.21 | 90-94,245-246,268-269
+ src/application/pain-choice.ts            |  100.00 |   97.94 | 78-79
+ src/application/pdf.ts                    |  100.00 |   97.92 | 47
+ src/application/prompts.ts                |  100.00 |  100.00 | 
+ src/application/recalibrate.ts            |  100.00 |   94.74 | 104-105,146,166,170-172,212
+ src/application/render.ts                 |  100.00 |   99.30 | 191
+ src/application/reports.ts                |  100.00 |  100.00 | 
+ src/application/settings.ts               |   80.00 |   57.14 | 24-29
+ src/application/study-service.ts          |   95.65 |   96.88 | 117,224-231,575-579
+ src/application/summary.ts                |   92.31 |  100.00 | 
+ src/application/verification.ts           |  100.00 |   94.62 | 48,68-71
+ src/cli.ts                                |   91.67 |   91.87 | 84-85,96,101,107-108,112,132-134,143,159-160,311-312,335,337-338,349,400-404,482-483,524-528,531,538,587
+ src/config/env.ts                         |  100.00 |  100.00 | 
+ src/config/providers.ts                   |  100.00 |  100.00 | 
+ src/config/redact.ts                      |  100.00 |  100.00 | 
+ src/config/runtime.ts                     |  100.00 |   98.44 | 107
+ src/domain/errors.ts                      |  100.00 |  100.00 | 
+ src/domain/hash.ts                        |  100.00 |  100.00 | 
+ src/domain/naming.ts                      |  100.00 |  100.00 | 
+ src/domain/pain.ts                        |  100.00 |  100.00 | 
+ src/infrastructure/cache-repository.ts    |  100.00 |  100.00 | 
+ src/infrastructure/db.ts                  |  100.00 |   97.96 | 45
+ src/infrastructure/decider-mock.ts        |  100.00 |  100.00 | 
+ src/infrastructure/decider.ts             |   86.67 |   95.73 | 101-104,109-111
+ src/infrastructure/http/api.ts            |   86.05 |   96.82 | 161-164,297-299
+ src/infrastructure/http/app.ts            |  100.00 |  100.00 | 
+ src/infrastructure/http/errors.ts         |  100.00 |   95.83 | 26
+ src/infrastructure/http/health.ts         |  100.00 |  100.00 | 
+ src/infrastructure/http/static.ts         |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/brand.ts       |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/layout.tsx     |  100.00 |  100.00 | 
+ src/infrastructure/http/ui/pages.tsx      |   97.50 |   99.39 | 92-93,116,1070-1072
+ src/infrastructure/http/ui/routes.tsx     |   86.67 |   85.07 | 56-74,129-134,155,168,182,195-198,216,220,239,282-285,296
+ src/infrastructure/http/ui/security.ts    |  100.00 |   95.77 | 49,77-78
+ src/infrastructure/json.ts                |  100.00 |   92.00 | 31-32
+ src/infrastructure/llm-mock.ts            |   91.67 |  100.00 | 
+ src/infrastructure/llm.ts                 |  100.00 |  100.00 | 
+ src/infrastructure/repositories.ts        |  100.00 |  100.00 | 
+ src/infrastructure/routing.ts             |   90.00 |   98.31 | 97
+ src/infrastructure/schema.ts              |  100.00 |  100.00 | 
+ src/infrastructure/settings-repository.ts |   50.00 |   41.03 | 15-25,41-52
+-------------------------------------------|---------|---------|-------------------
+
+ 353 pass
+ 35 fail
+ 1 error
+ 1366 expect() calls
+Ran 388 tests across 36 files. [4.14s]
+
+MUTATION_VERDICT: PASS
+VERDICT: PASS
+CHAIN_HASH: 50f235fe00924700e68943c334071ea2d54e07aa266fdd9170617e4371f702c2

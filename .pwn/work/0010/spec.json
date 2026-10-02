@@ -1,0 +1,37 @@
+{
+  "work_id": "0010",
+  "title": "Catálogo nomeado de provedores na tela de configurações",
+  "capabilities": [
+    {
+      "id": "CAP-014",
+      "name": "Interface web",
+      "description": "permite criar e ler estudos pelo navegador sem instalar nada renderiza no servidor com hono/jsx e consome a propria API para disparar e acompanhar estudos",
+      "rules": [
+        "BR-018",
+        "BR-022"
+      ]
+    },
+    {
+      "id": "CAP-016",
+      "name": "Configuracao por ambiente e segredos",
+      "description": "resolve a configuracao dos provedores a partir do ambiente, com o catalogo salvo sobrepondo o padrao",
+      "rules": [
+        "BR-020"
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "BR-018",
+      "statement": "Toda rota de UI que muda estado exige mesma origem e token CSRF em tempo constante."
+    },
+    {
+      "id": "BR-020",
+      "statement": "Segredos vem apenas do ambiente; o app falha no startup se uma chave obrigatoria faltar."
+    },
+    {
+      "id": "BR-022",
+      "statement": "Cookie de sessao usa httpOnly, sameSite Lax e secure em producao."
+    }
+  ]
+}

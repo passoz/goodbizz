@@ -1,0 +1,150 @@
+{
+  "version": 2,
+  "kind": "task-acceptance-candidate",
+  "harness_version": "0.1.0",
+  "gate_version": "1",
+  "work_id": "0010",
+  "task_id": "1.1",
+  "result": "pass",
+  "plan": {
+    "path": ".todo/0010-tasks.md",
+    "sha256": "1c72f17571eeef1c234eec188477ae5514dabf3d29126401fd78aeb759c4aee1"
+  },
+  "implementation": {
+    "src/domain/types.ts": {
+      "exists": true,
+      "sha256": "a56badc077028dbd146b9d2d4167a35429e6e6a7acf498211386b3dd0736fe8e"
+    },
+    "src/domain/ports.ts": {
+      "exists": true,
+      "sha256": "279a817f727385dff708bb1a8e1f776362d9f5751a5c5b06f303df1679d38ae5"
+    },
+    "src/config/providers.ts": {
+      "exists": true,
+      "sha256": "1795716abc864c51825d0ad66379e761bd8dc9ab218d6c124206411fc41c16d0"
+    },
+    "src/application/settings.ts": {
+      "exists": true,
+      "sha256": "f8a9ef37f6cd9edf21cb5c6941971615c7e050e86e0c1e4218164c0b0b113711"
+    },
+    "src/application/study-service.ts": {
+      "exists": true,
+      "sha256": "1fcb269cc435c976b653d203a8298b1cdcc2db8d859078f20901245c86c54d80"
+    },
+    "src/infrastructure/settings-repository.ts": {
+      "exists": true,
+      "sha256": "1cbf836afc049ff6c220b6fc1360afd5e6f24159d957a0fbcbbc764c83182a6b"
+    },
+    "src/infrastructure/provider-probe.ts": {
+      "exists": true,
+      "sha256": "f3ac13279bb131e22990362a019ddbe397129d5cb9324875f708f9225fe76cb8"
+    },
+    "src/infrastructure/http/api.ts": {
+      "exists": true,
+      "sha256": "169c16d856b22b652dba4b87910bdc85f3674d4eacc497a10b815d0f332ce56a"
+    },
+    "src/infrastructure/http/ui/routes.tsx": {
+      "exists": true,
+      "sha256": "90c17d58821eb4214b02f651b634afda6f3a844200b5608399a8dfa31a453b68"
+    },
+    "src/infrastructure/http/ui/pages.tsx": {
+      "exists": true,
+      "sha256": "a73dc94fbc07e675a431920563a44c63beae9917b7b51459d2a046be9ae69548"
+    },
+    "src/infrastructure/http/ui/layout.tsx": {
+      "exists": true,
+      "sha256": "258100fee69e297a2d0219bbde7bf75f28998ea5e63ff42f9e61e0c7c25f6fbd"
+    },
+    "src/cli.ts": {
+      "exists": true,
+      "sha256": "be22a1694f674859fc4c7eea7729cb1fc7761ef8e4feb76d018b3479bbcff105"
+    }
+  },
+  "tests": {
+    "tests/settings.test.ts": {
+      "exists": true,
+      "sha256": "7273cf093c43cf40a7d6465af0bef2377b51193f340c7f4c5798f171e607c1b3"
+    },
+    "tests/settings-api.test.ts": {
+      "exists": true,
+      "sha256": "3447fd987d4fb686bb39ec92d8346b4143d8d302125530047f6402d477b37bf5"
+    },
+    "tests/providers.test.ts": {
+      "exists": true,
+      "sha256": "cd3441e9e0ef71f37491fdd8b645d306a214c9de81f073836d2708c5c881fa1b"
+    },
+    "tests/routing.test.ts": {
+      "exists": true,
+      "sha256": "8acc9c46d0121a540b6e9c61341101cd361d8b9c69403df383c3a89bb61800c5"
+    },
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "4217d61605ffc99516f1f207147f6972724f0fa5f886ea50d911dd5963960865"
+    },
+    "tests/helpers.ts": {
+      "exists": true,
+      "sha256": "ba788fdd08cee0839a87e8ee17309988df0f1acc7405e40a79a628c4fd3ce046"
+    },
+    "tests/e2e.test.ts": {
+      "exists": true,
+      "sha256": "cd842972c200438dcfd39217218c5063f19d47cf3353432cee5d62cb18049817"
+    }
+  },
+  "evidence_sha256": "39109be2a116d6127b1ce2864cb2d1aa4387fa12fc5723f69b9d6635424600e3",
+  "evidence_chain_head": "87a331dc984c4aba0ea758f44b172958cc51835d9b5a4f4500cea05aa82622ee",
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun test"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0010/1.1-ac-1.log",
+      "log_sha256": "3b173d19a9ed2c8315ce4e8eb5003c4ddb7b8dc197d1ba0b4297d354e6040583",
+      "recorded_at": "2026-10-02T19:57:00.101Z"
+    },
+    "AC-2": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun run check"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0010/1.1-ac-2.log",
+      "log_sha256": "75bd968109e91045a35f0e8929d8df75cf303b82d972bfb030818e9b4ccde708",
+      "recorded_at": "2026-10-02T19:57:02.974Z"
+    },
+    "AC-3": {
+      "command": [
+        "bash",
+        "-lc",
+        "bunx eslint . && bunx prettier --check ."
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0010/1.1-ac-3.log",
+      "log_sha256": "b7396e6e7a9f72331c8f86378823d4dcb498fe1f721b4874c49e3f23037f1bc5",
+      "recorded_at": "2026-10-02T19:57:06.181Z"
+    },
+    "REGRESSION": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun test"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0010/1.1-regression.log",
+      "log_sha256": "5cac3da0d5f462cf4f069b0fecbd4a9da605e4ededeea24565e6d257e26ab7b6",
+      "recorded_at": "2026-10-02T19:57:10.499Z"
+    }
+  },
+  "generated_at": "2026-10-02T19:57:14.760Z"
+}

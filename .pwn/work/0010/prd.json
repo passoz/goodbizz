@@ -1,0 +1,65 @@
+{
+  "$schema": "../../../schemas/prd.schema.json",
+  "id": "PRD-0010",
+  "meta": {
+    "version": "1.0",
+    "created_at": "2026-10-02T19:55:01.506Z",
+    "author": "pwn-import"
+  },
+  "title": "Catálogo nomeado de provedores na tela de configurações",
+  "status": "approved",
+  "scenario": "brownfield",
+  "problem": {
+    "statement": "a tela de configurações mostrava seis campos soltos (URL, modelo e chave de cada função), cada um com origem e máscara próprias. Para trocar de provedor era preciso digitar URL e modelo de novo, não havia como guardar mais de uma configuração, não havia como testar se o que foi digitado funciona, e uma chave errada só aparecia quando um estudo falhava no meio."
+  },
+  "solution": {
+    "statement": "duas listas — provedor de texto e provedor de decisão — mostrando o **nome** que o operador deu a cada configuração mais a opção de adicionar, com editar e excluir ao lado; um modal com os campos do provedor e um botão Testar que fala com o provedor de verdade; e o catálogo guardado em banco com migração automática do formato antigo."
+  },
+  "decisions": [
+    {
+      "id": "DEC-001",
+      "statement": "Governar o Work 0010 pelo PWN com contratos V4 congelados derivados do plano v3.",
+      "status": "accepted",
+      "made_by": "pwn-import"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "FR-001",
+      "type": "functional",
+      "statement": "FR-001: Trocar os campos soltos por um catálogo nomeado, com teste de conexão",
+      "acceptance_criteria": [
+        "bun test — a suite passa com os testes do catalogo e do teste de conexao",
+        "bun run check — o typecheck estrito passa",
+        "bunx eslint . && bunx prettier --check . — o lint e a formatacao passam"
+      ]
+    }
+  ],
+  "stakeholders": [
+    {
+      "name": "ACT-003 Operador/consultor",
+      "role": "stakeholder"
+    },
+    {
+      "name": "ACT-001 Usuário da interface web",
+      "role": "stakeholder"
+    }
+  ],
+  "scope": {
+    "in_scope": [
+      "Catálogo nomeado de provedores (nome, tipo, URL, modelo, chave) com criar, editar e excluir.",
+      "Escolha do provedor ativo por função, incluindo \"padrão do ambiente\".",
+      "Botão Testar no modal, que valida URL, credencial e modelo contra o provedor.",
+      "Migração automática do formato antigo para perfis \"Padrão\".",
+      "Chave nunca devolvida em claro; editar sem digitar a chave mantém a atual."
+    ],
+    "out_of_scope": [
+      "Mudar o caminho de geração: os clientes de IA continuam os mesmos, só mudam de onde leem a configuração.",
+      "Guardar histórico de versões do catálogo.",
+      "Testar provedores em lote ou agendar o teste."
+    ]
+  },
+  "accepted_requirements": [
+    "FR-001"
+  ]
+}

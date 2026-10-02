@@ -1,0 +1,20 @@
+{
+  "work_id": "0010",
+  "title": "Catálogo nomeado de provedores na tela de configurações",
+  "imported_from": ".todo/0010-tasks.md",
+  "problem": "a tela de configurações mostrava seis campos soltos (URL, modelo e chave de cada função), cada um com origem e máscara próprias. Para trocar de provedor era preciso digitar URL e modelo de novo, não havia como guardar mais de uma configuração, não havia como testar se o que foi digitado funciona, e uma chave errada só aparecia quando um estudo falhava no meio.",
+  "actors": [
+    "ACT-003 Operador/consultor",
+    "ACT-001 Usuário da interface web"
+  ],
+  "objectives": [
+    "SC-001: `bun test` prova o CRUD, a escolha do ativo, a migração e os vereditos do teste (FR-001, FR-002, FR-003).",
+    "SC-002: o e2e sobre socket real cadastra, lista, escolhe e exclui passando pela página (FR-001)."
+  ],
+  "constraints": [
+    "QR-001: a chave nunca é devolvida em claro por API, HTML ou log; editar sem chave mantém a atual.",
+    "QR-002: o catálogo antigo (campos soltos) é migrado para perfis \"Padrão\" e continua valendo.",
+    "QR-003: escolher o provedor funciona sem JavaScript; criar/editar/excluir/testar exigem script, como o modal do plano.",
+    "QR-004: a suíte existente permanece verde, com os testes do formato antigo substituídos pelos do catálogo."
+  ]
+}

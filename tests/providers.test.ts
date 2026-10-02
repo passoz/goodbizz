@@ -1,15 +1,18 @@
 /**
- * Configuração de provedores: precedência (settings sobre ambiente), origem de cada campo e máscara.
+ * Configuração de provedores: precedência do perfil ativo sobre o ambiente, a visão sem segredo e
+ * a máscara das chaves.
  */
 import { describe, expect, test } from "bun:test";
 
 import {
+  activeProfile,
   effectiveProviders,
+  envProviderDefaults,
   maskSecret,
-  providerSettingsView,
-  providerSources,
+  profileViews,
 } from "../src/config/providers.ts";
 import type { Env } from "../src/config/env.ts";
+import type { ProviderProfile } from "../src/domain/types.ts";
 
 function env(overrides: Partial<Env> = {}): Env {
   return {
@@ -39,45 +42,92 @@ function env(overrides: Partial<Env> = {}): Env {
   };
 }
 
+function profile(overrides: Partial<ProviderProfile> = {}): ProviderProfile {
+  return {
+    id: "p-llm",
+    name: "Meu provedor",
+    kind: "llm",
+    url: "https://meu.test/v1",
+    model: "meu-modelo",
+    apiKey: "sk-meu-segredo-1234",
+    ...overrides,
+  };
+}
+
 describe("effectiveProviders", () => {
-  test("sem nada salvo, tudo vem do ambiente", () => {
-    const config = effectiveProviders(env(), {});
+  test("sem perfil ativo, tudo vem do ambiente", () => {
+    const config = effectiveProviders(env(), { profiles: [], activeLlm: null, activeDecider: null });
     expect(config.llmBaseUrl).toBe("https://env.test/v1");
     expect(config.llmApiKey).toBe("sk-do-ambiente");
     expect(config.deciderModel).toBe("systemone-latest");
   });
 
-  test("o que está salvo sobrepõe o ambiente, campo a campo", () => {
-    const config = effectiveProviders(env(), {
-      llmBaseUrl: "http://9router.9router.svc.cluster.local:20128/v1",
-      llmModel: "ds/deepseek-v4-flash",
-    });
-    expect(config.llmBaseUrl).toBe("http://9router.9router.svc.cluster.local:20128/v1");
-    expect(config.llmModel).toBe("ds/deepseek-v4-flash");
-    // O que não foi salvo continua herdando.
-    expect(config.llmApiKey).toBe("sk-do-ambiente");
+  test("o perfil ativo do LLM sobrepõe só os campos do LLM", () => {
+    const config = effectiveProviders(env(), { profiles: [profile()], activeLlm: "p-llm" });
+    expect(config.llmBaseUrl).toBe("https://meu.test/v1");
+    expect(config.llmModel).toBe("meu-modelo");
+    expect(config.llmApiKey).toBe("sk-meu-segredo-1234");
+    // O decisor continua herdando.
     expect(config.deciderUrl).toBe("https://decisor.test/v1");
+    expect(config.deciderModel).toBe("systemone-latest");
   });
 
-  test("string vazia ou só espaço não sobrescreve nada", () => {
-    const config = effectiveProviders(env(), { llmModel: "   ", deciderUrl: "" });
-    expect(config.llmModel).toBe("modelo-do-ambiente");
-    expect(config.deciderUrl).toBe("https://decisor.test/v1");
+  test("ativo que aponta para perfil inexistente volta ao ambiente", () => {
+    const config = effectiveProviders(env(), { profiles: [profile()], activeLlm: "nao-existe" });
+    expect(config.llmBaseUrl).toBe("https://env.test/v1");
+  });
+
+  test("perfil de um tipo não serve para o outro", () => {
+    // Um perfil de decisor marcado como ativo do LLM não pode alimentar o LLM.
+    const config = effectiveProviders(env(), {
+      profiles: [profile({ id: "p-dec", kind: "decider" })],
+      activeLlm: "p-dec",
+    });
+    expect(config.llmBaseUrl).toBe("https://env.test/v1");
+  });
+
+  test("perfil sem chave não herda a chave do ambiente", () => {
+    // Quem escolheu um provedor sem chave não quer a credencial do ambiente indo para ele.
+    const config = effectiveProviders(env(), {
+      profiles: [profile({ apiKey: "" })],
+      activeLlm: "p-llm",
+    });
+    expect(config.llmApiKey).toBe("");
   });
 });
 
-describe("providerSources", () => {
-  test("marca a origem de cada campo", () => {
-    const sources = providerSources(env(), { llmModel: "outro-modelo" });
-    expect(sources.llmModel).toBe("settings");
-    expect(sources.llmBaseUrl).toBe("env");
-    expect(sources.deciderModel).toBe("env");
+describe("activeProfile", () => {
+  test("devolve o perfil do tipo pedido", () => {
+    const settings = {
+      profiles: [profile(), profile({ id: "p-dec", kind: "decider" as const })],
+      activeDecider: "p-dec",
+    };
+    expect(activeProfile(settings, "decider")?.id).toBe("p-dec");
+    expect(activeProfile(settings, "llm")).toBeNull();
+  });
+});
+
+describe("profileViews", () => {
+  test("mascara a chave e diz se existe", () => {
+    const [view] = profileViews({ profiles: [profile({ apiKey: "sk-teste-1234" })] });
+    expect(view?.apiKey).toBe("sk-…1234");
+    expect(view?.hasKey).toBe(true);
+    // A chave em claro não aparece em lugar nenhum da visão.
+    expect(JSON.stringify(view)).not.toContain("sk-teste-1234");
+  });
+});
+
+describe("envProviderDefaults", () => {
+  test("descreve o que o ambiente oferece", () => {
+    const defaults = envProviderDefaults(env());
+    expect(defaults.llm.url).toBe("https://env.test/v1");
+    expect(defaults.llm.model).toBe("modelo-do-ambiente");
+    expect(defaults.llm.hasKey).toBe(true);
   });
 
-  test("campo sem valor em lugar nenhum é vazio", () => {
-    const sources = providerSources(env({ DECISION_API_URL: "", LLM_API_KEY: "" }), {});
-    expect(sources.deciderUrl).toBe("vazio");
-    expect(sources.llmApiKey).toBe("vazio");
+  test("ambiente sem chave aparece como sem chave", () => {
+    const defaults = envProviderDefaults(env({ DECISION_API_KEY: "" }));
+    expect(defaults.decider.hasKey).toBe(false);
   });
 });
 
@@ -89,20 +139,5 @@ describe("maskSecret", () => {
   test("esconde chaves curtas por inteiro e mantém vazio", () => {
     expect(maskSecret("123456")).toBe("••••••");
     expect(maskSecret("   ")).toBe("");
-  });
-});
-
-describe("providerSettingsView", () => {
-  test("mascara só os segredos e diz de onde vem cada campo", () => {
-    const rows = providerSettingsView(env(), { llmApiKey: "sk-teste-1234" });
-    const byKey = Object.fromEntries(rows.map((row) => [row.key, row]));
-
-    expect(byKey["llmApiKey"]?.source).toBe("settings");
-    expect(byKey["llmApiKey"]?.value).toBe("sk-…1234");
-    expect(byKey["llmApiKey"]?.secret).toBe(true);
-    expect(byKey["llmBaseUrl"]?.value).toBe("https://env.test/v1");
-    expect(byKey["llmBaseUrl"]?.secret).toBe(false);
-    // A chave em claro não aparece em lugar nenhum da visão.
-    expect(JSON.stringify(rows)).not.toContain("sk-teste-1234");
   });
 });

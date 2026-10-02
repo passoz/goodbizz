@@ -10,12 +10,12 @@ import { jsxRenderer } from "hono/jsx-renderer";
 
 import { resolveStudyConfig } from "../../../config/runtime.ts";
 import { loadEnv } from "../../../config/env.ts";
-import { PROVIDER_FIELDS, providerSettingsView } from "../../../config/providers.ts";
+import { envProviderDefaults, profileViews } from "../../../config/providers.ts";
 import { folderName } from "../../../application/reports.ts";
 import { mdToHtml } from "../../../application/render.ts";
 import { MAX_IDEAS_PER_STUDY, type StudyService } from "../../../application/study-service.ts";
 import { ConflictError, NotFoundError, ValidationError } from "../../../domain/errors.ts";
-import type { ProviderSettingsPatch, StudyRecord } from "../../../domain/types.ts";
+import type { StudyRecord } from "../../../domain/types.ts";
 import { Layout, Term } from "./layout.tsx";
 import { HelpPage, SettingsPage, StudiesList, StudyDetail, StudyForm } from "./pages.tsx";
 import { createCsrf, type UiEnv } from "./security.ts";
@@ -42,38 +42,15 @@ const ABOUT_ROWS: Array<{ method: string; path: string; description: string }> =
   { method: "GET", path: "/api/studies/:id/artifacts/*", description: "conteúdo de um artefato" },
   { method: "POST", path: "/api/diagnose", description: "diagnostica as sondas de dor" },
   { method: "POST", path: "/api/recalibrate", description: "recalibra os limiares" },
-  { method: "GET", path: "/api/settings", description: "configuração dos provedores (origem e máscara)" },
-  { method: "PATCH", path: "/api/settings", description: "sobrepõe ou limpa campos dos provedores" },
+  { method: "GET", path: "/api/settings", description: "catálogo de provedores nomeados e o ativo por tipo" },
+  { method: "POST", path: "/api/settings/providers", description: "cria um provedor nomeado" },
+  { method: "PATCH", path: "/api/settings/providers/:id", description: "edita um provedor" },
+  { method: "DELETE", path: "/api/settings/providers/:id", description: "exclui um provedor" },
+  { method: "PUT", path: "/api/settings/active", description: "escolhe o provedor ativo de um tipo" },
+  { method: "POST", path: "/api/settings/test", description: "testa a configuração contra o provedor" },
   { method: "GET", path: "/healthz", description: "liveness" },
   { method: "GET", path: "/readyz", description: "readiness" },
 ];
-
-/**
- * Monta o remendo a partir do formulario sem JS: campo preenchido define, "limpar" manda `null`
- * (volta a herdar o ambiente) e campo vazio fica de fora. Qualquer campo fora do contrato invalida o
- * formulario inteiro, para o corpo nao introduzir chaves que o servico nao conhece.
- */
-function settingsPatch(body: Record<string, unknown>): ProviderSettingsPatch | null {
-  const allowed: Record<string, true> = { _csrf: true };
-  for (const field of PROVIDER_FIELDS) {
-    allowed[field.key] = true;
-    allowed[`clear_${field.key}`] = true;
-  }
-  for (const key of Object.keys(body)) {
-    if (allowed[key] !== true) return null;
-  }
-  const patch: ProviderSettingsPatch = {};
-  for (const field of PROVIDER_FIELDS) {
-    if (body[`clear_${field.key}`] !== undefined) {
-      patch[field.settingKey] = null;
-      continue;
-    }
-    const raw = body[field.key];
-    const value = typeof raw === "string" ? raw.trim() : "";
-    if (value.length > 0) patch[field.settingKey] = value;
-  }
-  return patch;
-}
 
 export function buildUiApp(deps: UiDeps): Hono {
   const ui = new Hono<UiEnv>();
@@ -111,27 +88,35 @@ export function buildUiApp(deps: UiDeps): Hono {
 
   ui.get("/como-ler", (c) => c.render(<HelpPage />, { title: "GoodBizz — como ler" }));
 
-  /** Configuracao dos provedores: mostra o valor efetivo, a origem de cada campo e o formulario. */
+  /** Configuração dos provedores: catálogo nomeado, escolha do ativo por tipo e o modal de edição. */
   ui.get("/settings", async (c) => {
     const settings = await deps.service.providerSettings();
     return c.render(
-      <SettingsPage rows={providerSettingsView(loadEnv(), settings)} token={c.get("csrfToken")} />,
-      {
-        title: "GoodBizz — configurações",
-      },
+      <SettingsPage
+        view={{
+          profiles: profileViews(settings),
+          active: { llm: settings.activeLlm ?? null, decider: settings.activeDecider ?? null },
+          defaults: envProviderDefaults(loadEnv()),
+        }}
+        token={c.get("csrfToken")}
+      />,
+      { title: "GoodBizz — configurações" },
     );
   });
 
   /**
-   * Salvar sem JS: monta o remendo a partir do formulario (mesma origem + CSRF) e volta para a
-   * pagina. Com JS o `PATCH /api/settings` assume; a rota existe para o caminho sem script.
+   * Escolher o provedor ativo sem JavaScript: o `select` posta aqui (mesma origem + CSRF) e a
+   * pagina volta. Com JS o proprio `select` dispara este submit. Criar/editar/excluir/testar
+   * exigem script, como o modal do plano.
    */
-  ui.post("/ui/settings", requireCsrf, async (c) => {
-    const patch = settingsPatch(await c.req.parseBody());
-    if (patch === null) {
-      return c.json({ error: "VALIDATION_FAILED", message: "campo desconhecido no formulário" }, 422);
+  ui.post("/ui/settings/active", requireCsrf, async (c) => {
+    const body = await c.req.parseBody();
+    const kind = body["kind"] === "decider" ? "decider" : body["kind"] === "llm" ? "llm" : null;
+    if (kind === null) {
+      return c.json({ error: "VALIDATION_FAILED", message: "tipo de provedor inválido" }, 422);
     }
-    await deps.service.updateProviderSettings(patch);
+    const raw = typeof body["id"] === "string" ? body["id"].trim() : "";
+    await deps.service.setActiveProvider(kind, raw.length === 0 ? null : raw);
     return c.redirect("/settings", 303);
   });
 

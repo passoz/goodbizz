@@ -146,12 +146,11 @@ afterAll(() => {
   resetEnv();
 });
 
-/** Fatia o HTML de uma linha da tabela de configuracao (`data-setting="<key>"` ate a proxima). */
-function settingRow(body: string, key: string): string {
-  const marker = `data-setting="${key}"`;
-  const start = body.indexOf(marker);
+/** Fatia o HTML entre duas legendas de provedor (LLM e decisor) na pagina de configuracoes. */
+function providerSection(body: string, legend: string): string {
+  const start = body.indexOf(`<legend>${legend}</legend>`);
   expect(start).toBeGreaterThanOrEqual(0);
-  const next = body.indexOf(`class="field" data-setting="`, start + marker.length);
+  const next = body.indexOf("<legend>", start + 1);
   return next === -1 ? body.slice(start) : body.slice(start, next);
 }
 
@@ -608,123 +607,97 @@ describe("configuracao dos provedores", () => {
     expect(body).toContain('<a href="/settings">Configurações</a>');
   });
 
-  test("a pagina de configuracoes mostra cada campo com a origem e a chave mascarada", async () => {
-    await harness.settings.patch({ llmBaseUrl: "https://salvo.test/v1", deciderApiKey: "chave-salva-9999" });
-
+  test("a pagina mostra uma lista por funcao, com o padrao do ambiente e a opcao de adicionar no fim", async () => {
     const response = await harness.app.request("/settings");
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("text/html");
     const body = await response.text();
 
     expect(body).toContain("Configuração dos provedores");
-    expect(body).toContain("A configuração vale para os próximos estudos.");
-    expect(body).toContain('action="/ui/settings"');
-    expect(body).toContain("Salvar");
-
-    // Sobreposicao salva: origem "definido aqui" e a opcao de limpar.
-    const saved = settingRow(body, "llmBaseUrl");
-    expect(saved).toContain("URL do LLM");
-    expect(saved).toContain("definido aqui");
-    expect(saved).toContain("salvo.test");
-    expect(saved).toContain('name="clear_llmBaseUrl"');
-
-    // Chave vinda do ambiente: mascara no lugar do valor cru e campo de senha.
-    const envKey = settingRow(body, "llmApiKey");
-    expect(envKey).toContain("Chave do LLM");
-    expect(envKey).toContain("do ambiente");
-    expect(envKey).toContain("sk-…1234");
-    expect(envKey).toContain('type="password"');
-    expect(envKey).toContain('autocomplete="off"');
-    expect(envKey).not.toContain('name="clear_llmApiKey"');
-
-    // Chave salva: continua mascarada, nunca em claro.
-    const savedKey = settingRow(body, "deciderApiKey");
-    expect(savedKey).toContain("definido aqui");
-    expect(savedKey).toContain("cha…9999");
-    expect(savedKey).toContain('name="clear_deciderApiKey"');
-
-    // Campo sem ambiente e sem sobreposicao: "nao definido".
-    expect(settingRow(body, "deciderUrl")).toContain("não definido");
-    expect(settingRow(body, "llmModel")).toContain("do ambiente");
-
-    // Nem a chave do ambiente nem a salva podem aparecer em claro no HTML.
-    expect(body).not.toContain("sk-env-chave-secreta-1234");
-    expect(body).not.toContain("chave-salva-9999");
-  });
-
-  test("a pagina agrupa os campos por provedor, com legenda e ajuda associada ao campo", async () => {
-    const body = await (await harness.app.request("/settings")).text();
-
-    expect(body).toContain('class="settings-group"');
     expect(body).toContain("<legend>Provedor de texto (LLM)</legend>");
     expect(body).toContain("<legend>Provedor de decisão (System One)</legend>");
+    expect(body).toContain('action="/ui/settings/active"');
 
-    // Cada campo sob o grupo do provedor a que pertence — e só sob ele.
-    const llmGroup = body.slice(
-      body.indexOf("<legend>Provedor de texto (LLM)</legend>"),
-      body.indexOf("<legend>Provedor de decisão (System One)</legend>"),
-    );
-    expect(llmGroup).toContain('data-setting="llmBaseUrl"');
-    expect(llmGroup).toContain('data-setting="llmApiKey"');
-    expect(llmGroup).not.toContain('data-setting="deciderUrl"');
-
-    const deciderGroup = body.slice(body.indexOf("<legend>Provedor de decisão (System One)</legend>"));
-    expect(deciderGroup).toContain('data-setting="deciderUrl"');
-    expect(deciderGroup).not.toContain('data-setting="llmModel"');
-
-    // O texto de ajuda vive no DOM e é referenciado pelo input.
-    expect(body).toContain('id="setting-help-llmBaseUrl"');
-    expect(body).toContain('aria-describedby="setting-help-llmBaseUrl"');
+    // Duas listas; cada uma abre com o padrao do ambiente e fecha com "adicionar provedor".
+    const selects = body.match(/<select[^>]*name="id"[^>]*>[\s\S]*?<\/select>/g) ?? [];
+    expect(selects).toHaveLength(2);
+    for (const select of selects) {
+      expect(select).toContain("padrão do ambiente");
+      expect(select).toContain("+ adicionar provedor");
+      expect(select.indexOf("+ adicionar provedor")).toBeGreaterThan(select.indexOf("padrão do ambiente"));
+    }
   });
 
-  test("salvar sem JS aplica o patch e volta para a pagina de configuracoes", async () => {
+  test("o provedor aparece na lista pelo nome, com editar, excluir e o modal de teste", async () => {
+    await harness.settings.create({
+      name: "Meu Token Harbor",
+      kind: "llm",
+      url: "https://salvo.test/v1",
+      model: "mimo-v2.6-flash:free",
+      apiKey: "chave-super-secreta-9999",
+    });
+
+    const body = await (await harness.app.request("/settings")).text();
+    const llm = providerSection(body, "Provedor de texto (LLM)");
+    // A lista mostra o NOME como texto da opcao; a URL so vive no atributo que preenche o modal.
+    expect(llm).toContain(">Meu Token Harbor</option>");
+    expect(llm).not.toContain(">https://salvo.test/v1<");
+    expect(llm).toContain('data-profile="1"');
+
+    // Editar, excluir e o modal com testar/salvar existem uma vez na pagina.
+    expect(body).toContain('data-action="edit"');
+    expect(body).toContain('data-action="delete"');
+    expect(body).toContain('data-action="test"');
+    expect(body).toContain('data-action="save"');
+    expect(body).toContain('id="provider-modal"');
+    expect(body).toContain("Testar");
+
+    // A chave nunca aparece em claro; a linha diz o que esta ativo.
+    expect(body).not.toContain("chave-super-secreta-9999");
+    expect(body).toContain("ativo:");
+  });
+
+  test("escolher um provedor sem JS aplica e volta para a pagina", async () => {
+    const created = await harness.settings.create({
+      name: "Escolhido",
+      kind: "llm",
+      url: "https://escolhido.test/v1",
+      model: "modelo",
+    });
+    const id = created.profiles?.[0]?.id ?? "";
+    await harness.settings.setActive("llm", null);
+
     const { cookiePair, token } = await csrfToken();
-    const response = await harness.app.request("/ui/settings", {
+    const response = await harness.app.request("/ui/settings/active", {
       method: "POST",
       headers: { ...FORM, Origin: "http://localhost", Cookie: cookiePair },
-      body: `llmModel=modelo-escolhido&_csrf=${token}`,
+      body: `kind=llm&id=${encodeURIComponent(id)}&_csrf=${token}`,
     });
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe("/settings");
-    expect(await harness.service.providerSettings()).toEqual({ llmModel: "modelo-escolhido" });
-
-    const body = await (await harness.app.request("/settings")).text();
-    const row = settingRow(body, "llmModel");
-    expect(row).toContain("definido aqui");
-    expect(row).toContain("modelo-escolhido");
-    expect(row).toContain('name="clear_llmModel"');
+    expect((await harness.service.providerSettings()).activeLlm).toBe(id);
   });
 
-  test("limpar remove a sobreposicao e o campo volta a herdar o ambiente", async () => {
-    await harness.settings.patch({ llmBaseUrl: "https://salvo.test/v1" });
-
+  test("escolher o padrao do ambiente limpa o ativo daquele tipo", async () => {
+    await harness.settings.create({ name: "Um", kind: "decider", url: "u", model: "m" });
     const { cookiePair, token } = await csrfToken();
-    const response = await harness.app.request("/ui/settings", {
+    const response = await harness.app.request("/ui/settings/active", {
       method: "POST",
       headers: { ...FORM, Origin: "http://localhost", Cookie: cookiePair },
-      body: `clear_llmBaseUrl=1&_csrf=${token}`,
+      body: `kind=decider&id=&_csrf=${token}`,
     });
     expect(response.status).toBe(303);
-    expect(response.headers.get("location")).toBe("/settings");
-    expect(await harness.service.providerSettings()).toEqual({});
-
-    const body = await (await harness.app.request("/settings")).text();
-    const row = settingRow(body, "llmBaseUrl");
-    expect(row).toContain("do ambiente");
-    expect(row).toContain("api.llm.test");
-    expect(row).not.toContain("salvo.test");
-    expect(row).not.toContain('name="clear_llmBaseUrl"');
+    expect((await harness.service.providerSettings()).activeDecider).toBeNull();
   });
 
-  test("um campo fora do contrato e recusado e nada muda", async () => {
+  test("tipo de provedor desconhecido no formulario e recusado", async () => {
     const { cookiePair, token } = await csrfToken();
-    const response = await harness.app.request("/ui/settings", {
+    const response = await harness.app.request("/ui/settings/active", {
       method: "POST",
       headers: { ...FORM, Origin: "http://localhost", Cookie: cookiePair },
-      body: `desconhecido=1&_csrf=${token}`,
+      body: `kind=outro&id=&_csrf=${token}`,
     });
     expect(response.status).toBe(422);
-    expect(await harness.service.providerSettings()).toEqual({});
   });
 });
 

@@ -165,21 +165,35 @@ export interface StudyProgress {
 }
 
 /**
- * Configuração de provedores definida em runtime (aba `/settings`).
- * Campo ausente (ou string vazia) = herda o ambiente; por isso a precedência é sempre
- * `settings ?? env`.
+ * Provedor de IA: texto (LLM) ou decisao (System One).
  */
-export interface ProviderSettings {
-  llmBaseUrl?: string;
-  llmApiKey?: string;
-  llmModel?: string;
-  deciderUrl?: string;
-  deciderApiKey?: string;
-  deciderModel?: string;
+export type ProviderKind = "llm" | "decider";
+
+/**
+ * Provedor nomeado pelo operador. O `name` e o que aparece na lista; `url`, `model` e `apiKey` sao
+ * como falar com ele. O `apiKey` nunca sai do servidor em claro.
+ */
+export interface ProviderProfile {
+  id: string;
+  name: string;
+  kind: ProviderKind;
+  /** Base do provedor (LLM: `.../v1`; decisor: a que o cliente normaliza para `/systemone`). */
+  url: string;
+  model: string;
+  /** Chave da API; vazia quando o provedor nao exige. */
+  apiKey: string;
 }
 
-/** Remendo de configuração: `null` limpa o campo e volta a herdar o ambiente. */
-export type ProviderSettingsPatch = { [K in keyof ProviderSettings]?: string | null };
+/**
+ * Configuracao de provedores: catalogo nomeado e qual perfil esta ativo por funcao. Sem perfil
+ * ativo, os campos voltam a herdar o ambiente — a pagina `/settings` mostra esse padrao como a
+ * primeira opcao de cada lista.
+ */
+export interface ProviderSettings {
+  profiles?: ProviderProfile[];
+  activeLlm?: string | null;
+  activeDecider?: string | null;
+}
 
 /** Consumo acumulado de um provedor. Tokens só quando o provedor informa. */
 export interface ProviderUsage {

@@ -15,9 +15,9 @@ import { MAX_IDEAS_PER_STUDY } from "../../../application/study-service.ts";
 import { explainFailure } from "../../../application/failures.ts";
 import { folderName } from "../../../application/reports.ts";
 import { MAX_DESCRIPTION_LENGTH, MAX_NICHE_LENGTH } from "../../../domain/naming.ts";
-import { PROVIDER_GROUPS } from "../../../config/providers.ts";
-import type { ProviderSettingRow, ProviderSource } from "../../../config/providers.ts";
+import type { ProviderDefaultView, ProviderProfileView } from "../../../config/providers.ts";
 import type {
+  ProviderKind,
   StudyIdea,
   StudyListItem,
   StudyRecord,
@@ -957,78 +957,207 @@ export const HelpPage: FC = () => (
   </>
 );
 
-/** Vocabulario e selos da origem de cada campo da configuracao (mesma escala do resto da UI). */
-const SOURCE_LABEL: Record<ProviderSource, string> = {
-  settings: "definido aqui",
-  env: "do ambiente",
-  vazio: "não definido",
-};
-
-const SOURCE_TONE: Record<ProviderSource, string> = {
-  settings: "b-green",
-  env: "b-yellow",
-  vazio: "b-red",
+/** Rótulo e ajuda de cada tipo de provedor na página. */
+const PROVIDER_KIND_TEXT: Record<ProviderKind, { title: string; description: string }> = {
+  llm: {
+    title: "Provedor de texto (LLM)",
+    description:
+      "Escreve o brief e os planos de cada ideia. Todo número do texto passa pelo guardrail da medição.",
+  },
+  decider: {
+    title: "Provedor de decisão (System One)",
+    description:
+      "Responde as probabilidades que viram índice de ação, tier e natureza da dor. Não escreve prosa.",
+  },
 };
 
 /**
- * Configuracao dos provedores: com JS intercepta o `submit`, envia `PATCH /api/settings` e recarrega,
- * mostrando o erro inline; sem JS o form posta em `/ui/settings` (mesma origem + CSRF), que responde
- * 303 para ca. Campo preenchido define, "limpar" volta a herdar o ambiente e campo vazio nao mexe.
+ * Catálogo de provedores em script de página: trocar a escolha aplica na hora, "adicionar provedor"
+ * abre o modal, e editar/excluir agem sobre o provedor selecionado.
+ *
+ * O modal é o único caminho de criar/editar (ele abre com JS); o `select` também funciona sem
+ * script, porque é um `<form>` de verdade que posta em `/ui/settings/active`.
  */
 const SETTINGS_SCRIPT = `
 (function () {
-  var form = document.getElementById("settings-form");
-  if (!form) return;
-  form.addEventListener("submit", function (event) {
-    event.preventDefault();
-    var error = document.getElementById("settings-error");
-    var button = form.querySelector("button[type=submit]");
-    var token = form.elements["_csrf"].value;
-    var patch = {};
-    Array.prototype.slice.call(form.querySelectorAll("[data-setting]")).forEach(function (row) {
-      var key = row.getAttribute("data-setting");
-      var clear = row.querySelector("input[data-clear]");
-      var input = row.querySelector("input[data-value]");
-      if (clear && clear.checked) { patch[key] = null; return; }
-      var value = input ? input.value.trim() : "";
-      if (value) patch[key] = value;
+  var modal = document.getElementById("provider-modal");
+  var form = document.getElementById("provider-form");
+  if (!modal || typeof modal.showModal !== "function" || !form) return;
+
+  var title = document.getElementById("provider-modal-title");
+  var status = document.getElementById("provider-status");
+  var error = document.getElementById("provider-error");
+  var save = form.querySelector("[data-action=save]");
+  var previous = {}; // ultima escolha de cada lista, para restaurar ao cancelar
+
+  function field(name) { return form.querySelector('[data-field="' + name + '"]'); }
+  function token() { return form.querySelector('input[name="_csrf"]').value; }
+  function setStatus(text, tone) {
+    status.textContent = text || "";
+    status.className = text ? "hint " + (tone || "") : "hint";
+  }
+  function setError(text) { error.textContent = text || ""; }
+  function busy(on) {
+    save.disabled = on;
+    save.textContent = on ? "Salvando..." : "Salvar";
+  }
+
+  function restore(picker) {
+    if (previous[picker] !== undefined) picker.querySelector("select").value = previous[picker];
+  }
+
+  function open(mode, picker, data) {
+    form.reset();
+    setStatus("");
+    setError("");
+    field("id").value = data.id || "";
+    field("kind").value = data.kind;
+    field("name").value = data.name || "";
+    field("url").value = data.url || "";
+    field("model").value = data.model || "";
+    field("key").placeholder = data.hasKey ? "•••• (deixe vazio para manter)" : "";
+    title.textContent = mode === "edit" ? "Editar provedor" : "Adicionar provedor";
+    modal.dataset.mode = mode;
+    modal.dataset.picker = data.kind;
+    modal.showModal();
+  }
+
+  function payload() {
+    return {
+      kind: field("kind").value,
+      name: field("name").value.trim(),
+      url: field("url").value.trim(),
+      model: field("model").value.trim(),
+      apiKey: field("key").value.trim(),
+    };
+  }
+
+  function readProfile(select) {
+    var option = select.options[select.selectedIndex];
+    return {
+      id: select.value,
+      kind: select.getAttribute("data-kind"),
+      name: option.getAttribute("data-name") || "",
+      url: option.getAttribute("data-url") || "",
+      model: option.getAttribute("data-model") || "",
+      hasKey: option.getAttribute("data-has-key") === "1",
+    };
+  }
+
+  function selectedProfile(picker) {
+    var select = picker.querySelector("select");
+    var option = select.options[select.selectedIndex];
+    if (!option || option.getAttribute("data-profile") !== "1") return null;
+    return readProfile(select);
+  }
+
+  Array.prototype.slice.call(document.querySelectorAll("[data-provider-picker]")).forEach(function (picker) {
+    var select = picker.querySelector("select");
+    previous[picker.getAttribute("data-kind")] = select.value;
+    picker.querySelector("select").addEventListener("change", function () {
+      var option = select.options[select.selectedIndex];
+      if (option && option.value === "__new") {
+        open("create", picker, { kind: picker.getAttribute("data-kind") });
+        return;
+      }
+      picker.submit();
     });
-    error.textContent = "";
-    button.disabled = true;
-    button.textContent = "Salvando...";
-    fetch("/api/settings", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json", "X-CSRF-Token": token },
-      body: JSON.stringify(patch),
-    })
-      .then(function (response) {
-        if (response.ok) { window.location.reload(); return null; }
+    var apply = picker.querySelector("[data-action=apply]");
+    if (apply) apply.hidden = true;
+    picker.querySelector("[data-action=edit]").addEventListener("click", function () {
+      var profile = selectedProfile(picker);
+      if (!profile) { setError(""); window.alert("escolha um provedor configurado para editar"); return; }
+      open("edit", picker, profile);
+    });
+    picker.querySelector("[data-action=delete]").addEventListener("click", function () {
+      var profile = selectedProfile(picker);
+      if (!profile) { window.alert("escolha um provedor configurado para excluir"); return; }
+      if (!window.confirm("Excluir o provedor " + profile.name + "?")) return;
+      fetch("/api/settings/providers/" + encodeURIComponent(profile.id), {
+        method: "DELETE",
+        headers: { "X-CSRF-Token": token() },
+      }).then(function (response) {
+        if (response.ok) { window.location.reload(); return; }
         return response.json().then(
-          function (body) { throw new Error(body.message || "não foi possível salvar"); },
-          function () { throw new Error("não foi possível salvar"); },
+          function (body) { throw new Error(body.message || "não foi possível excluir"); },
+          function () { throw new Error("não foi possível excluir"); },
         );
-      })
-      .catch(function (failure) {
-        error.textContent = failure.message || "não foi possível salvar";
-        button.disabled = false;
-        button.textContent = "Salvar";
+      }).catch(function (failure) { window.alert(failure.message || "não foi possível excluir"); });
+    });
+  });
+
+  var cancel = form.querySelector("[data-action=cancel]");
+  if (cancel) cancel.addEventListener("click", function () { modal.close(); });
+  modal.addEventListener("close", function () {
+    var picker = document.querySelector('[data-provider-picker][data-kind="' + modal.dataset.picker + '"]');
+    if (picker) restore(picker);
+  });
+
+  form.querySelector("[data-action=test]").addEventListener("click", function () {
+    var input = payload();
+    setError("");
+    setStatus("testando " + input.kind + "...");
+    fetch("/api/settings/test", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-CSRF-Token": token() },
+      body: JSON.stringify(input),
+    }).then(function (response) {
+      return response.json().then(function (body) {
+        if (!response.ok) throw new Error(body.message || "não foi possível testar");
+        setStatus((body.ok ? "ok: " : "falhou: ") + body.detail, body.ok ? "tone-ok" : "tone-bad");
       });
+    }).catch(function (failure) { setStatus("falhou: " + (failure.message || "erro"), "tone-bad"); });
+  });
+
+  save.addEventListener("click", function () {
+    var input = payload();
+    var editing = modal.dataset.mode === "edit";
+    if (input.name === "" || input.url === "" || input.model === "") {
+      setError("nome, URL e modelo são obrigatórios");
+      return;
+    }
+    setError("");
+    busy(true);
+    var path = editing
+      ? "/api/settings/providers/" + encodeURIComponent(field("id").value)
+      : "/api/settings/providers";
+    fetch(path, {
+      method: editing ? "PATCH" : "POST",
+      headers: { "Content-Type": "application/json", "X-CSRF-Token": token() },
+      body: JSON.stringify(input),
+    }).then(function (response) {
+      if (response.ok) { window.location.reload(); return; }
+      return response.json().then(
+        function (body) { throw new Error(body.message || "não foi possível salvar"); },
+        function () { throw new Error("não foi possível salvar"); },
+      );
+    }).catch(function (failure) {
+      busy(false);
+      setError(failure.message || "não foi possível salvar");
+    });
   });
 })();`;
 
+/** Catálogo de provedores como a página consome: nome, tipo, e o ativo por função. */
+export interface SettingsView {
+  profiles: ProviderProfileView[];
+  active: { llm: string | null; decider: string | null };
+  defaults: { llm: ProviderDefaultView; decider: ProviderDefaultView };
+}
+
 /**
- * Configuracao dos provedores de IA, na pagina `/settings`. Cada linha traz o valor efetivo (chave
- * sempre mascarada), a origem e um campo que, vazio, nao mexe em nada. O que for salvo sobrepoe as
- * variaveis de ambiente e vale para os proximos estudos.
+ * Configuração dos provedores: uma lista por função (texto e decisão). Cada lista traz o padrão do
+ * ambiente, os provedores nomeados pelo operador e "adicionar provedor"; ao lado ficam Editar e
+ * Excluir. O modal reúne os campos do provedor e o botão Testar, que fala com o provedor de verdade.
  */
-export const SettingsPage: FC<{ rows: ProviderSettingRow[]; token: string }> = (props) => (
+export const SettingsPage: FC<{ view: SettingsView; token: string }> = (props) => (
   <section>
     <div class="page-head">
       <div>
         <h2>Configuração dos provedores</h2>
         <p class="sub">
-          O que você salvar aqui sobrepõe as variáveis de ambiente e passa a valer na hora, sem reiniciar o
-          serviço. A configuração vale para os próximos estudos. Deixe o campo vazio para não mexer.
+          Escolha o provedor de cada função. O que estiver salvo aqui vale na hora, sem reiniciar o serviço, e
+          sobrepõe o padrão do ambiente.
         </p>
       </div>
       <a class="btn btn-ghost" href="/">
@@ -1036,55 +1165,117 @@ export const SettingsPage: FC<{ rows: ProviderSettingRow[]; token: string }> = (
       </a>
     </div>
 
-    <form id="settings-form" method="post" action="/ui/settings" class="panel glass">
-      <input type="hidden" name="_csrf" value={props.token} />
-      {PROVIDER_GROUPS.map((group) => (
-        <fieldset class="settings-group">
-          <legend>{group.title}</legend>
-          <p class="group-note">{group.description}</p>
+    {(["llm", "decider"] as const).map((kind) => {
+      const profiles = props.view.profiles.filter((profile) => profile.kind === kind);
+      const active = props.view.active[kind];
+      const fallback = props.view.defaults[kind];
+      const current = profiles.find((profile) => profile.id === active);
+      const text = PROVIDER_KIND_TEXT[kind];
+      return (
+        <form
+          class="panel glass provider-picker"
+          method="post"
+          action="/ui/settings/active"
+          data-provider-picker
+          data-kind={kind}
+        >
+          <input type="hidden" name="_csrf" value={props.token} />
+          <input type="hidden" name="kind" value={kind} />
+          <fieldset class="settings-group">
+            <legend>{text.title}</legend>
+            <p class="group-note">{text.description}</p>
+            <div class="provider-row">
+              <div class="field">
+                <label for={`provider-${kind}`}>Provedor</label>
+                <select id={`provider-${kind}`} name="id">
+                  <option value="" selected={active === null}>
+                    padrão do ambiente ({fallback.model || "não definido"})
+                  </option>
+                  {profiles.map((profile) => (
+                    <option
+                      value={profile.id}
+                      selected={profile.id === active}
+                      data-profile="1"
+                      data-name={profile.name}
+                      data-url={profile.url}
+                      data-model={profile.model}
+                      data-has-key={profile.hasKey ? "1" : "0"}
+                    >
+                      {profile.name}
+                    </option>
+                  ))}
+                  <option value="__new">+ adicionar provedor</option>
+                </select>
+              </div>
+              <div class="provider-actions">
+                <button class="btn btn-primary" type="submit" data-action="apply">
+                  Aplicar
+                </button>
+                <button class="btn btn-ghost" type="button" data-action="edit">
+                  Editar
+                </button>
+                <button class="btn btn-danger" type="button" data-action="delete">
+                  Excluir
+                </button>
+              </div>
+            </div>
+            <p class="hint">
+              ativo:{" "}
+              <code>
+                {current
+                  ? `${current.name} (${current.model || "sem modelo"})`
+                  : `ambiente — ${fallback.model || "não definido"}`}
+              </code>
+              {current !== undefined && !current.hasKey ? " · sem chave salva" : ""}
+            </p>
+          </fieldset>
+        </form>
+      );
+    })}
+
+    <dialog id="provider-modal" class="modal" aria-labelledby="provider-modal-title">
+      <form id="provider-form" method="dialog">
+        <input type="hidden" name="_csrf" value={props.token} />
+        <input type="hidden" data-field="id" />
+        <input type="hidden" data-field="kind" />
+        <div class="modal-head">
+          <h3 id="provider-modal-title">Adicionar provedor</h3>
+        </div>
+        <div class="modal-body">
           <div class="form-grid">
-            {props.rows
-              .filter((row) => group.keys.includes(row.key))
-              .map((row) => {
-                // O texto de ajuda é referenciado pelo input: o leitor de tela lê o mesmo valor
-                // efetivo e a mesma origem que aparecem na linha.
-                const helpId = `setting-help-${row.key}`;
-                return (
-                  <div class="field" data-setting={row.key}>
-                    <label for={`setting-${row.key}`}>{row.label}</label>
-                    <p class="hint" id={helpId}>
-                      atual: <code>{row.value || "não definido"}</code>{" "}
-                      <span class={`badge ${SOURCE_TONE[row.source]}`}>{SOURCE_LABEL[row.source]}</span>
-                    </p>
-                    <input
-                      id={`setting-${row.key}`}
-                      name={row.key}
-                      data-value
-                      aria-describedby={helpId}
-                      spellcheck={false}
-                      type={row.secret ? "password" : "text"}
-                      autocomplete={row.secret ? "off" : undefined}
-                      placeholder={row.secret ? "••••••" : "vazio = não mexer"}
-                    />
-                    {row.source === "settings" ? (
-                      <label class="check">
-                        <input type="checkbox" name={`clear_${row.key}`} value="1" data-clear />
-                        Limpar <Hint>voltar a usar o ambiente</Hint>
-                      </label>
-                    ) : null}
-                  </div>
-                );
-              })}
+            <div class="field">
+              <label for="provider-name">Nome</label>
+              <input id="provider-name" data-field="name" maxlength="60" spellcheck={false} />
+            </div>
+            <div class="field">
+              <label for="provider-url">URL</label>
+              <input id="provider-url" data-field="url" spellcheck={false} />
+            </div>
+            <div class="field">
+              <label for="provider-model">Modelo</label>
+              <input id="provider-model" data-field="model" spellcheck={false} />
+            </div>
+            <div class="field">
+              <label for="provider-key">Chave da API</label>
+              <input id="provider-key" data-field="key" type="password" autocomplete="off" />
+            </div>
           </div>
-        </fieldset>
-      ))}
-      <div class="form-actions">
-        <button class="btn btn-primary" type="submit">
-          Salvar
-        </button>
-        <p id="settings-error" role="alert" />
-      </div>
-    </form>
+          <p id="provider-status" class="hint" role="status" />
+          <p id="provider-error" role="alert" />
+          <div class="form-actions">
+            <button class="btn btn-ghost" type="button" data-action="test">
+              Testar
+            </button>
+            <button class="btn btn-primary" type="button" data-action="save">
+              Salvar
+            </button>
+            <button class="btn btn-ghost" type="button" data-action="cancel">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </form>
+    </dialog>
     <script>{raw(SETTINGS_SCRIPT)}</script>
   </section>
 );

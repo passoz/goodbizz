@@ -27,7 +27,8 @@ import { SqliteCacheStore } from "./infrastructure/cache-repository.ts";
 import { createLlmClient } from "./infrastructure/llm.ts";
 import { startService } from "./index.ts";
 import type { ArtifactFile } from "./domain/ports.ts";
-import type { ProviderSettings, StudyConfig } from "./domain/types.ts";
+import type { StudyConfig } from "./domain/types.ts";
+import { effectiveProviders, type ProviderConfig } from "./config/providers.ts";
 
 /** Migrations ship next to the sources (`drizzle/`) and are resolved from the module, not the cwd. */
 const MIGRATIONS_DIR = fileURLToPath(new URL("../drizzle", import.meta.url));
@@ -320,22 +321,18 @@ function printSummary(cfg: StudyConfig, result: GenerateStudyResult): void {
 }
 
 /**
- * Configuração de provedores salva na aba /settings vale também para a CLI — mas só quando o banco
- * do serviço existe nesta máquina. A ordem é: flag explícita > settings > ambiente.
+ * Configuração efetiva dos provedores para a CLI: o catálogo salvo em `/settings` sobrepõe o
+ * ambiente. Banco ausente é o caso normal fora do serviço — cai no ambiente, e isso é decidido
+ * pelo `existsSync` abaixo. Banco que existe e não pode ser lido é problema de verdade e sobe.
  */
-async function loadProviderSettings(databaseUrl: string): Promise<ProviderSettings> {
-  if (databaseUrl === ":memory:" || !existsSync(databaseUrl)) return {};
+async function loadProviderSettings(databaseUrl: string): Promise<ProviderConfig> {
+  const env = loadEnv();
+  if (databaseUrl === ":memory:" || !existsSync(databaseUrl)) return effectiveProviders(env, {});
+  const handle = openMigratedDatabase(databaseUrl, MIGRATIONS_DIR);
   try {
-    const handle = openMigratedDatabase(databaseUrl, MIGRATIONS_DIR);
-    try {
-      return await new SqliteSettingsRepository(handle.db).get();
-    } finally {
-      handle.sqlite.close();
-    }
-  } catch (error) {
-    // Silencioso de propósito: a CLI roda fora do serviço e um banco ausente é o caso normal.
-    void error;
-    return {};
+    return effectiveProviders(env, await new SqliteSettingsRepository(handle.db).get());
+  } finally {
+    handle.sqlite.close();
   }
 }
 

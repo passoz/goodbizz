@@ -5,7 +5,6 @@ import type {
   DeciderAnswers,
   StudyIdea,
   ProviderSettings,
-  ProviderSettingsPatch,
   ProviderUsage,
   QuestionSet,
   StudyListItem,
@@ -55,8 +54,8 @@ export interface CacheStore {
 /** Persistência da configuração de provedores (linha única). */
 export interface SettingsRepository {
   get(): Promise<ProviderSettings>;
-  /** Aplica o remendo (string define, `null` limpa) e devolve o estado final. */
-  patch(patch: ProviderSettingsPatch): Promise<ProviderSettings>;
+  /** Grava o estado completo (catalogo + ativos) e devolve o que ficou persistido. */
+  save(settings: ProviderSettings): Promise<ProviderSettings>;
 }
 
 export interface StudyRepository {

@@ -1,0 +1,122 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.1",
+  "work_id": "0010",
+  "title": "Trocar os campos soltos por um catálogo nomeado, com teste de conexão",
+  "risk": {
+    "level": "L2",
+    "reasons": [
+      "Task 1.1 classificada como L2"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.1-01",
+        "given": "Dado o comportamento declarado: o catalogo guarda provedores nomeados por tipo e o ativo de cada um, a tela mostra duas listas com editar, excluir e adicionar, o modal testa a configuracao contra o provedor, e o formato antigo e migrado para perfis Padrao",
+        "when": "Quando `bun test` é executado",
+        "then": "Então a suite passa com os testes do catalogo e do teste de conexao"
+      },
+      {
+        "id": "SCENARIO-1.1-02",
+        "given": "Dado o comportamento declarado: o catalogo guarda provedores nomeados por tipo e o ativo de cada um, a tela mostra duas listas com editar, excluir e adicionar, o modal testa a configuracao contra o provedor, e o formato antigo e migrado para perfis Padrao",
+        "when": "Quando `bun run check` é executado",
+        "then": "Então o typecheck estrito passa"
+      },
+      {
+        "id": "SCENARIO-1.1-03",
+        "given": "Dado o comportamento declarado: o catalogo guarda provedores nomeados por tipo e o ativo de cada um, a tela mostra duas listas com editar, excluir e adicionar, o modal testa a configuracao contra o provedor, e o formato antigo e migrado para perfis Padrao",
+        "when": "Quando `bunx eslint . && bunx prettier --check .` é executado",
+        "then": "Então o lint e a formatacao passam"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/domain/types.ts",
+      "src/domain/ports.ts",
+      "src/config/providers.ts",
+      "src/application/settings.ts",
+      "src/application/study-service.ts",
+      "src/infrastructure/settings-repository.ts",
+      "src/infrastructure/provider-probe.ts",
+      "src/infrastructure/http/api.ts",
+      "src/infrastructure/http/ui/routes.tsx",
+      "src/infrastructure/http/ui/pages.tsx",
+      "src/infrastructure/http/ui/layout.tsx",
+      "src/cli.ts",
+      "tests/settings.test.ts",
+      "tests/settings-api.test.ts",
+      "tests/providers.test.ts",
+      "tests/routing.test.ts",
+      "tests/ui.test.ts",
+      "tests/helpers.ts",
+      "tests/e2e.test.ts"
+    ],
+    "affected_components": [
+      "provider-catalog"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "Não quebrar retrocompatibilidade nem expor dados sensíveis",
+      "Manter cobertura de testes existente"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun test",
+      "bun run check",
+      "bunx eslint . && bunx prettier --check ."
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/domain/types.ts",
+      "src/domain/ports.ts",
+      "src/config/providers.ts",
+      "src/application/settings.ts",
+      "src/application/study-service.ts",
+      "src/infrastructure/settings-repository.ts",
+      "src/infrastructure/provider-probe.ts",
+      "src/infrastructure/http/api.ts",
+      "src/infrastructure/http/ui/routes.tsx",
+      "src/infrastructure/http/ui/pages.tsx",
+      "src/infrastructure/http/ui/layout.tsx",
+      "src/cli.ts",
+      "tests/settings.test.ts",
+      "tests/settings-api.test.ts",
+      "tests/providers.test.ts",
+      "tests/routing.test.ts",
+      "tests/ui.test.ts",
+      "tests/helpers.ts",
+      "tests/e2e.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env*"
+    ],
+    "out_of_scope": [
+      "Arquivos fora de: src/domain/types.ts, src/domain/ports.ts, src/config/providers.ts, src/application/settings.ts, src/application/study-service.ts, src/infrastructure/settings-repository.ts, src/infrastructure/provider-probe.ts, src/infrastructure/http/api.ts, src/infrastructure/http/ui/routes.tsx, src/infrastructure/http/ui/pages.tsx, src/infrastructure/http/ui/layout.tsx, src/cli.ts, tests/settings.test.ts, tests/settings-api.test.ts, tests/providers.test.ts, tests/routing.test.ts, tests/ui.test.ts, tests/helpers.ts, tests/e2e.test.ts"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 50000,
+    "max_cost_usd": 0.5,
+    "max_duration_minutes": 15,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 30,
+    "max_tool_calls": 60,
+    "max_shell_executions": 15
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

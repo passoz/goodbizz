@@ -2,13 +2,10 @@
  * Clientes que releem a configuração: trocar URL/chave na aba /settings vale sem reiniciar o
  * processo, e o consumo acumulado sobrevive à troca de cliente.
  */
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
 
-import { ProviderSettingsStore } from "../src/application/settings.ts";
 import { effectiveProviders, type ProviderConfig } from "../src/config/providers.ts";
 import { sumUsage, RoutingDeciderClient, RoutingLlmClient } from "../src/infrastructure/routing.ts";
-import { SqliteSettingsRepository } from "../src/infrastructure/settings-repository.ts";
-import { openMigratedDatabase, type DatabaseHandle } from "../src/infrastructure/db.ts";
 import type { Env } from "../src/config/env.ts";
 
 interface Stub {
@@ -87,40 +84,6 @@ function baseEnv(): Env {
     GOODBIZZ_USD_BRL: 0,
   };
 }
-
-let handle: DatabaseHandle;
-
-beforeEach(() => {
-  handle = openMigratedDatabase(":memory:");
-});
-
-afterEach(() => {
-  handle.sqlite.close();
-});
-
-describe("ProviderSettingsStore", () => {
-  test("carrega do banco, aplica remendo e limpa com null", async () => {
-    const store = new ProviderSettingsStore(new SqliteSettingsRepository(handle.db));
-    expect(await store.load()).toEqual({});
-
-    await store.patch({ llmModel: "ds/deepseek-v4-flash" });
-    expect(store.current().llmModel).toBe("ds/deepseek-v4-flash");
-
-    // Uma segunda instância lê o que ficou salvo (persistência de verdade).
-    const reopened = new ProviderSettingsStore(new SqliteSettingsRepository(handle.db));
-    expect((await reopened.load()).llmModel).toBe("ds/deepseek-v4-flash");
-
-    await store.patch({ llmModel: null });
-    expect(store.current()).toEqual({});
-  });
-
-  test("valor vazio não vira sobreposição", async () => {
-    const store = new ProviderSettingsStore(new SqliteSettingsRepository(handle.db));
-    await store.patch({ llmApiKey: "   ", deciderUrl: "http://decisor.test/v1" });
-    expect(store.current().llmApiKey).toBeUndefined();
-    expect(store.current().deciderUrl).toBe("http://decisor.test/v1");
-  });
-});
 
 describe("sumUsage", () => {
   test("soma campos e trata ausente como zero", () => {
