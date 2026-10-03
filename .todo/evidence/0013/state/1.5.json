@@ -1,0 +1,154 @@
+{
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun test"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0013/1.5-ac-1.log",
+      "log_sha256": "a245a69fe5662addc879fe04a90210bf693185fbae3f6b23ff5324586da4d0ce",
+      "recorded_at": "2026-10-03T21:31:31.720Z"
+    },
+    "AC-2": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun run check"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0013/1.5-ac-2.log",
+      "log_sha256": "e8099698453ba3669125feb9c0d950d6e76bd9e612e6ea6199c217779f728235",
+      "recorded_at": "2026-10-03T21:31:34.129Z"
+    },
+    "AC-3": {
+      "command": [
+        "bash",
+        "-lc",
+        "bunx eslint . && bunx prettier --check ."
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0013/1.5-ac-3.log",
+      "log_sha256": "d7bb7ee233da654e662710500b5220091fcd891871e3358573d2646d8d67f91b",
+      "recorded_at": "2026-10-03T21:31:36.904Z"
+    }
+  },
+  "baseline_implementation": {
+    "src/domain/types.ts": {
+      "exists": true,
+      "sha256": "a56badc077028dbd146b9d2d4167a35429e6e6a7acf498211386b3dd0736fe8e"
+    },
+    "src/application/evaluate.ts": {
+      "exists": true,
+      "sha256": "6a1c3ea77c70ea0f3a5ba12480c8cdc617ddfec1d92a73e2a9921bb8de43cce6"
+    },
+    "src/infrastructure/schema.ts": {
+      "exists": true,
+      "sha256": "9d2f4c48940c78bb592386d7d2cd6ccdd4a79de86ec15614582a8301b3e34d90"
+    },
+    "src/infrastructure/repositories.ts": {
+      "exists": true,
+      "sha256": "cb1ff428599b0b02d92d9840a4c5686cfe182bffcb8d64311f87785d2dcfbef7"
+    },
+    "drizzle/0005_tan_giant_man.sql": {
+      "exists": false,
+      "sha256": null
+    },
+    "drizzle/meta/0005_snapshot.json": {
+      "exists": false,
+      "sha256": null
+    },
+    "drizzle/meta/_journal.json": {
+      "exists": true,
+      "sha256": "7a97deb873537a1cb5cf0bcd8f63491c8b38a44f035ba1e09e77bcfacbbe325c"
+    }
+  },
+  "baseline_tests": {
+    "tests/evaluate.test.ts": {
+      "exists": true,
+      "sha256": "e148e14265cbb19b4f82f939932b03bf693c8babd6f0919ee01b168cb560da28"
+    },
+    "tests/repositories.test.ts": {
+      "exists": true,
+      "sha256": "c451c4a3fb3072c7992367e114ba900cddf8415833778a7bf692d89c9405b2f5"
+    }
+  },
+  "created_at": "2026-10-03T21:31:15.027Z",
+  "green_expect": null,
+  "green_implementation": {
+    "src/domain/types.ts": {
+      "exists": true,
+      "sha256": "5431f9432ef76dd0ad216d54fb556e9a2f79e21d350820c4e205c9188e008d3b"
+    },
+    "src/application/evaluate.ts": {
+      "exists": true,
+      "sha256": "9e7f76a7cee4a4bb5b876672b9bfde638ee499b6f99f0c05620b6ee72e585e73"
+    },
+    "src/infrastructure/schema.ts": {
+      "exists": true,
+      "sha256": "8a4b7f845973067cf20fd240ca456850a19cf3d4b5c3a2772b6af262618107af"
+    },
+    "src/infrastructure/repositories.ts": {
+      "exists": true,
+      "sha256": "434c56e4265f3a387a6c3e7d9066922bdd27e93e1268a2d74e63b2fd77317085"
+    },
+    "drizzle/0005_tan_giant_man.sql": {
+      "exists": true,
+      "sha256": "e7b1e85c8d2db24ea69013bb55024d741b7f8a7ad84a7877726f1d5974f3f558"
+    },
+    "drizzle/meta/0005_snapshot.json": {
+      "exists": true,
+      "sha256": "5d8bd50efc31e095484ef2684057ee0d73c717e311654cb4c1e2af236d9a8f57"
+    },
+    "drizzle/meta/_journal.json": {
+      "exists": true,
+      "sha256": "d9d55718eeff361b001b5003926bda3656ae2096d1309c3a251d0509f891757d"
+    }
+  },
+  "green_tests": {
+    "tests/evaluate.test.ts": {
+      "exists": true,
+      "sha256": "8f0b7a8a8920a5522a4f9d9e1232cda93193429d385aa0be3a181ce5ed4e10e9"
+    },
+    "tests/repositories.test.ts": {
+      "exists": true,
+      "sha256": "307e508bad5fb121d4120edff81b3f69c0deccb200d4725c59c9ac87a3f5901d"
+    }
+  },
+  "implementation_files": [
+    "src/domain/types.ts",
+    "src/application/evaluate.ts",
+    "src/infrastructure/schema.ts",
+    "src/infrastructure/repositories.ts",
+    "drizzle/0005_tan_giant_man.sql",
+    "drizzle/meta/0005_snapshot.json",
+    "drizzle/meta/_journal.json"
+  ],
+  "red_command": [
+    "bun",
+    "test"
+  ],
+  "red_expect": "a coluna generated_at existe depois das migracoes",
+  "red_tests": {
+    "tests/evaluate.test.ts": {
+      "exists": true,
+      "sha256": "8f0b7a8a8920a5522a4f9d9e1232cda93193429d385aa0be3a181ce5ed4e10e9"
+    },
+    "tests/repositories.test.ts": {
+      "exists": true,
+      "sha256": "307e508bad5fb121d4120edff81b3f69c0deccb200d4725c59c9ac87a3f5901d"
+    }
+  },
+  "task": "1.5",
+  "test_files": [
+    "tests/evaluate.test.ts",
+    "tests/repositories.test.ts"
+  ]
+}

@@ -1,0 +1,10 @@
+TASK: 1.3
+CHECK: AC-3
+COMMAND: bash -lc 'bunx eslint . && bunx prettier --check .'
+EXIT: 0
+OUTPUT:
+Checking formatting...
+All matched files use Prettier code style!
+
+VERDICT: PASS
+CHAIN_HASH: f5888ffd99eceabd066bb0cf5a956b9ad0e60a6a46035ffad333927bd088ce17

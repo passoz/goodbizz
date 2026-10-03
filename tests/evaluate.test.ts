@@ -58,6 +58,7 @@ function studyConfig(painMethod: StudyConfig["painMethod"] = "choice"): StudyCon
     niche: "pousadas de ate 20 quartos",
     description: "",
     cacheSeed: "",
+    providerFingerprint: "",
     city: "Gramado",
     monthlyTicket: 300,
     numIdeas: 2,
@@ -195,6 +196,17 @@ describe("evaluateIdea", () => {
       tecnologia: 0.05,
     });
     expect(Object.keys(evaluation.algorithm.byParaphrase)).toEqual(["v1", "v2", "v3"]);
+  });
+
+  test("a ideia sai com a data de geracao", async () => {
+    const before = Date.now();
+    const evaluation = await evaluateIdea(strongIdea, evaluationDecider(strongProfile), studyConfig());
+
+    // ISO exigido pela coluna `generated_at`; a UI formata e o plano assina o rodape com ela.
+    expect(typeof evaluation.generatedAt).toBe("string");
+    const parsed = Date.parse(evaluation.generatedAt ?? "");
+    expect(Number.isNaN(parsed)).toBe(false);
+    expect(parsed).toBeGreaterThanOrEqual(before - 60_000);
   });
 });
 

@@ -28,6 +28,7 @@ const config: StudyConfig = {
   niche: "Clinica Odontologica",
   description: "",
   cacheSeed: "",
+  providerFingerprint: "",
   city: "Recife",
   monthlyTicket: 300,
   numIdeas: 2,
@@ -173,6 +174,22 @@ describe("buildArtifactFiles", () => {
       "Oficina Rapida": "   ",
     });
     expect(files.some((file) => file.path.includes("README.md") && file.path !== "README.md")).toBe(false);
+  });
+
+  test("o plano assina a data de geracao da ideia, e ideia sem data nao ganha rodape", () => {
+    const documents = { "Clinica Sorriso": "# Plano\n\nconteudo do plano\n" };
+    const dated = [...data];
+    dated[0] = { ...data[0]!, generatedAt: "2026-09-25T14:32:00.000Z" };
+
+    const withDate = buildArtifactFiles(config, brief, summary, dated, folders, documents);
+    const plan = withDate.find((file) => file.path === "01-clinica-sorriso/README.md");
+    // A data sai no rodape, nao no corpo do prompt (o guardrail de numeros confere o texto do LLM).
+    expect(plan?.content).toMatch(/\n\n---\n\n_Gerada em \d{2}\/\d{2}\/\d{4}, \d{2}:\d{2}_\n$/);
+    expect(plan?.content).toContain("conteudo do plano");
+
+    const withoutDate = buildArtifactFiles(config, brief, summary, data, folders, documents);
+    const plain = withoutDate.find((file) => file.path === "01-clinica-sorriso/README.md");
+    expect(plain?.content).not.toContain("Gerada em");
   });
 
   test("dados.json traz config, medias, grupos_dor, tiers e ideias", () => {

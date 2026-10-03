@@ -15,7 +15,7 @@ import { ProviderSettingsStore } from "./application/settings.ts";
 import { StudyService } from "./application/study-service.ts";
 import { createLogger } from "./config/runtime.ts";
 import { loadEnv, type Env } from "./config/env.ts";
-import { effectiveProviders } from "./config/providers.ts";
+import { effectiveProviders, providerLabels } from "./config/providers.ts";
 import { ConfigError } from "./domain/errors.ts";
 import { SqliteCacheStore } from "./infrastructure/cache-repository.ts";
 import { openDatabase, runMigrations, studies, type DatabaseHandle } from "./infrastructure/db.ts";
@@ -132,6 +132,8 @@ export async function buildService(env: Env = loadEnv()): Promise<ServiceBundle>
     mockLlm,
     mockDecider,
     settings: settingsStore,
+    // A impressao dos provedores ativos entra nas chaves de cache (ver StudyServiceOptions).
+    providerConfig: resolveProviders,
   });
 
   const production = env.APP_ENV === "production";
@@ -144,11 +146,9 @@ export async function buildService(env: Env = loadEnv()): Promise<ServiceBundle>
     }),
   });
   const health = buildHealthApp(handle.db);
-  // Texto curto e sem segredo, para a interface dizer o que será executado de verdade.
-  const providers = {
-    llm: mockLlm ? "texto simulado" : `texto real (${env.LLM_API_MODEL})`,
-    decider: mockDecider ? "números simulados" : `numeros reais (${env.DECISION_API_MODEL})`,
-  };
+  // Texto curto e sem segredo, para a interface dizer o que sera executado de verdade. Calculado
+  // a cada leitura: trocar o ativo na aba /settings vale no formulario sem reiniciar o servico.
+  const providers = () => providerLabels(env, settingsStore.current());
   const ui = buildUiApp({ service, sessionSecret: env.SESSION_SECRET, production, providers, logger });
   const app = buildHttpApp({ api, ui, health, logger, production });
 

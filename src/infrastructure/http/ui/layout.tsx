@@ -253,6 +253,12 @@ html[data-theme="light"] .progress-steps li[data-live="1"] { background: var(--r
   transition-property: opacity; transition-duration: 150ms;
 }
 .idea-link:hover .idea-chip, .idea-link:focus-visible .idea-chip { opacity: 1; }
+/* Data da geracao da ideia: discreta, em bloco proprio dentro da celula ja existente;
+   nao adiciona coluna nem muda a linha. */
+.idea-date {
+  display: block; margin-top: 3px;
+  font: 480 var(--fs-micro)/1.3 var(--sans); color: var(--muted); letter-spacing: .01em;
+}
 html[data-theme="light"] .idea-link { border-bottom-color: oklch(0 0 0 / 0.3); }
 
 /* ── Modal do plano (dialog nativo: ESC, foco e backdrop vem do navegador) */
@@ -517,6 +523,19 @@ h3 { font-size: var(--fs-h3); color: var(--paper); font-weight: 620; margin: 28p
 .provider-row select option { color: var(--paper); background: var(--ink-2); }
 html[data-theme="light"] .provider-row select { background: #fff; border-color: rgb(0 0 0 / 0.18); }
 html[data-theme="light"] .provider-row select option { color: #1c1613; background: #fff; }
+/* O select do modal de provedor (modelos listados pelo "Testar") veste a mesma roupa do input. */
+.field select {
+  width: 100%;
+  padding: 13px 15px;
+  color: var(--paper);
+  font: var(--fs-body)/1.4 var(--sans);
+  background: rgb(10 8 8 / 0.42);
+  border: 1px solid oklch(1 0 0 / 0.16);
+  border-radius: var(--r-control);
+}
+.field select option { color: var(--paper); background: var(--ink-2); }
+html[data-theme="light"] .field select { background: #fff; border-color: rgb(0 0 0 / 0.18); }
+html[data-theme="light"] .field select option { color: #1c1613; background: #fff; }
 .tone-ok { color: var(--r-green); }
 .tone-bad { color: var(--r-red); }
 /* Uma caixa so, para QUALQUER type: text, password, number, email, search, date... O seletor tem

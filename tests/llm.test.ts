@@ -23,6 +23,7 @@ function baseConfig(overrides: Partial<StudyConfig> = {}): StudyConfig {
     niche: "oficinas mecanicas",
     description: "",
     cacheSeed: "",
+    providerFingerprint: "",
     city: "Niteroi",
     monthlyTicket: 300,
     numIdeas: 6,

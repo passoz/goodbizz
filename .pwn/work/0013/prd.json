@@ -1,0 +1,113 @@
+{
+  "$schema": "../../../pwn/schemas/prd.schema.json",
+  "id": "PRD-0013",
+  "meta": {
+    "version": "1.0",
+    "created_at": "2026-10-03T00:00:00.000Z",
+    "author": "omp"
+  },
+  "title": "Provedores trocam de verdade e a ideia carrega a data de geracao",
+  "status": "approved",
+  "scenario": "brownfield",
+  "problem": {
+    "statement": "Trocar de provedor em `/settings` nao invalidava o cache de respostas do estudo (a chave nao levava o provedor efetivo), o rotulo do `/new` ficava na foto do boot, o Testar nao devolvia o catalogo de modelos, a edicao mandava `kind` num schema estrito (422), excluir provedor usava alert/confirm nativos e a ideia gerada nao gravava a data da geracao."
+  },
+  "solution": {
+    "statement": "A impressao dos provedores efetivos entra em toda chave de cache e os rotulos sao recalculados a cada pagina; o Testar devolve `models` e a sonda usa a chave guardada quando o id viaja; a edicao nao manda `kind`; a exclusao vive num dialogo proprio; a ideia grava `generatedAt` numa coluna propria (fora do payload_json) e o plano e a lista exibem a data."
+  },
+  "decisions": [
+    {
+      "id": "DEC-001",
+      "statement": "Escopar o cache pela impressao dos provedores efetivos (URL/modelo/chave de cada funcao) em vez de purgar as chaves na troca: a resposta antiga continua auditavel e a reexecucao no provedor novo gera de verdade.",
+      "status": "accepted",
+      "made_by": "operador"
+    },
+    {
+      "id": "DEC-002",
+      "statement": "O rotulo de provedores vira funcao avaliada a cada pagina (o catalogo em memoria e a fonte), em vez de um objeto montado no boot.",
+      "status": "accepted",
+      "made_by": "operador"
+    },
+    {
+      "id": "DEC-003",
+      "statement": "A sonda devolve os ids de `GET {base}/models` (best-effort) e a tela troca o texto por um dropdown com a opcao `outro modelo (digitar)`; o Testar do editar manda o id e a API usa a chave guardada.",
+      "status": "accepted",
+      "made_by": "operador"
+    },
+    {
+      "id": "DEC-004",
+      "statement": "Excluir provedor confirma num `<dialog>` do proprio app; nenhuma pagina usa `window.alert`/`window.confirm`.",
+      "status": "accepted",
+      "made_by": "operador"
+    },
+    {
+      "id": "DEC-005",
+      "statement": "A data da geracao vive em coluna `generated_at` (nullable), fora do payload_json: o blob continua com a forma do baseline e ideia antiga volta sem data em vez de com data inventada.",
+      "status": "accepted",
+      "made_by": "operador"
+    },
+    {
+      "id": "DEC-006",
+      "statement": "A data aparece no rodape do README do plano (fora do texto do LLM, onde o guardrail de numeros confere digitos) e como rotulo pequeno dentro da celula do nome no ranking, sem coluna nova.",
+      "status": "accepted",
+      "made_by": "operador"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "FR-001",
+      "type": "functional",
+      "statement": "FR-001: Trocar de provedor invalida as respostas gravadas pelo anterior",
+      "acceptance_criteria": [
+        "bun test tests/generate-study.test.ts",
+        "bun test tests/providers.test.ts",
+        "bun run check"
+      ]
+    },
+    {
+      "id": "FR-002",
+      "type": "functional",
+      "statement": "FR-002: O rotulo do servico reflete o provedor ativo",
+      "acceptance_criteria": ["bun test tests/providers.test.ts", "bun test tests/ui.test.ts", "bun run check"]
+    },
+    {
+      "id": "FR-003",
+      "type": "functional",
+      "statement": "FR-003: O Testar devolve a lista de modelos",
+      "acceptance_criteria": ["bun test tests/settings-api.test.ts", "bun test tests/ui.test.ts", "bun run check"]
+    },
+    {
+      "id": "FR-004",
+      "type": "functional",
+      "statement": "FR-004: Editar e excluir provedor cabem na pagina",
+      "acceptance_criteria": ["bun test tests/settings-api.test.ts", "bun test tests/ui.test.ts", "bun run check"]
+    },
+    {
+      "id": "FR-005",
+      "type": "functional",
+      "statement": "FR-005: A ideia carrega a data de geracao",
+      "acceptance_criteria": ["bun test tests/evaluate.test.ts", "bun test tests/repositories.test.ts", "bun run check"]
+    },
+    {
+      "id": "FR-006",
+      "type": "functional",
+      "statement": "FR-006: O plano e a lista mostram a data",
+      "acceptance_criteria": ["bun test tests/artifacts.test.ts", "bun test tests/ui.test.ts", "bun run check"]
+    }
+  ],
+  "stakeholders": [{ "name": "ACT-003 Operador/consultor", "role": "stakeholder" }],
+  "scope": {
+    "in_scope": [
+      "Impressao dos provedores efetivos nas chaves de cache e rotulos recalculados por pagina.",
+      "Catalogo de modelos no veredito do Testar e uso da chave guardada no editar.",
+      "Ordem dos campos do modal, dropdown de modelos e exclusao em dialogo sem alert nativo.",
+      "Coluna generated_at, carimbo em evaluateIdea, rodape do plano e data no ranking."
+    ],
+    "out_of_scope": [
+      "Mudar o contrato de ambiente (`LLM_API_*`/`DECISION_API_*`) ou a precedencia do perfil ativo.",
+      "Backfill de ideias antigas: sem data gravada, a UI omite o rotulo.",
+      "Trocar Drizzle por SQL cru ou mudar a forma do payload_json."
+    ]
+  },
+  "accepted_requirements": ["FR-001", "FR-002", "FR-003", "FR-004", "FR-005", "FR-006"]
+}

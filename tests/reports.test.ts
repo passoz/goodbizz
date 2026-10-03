@@ -21,6 +21,7 @@ const config: StudyConfig = {
   niche: "Clinica Odontologica",
   description: "",
   cacheSeed: "",
+  providerFingerprint: "",
   city: "Recife",
   monthlyTicket: 300,
   numIdeas: 3,

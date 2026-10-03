@@ -47,6 +47,11 @@ export const evaluations = sqliteTable(
      * porque esse campo guarda a forma do baseline lida por ferramentas Python (CON-006).
      */
     ideaId: text("idea_id"),
+    /**
+     * Momento (ISO) em que a ideia foi gerada e avaliada. Nulo nas ideias anteriores à coluna;
+     * vive fora do `payload_json` para nao mexer na forma do baseline (CON-006).
+     */
+    generatedAt: text("generated_at"),
   },
   (table) => [
     primaryKey({ columns: [table.studyId, table.rank] }),

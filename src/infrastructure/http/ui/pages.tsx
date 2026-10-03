@@ -977,6 +977,10 @@ const PROVIDER_KIND_TEXT: Record<ProviderKind, { title: string; description: str
  *
  * O modal é o único caminho de criar/editar (ele abre com JS); o `select` também funciona sem
  * script, porque é um `<form>` de verdade que posta em `/ui/settings/active`.
+ *
+ * "Testar" fala com o provedor: quando ele expõe o catálogo de modelos, o campo Modelo vira
+ * dropdown com a lista recebida (criar e editar usam o mesmo modal, então o comportamento é o
+ * mesmo nos dois). Excluir confirma em diálogo próprio — nunca em `alert`/`confirm` nativos.
  */
 const SETTINGS_SCRIPT = `
 (function () {
@@ -988,18 +992,63 @@ const SETTINGS_SCRIPT = `
   var status = document.getElementById("provider-status");
   var error = document.getElementById("provider-error");
   var save = form.querySelector("[data-action=save]");
+  var modelSelect = document.getElementById("provider-model-select");
   var previous = {}; // ultima escolha de cada lista, para restaurar ao cancelar
 
   function field(name) { return form.querySelector('[data-field="' + name + '"]'); }
+  var modelInput = field("model");
   function token() { return form.querySelector('input[name="_csrf"]').value; }
   function setStatus(text, tone) {
     status.textContent = text || "";
     status.className = text ? "hint " + (tone || "") : "hint";
   }
   function setError(text) { error.textContent = text || ""; }
+  function notice(picker, text) {
+    var slot = picker.querySelector("[data-notice]");
+    if (slot) slot.textContent = text || "";
+  }
   function busy(on) {
     save.disabled = on;
     save.textContent = on ? "Salvando..." : "Salvar";
+  }
+
+  // O modelo digitado pode ser substituido pela lista do provedor: o dropdown manda enquanto
+  // estiver visivel, e "outro modelo" devolve o controle ao campo de texto.
+  function currentModel() {
+    if (modelSelect && !modelSelect.hidden && modelSelect.value !== "__custom") return modelSelect.value;
+    return modelInput.value.trim();
+  }
+  function showModels(list) {
+    if (!modelSelect) return;
+    modelSelect.innerHTML = "";
+    list.forEach(function (id) {
+      var option = document.createElement("option");
+      option.value = id;
+      option.textContent = id;
+      modelSelect.appendChild(option);
+    });
+    var custom = document.createElement("option");
+    custom.value = "__custom";
+    custom.textContent = "outro modelo (digitar)";
+    modelSelect.appendChild(custom);
+    var current = modelInput.value.trim();
+    var match = list.indexOf(current);
+    if (match >= 0) { modelSelect.selectedIndex = match; modelInput.hidden = true; }
+    else if (current === "") { modelSelect.selectedIndex = 0; modelInput.hidden = true; }
+    else { custom.selected = true; modelInput.hidden = false; }
+    modelSelect.hidden = false;
+  }
+  function hideModels() {
+    if (!modelSelect) return;
+    modelSelect.hidden = true;
+    modelSelect.innerHTML = "";
+    modelInput.hidden = false;
+  }
+  if (modelSelect) {
+    modelSelect.addEventListener("change", function () {
+      modelInput.hidden = modelSelect.value !== "__custom";
+      if (!modelInput.hidden) modelInput.focus();
+    });
   }
 
   function restore(picker) {
@@ -1011,6 +1060,8 @@ const SETTINGS_SCRIPT = `
     form.reset();
     setStatus("");
     setError("");
+    hideModels();
+    busy(false);
     field("id").value = data.id || "";
     field("kind").value = data.kind;
     field("name").value = data.name || "";
@@ -1028,15 +1079,21 @@ const SETTINGS_SCRIPT = `
       kind: field("kind").value,
       name: field("name").value.trim(),
       url: field("url").value.trim(),
-      model: field("model").value.trim(),
+      model: currentModel(),
       apiKey: field("key").value.trim(),
     };
   }
 
-  /** O teste recebe so o que a sonda usa: nome e rotulo da tela, nao vai para a API. */
+  /**
+   * O teste recebe so o que a sonda usa: nome e rotulo da tela, nao vai para a API. No editar, o
+   * "id" vai junto: a sonda usa a chave guardada quando o campo esta vazio (a tela nunca mostra a
+   * chave em claro, e testar o provedor salvo sem redigitar e o caminho normal).
+   */
   function probePayload() {
     var input = payload();
-    return { kind: input.kind, url: input.url, model: input.model, apiKey: input.apiKey };
+    var body = { kind: input.kind, url: input.url, model: input.model, apiKey: input.apiKey };
+    if (modal.dataset.mode === "edit") body.id = field("id").value;
+    return body;
   }
 
   /**
@@ -1060,7 +1117,8 @@ const SETTINGS_SCRIPT = `
   Array.prototype.slice.call(document.querySelectorAll("[data-provider-picker]")).forEach(function (picker) {
     var select = picker.querySelector("select");
     previous[picker.getAttribute("data-kind")] = select.value;
-    picker.querySelector("select").addEventListener("change", function () {
+    select.addEventListener("change", function () {
+      notice(picker, "");
       var option = select.options[select.selectedIndex];
       if (option && option.value === "__new") {
         open("create", picker, { kind: picker.getAttribute("data-kind") });
@@ -1072,13 +1130,45 @@ const SETTINGS_SCRIPT = `
     if (apply) apply.hidden = true;
     picker.querySelector("[data-action=edit]").addEventListener("click", function () {
       var profile = selectedProfile(picker);
-      if (!profile) { setError(""); window.alert("escolha um provedor configurado para editar"); return; }
+      if (!profile) { notice(picker, "escolha um provedor configurado para editar"); return; }
+      notice(picker, "");
       open("edit", picker, profile);
     });
     picker.querySelector("[data-action=delete]").addEventListener("click", function () {
       var profile = selectedProfile(picker);
-      if (!profile) { window.alert("escolha um provedor configurado para excluir"); return; }
-      if (!window.confirm("Excluir o provedor " + profile.name + "?")) return;
+      if (!profile) { notice(picker, "escolha um provedor configurado para excluir"); return; }
+      notice(picker, "");
+      askDelete(profile);
+    });
+  });
+
+  // ── Confirmacao de exclusao em dialogo (o app nao usa alert/confirm nativos) ──
+  var deleteModal = document.getElementById("provider-delete-modal");
+  var deleteText = document.getElementById("provider-delete-text");
+  var deleteError = document.getElementById("provider-delete-error");
+  var deleteConfirm = document.getElementById("provider-delete-confirm");
+  var deleteCancel = document.getElementById("provider-delete-cancel");
+  var pendingDelete = null;
+
+  function closeDelete() {
+    if (deleteModal && deleteModal.open) deleteModal.close();
+    pendingDelete = null;
+  }
+  function askDelete(profile) {
+    if (!deleteModal || typeof deleteModal.showModal !== "function") return;
+    pendingDelete = profile;
+    if (deleteText) deleteText.textContent = "Excluir o provedor " + profile.name +
+      "? Se ele estiver ativo, a funcao volta ao padrao do ambiente.";
+    if (deleteError) deleteError.textContent = "";
+    if (deleteConfirm) deleteConfirm.disabled = false;
+    deleteModal.showModal();
+  }
+  if (deleteCancel) deleteCancel.addEventListener("click", closeDelete);
+  if (deleteConfirm) {
+    deleteConfirm.addEventListener("click", function () {
+      if (!pendingDelete) return closeDelete();
+      var profile = pendingDelete;
+      deleteConfirm.disabled = true;
       fetch("/api/settings/providers/" + encodeURIComponent(profile.id), {
         method: "DELETE",
         headers: { "X-CSRF-Token": token() },
@@ -1088,9 +1178,16 @@ const SETTINGS_SCRIPT = `
           function (body) { throw new Error(body.message || "não foi possível excluir"); },
           function () { throw new Error("não foi possível excluir"); },
         );
-      }).catch(function (failure) { window.alert(failure.message || "não foi possível excluir"); });
+      }).catch(function (failure) {
+        if (deleteError) deleteError.textContent = failure.message || "não foi possível excluir";
+        deleteConfirm.disabled = false;
+      });
     });
-  });
+  }
+  if (deleteModal) {
+    deleteModal.addEventListener("cancel", function () { pendingDelete = null; });
+    deleteModal.addEventListener("click", function (event) { if (event.target === deleteModal) closeDelete(); });
+  }
 
   var cancel = form.querySelector("[data-action=cancel]");
   if (cancel) cancel.addEventListener("click", function () { modal.close(); });
@@ -1102,6 +1199,7 @@ const SETTINGS_SCRIPT = `
   form.querySelector("[data-action=test]").addEventListener("click", function () {
     var input = probePayload();
     setError("");
+    if (input.url === "") { setError("preencha a URL antes de testar"); return; }
     setStatus("testando " + input.kind + "...");
     fetch("/api/settings/test", {
       method: "POST",
@@ -1110,6 +1208,7 @@ const SETTINGS_SCRIPT = `
     }).then(function (response) {
       return response.json().then(function (body) {
         if (!response.ok) throw new Error(body.message || "não foi possível testar");
+        if (body.ok && Array.isArray(body.models) && body.models.length > 0) showModels(body.models);
         setStatus((body.ok ? "ok: " : "falhou: ") + body.detail, body.ok ? "tone-ok" : "tone-bad");
       });
     }).catch(function (failure) { setStatus("falhou: " + (failure.message || "erro"), "tone-bad"); });
@@ -1124,17 +1223,22 @@ const SETTINGS_SCRIPT = `
     }
     setError("");
     busy(true);
+    // O PATCH nao aceita "kind": o tipo do provedor e imutavel (o id ja o define), e o schema
+    // estrito recusava a edicao inteira com "Unrecognized key(s)".
+    var body = editing
+      ? { name: input.name, url: input.url, model: input.model, apiKey: input.apiKey }
+      : input;
     var path = editing
       ? "/api/settings/providers/" + encodeURIComponent(field("id").value)
       : "/api/settings/providers";
     fetch(path, {
       method: editing ? "PATCH" : "POST",
       headers: { "Content-Type": "application/json", "X-CSRF-Token": token() },
-      body: JSON.stringify(input),
+      body: JSON.stringify(body),
     }).then(function (response) {
       if (response.ok) { window.location.reload(); return; }
       return response.json().then(
-        function (body) { throw new Error(body.message || "não foi possível salvar"); },
+        function (bodyResult) { throw new Error(bodyResult.message || "não foi possível salvar"); },
         function () { throw new Error("não foi possível salvar"); },
       );
     }).catch(function (failure) {
@@ -1234,6 +1338,7 @@ export const SettingsPage: FC<{ view: SettingsView; token: string }> = (props) =
               </code>
               {current !== undefined && !current.hasKey ? " · sem chave salva" : ""}
             </p>
+            <p class="hint" data-notice role="status" />
           </fieldset>
         </form>
       );
@@ -1258,12 +1363,20 @@ export const SettingsPage: FC<{ view: SettingsView; token: string }> = (props) =
               <input id="provider-url" data-field="url" spellcheck={false} />
             </div>
             <div class="field">
-              <label for="provider-model">Modelo</label>
-              <input id="provider-model" data-field="model" spellcheck={false} />
-            </div>
-            <div class="field">
               <label for="provider-key">Chave da API</label>
               <input id="provider-key" data-field="key" type="password" autocomplete="off" />
+            </div>
+            <div class="field">
+              <label for="provider-model">Modelo</label>
+              <input id="provider-model" data-field="model" spellcheck={false} />
+              {/* Preenchido pelo "Testar": quando o provedor expoe modelos, ele vira a escolha. */}
+              <select
+                id="provider-model-select"
+                class="model-select"
+                hidden
+                aria-label="Modelos devolvidos pelo provedor"
+              />
+              <span class="hint">(teste a conexão para listar os modelos do provedor)</span>
             </div>
           </div>
           <p id="provider-status" class="hint" role="status" />
@@ -1281,6 +1394,24 @@ export const SettingsPage: FC<{ view: SettingsView; token: string }> = (props) =
           </div>
         </div>
       </form>
+    </dialog>
+    {/* Confirmacao de exclusao de provedor: dialogo, nunca alert/confirm nativos. */}
+    <dialog id="provider-delete-modal" class="modal modal-confirm" aria-labelledby="provider-delete-title">
+      <div class="modal-head">
+        <h3 id="provider-delete-title">Excluir provedor</h3>
+      </div>
+      <div class="modal-body">
+        <p id="provider-delete-text">Excluir este provedor?</p>
+        <p id="provider-delete-error" class="alert" role="alert" />
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" id="provider-delete-cancel">
+            Cancelar
+          </button>
+          <button type="button" class="btn btn-danger" id="provider-delete-confirm">
+            Confirmar
+          </button>
+        </div>
+      </div>
     </dialog>
     <script>{raw(SETTINGS_SCRIPT)}</script>
   </section>
@@ -1625,6 +1756,11 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; token: s
                             {idea.name}
                             <span class="idea-chip">plano</span>
                           </a>
+                        )}
+                        {idea.generatedAt === undefined ? null : (
+                          <span class="idea-date" title="data da geração desta ideia">
+                            {formatDate(idea.generatedAt)}
+                          </span>
                         )}
                       </td>
                       <td>{idea.sector !== "" ? idea.sector : "-"}</td>

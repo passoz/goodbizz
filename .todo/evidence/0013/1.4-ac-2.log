@@ -1,0 +1,9 @@
+TASK: 1.4
+CHECK: AC-2
+COMMAND: bash -lc 'bun run check'
+EXIT: 0
+OUTPUT:
+$ bunx tsc --noEmit
+
+VERDICT: PASS
+CHAIN_HASH: 852a04a57c69f4f7b1e3872496e0512eb65fc3de64e45ae8c960848ccf5cee5b

@@ -228,6 +228,8 @@ export class SqliteStudyRepository implements StudyRepository {
       ...ideaJsonToEvaluation(JSON.parse(r.payloadJson) as IdeaJson),
       // O id vem da coluna; o payload_json continua sendo a fonte da forma do baseline (CON-006).
       id: r.ideaId ?? `legacy-${r.studyId}-${String(r.rank).padStart(8, "0")}`,
+      // A data de geracao vive em coluna propria pela mesma razao; ideia antiga nao tem.
+      ...(r.generatedAt === null ? {} : { generatedAt: r.generatedAt }),
     }));
     const summary = row.summaryJson ? (JSON.parse(row.summaryJson) as StudySummary) : null;
     // Estudos gravados antes da migration 0003 guardaram `summary_json` sem `id` em `ordered`.
@@ -303,6 +305,7 @@ export class SqliteStudyRepository implements StudyRepository {
               tier: e.tier,
               payloadJson: JSON.stringify(evaluationToIdeaJson(e)),
               ideaId: e.id,
+              generatedAt: e.generatedAt ?? null,
             })),
           )
           .run();

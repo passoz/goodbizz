@@ -1,0 +1,18 @@
+{
+  "work_id": "0013",
+  "title": "Provedores trocam de verdade e a ideia carrega a data de geracao",
+  "imported_from": "pedido do operador na sessao de 2026-10-03",
+  "problem": "Cinco defeitos no mesmo caminho: (1) trocar de provedor em `/settings` nao invalidava as respostas ja gravadas no cache do estudo, entao reexecutar servia o texto do provedor anterior; o rotulo do `/new` tambem ficava na foto do boot; (2) o botao Testar nao devolvia a lista de modelos do provedor, e o campo `kind` que a tela mandava no PATCH da edicao tomava 422 de um schema estrito; (3) excluir provedor usava `window.alert`/`window.confirm` nativos, unicos alertas do app; (4) a ideia gerada nao gravava a data da geracao, entao o plano e a lista nao tinham como mostrar quando a ideia nasceu.",
+  "actors": ["ACT-003 Operador/consultor"],
+  "objectives": [
+    "SC-001: `bun test` prova que trocar o provedor muda a chave de cache e que o rotulo do servico reflete a configuracao atual (FR-001, FR-002).",
+    "SC-002: `bun test` prova que o Testar devolve os modelos, que a sonda usa a chave guardada no editar e que a exclusao vive em dialogo (FR-003, FR-004).",
+    "SC-003: `bun test` prova que a ideia sai com a data ISO, que a coluna `generated_at` sobrevive ao banco e que o plano e o ranking exibem a data (FR-005, FR-006).",
+    "SC-004: `bun run check` e `bunx eslint . && bunx prettier --check .` passam com exit 0."
+  ],
+  "constraints": [
+    "QR-001: o payload_json continua sendo a forma do baseline (a data vive em coluna propria, fora dele).",
+    "QR-002: nenhum alerta nativo (`window.alert`/`window.confirm`) em nenhuma pagina.",
+    "QR-003: a chave de API nunca aparece em claro na API, na pagina ou no rodape do plano."
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.6",
+  "work_id": "0013",
+  "title": "O plano e a lista mostram a data de geracao",
+  "risk": {
+    "level": "L2",
+    "reasons": [
+      "A mudanca atravessa cache/persistencia/credencial ou o modal que grava configuracao",
+      "A task pode alterar o que o operador ve e o que fica gravado no estudo"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.6-01",
+        "given": "Dado o comportamento declarado: o README do plano fecha com o rodape _Gerada em <data>_ e a linha do ranking mostra a data pequena dentro da celula do nome, sem coluna nova",
+        "when": "Quando `bun test` é executado",
+        "then": "Então a suite passa com as assercoes do requisito FR-006"
+      },
+      {
+        "id": "SCENARIO-1.6-02",
+        "given": "Dado o comportamento declarado: o README do plano fecha com o rodape _Gerada em <data>_ e a linha do ranking mostra a data pequena dentro da celula do nome, sem coluna nova",
+        "when": "Quando `bun run check` é executado",
+        "then": "Então o typecheck estrito passa"
+      },
+      {
+        "id": "SCENARIO-1.6-03",
+        "given": "Dado o comportamento declarado: o README do plano fecha com o rodape _Gerada em <data>_ e a linha do ranking mostra a data pequena dentro da celula do nome, sem coluna nova",
+        "when": "Quando `bunx eslint . && bunx prettier --check .` é executado",
+        "then": "Então o lint e a formatacao passam"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/application/artifacts.ts",
+      "src/infrastructure/http/ui/pages.tsx",
+      "src/infrastructure/http/ui/layout.tsx",
+      "README.md",
+      "tests/artifacts.test.ts",
+      "tests/ui.test.ts"
+    ],
+    "affected_components": [
+      "idea-dates"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "Não quebrar retrocompatibilidade nem expor dados sensíveis",
+      "Nenhum alert/confirm nativo em pagina alguma",
+      "Manter cobertura de testes existente"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun test",
+      "bun run check",
+      "bunx eslint .",
+      "bunx prettier --check ."
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/application/artifacts.ts",
+      "src/infrastructure/http/ui/pages.tsx",
+      "src/infrastructure/http/ui/layout.tsx",
+      "README.md",
+      "tests/artifacts.test.ts",
+      "tests/ui.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env*"
+    ],
+    "out_of_scope": [
+      "Arquivos fora de: src/application/artifacts.ts, src/infrastructure/http/ui/pages.tsx, src/infrastructure/http/ui/layout.tsx, README.md, tests/artifacts.test.ts, tests/ui.test.ts"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 50000,
+    "max_cost_usd": 0.5,
+    "max_duration_minutes": 15,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 30,
+    "max_tool_calls": 60,
+    "max_shell_executions": 15
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

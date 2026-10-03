@@ -46,6 +46,12 @@ export interface StudyConfigOverrides {
   deciderKey?: string;
   /** Semente do cache: o id do estudo no serviço; vazio na CLI de tiro único. */
   cacheSeed?: string;
+  /**
+   * Impressão dos provedores efetivos no momento da execução (URL/modelo/chave ativos). Entra na
+   * semente do cache: trocar de provedor muda a chave, e a resposta gravada pelo provedor
+   * anterior nunca e servida para o novo.
+   */
+  providerFingerprint?: string;
 }
 
 function normalizePainMethod(value: string): PainMethod {
@@ -78,6 +84,7 @@ export function resolveStudyConfig(overrides: StudyConfigOverrides): StudyConfig
     niche,
     description: (overrides.description ?? "").trim(),
     cacheSeed: overrides.cacheSeed ?? "",
+    providerFingerprint: overrides.providerFingerprint ?? "",
     city: (overrides.city ?? "").trim(),
     monthlyTicket: overrides.monthlyTicket ?? 300,
     numIdeas: overrides.numIdeas ?? 8,

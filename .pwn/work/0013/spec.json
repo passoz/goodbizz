@@ -1,0 +1,52 @@
+{
+  "work_id": "0013",
+  "title": "Provedores trocam de verdade e a ideia carrega a data de geracao",
+  "capabilities": [
+    {
+      "id": "CAP-009",
+      "name": "Relatorios deterministas",
+      "description": "gera o indice, o tabelao e o material empacotado sem LLM, a partir das avaliacoes ja gravadas",
+      "rules": ["BR-010"]
+    },
+    {
+      "id": "CAP-011",
+      "name": "Cache de respostas de API",
+      "description": "guarda e reaproveita as respostas das chamadas por estudo e por etapa",
+      "rules": ["BR-015"]
+    },
+    {
+      "id": "CAP-013",
+      "name": "API HTTP de estudos",
+      "description": "expõe o catalogo de provedores, o teste de conexao e o CRUD de estudos com validacao de borda",
+      "rules": ["BR-017", "BR-021"]
+    },
+    {
+      "id": "CAP-014",
+      "name": "Interface web",
+      "description": "permite criar e ler estudos pelo navegador sem instalar nada renderiza no servidor com hono/jsx e consome a propria API para disparar e acompanhar estudos",
+      "rules": ["BR-018", "BR-022"]
+    },
+    {
+      "id": "CAP-015",
+      "name": "Persistencia de estudos",
+      "description": "grava e le estudos, avaliacoes e configuracoes no SQLite via Drizzle",
+      "rules": ["BR-019"]
+    },
+    {
+      "id": "CAP-016",
+      "name": "Configuracao por ambiente e segredos",
+      "description": "resolve URL, modelo e chave por ambiente e pelo catalogo ativo, sem devolver segredo",
+      "rules": ["BR-020"]
+    }
+  ],
+  "rules": [
+    { "id": "BR-010", "statement": "As pastas de ideia sao numeradas pela ordem do ranking, com slug deterministico do nome." },
+    { "id": "BR-015", "statement": "A chave de cache e o hash dos parametros da chamada, por etapa." },
+    { "id": "BR-017", "statement": "Payload de API invalido retorna 422 com o detalhe da validacao Zod." },
+    { "id": "BR-019", "statement": "Nenhum acesso a dados escreve SQL cru; tudo passa por Drizzle." },
+    { "id": "BR-018", "statement": "Toda rota de UI que muda estado exige mesma origem e token CSRF em tempo constante." },
+    { "id": "BR-020", "statement": "A configuracao efetiva de cada funcao vem do perfil ativo do catalogo sobre o ambiente, e a chave nunca e devolvida em claro." },
+    { "id": "BR-021", "statement": "Rotas de API publica nao entram no filtro CSRF e a UI nao compartilha o mesmo sub-app." },
+    { "id": "BR-022", "statement": "Cookie de sessao usa httpOnly, sameSite Lax e secure em producao." }
+  ]
+}

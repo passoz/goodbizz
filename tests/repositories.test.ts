@@ -262,6 +262,40 @@ describe("identidade na persistencia", () => {
       db.sqlite.close();
     }
   });
+
+  test("a data de geracao sobrevive a gravacao e a leitura", async () => {
+    const db = openMigratedDatabase(":memory:");
+    const repo = new SqliteStudyRepository(db.db);
+    try {
+      seedStudy(repo, db, "estudo-data");
+      const dated = { ...evaluation("id-data", "Com data", 0.9), generatedAt: "2026-09-25T14:32:00.000Z" };
+      await repo.saveEvaluations("estudo-data", [dated], null);
+
+      const record = await repo.get("estudo-data");
+      expect(record?.evaluations[0]?.generatedAt).toBe("2026-09-25T14:32:00.000Z");
+
+      // Linha anterior a coluna volta sem o campo: a UI omite o rotulo em vez de mentir a data.
+      db.sqlite.query("UPDATE evaluations SET generated_at = NULL WHERE study_id = ?").run("estudo-data");
+      expect((await repo.get("estudo-data"))?.evaluations[0]?.generatedAt).toBeUndefined();
+      // E o payload_json continua com a forma do baseline (a data vive fora dele, em coluna).
+      const row = db.sqlite
+        .query("SELECT payload_json FROM evaluations WHERE study_id = ?")
+        .get("estudo-data") as { payload_json: string };
+      expect(JSON.parse(row.payload_json)).not.toHaveProperty("generated_at");
+    } finally {
+      db.sqlite.close();
+    }
+  });
+});
+
+describe("migracao da coluna generated_at", () => {
+  test("a coluna generated_at existe depois das migracoes", () => {
+    const handle = openDatabase(":memory:");
+    runMigrations(handle, "drizzle");
+
+    expect(columnsOf(handle.sqlite, "evaluations")).toContain("generated_at");
+    handle.sqlite.close();
+  });
 });
 
 describe("migracao da coluna description", () => {

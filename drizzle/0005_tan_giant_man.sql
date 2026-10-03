@@ -1,0 +1,1 @@
+ALTER TABLE `evaluations` ADD `generated_at` text;

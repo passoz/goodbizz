@@ -3,7 +3,7 @@
  * Conteudo 100% determinístico: nenhum LLM entra aqui.
  */
 import type { ArtifactFile } from "../domain/ports.ts";
-import type { IdeaEvaluation, StudyConfig, StudySummary } from "../domain/types.ts";
+import type { IdeaEvaluation, StudyConfig, StudyIdea, StudySummary } from "../domain/types.ts";
 import { serializeDados } from "./dados.ts";
 import { indexMarkdown, indicatorsTableCsv, indicatorsTableMarkdown, scopeNotice } from "./reports.ts";
 
@@ -16,6 +16,8 @@ export interface ArtifactPlan {
  * Arquivos do estudo: brief, tabelão (md/csv), índice, dados.json e o README de cada ideia.
  * @param folders nome da ideia -> pasta (`01-slug`).
  * @param documents nome da ideia -> markdown já gerado; ideia sem documento não vira pasta.
+ * @param data ideias avaliadas; a data de geracao de cada uma assina o rodape do plano (a linha
+ * `Data:` nao entra no corpo porque o guardrail de numeros confere digitos no texto do LLM).
  */
 export function buildArtifactFiles(
   cfg: StudyConfig,
@@ -37,13 +39,45 @@ export function buildArtifactFiles(
     files.push({ path: "README.md", content: indexMarkdown(cfg, brief, summary, folders) });
   }
   files.push({ path: "dados.json", content: serializeDados(cfg, brief, summary, data) });
+  // O rodape de data sai aqui, nao do prompt: a resposta em cache volta intacta e a data gravada
+  // com a avaliacao e a que identifica a geracao. Ideias homonimas partilham pasta por contrato,
+  // entao a data acompanha o nome (a primeira que gerou vale).
+  const generatedAtByName = new Map<string, string>();
+  for (const idea of data) {
+    const stamp = (idea as StudyIdea).generatedAt;
+    if (typeof stamp === "string" && !generatedAtByName.has(idea.name)) {
+      generatedAtByName.set(idea.name, stamp);
+    }
+  }
   for (const [name, folder] of Object.entries(folders)) {
     const document = documents[name];
     if (document !== undefined && document.trim() !== "") {
-      files.push({ path: `${folder}/README.md`, content: document });
+      files.push({
+        path: `${folder}/README.md`,
+        content: `${document.trimEnd()}${generationFooter(generatedAtByName.get(name))}`,
+      });
     }
   }
   return files;
+}
+
+/** Data curta pt-BR com hora, para o rodape do plano ("25/09/2026 14:32"). */
+function stampDate(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+}
+
+/**
+ * Rodape de geracao do plano: a data sai aqui, nao do prompt. A resposta em cache volta intacta,
+ * entao o texto gravado com a ideia nao conteria a data da geracao, e um rodape com hora de hoje
+ * mentiria sobre uma ideia reutilizada do cache. Ideia sem data (estudo anterior a esse campo)
+ * nao ganha rodape: nao ha o que afirmar.
+ */
+function generationFooter(generatedAt: string | undefined): string {
+  const stamp = generatedAt === undefined ? "" : stampDate(generatedAt);
+  if (stamp === "") return "\n";
+  return `\n\n---\n\n_Gerada em ${stamp}_\n`;
 }
 
 // ── Empacotamento ───────────────────────────────────────────────────────────

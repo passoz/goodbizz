@@ -1,0 +1,96 @@
+{
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun test"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0013/1.3-ac-1.log",
+      "log_sha256": "f506897d741f0802ed58da9a9a1af940c68a831a080c14955230e5a1ff0e3912",
+      "recorded_at": "2026-10-03T21:30:32.128Z"
+    },
+    "AC-2": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun run check"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0013/1.3-ac-2.log",
+      "log_sha256": "3b89c9506ed9673e5fa8b1dc76b2ab2a8cc68cfabe6bb34818f4ae34ba1af629",
+      "recorded_at": "2026-10-03T21:30:34.456Z"
+    },
+    "AC-3": {
+      "command": [
+        "bash",
+        "-lc",
+        "bunx eslint . && bunx prettier --check ."
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0013/1.3-ac-3.log",
+      "log_sha256": "d274d4fd57536d83c34d766320d43f22d75700490c386b2ce8edc8cc36dafa7d",
+      "recorded_at": "2026-10-03T21:30:37.404Z"
+    }
+  },
+  "baseline_implementation": {
+    "src/infrastructure/provider-probe.ts": {
+      "exists": true,
+      "sha256": "f3ac13279bb131e22990362a019ddbe397129d5cb9324875f708f9225fe76cb8"
+    },
+    "src/infrastructure/http/api.ts": {
+      "exists": true,
+      "sha256": "169c16d856b22b652dba4b87910bdc85f3674d4eacc497a10b815d0f332ce56a"
+    }
+  },
+  "baseline_tests": {
+    "tests/settings-api.test.ts": {
+      "exists": true,
+      "sha256": "3447fd987d4fb686bb39ec92d8346b4143d8d302125530047f6402d477b37bf5"
+    }
+  },
+  "created_at": "2026-10-03T21:30:15.232Z",
+  "green_expect": null,
+  "green_implementation": {
+    "src/infrastructure/provider-probe.ts": {
+      "exists": true,
+      "sha256": "b26456254309f001c33e75ccfa38c967835a9b2bf0637b75c3f3a6d6d98d9ac5"
+    },
+    "src/infrastructure/http/api.ts": {
+      "exists": true,
+      "sha256": "5d11bb2c040ca7d8e5fa0a8c6117909dc5617ff8ca4f1a5fa4a33b0216c15115"
+    }
+  },
+  "green_tests": {
+    "tests/settings-api.test.ts": {
+      "exists": true,
+      "sha256": "c2859c30aebdc5c74e6ae80c2f3aeb9c960fc83f8dba06a7ea025ddd38ff5f9f"
+    }
+  },
+  "implementation_files": [
+    "src/infrastructure/provider-probe.ts",
+    "src/infrastructure/http/api.ts"
+  ],
+  "red_command": [
+    "bun",
+    "test"
+  ],
+  "red_expect": "testar provedor salvo usa a chave guardada",
+  "red_tests": {
+    "tests/settings-api.test.ts": {
+      "exists": true,
+      "sha256": "c2859c30aebdc5c74e6ae80c2f3aeb9c960fc83f8dba06a7ea025ddd38ff5f9f"
+    }
+  },
+  "task": "1.3",
+  "test_files": [
+    "tests/settings-api.test.ts"
+  ]
+}

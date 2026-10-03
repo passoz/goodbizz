@@ -187,8 +187,9 @@ texto digitado (`422` acima disso) e cada palavra e capitalizada ao ser gravada.
 (ate 300 caracteres) e concatenada ao titulo antes de cada chamada a provedor — ela orienta o brief,
 as ideias, o bloco de dados e o decisor, e nao aparece como texto proprio na tela.
 
-**Cache com dono.** Cada estudo grava as respostas de API sob o proprio id (`<id>::<hash>`). Dois
-estudos com o mesmo titulo nunca compartilham resposta, excluir um estudo apaga as respostas dele, e
+**Cache com dono.** Cada estudo grava as respostas de API sob o proprio id e sob a impressao dos
+provedores ativos (`<id>::<hash>`). Dois estudos com o mesmo titulo nunca compartilham resposta,
+excluir um estudo apaga as respostas dele, trocar de provedor invalida as gravadas pelo anterior, e
 reexecutar um estudo que falhou retoma do ponto onde parou, sem repetir as fases ja concluidas.
 
 ---
@@ -259,21 +260,30 @@ por sessao: rotacionar a cada resposta invalidaria qualquer formulario já abert
 
 ## Configuração em runtime (`/settings`)
 
-A aba **Configurações** (`/settings`) deixa o operador definir, pela interface, o que antes só existia
-em variável de ambiente: URL, modelo e chave do LLM e do decisor.
+A aba **Configurações** (`/settings`) mantém um catálogo nomeado de provedores (nome, URL, modelo e
+chave por perfil de LLM e de decisão) e escolhe qual está ativo por função.
 
-- **Precedência:** o que está salvo em `/settings` **sobrepõe** `LLM_API_*`/`DECISION_API_*` e o
-  restante do contrato de ambiente. Campo não preenchido continua herdando o ambiente; `null` (ou o
-  botão "limpar") volta a herdar. Na CLI a ordem é _flag explícita > /settings > ambiente_.
-- **Vale na hora:** os clientes releem a configuração a cada chamada (troca de URL/chave só recria o
-  cliente HTTP quando algo muda) — não precisa reiniciar o processo. O consumo medido sobrevive à troca.
+- **Precedência:** o perfil ativo **sobrepõe** `LLM_API_*`/`DECISION_API_*`; sem perfil ativo
+  ("padrão do ambiente") cada campo herda o ambiente. Na CLI a ordem é _flag explícita > /settings >
+  ambiente_.
+- **Vale na hora:** os clientes releem a configuração a cada chamada, e os provedores efetivos entram
+  na **impressão de cache** das respostas: reexecutar um estudo depois de trocar de provedor gera no
+  provedor novo, em vez de servir a resposta gravada pelo anterior. O consumo medido sobrevive à troca.
+- **Testar:** o botão Testar fala com o provedor (`GET {base}/models`, com fallback de 1 token). Quando
+  o provedor expõe modelos, o campo Modelo vira dropdown com a lista — em adicionar e em editar
+  provedor (os campos seguem a ordem Nome, URL, Chave da API, Modelo).
+- **Excluir:** confirmado em diálogo próprio, como estudo e ideia (o app não usa `alert`/`confirm`
+  nativos em lugar nenhum).
 - **Chaves:** são gravadas no SQLite do serviço (`settings`) e nunca voltam em claro pela API nem pela
-  página — `GET /api/settings` e `/settings` devolvem apenas a máscara (`sk-abc…1234`) e a origem de
-  cada campo (`definido aqui`, `do ambiente`, `não definido`). Como o serviço é acessível só pela
-  tailnet e não tem autenticação própria, trate essa aba como área administrativa.
-- **API:** `GET /api/settings` e `PATCH /api/settings` com
-  `{llmBaseUrl, llmModel, llmApiKey, deciderUrl, deciderModel, deciderApiKey}` (string define,
-  `null` limpa); sem JS, o formulário posta em `/ui/settings` com CSRF.
+  página — `GET /api/settings` e `/settings` devolvem apenas a máscara (`sk-abc...1234`). Editar com a
+  chave vazia mantém a guardada, e o Testar usa a chave do provedor salvo quando o campo está vazio.
+  Como o serviço é acessível só pela tailnet e não tem autenticação própria, trate essa aba como área
+  administrativa.
+- **API:** `POST /api/settings/providers` (cria; fica ativo no tipo dele), `PATCH
+/api/settings/providers/:id` (edita; sem `kind` — o tipo é imutável), `DELETE
+/api/settings/providers/:id`, `PUT /api/settings/active` (`{kind, id}`; `null` herda o ambiente) e
+  `POST /api/settings/test` (`{kind, url, model?, apiKey?, id?}` → veredito e a lista de modelos,
+  quando houver). Sem JS, o formulário de escolha posta em `/ui/settings/active` com CSRF.
 
 ## Consumo e custo estimado
 

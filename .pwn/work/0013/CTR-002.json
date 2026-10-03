@@ -1,0 +1,95 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.2",
+  "work_id": "0013",
+  "title": "O rotulo do servico reflete o provedor ativo",
+  "risk": {
+    "level": "L2",
+    "reasons": [
+      "A mudanca atravessa cache/persistencia/credencial ou o modal que grava configuracao",
+      "A task pode alterar o que o operador ve e o que fica gravado no estudo"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.2-01",
+        "given": "Dado o comportamento declarado: os rotulos de texto/numeros reais vem do catalogo ativo e sao recalculados a cada pagina, sem foto do boot",
+        "when": "Quando `bun test` é executado",
+        "then": "Então a suite passa com as assercoes do requisito FR-002"
+      },
+      {
+        "id": "SCENARIO-1.2-02",
+        "given": "Dado o comportamento declarado: os rotulos de texto/numeros reais vem do catalogo ativo e sao recalculados a cada pagina, sem foto do boot",
+        "when": "Quando `bun run check` é executado",
+        "then": "Então o typecheck estrito passa"
+      },
+      {
+        "id": "SCENARIO-1.2-03",
+        "given": "Dado o comportamento declarado: os rotulos de texto/numeros reais vem do catalogo ativo e sao recalculados a cada pagina, sem foto do boot",
+        "when": "Quando `bunx eslint . && bunx prettier --check .` é executado",
+        "then": "Então o lint e a formatacao passam"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/index.ts",
+      "src/infrastructure/http/ui/routes.tsx",
+      "tests/providers.test.ts",
+      "tests/ui.test.ts"
+    ],
+    "affected_components": [
+      "provider-catalog"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "Não quebrar retrocompatibilidade nem expor dados sensíveis",
+      "Nenhum alert/confirm nativo em pagina alguma",
+      "Manter cobertura de testes existente"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun test",
+      "bun run check",
+      "bunx eslint .",
+      "bunx prettier --check ."
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/index.ts",
+      "src/infrastructure/http/ui/routes.tsx",
+      "tests/providers.test.ts",
+      "tests/ui.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env*"
+    ],
+    "out_of_scope": [
+      "Arquivos fora de: src/index.ts, src/infrastructure/http/ui/routes.tsx, tests/providers.test.ts, tests/ui.test.ts"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 50000,
+    "max_cost_usd": 0.5,
+    "max_duration_minutes": 15,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 30,
+    "max_tool_calls": 60,
+    "max_shell_executions": 15
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

@@ -246,6 +246,8 @@ export async function evaluateIdea(idea: Idea, decider: DeciderClient, cfg: Stud
 
   return {
     id: Bun.randomUUIDv7(),
+    // Data da geracao/avaliacao: sai com a ideia, e o `dados.json` e a UI a mostram.
+    generatedAt: new Date().toISOString(),
     name: idea.name,
     sector: idea.sector,
     description: idea.description,

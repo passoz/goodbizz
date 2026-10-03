@@ -22,6 +22,8 @@ export interface ProviderProbeResult {
   /** Status HTTP quando houve resposta; `null` quando nem chegou a falar com o provedor. */
   status: number | null;
   detail: string;
+  /** Ids dos modelos quando o provedor os expoe (`GET {base}/models`); a UI vira dropdown. */
+  models?: string[];
 }
 
 const DEFAULT_TIMEOUT_MS = 10_000;
@@ -69,6 +71,37 @@ function authHint(status: number, detail: string): string {
   return `a chave foi recusada (HTTP ${status}): ${detail}`;
 }
 
+/** Extrai os ids de `{"data":[{...}]}` do catálogo OpenAI-compatível; nada utilizavel vira null. */
+function parseModelIds(body: unknown): string[] | null {
+  if (body === null || typeof body !== "object" || Array.isArray(body)) return null;
+  const data = (body as Record<string, unknown>)["data"];
+  if (!Array.isArray(data)) return null;
+  return data
+    .map((entry) =>
+      entry !== null && typeof entry === "object" && !Array.isArray(entry)
+        ? (entry as Record<string, unknown>)["id"]
+        : undefined,
+    )
+    .filter((id): id is string => typeof id === "string" && id.trim().length > 0);
+}
+
+/**
+ * Catalogo de modelos do gateway, quando ele expoe `GET {base}/models` (o System One puro nao tem
+ * GET). Best-effort: qualquer falha aqui e so "sem lista", nunca muda o veredito do teste.
+ */
+async function tryModelCatalog(base: string, key: string, timeoutMs: number): Promise<string[] | null> {
+  const headers: Record<string, string> = { "User-Agent": "goodbizz/2.0" };
+  if (key.length > 0) headers["Authorization"] = `Bearer ${key}`;
+  try {
+    const response = await fetch(`${base}/models`, { headers, signal: AbortSignal.timeout(timeoutMs) });
+    if (!response.ok) return null;
+    const ids = parseModelIds(await response.json());
+    return ids === null || ids.length === 0 ? null : ids;
+  } catch {
+    return null;
+  }
+}
+
 async function probeLlm(input: ProviderProbeInput, timeoutMs: number): Promise<ProviderProbeResult> {
   const base = baseUrl(input.url);
   const key = input.apiKey.trim();
@@ -81,23 +114,20 @@ async function probeLlm(input: ProviderProbeInput, timeoutMs: number): Promise<P
     return unreachable(error);
   }
   if (models.ok) {
-    let count: number | null = null;
+    let ids: string[] | null = null;
     try {
-      const body: unknown = await models.json();
-      if (body !== null && typeof body === "object" && !Array.isArray(body)) {
-        const data = (body as Record<string, unknown>)["data"];
-        if (Array.isArray(data)) count = data.length;
-      }
+      ids = parseModelIds(await models.json());
     } catch {
-      count = null;
+      ids = null;
     }
     return {
       ok: true,
       status: models.status,
       detail:
-        count === null
+        ids === null
           ? "o provedor respondeu ao catálogo de modelos"
-          : `o provedor respondeu com ${count} modelo(s)`,
+          : `o provedor respondeu com ${ids.length} modelo(s)`,
+      ...(ids === null || ids.length === 0 ? {} : { models: ids }),
     };
   }
   if (models.status === 401 || models.status === 403) {
@@ -204,7 +234,15 @@ async function probeDecider(input: ProviderProbeInput, timeoutMs: number): Promi
       detail: `a resposta não segue o contrato System One: ${scrub(String(error))}`,
     };
   }
-  return { ok: true, status: response.status, detail: "o decisor respondeu à pergunta de teste" };
+  // Gateway System One costuma expor modelos em `GET {base}/models` (o contrato so tem POST):
+  // tenta o catalogo, e se houver, o "Testar" da tela vira dropdown tambem para o decisor.
+  const catalog = await tryModelCatalog(baseUrl(input.url), key, timeoutMs);
+  return {
+    ok: true,
+    status: response.status,
+    detail: "o decisor respondeu à pergunta de teste",
+    ...(catalog === null ? {} : { models: catalog }),
+  };
 }
 
 /** Fala com o provedor e devolve o veredito; nunca lanca por falha de rede. */

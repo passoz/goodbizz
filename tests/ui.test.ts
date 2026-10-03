@@ -186,12 +186,13 @@ describe("paginas da interface", () => {
       service: harness.service,
       sessionSecret: loadEnv().SESSION_SECRET,
       production: false,
-      providers: { llm: "texto real (deepseek-flash)", decider: "numeros simulados" },
+      providers: () => ({ llm: "texto real (deepseek-flash)", decider: "numeros simulados" }),
     });
     const body = await (await app.request("/new")).text();
     expect(body).toContain('id="providers"');
     expect(body).toContain("texto real (deepseek-flash)");
     expect(body).toContain("numeros simulados");
+    // O rotulo vem da configuracao atual do servico, nao da foto do boot.
     // Nenhuma chave ou URL pode aparecer na pagina.
     expect(body).not.toContain("sk-");
     expect(body).not.toContain("vps.");
@@ -726,6 +727,68 @@ describe("configuracao dos provedores", () => {
     expect(profile).toContain('kind: picker.getAttribute("data-kind")');
     expect(profile).not.toContain("select.getAttribute");
   });
+
+  test("o modal segue a ordem nome, URL, chave e modelo, com o modelo em dropdown", async () => {
+    const body = await (await harness.app.request("/settings")).text();
+    // A ordem pedida pelo operador: o modelo vem depois da chave (a chave e o que libera a lista).
+    const position = (needle: string) => body.indexOf(needle);
+    expect(position('for="provider-name"')).toBeLessThan(position('for="provider-url"'));
+    expect(position('for="provider-url"')).toBeLessThan(position('for="provider-key"'));
+    expect(position('for="provider-key"')).toBeLessThan(position('for="provider-model"'));
+    // O campo Modelo ganha o select que o Testar preenche; o texto continua o caminho manual.
+    expect(body).toContain('id="provider-model-select"');
+    expect(body).toContain("teste a conexão para listar os modelos do provedor");
+  });
+
+  test("o testar vira dropdown quando o provedor devolve modelos", async () => {
+    const body = await (await harness.app.request("/settings")).text();
+    // O veredito carrega `models`; o script troca o texto pela lista e volta ao texto em "outro".
+    expect(body).toContain("Array.isArray(body.models)");
+    expect(body).toContain("showModels(body.models)");
+    expect(body).toContain("__custom");
+    // O que for escolhido no dropdown entra no corpo do salvar/testar.
+    expect(body).toContain("model: currentModel()");
+  });
+
+  test("o testar do provedor salvo manda o id para a sonda usar a chave guardada", async () => {
+    const body = await (await harness.app.request("/settings")).text();
+    // A tela nunca mostra a chave em claro: no editar, o id viaja no corpo e a sonda le a guardada.
+    expect(body).toContain('body.id = field("id").value');
+  });
+
+  test("salvar a edicao nao manda kind no PATCH", async () => {
+    const body = await (await harness.app.request("/settings")).text();
+    // O schema estrito do PATCH recusa `kind`; a edicao mandava o corpo inteiro e tomava 422.
+    expect(body).toContain("{ name: input.name, url: input.url, model: input.model, apiKey: input.apiKey }");
+  });
+
+  test("excluir provedor confirma em dialogo e nunca em alert ou confirm nativos", async () => {
+    const body = await (await harness.app.request("/settings")).text();
+    expect(body).toContain('id="provider-delete-modal"');
+    expect(body).toContain('id="provider-delete-confirm"');
+    expect(body).toContain('id="provider-delete-cancel"');
+    // O app nao usa dialogo nativo em lugar nenhum.
+    expect(body).not.toContain("window.alert");
+    expect(body).not.toContain("window.confirm");
+    // Escolher sem provedor ou falhar a exclusao vira aviso na propria secao.
+    expect(body).toContain("data-notice");
+  });
+
+  test("o rotulo dos provedores e recalculado a cada pagina", async () => {
+    let calls = 0;
+    const app = buildUiApp({
+      service: harness.service,
+      sessionSecret: loadEnv().SESSION_SECRET,
+      production: false,
+      providers: () => {
+        calls += 1;
+        return { llm: `texto real (modelo-${calls})`, decider: "numeros simulados" };
+      },
+    });
+    // Uma foto tirada no boot mostraria o mesmo rotulo nas duas paginas.
+    expect(await (await app.request("/new")).text()).toContain("texto real (modelo-1)");
+    expect(await (await app.request("/new")).text()).toContain("texto real (modelo-2)");
+  });
 });
 
 describe("gestao de ideias na pagina do estudo", () => {
@@ -810,6 +873,25 @@ describe("gestao de ideias na pagina do estudo", () => {
     const form = html.match(/<form[^>]*data-add-ideas[^>]*>[\s\S]*?<\/form>/)?.[0] ?? "";
     expect(form).toContain('name="_csrf"');
     expect(form).toContain("value=");
+  });
+
+  test("a linha do ranking mostra a data de geracao da ideia", async () => {
+    const study = await harness.service.create(resolveStudyConfig({ niche: "padarias", mock: true }));
+    const evaluation = { ...makeEvaluation(), generatedAt: "2026-09-25T14:32:00.000Z" };
+    await harness.repo.saveEvaluations(study.id, [evaluation], makeSummary(evaluation));
+
+    const html = await (await harness.app.request(`/studies/${study.id}`)).text();
+    // Data pequena na propria celula do nome: nao nasce coluna nova nem a linha muda de forma.
+    expect(html).toContain('class="idea-date"');
+    expect(html).toContain("25/09/2026");
+    expect(html).toContain("data da geração desta ideia");
+
+    // Ideia sem data (anterior a coluna) nao ganha o rotulo.
+    const plainStudy = await harness.service.create(resolveStudyConfig({ niche: "padarias", mock: true }));
+    const plainEvaluation = makeEvaluation();
+    await harness.repo.saveEvaluations(plainStudy.id, [plainEvaluation], makeSummary(plainEvaluation));
+    const plainHtml = await (await harness.app.request(`/studies/${plainStudy.id}`)).text();
+    expect(plainHtml).not.toContain('class="idea-date"');
   });
 });
 

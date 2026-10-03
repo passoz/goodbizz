@@ -228,6 +228,63 @@ describe("teste de provedor (ping/ready)", () => {
     expect(body.detail).toContain("2 modelo");
   });
 
+  test("testar provedor salvo usa a chave guardada quando a tela devolve o campo vazio", async () => {
+    mode = "openai";
+    const created = await jsonRequest("/settings/providers", "POST", {
+      name: "Salvo",
+      kind: "llm",
+      url: providerBase,
+      model: "modelo-1",
+      apiKey: "chave-boa",
+    });
+    const id = ((await created.json()) as { profiles: Array<{ id: string }> }).profiles[0]?.id ?? "";
+
+    // O editar da UI manda `apiKey` vazio (a tela nunca viu a chave em claro) + o `id`.
+    const response = await jsonRequest("/settings/test", "POST", {
+      kind: "llm",
+      id,
+      url: providerBase,
+      model: "modelo-1",
+      apiKey: "",
+    });
+    const body = (await response.json()) as { ok: boolean; models?: string[] };
+    expect(body.ok).toBe(true);
+    // A lista de modelos vem com o veredito: e ela que o modal transforma em dropdown.
+    expect(body.models).toEqual(["modelo-1", "modelo-2"]);
+
+    // Sem `id` e sem chave, a mesma URL falha: a chave guardada so entra quando o provedor e nomeado.
+    const anonymous = await jsonRequest("/settings/test", "POST", {
+      kind: "llm",
+      url: providerBase,
+      model: "modelo-1",
+      apiKey: "",
+    });
+    expect(((await anonymous.json()) as { ok: boolean }).ok).toBe(false);
+  });
+
+  test("editar um provedor aceita o corpo sem kind e recusa kind", async () => {
+    const created = await jsonRequest("/settings/providers", "POST", {
+      name: "Editavel",
+      kind: "llm",
+      url: "https://editavel.test/v1",
+      model: "m1",
+      apiKey: "k",
+    });
+    const id = ((await created.json()) as { profiles: Array<{ id: string }> }).profiles[0]?.id ?? "";
+
+    const edited = await jsonRequest(`/settings/providers/${id}`, "PATCH", {
+      name: "Editavel",
+      url: "https://editavel2.test/v1",
+      model: "m2",
+      apiKey: "",
+    });
+    expect(edited.status).toBe(200);
+
+    // O tipo e imutavel: o schema estrito continua recusando `kind` no PATCH (a UI nao o envia).
+    const withKind = await jsonRequest(`/settings/providers/${id}`, "PATCH", { kind: "llm", model: "m3" });
+    expect(withKind.status).toBe(422);
+  });
+
   test("chave recusada não é sucesso", async () => {
     mode = "openai";
     const response = await jsonRequest("/settings/test", "POST", {

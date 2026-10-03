@@ -28,7 +28,7 @@ import { createLlmClient } from "./infrastructure/llm.ts";
 import { startService } from "./index.ts";
 import type { ArtifactFile } from "./domain/ports.ts";
 import type { StudyConfig } from "./domain/types.ts";
-import { effectiveProviders, type ProviderConfig } from "./config/providers.ts";
+import { cacheFingerprint, effectiveProviders, type ProviderConfig } from "./config/providers.ts";
 
 /** Migrations ship next to the sources (`drizzle/`) and are resolved from the module, not the cwd. */
 const MIGRATIONS_DIR = fileURLToPath(new URL("../drizzle", import.meta.url));
@@ -361,6 +361,9 @@ async function runGenerate(argv: string[]): Promise<number> {
     mock: flags.has("mock"),
     mockLlm: flags.has("mock-llm"),
     mockDecider: flags.has("mock-decider"),
+    // A impressao dos provedores efetivos entra nas chaves de cache do --saida: trocar de
+    // provedor nao serve a resposta gravada pelo anterior.
+    providerFingerprint: cacheFingerprint(settings),
     pdf: flags.has("pdf"),
     concurrency: parseIntFlag(values, "concurrency", 8),
     timeout: parseFloatFlag(values, "timeout", 60),

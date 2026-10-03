@@ -136,6 +136,25 @@ describe("generateStudy", () => {
     handle.sqlite.close();
   });
 
+  test("trocar de provedor invalida o cache; o mesmo provedor continua retomando", async () => {
+    const { handle, cache } = harness();
+    const deps = { llm: new LlmMock(), decider: new DeciderMock(), cache, logger: silentLogger() };
+
+    await generateStudy(config({ cacheSeed: "mesmo-estudo", providerFingerprint: "urlA|m|kA" }), deps);
+
+    // O estudo reexecutado com OUTRO provedor ativo nao pode receber a resposta gravada pelo
+    // anterior: a impressao entra em toda chave de cache.
+    const beforeSwitch = cache.hits;
+    await generateStudy(config({ cacheSeed: "mesmo-estudo", providerFingerprint: "urlB|m|kB" }), deps);
+    expect(cache.hits - beforeSwitch).toBe(0);
+
+    // Reexecutar no MESMO provedor novo retoma o que ele ja produziu.
+    const beforeRerun = cache.hits;
+    await generateStudy(config({ cacheSeed: "mesmo-estudo", providerFingerprint: "urlB|m|kB" }), deps);
+    expect(cache.hits - beforeRerun).toBeGreaterThan(0);
+    handle.sqlite.close();
+  });
+
   test("reports guardrail issues when the generated document breaks the contract", async () => {
     const { handle, cache } = harness();
     const broken: LlmClient = {

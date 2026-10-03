@@ -38,6 +38,43 @@ export function effectiveProviders(env: Env, settings: ProviderSettings): Provid
   };
 }
 
+/**
+ * Impressão estável da configuração efetiva de provedores. Entra nas chaves do cache de respostas:
+ * trocar de perfil ativo (ou editar URL/modelo/chave) muda a impressão, e as respostas gravadas
+ * pelo provedor anterior deixam de ser servidas — estudar de novo com o provedor novo gera de
+ * verdade no provedor novo.
+ */
+export function cacheFingerprint(cfg: ProviderConfig): string {
+  return [
+    cfg.llmBaseUrl,
+    cfg.llmModel,
+    cfg.llmApiKey,
+    cfg.deciderUrl,
+    cfg.deciderModel,
+    cfg.deciderApiKey,
+  ].join("|");
+}
+
+/**
+ * Rótulos curtos e sem segredo do que roda de verdade agora (perfil ativo sobre o ambiente),
+ * por função. A página os calcula a cada leitura: mudar o ativo em /settings vale no /new sem
+ * reiniciar o serviço.
+ */
+export function providerLabels(env: Env, settings: ProviderSettings): { llm: string; decider: string } {
+  const mockLlm = env.GOODBIZZ_MOCK || env.GOODBIZZ_MOCK_LLM;
+  const mockDecider = env.GOODBIZZ_MOCK || env.GOODBIZZ_MOCK_DECIDER;
+  const llm = activeProfile(settings, "llm");
+  const decider = activeProfile(settings, "decider");
+  return {
+    llm: mockLlm
+      ? "texto simulado"
+      : `texto real (${(llm?.model || env.LLM_API_MODEL).trim() || "não definido"})`,
+    decider: mockDecider
+      ? "números simulados"
+      : `numeros reais (${(decider?.model || env.DECISION_API_MODEL).trim() || "não definido"})`,
+  };
+}
+
 /** `sk-1234567890abcd` -> `sk-…abcd`; vazio continua vazio (a UI mostra "não definido"). */
 export function maskSecret(value: string): string {
   const clean = value.trim();

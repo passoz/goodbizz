@@ -1,0 +1,59 @@
+{
+  "work_id": "0013",
+  "requirements": [
+    {
+      "id": "FR-001",
+      "title": "Trocar de provedor invalida as respostas gravadas pelo anterior",
+      "acceptance_criteria": [
+        "bun test tests/generate-study.test.ts — trocar a impressao de provedor nao serve a resposta em cache; o mesmo provedor continua retomando",
+        "bun test tests/providers.test.ts — a impressao muda quando qualquer campo efetivo muda",
+        "bun run check — o typecheck estrito passa"
+      ]
+    },
+    {
+      "id": "FR-002",
+      "title": "O rotulo do servico reflete o provedor ativo",
+      "acceptance_criteria": [
+        "bun test tests/providers.test.ts — o rotulo nomeia o modelo do perfil ativo, sem segredo",
+        "bun test tests/ui.test.ts — o rotulo e recalculado a cada pagina",
+        "bun run check — o typecheck estrito passa"
+      ]
+    },
+    {
+      "id": "FR-003",
+      "title": "O Testar devolve a lista de modelos",
+      "acceptance_criteria": [
+        "bun test tests/settings-api.test.ts — o veredito carrega `models` quando o provedor expoe o catalogo",
+        "bun test tests/ui.test.ts — o campo Modelo vira dropdown com a lista devolvida",
+        "bun run check — o typecheck estrito passa"
+      ]
+    },
+    {
+      "id": "FR-004",
+      "title": "Editar e excluir provedor cabem na pagina",
+      "acceptance_criteria": [
+        "bun test tests/settings-api.test.ts — a sonda usa a chave guardada quando o id viaja e o PATCH aceita o corpo sem kind",
+        "bun test tests/ui.test.ts — ordem nome, URL, chave, modelo; exclusao em dialogo e zero alert nativo",
+        "bun run check — o typecheck estrito passa"
+      ]
+    },
+    {
+      "id": "FR-005",
+      "title": "A ideia carrega a data de geracao",
+      "acceptance_criteria": [
+        "bun test tests/evaluate.test.ts — a avaliacao sai com a data ISO",
+        "bun test tests/repositories.test.ts — a coluna generated_at sobrevive a gravacao e a leitura, sem entrar no payload_json",
+        "bun run check — o typecheck estrito passa"
+      ]
+    },
+    {
+      "id": "FR-006",
+      "title": "O plano e a lista mostram a data",
+      "acceptance_criteria": [
+        "bun test tests/artifacts.test.ts — o README do plano fecha com o rodape `Gerada em`",
+        "bun test tests/ui.test.ts — a linha do ranking mostra a data pequena, sem coluna nova",
+        "bun run check — o typecheck estrito passa"
+      ]
+    }
+  ]
+}

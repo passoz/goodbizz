@@ -1,0 +1,96 @@
+{
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun test"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0013/1.4-ac-1.log",
+      "log_sha256": "0dbe44d6a73f267367950850036ab8d714e74b7b33feb7fe6f73879ff3c8008b",
+      "recorded_at": "2026-10-03T21:31:05.550Z"
+    },
+    "AC-2": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun run check"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0013/1.4-ac-2.log",
+      "log_sha256": "cdb3b4460699e974e586ba639577fcc7be2ef9f4ed4a9f7ad82d05c7d1c1d34f",
+      "recorded_at": "2026-10-03T21:31:07.930Z"
+    },
+    "AC-3": {
+      "command": [
+        "bash",
+        "-lc",
+        "bunx eslint . && bunx prettier --check ."
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0013/1.4-ac-3.log",
+      "log_sha256": "ee6c5690516ec0d6a3f3a1a3e921af81bf6a6ce6a2f198396e4ff5dd679a06b1",
+      "recorded_at": "2026-10-03T21:31:10.715Z"
+    }
+  },
+  "baseline_implementation": {
+    "src/infrastructure/http/ui/pages.tsx": {
+      "exists": true,
+      "sha256": "8b7a59676031088a339b8bc67cf978b6b5143559755ad603f7061bba3ec9427e"
+    },
+    "src/infrastructure/http/ui/layout.tsx": {
+      "exists": true,
+      "sha256": "258100fee69e297a2d0219bbde7bf75f28998ea5e63ff42f9e61e0c7c25f6fbd"
+    }
+  },
+  "baseline_tests": {
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "001c80a955b54f0c667918173cef17bf1a72a2a0ab59cde17864ed4faf938734"
+    }
+  },
+  "created_at": "2026-10-03T21:30:48.711Z",
+  "green_expect": null,
+  "green_implementation": {
+    "src/infrastructure/http/ui/pages.tsx": {
+      "exists": true,
+      "sha256": "55d24410b2f6e67c4ca273aff550922ec491c7cd4f069a97fcaf28cb98998fff"
+    },
+    "src/infrastructure/http/ui/layout.tsx": {
+      "exists": true,
+      "sha256": "fcf0083bea139cbc2a8dc936e64c6b8ebe51dfeba2fe157fd3929783a36512c5"
+    }
+  },
+  "green_tests": {
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "dccd7af95d0552e1f54be26dd4c7481c374653e9eb7a06140244b78f2f2ab227"
+    }
+  },
+  "implementation_files": [
+    "src/infrastructure/http/ui/pages.tsx",
+    "src/infrastructure/http/ui/layout.tsx"
+  ],
+  "red_command": [
+    "bun",
+    "test"
+  ],
+  "red_expect": "excluir provedor confirma em dialogo",
+  "red_tests": {
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "dccd7af95d0552e1f54be26dd4c7481c374653e9eb7a06140244b78f2f2ab227"
+    }
+  },
+  "task": "1.4",
+  "test_files": [
+    "tests/ui.test.ts"
+  ]
+}

@@ -1,0 +1,127 @@
+{
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun test"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0013/1.6-ac-1.log",
+      "log_sha256": "00c6752b7be24b318b945367ac72267b499aa3d588c681f19f4a007f40fe5dea",
+      "recorded_at": "2026-10-03T21:31:57.939Z"
+    },
+    "AC-2": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun run check"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0013/1.6-ac-2.log",
+      "log_sha256": "cc4799a8aaff31eca35224144aa24ca9a635f80ad8a6ce9fe076d90f51acb7e1",
+      "recorded_at": "2026-10-03T21:32:00.401Z"
+    },
+    "AC-3": {
+      "command": [
+        "bash",
+        "-lc",
+        "bunx eslint . && bunx prettier --check ."
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0013/1.6-ac-3.log",
+      "log_sha256": "fb30706d4bc098d561a90c1f489119a5855da15719d51f63ebd6f8378adbf51b",
+      "recorded_at": "2026-10-03T21:32:03.345Z"
+    }
+  },
+  "baseline_implementation": {
+    "src/application/artifacts.ts": {
+      "exists": true,
+      "sha256": "ddea79520fd001eb0bd6170e72bb4b3e0474a41f728786584e8a5a726e568061"
+    },
+    "src/infrastructure/http/ui/pages.tsx": {
+      "exists": true,
+      "sha256": "8b7a59676031088a339b8bc67cf978b6b5143559755ad603f7061bba3ec9427e"
+    },
+    "src/infrastructure/http/ui/layout.tsx": {
+      "exists": true,
+      "sha256": "258100fee69e297a2d0219bbde7bf75f28998ea5e63ff42f9e61e0c7c25f6fbd"
+    },
+    "README.md": {
+      "exists": true,
+      "sha256": "7336d5909803ecf92ed95b596eeca6df1ccd140766373ca92f0044be2bb00443"
+    }
+  },
+  "baseline_tests": {
+    "tests/artifacts.test.ts": {
+      "exists": true,
+      "sha256": "1cab034ef9b203ada2a57a0269319516ccfaa4c817348cfd0641576c398d0640"
+    },
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "001c80a955b54f0c667918173cef17bf1a72a2a0ab59cde17864ed4faf938734"
+    }
+  },
+  "created_at": "2026-10-03T21:31:41.169Z",
+  "green_expect": null,
+  "green_implementation": {
+    "src/application/artifacts.ts": {
+      "exists": true,
+      "sha256": "abdcb031461b1310495bedde1a54ffbb1837104e78a49fcb64cc311c917f223e"
+    },
+    "src/infrastructure/http/ui/pages.tsx": {
+      "exists": true,
+      "sha256": "55d24410b2f6e67c4ca273aff550922ec491c7cd4f069a97fcaf28cb98998fff"
+    },
+    "src/infrastructure/http/ui/layout.tsx": {
+      "exists": true,
+      "sha256": "fcf0083bea139cbc2a8dc936e64c6b8ebe51dfeba2fe157fd3929783a36512c5"
+    },
+    "README.md": {
+      "exists": true,
+      "sha256": "1b508b1ba681a84b05de782a96dbbfd46ba7e4660ffaac56f0425373d35ebdbc"
+    }
+  },
+  "green_tests": {
+    "tests/artifacts.test.ts": {
+      "exists": true,
+      "sha256": "69063b4ca196359539d2d0f0c276a6f31a7b7d12ead1877edb045a7f74aeb8a2"
+    },
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "dccd7af95d0552e1f54be26dd4c7481c374653e9eb7a06140244b78f2f2ab227"
+    }
+  },
+  "implementation_files": [
+    "src/application/artifacts.ts",
+    "src/infrastructure/http/ui/pages.tsx",
+    "src/infrastructure/http/ui/layout.tsx",
+    "README.md"
+  ],
+  "red_command": [
+    "bun",
+    "test"
+  ],
+  "red_expect": "o plano assina a data de geracao",
+  "red_tests": {
+    "tests/artifacts.test.ts": {
+      "exists": true,
+      "sha256": "69063b4ca196359539d2d0f0c276a6f31a7b7d12ead1877edb045a7f74aeb8a2"
+    },
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "dccd7af95d0552e1f54be26dd4c7481c374653e9eb7a06140244b78f2f2ab227"
+    }
+  },
+  "task": "1.6",
+  "test_files": [
+    "tests/artifacts.test.ts",
+    "tests/ui.test.ts"
+  ]
+}

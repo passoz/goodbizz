@@ -24,8 +24,8 @@ export interface UiDeps {
   service: StudyService;
   sessionSecret: string;
   production: boolean;
-  /** Como este servico esta configurado, em texto curto e sem segredo. */
-  providers?: { llm: string; decider: string };
+  /** Como este servico esta configurado, em texto curto e sem segredo; refeito a cada pagina. */
+  providers?: () => { llm: string; decider: string };
   /** Diagnostico das recusas de CSRF (sinais do cliente e presenca do token). */
   logger?: { warn(message: string, meta?: Record<string, unknown>): void };
 }
@@ -80,7 +80,7 @@ export function buildUiApp(deps: UiDeps): Hono {
       <StudyForm
         token={c.get("csrfToken")}
         defaults={{ monthlyTicket: 300, numIdeas: 8 }}
-        providers={deps.providers}
+        providers={deps.providers?.()}
       />,
       { title: "GoodBizz — novo estudo" },
     ),

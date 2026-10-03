@@ -1,0 +1,232 @@
+{
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun test"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0013/1.1-ac-1.log",
+      "log_sha256": "5437af881ecc19a94e9f58bed5b432e3c02821c0b11da6c0eab1771d86953acc",
+      "recorded_at": "2026-10-03T21:28:17.610Z"
+    },
+    "AC-2": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun run check"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0013/1.1-ac-2.log",
+      "log_sha256": "14e80fc0d90baf899a085cd387556ddbe2333be61799b1bef4b4892cff80e6d3",
+      "recorded_at": "2026-10-03T21:28:20.174Z"
+    },
+    "AC-3": {
+      "command": [
+        "bash",
+        "-lc",
+        "bunx eslint . && bunx prettier --check ."
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0013/1.1-ac-3.log",
+      "log_sha256": "a25d6e64e3fb185ea68c96faa47305391fe8957027dd3df3018a115ae9aed736",
+      "recorded_at": "2026-10-03T21:28:23.169Z"
+    }
+  },
+  "baseline_implementation": {
+    "src/config/providers.ts": {
+      "exists": true,
+      "sha256": "1795716abc864c51825d0ad66379e761bd8dc9ab218d6c124206411fc41c16d0"
+    },
+    "src/domain/types.ts": {
+      "exists": true,
+      "sha256": "a56badc077028dbd146b9d2d4167a35429e6e6a7acf498211386b3dd0736fe8e"
+    },
+    "src/config/runtime.ts": {
+      "exists": true,
+      "sha256": "17a71a56816a02059d9f2c2f278d731ce791549ce873d5cfe4ca54fdcb8db45a"
+    },
+    "src/application/generate-study.ts": {
+      "exists": true,
+      "sha256": "9ef2f34fe786f90b859a775b9593498397c9a3891a5d1e02d17694d203c1c116"
+    },
+    "src/application/study-service.ts": {
+      "exists": true,
+      "sha256": "1fcb269cc435c976b653d203a8298b1cdcc2db8d859078f20901245c86c54d80"
+    },
+    "src/cli.ts": {
+      "exists": true,
+      "sha256": "be22a1694f674859fc4c7eea7729cb1fc7761ef8e4feb76d018b3479bbcff105"
+    },
+    "src/index.ts": {
+      "exists": true,
+      "sha256": "1577c0c26450e69526004d728d1cc6702f06dd40719d90dde4db55db530538e4"
+    }
+  },
+  "baseline_tests": {
+    "tests/generate-study.test.ts": {
+      "exists": true,
+      "sha256": "0cafd42f70e49751f601639ee259d869f2dae52659a4e79ccb03e9d73ea6c81a"
+    },
+    "tests/providers.test.ts": {
+      "exists": true,
+      "sha256": "cd3441e9e0ef71f37491fdd8b645d306a214c9de81f073836d2708c5c881fa1b"
+    },
+    "tests/decider.test.ts": {
+      "exists": true,
+      "sha256": "5bd47578c018ecb06126c2a002104e290f159d35802b25348886ee6d0961be05"
+    },
+    "tests/artifacts.test.ts": {
+      "exists": true,
+      "sha256": "1cab034ef9b203ada2a57a0269319516ccfaa4c817348cfd0641576c398d0640"
+    },
+    "tests/evaluate.test.ts": {
+      "exists": true,
+      "sha256": "e148e14265cbb19b4f82f939932b03bf693c8babd6f0919ee01b168cb560da28"
+    },
+    "tests/generation.test.ts": {
+      "exists": true,
+      "sha256": "075660d30a0060508d89d6b538637828891ecf9ddc4e20989565bbd9d3b6a401"
+    },
+    "tests/llm.test.ts": {
+      "exists": true,
+      "sha256": "4f74f9a25304ec313d1d824e83951bc57e7295b1aa144f1b308fae61a2ded6a4"
+    },
+    "tests/reports.test.ts": {
+      "exists": true,
+      "sha256": "5eb9a5d9fc4e783852a72fdc131b234ef34fe6e73bb1fd3ddef93ba87e45b566"
+    }
+  },
+  "created_at": "2026-10-03T21:28:00.549Z",
+  "green_expect": null,
+  "green_implementation": {
+    "src/config/providers.ts": {
+      "exists": true,
+      "sha256": "6c78a3e1c59c136a216d2c1470cdbb048222e452206f44ad598e750ec0b44ca3"
+    },
+    "src/domain/types.ts": {
+      "exists": true,
+      "sha256": "5431f9432ef76dd0ad216d54fb556e9a2f79e21d350820c4e205c9188e008d3b"
+    },
+    "src/config/runtime.ts": {
+      "exists": true,
+      "sha256": "9f1ef908163176df25ee9e26d14d8e8ddcf02afee749bafd5ecc0641bd138cb2"
+    },
+    "src/application/generate-study.ts": {
+      "exists": true,
+      "sha256": "63b750a4ea4ff4bd7bec28069c9c1f631afef7dda5b41a5b05b48bbd31ee3b85"
+    },
+    "src/application/study-service.ts": {
+      "exists": true,
+      "sha256": "969ef720ead6c79263907494efc454277ffd8ef8372634ef8ed5f2df8ddb9a38"
+    },
+    "src/cli.ts": {
+      "exists": true,
+      "sha256": "1002ad25dd15f36a98d5d5b3fee9d44314ae6aa23134b494940bb68acd3a8b87"
+    },
+    "src/index.ts": {
+      "exists": true,
+      "sha256": "a7246f60a0439ad9727cd73eecc57e623c2748f670832f0a9c11130d230a2f81"
+    }
+  },
+  "green_tests": {
+    "tests/generate-study.test.ts": {
+      "exists": true,
+      "sha256": "1e02a1499a7dcf63c5955fc884ba9ff9288692e02ad80be5665dbc22dc077fef"
+    },
+    "tests/providers.test.ts": {
+      "exists": true,
+      "sha256": "f42c787bc557e24b3649cafe176cf1d3a9056459a3d024146580db2a002a708a"
+    },
+    "tests/decider.test.ts": {
+      "exists": true,
+      "sha256": "926a22073e760edd96e3815ead7daba441cac4ff8dc91f4acd511b255dd0d0c7"
+    },
+    "tests/artifacts.test.ts": {
+      "exists": true,
+      "sha256": "69063b4ca196359539d2d0f0c276a6f31a7b7d12ead1877edb045a7f74aeb8a2"
+    },
+    "tests/evaluate.test.ts": {
+      "exists": true,
+      "sha256": "8f0b7a8a8920a5522a4f9d9e1232cda93193429d385aa0be3a181ce5ed4e10e9"
+    },
+    "tests/generation.test.ts": {
+      "exists": true,
+      "sha256": "f0a1bf3aef0c2071fd75d211381ed880ae576e0f573ba325ce66298be8a69360"
+    },
+    "tests/llm.test.ts": {
+      "exists": true,
+      "sha256": "3d780cda1b08961dbc349ae3d59251685ca62a77f2755f15f386c735417afb84"
+    },
+    "tests/reports.test.ts": {
+      "exists": true,
+      "sha256": "7d737519d0c3e0eb49a76693c0258c9f9c8251e44f5573a963b33e4ff0181fc0"
+    }
+  },
+  "implementation_files": [
+    "src/config/providers.ts",
+    "src/domain/types.ts",
+    "src/config/runtime.ts",
+    "src/application/generate-study.ts",
+    "src/application/study-service.ts",
+    "src/cli.ts",
+    "src/index.ts"
+  ],
+  "red_command": [
+    "bun",
+    "test"
+  ],
+  "red_expect": "trocar de provedor invalida o cache",
+  "red_tests": {
+    "tests/generate-study.test.ts": {
+      "exists": true,
+      "sha256": "1e02a1499a7dcf63c5955fc884ba9ff9288692e02ad80be5665dbc22dc077fef"
+    },
+    "tests/providers.test.ts": {
+      "exists": true,
+      "sha256": "f42c787bc557e24b3649cafe176cf1d3a9056459a3d024146580db2a002a708a"
+    },
+    "tests/decider.test.ts": {
+      "exists": true,
+      "sha256": "926a22073e760edd96e3815ead7daba441cac4ff8dc91f4acd511b255dd0d0c7"
+    },
+    "tests/artifacts.test.ts": {
+      "exists": true,
+      "sha256": "69063b4ca196359539d2d0f0c276a6f31a7b7d12ead1877edb045a7f74aeb8a2"
+    },
+    "tests/evaluate.test.ts": {
+      "exists": true,
+      "sha256": "8f0b7a8a8920a5522a4f9d9e1232cda93193429d385aa0be3a181ce5ed4e10e9"
+    },
+    "tests/generation.test.ts": {
+      "exists": true,
+      "sha256": "f0a1bf3aef0c2071fd75d211381ed880ae576e0f573ba325ce66298be8a69360"
+    },
+    "tests/llm.test.ts": {
+      "exists": true,
+      "sha256": "3d780cda1b08961dbc349ae3d59251685ca62a77f2755f15f386c735417afb84"
+    },
+    "tests/reports.test.ts": {
+      "exists": true,
+      "sha256": "7d737519d0c3e0eb49a76693c0258c9f9c8251e44f5573a963b33e4ff0181fc0"
+    }
+  },
+  "task": "1.1",
+  "test_files": [
+    "tests/generate-study.test.ts",
+    "tests/providers.test.ts",
+    "tests/decider.test.ts",
+    "tests/artifacts.test.ts",
+    "tests/evaluate.test.ts",
+    "tests/generation.test.ts",
+    "tests/llm.test.ts",
+    "tests/reports.test.ts"
+  ]
+}

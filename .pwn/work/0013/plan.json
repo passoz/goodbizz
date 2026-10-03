@@ -1,0 +1,375 @@
+{
+  "$schema": "../../../pwn/schemas/plan.schema.json",
+  "work_id": "0013",
+  "title": "Provedores trocam de verdade e a ideia carrega a data de geracao",
+  "components": [
+    {
+      "name": "provider-catalog",
+      "purpose": "Impressao e rotulos dos provedores efetivos (catalogo ativo sobre ambiente)"
+    },
+    {
+      "name": "provider-probe",
+      "purpose": "Sonda do Testar: catalogo de modelos, chave guardada e veredito"
+    },
+    {
+      "name": "provider-modal",
+      "purpose": "Modal de provedor: ordem, dropdown de modelos, PATCH sem kind e dialogo de exclusao"
+    },
+    {
+      "name": "idea-dates",
+      "purpose": "Coluna generated_at, carimbo, rodape do plano e rotulo no ranking"
+    }
+  ],
+  "global_gates": [
+    "`bun test` — a suite completa passa com exit 0.",
+    "`bun run check` — typecheck estrito passa com exit 0.",
+    "`bunx eslint . && bunx prettier --check .` — lint e formatacao passam."
+  ],
+  "tasks": [
+    {
+      "id": "1.1",
+      "title": "Trocar de provedor invalida as respostas gravadas pelo anterior",
+      "requirement_id": "FR-001",
+      "depends_on": [],
+      "behavior": "a impressao dos provedores efetivos entra em toda chave de cache, entao reexecutar depois de trocar de provedor gera no provedor novo",
+      "components": [
+        "provider-catalog"
+      ],
+      "files": [
+        "src/config/providers.ts",
+        "src/domain/types.ts",
+        "src/config/runtime.ts",
+        "src/application/generate-study.ts",
+        "src/application/study-service.ts",
+        "src/cli.ts",
+        "src/index.ts",
+        "tests/generate-study.test.ts",
+        "tests/providers.test.ts",
+        "tests/decider.test.ts",
+        "tests/artifacts.test.ts",
+        "tests/evaluate.test.ts",
+        "tests/generation.test.ts",
+        "tests/llm.test.ts",
+        "tests/reports.test.ts"
+      ],
+      "implementation_files": [
+        "src/config/providers.ts",
+        "src/domain/types.ts",
+        "src/config/runtime.ts",
+        "src/application/generate-study.ts",
+        "src/application/study-service.ts",
+        "src/cli.ts",
+        "src/index.ts"
+      ],
+      "test_files": [
+        "tests/generate-study.test.ts",
+        "tests/providers.test.ts",
+        "tests/decider.test.ts",
+        "tests/artifacts.test.ts",
+        "tests/evaluate.test.ts",
+        "tests/generation.test.ts",
+        "tests/llm.test.ts",
+        "tests/reports.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/generate-study.test.ts -t \"trocar de provedor invalida o cache\"",
+        "description": "sem providerScope na chave, o segundo estudo acha a resposta do provedor anterior no cache e a assercao falha"
+      },
+      "implementation_steps": [
+        "Escrever o teste que falha (RED): trocar a impressao de provedor nao pode servir a resposta em cache",
+        "Adicionar cacheFingerprint em providers.ts e providerFingerprint em StudyConfig/overrides (GREEN parcial)",
+        "Passar a impressao em toda chave de scopedKey do pipeline e injetar providerConfig no StudyService/CLI (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test",
+          "description": "a suite completa passa com as assercoes novas"
+        },
+        {
+          "command": "bun run check",
+          "description": "o typecheck estrito passa"
+        },
+        {
+          "command": "bunx eslint . && bunx prettier --check .",
+          "description": "o lint e a formatacao do repositorio passam"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-011",
+      "contract_id": "CTR-001",
+      "complexity": "medium",
+      "status": "done"
+    },
+    {
+      "id": "1.2",
+      "title": "O rotulo do servico reflete o provedor ativo",
+      "requirement_id": "FR-002",
+      "depends_on": [],
+      "behavior": "os rotulos de texto/numeros reais vem do catalogo ativo e sao recalculados a cada pagina, sem foto do boot",
+      "components": [
+        "provider-catalog"
+      ],
+      "files": [
+        "src/index.ts",
+        "src/infrastructure/http/ui/routes.tsx",
+        "tests/providers.test.ts",
+        "tests/ui.test.ts"
+      ],
+      "implementation_files": [
+        "src/index.ts",
+        "src/infrastructure/http/ui/routes.tsx"
+      ],
+      "test_files": [
+        "tests/providers.test.ts",
+        "tests/ui.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/ui.test.ts -t \"o rotulo dos provedores e recalculado a cada pagina\"",
+        "description": "com o rotulo estatico do boot, as duas paginas mostram o mesmo texto e a assercao da segunda falha"
+      },
+      "implementation_steps": [
+        "Escrever o teste que falha (RED): duas paginas seguidas veem rotulos diferentes",
+        "Trocar o objeto do boot por uma funcao providerLabels(env, settings) avaliada na rota (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test",
+          "description": "a suite completa passa com as assercoes novas"
+        },
+        {
+          "command": "bun run check",
+          "description": "o typecheck estrito passa"
+        },
+        {
+          "command": "bunx eslint . && bunx prettier --check .",
+          "description": "o lint e a formatacao do repositorio passam"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-016",
+      "contract_id": "CTR-002",
+      "complexity": "low",
+      "status": "done"
+    },
+    {
+      "id": "1.3",
+      "title": "O Testar devolve o catalogo de modelos e usa a chave guardada",
+      "requirement_id": "FR-003",
+      "depends_on": [],
+      "behavior": "a sonda devolve os ids de GET /models quando existem, e o editar manda o id para a API usar a chave guardada em vez do campo vazio",
+      "components": [
+        "provider-probe"
+      ],
+      "files": [
+        "src/infrastructure/provider-probe.ts",
+        "src/infrastructure/http/api.ts",
+        "tests/settings-api.test.ts"
+      ],
+      "implementation_files": [
+        "src/infrastructure/provider-probe.ts",
+        "src/infrastructure/http/api.ts"
+      ],
+      "test_files": [
+        "tests/settings-api.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/settings-api.test.ts -t \"testar provedor salvo usa a chave guardada\"",
+        "description": "sem o campo id no schema do teste, o corpo estrito responde 422 e o veredito esperado nao vem"
+      },
+      "implementation_steps": [
+        "Escrever o teste que falha (RED): o editar manda id + chave vazia e espera veredito com a lista de modelos",
+        "Devolver models no veredito da sonda e aceitar id no ProviderTestInput, buscando a chave guardada (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test",
+          "description": "a suite completa passa com as assercoes novas"
+        },
+        {
+          "command": "bun run check",
+          "description": "o typecheck estrito passa"
+        },
+        {
+          "command": "bunx eslint . && bunx prettier --check .",
+          "description": "o lint e a formatacao do repositorio passam"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-013",
+      "contract_id": "CTR-003",
+      "complexity": "medium",
+      "status": "done"
+    },
+    {
+      "id": "1.4",
+      "title": "Modal do provedor com ordem, dropdown e exclusao em dialogo",
+      "requirement_id": "FR-004",
+      "depends_on": [],
+      "behavior": "o modal segue a ordem nome, URL, chave, modelo; o Testar vira o Modelo em dropdown; salvar a edicao nao manda kind; excluir confirma em dialogo do app, sem alert/confirm nativos",
+      "components": [
+        "provider-modal"
+      ],
+      "files": [
+        "src/infrastructure/http/ui/pages.tsx",
+        "src/infrastructure/http/ui/layout.tsx",
+        "tests/ui.test.ts"
+      ],
+      "implementation_files": [
+        "src/infrastructure/http/ui/pages.tsx",
+        "src/infrastructure/http/ui/layout.tsx"
+      ],
+      "test_files": [
+        "tests/ui.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/ui.test.ts -t \"excluir provedor confirma em dialogo\"",
+        "description": "sem o dialogo proprio o script ainda chama window.confirm e a pagina nao tem o modal de exclusao"
+      },
+      "implementation_steps": [
+        "Escrever os testes que falham (RED): ordem dos campos, select de modelos, PATCH sem kind e dialogo de exclusao sem alert nativo",
+        "Reordenar os campos, criar o select preenchido pelo Testar, tirar kind do PATCH e trocar alert/confirm pelo dialogo (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test",
+          "description": "a suite completa passa com as assercoes novas"
+        },
+        {
+          "command": "bun run check",
+          "description": "o typecheck estrito passa"
+        },
+        {
+          "command": "bunx eslint . && bunx prettier --check .",
+          "description": "o lint e a formatacao do repositorio passam"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-014",
+      "contract_id": "CTR-004",
+      "complexity": "high",
+      "status": "done"
+    },
+    {
+      "id": "1.5",
+      "title": "A ideia carrega a data de geracao em coluna propria",
+      "requirement_id": "FR-005",
+      "depends_on": [],
+      "behavior": "evaluateIdea carimba generatedAt (ISO) e a leitura/gravacao passa pela coluna generated_at, fora do payload_json",
+      "components": [
+        "idea-dates"
+      ],
+      "files": [
+        "src/domain/types.ts",
+        "src/application/evaluate.ts",
+        "src/infrastructure/schema.ts",
+        "src/infrastructure/repositories.ts",
+        "drizzle/0005_tan_giant_man.sql",
+        "drizzle/meta/0005_snapshot.json",
+        "drizzle/meta/_journal.json",
+        "tests/evaluate.test.ts",
+        "tests/repositories.test.ts"
+      ],
+      "implementation_files": [
+        "src/domain/types.ts",
+        "src/application/evaluate.ts",
+        "src/infrastructure/schema.ts",
+        "src/infrastructure/repositories.ts",
+        "drizzle/0005_tan_giant_man.sql",
+        "drizzle/meta/0005_snapshot.json",
+        "drizzle/meta/_journal.json"
+      ],
+      "test_files": [
+        "tests/evaluate.test.ts",
+        "tests/repositories.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/repositories.test.ts -t \"a coluna generated_at existe depois das migracoes\"",
+        "description": "sem a migracao 0005 a coluna generated_at nao existe e a assercao falha"
+      },
+      "implementation_steps": [
+        "Escrever os testes que falham (RED): coluna generated_at apos as migracoes, round-trip da data e payload_json intacto",
+        "Carimbar generatedAt em evaluateIdea, adicionar a coluna com a migracao 0005 e gravar/ler pela coluna (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test",
+          "description": "a suite completa passa com as assercoes novas"
+        },
+        {
+          "command": "bun run check",
+          "description": "o typecheck estrito passa"
+        },
+        {
+          "command": "bunx eslint . && bunx prettier --check .",
+          "description": "o lint e a formatacao do repositorio passam"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-015",
+      "contract_id": "CTR-005",
+      "complexity": "medium",
+      "status": "done"
+    },
+    {
+      "id": "1.6",
+      "title": "O plano e a lista mostram a data de geracao",
+      "requirement_id": "FR-006",
+      "depends_on": [],
+      "behavior": "o README do plano fecha com o rodape da data de geracao e a linha do ranking mostra a data pequena dentro da celula do nome, sem coluna nova",
+      "components": [
+        "idea-dates"
+      ],
+      "files": [
+        "src/application/artifacts.ts",
+        "src/infrastructure/http/ui/pages.tsx",
+        "src/infrastructure/http/ui/layout.tsx",
+        "README.md",
+        "tests/artifacts.test.ts",
+        "tests/ui.test.ts"
+      ],
+      "implementation_files": [
+        "src/application/artifacts.ts",
+        "src/infrastructure/http/ui/pages.tsx",
+        "src/infrastructure/http/ui/layout.tsx",
+        "README.md"
+      ],
+      "test_files": [
+        "tests/artifacts.test.ts",
+        "tests/ui.test.ts"
+      ],
+      "red": {
+        "command": "bun test tests/artifacts.test.ts -t \"o plano assina a data de geracao\"",
+        "description": "sem o rodape no buildArtifactFiles o README do plano termina sem a linha de data"
+      },
+      "implementation_steps": [
+        "Escrever os testes que falham (RED): rodape do plano com a data e rotulo pequeno no ranking",
+        "Assinar o rodape em buildArtifactFiles, renderizar o rotulo na celula do nome e documentar no README (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun test",
+          "description": "a suite completa passa com as assercoes novas"
+        },
+        {
+          "command": "bun run check",
+          "description": "o typecheck estrito passa"
+        },
+        {
+          "command": "bunx eslint . && bunx prettier --check .",
+          "description": "o lint e a formatacao do repositorio passam"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-009",
+      "contract_id": "CTR-006",
+      "complexity": "standard",
+      "status": "done"
+    }
+  ]
+}

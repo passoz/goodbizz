@@ -96,6 +96,11 @@ export interface IdeaEvaluation {
  */
 export interface StudyIdea extends IdeaEvaluation {
   id: string;
+  /**
+   * Momento em que a ideia foi gerada e avaliada (ISO). Opcional porque ideias anteriores à
+   * coluna `generated_at` não têm data; a UI omite o rótulo quando falta.
+   */
+  generatedAt?: string;
 }
 
 export interface PainGroups {
@@ -154,6 +159,12 @@ export interface StudyConfig {
    * novo — e que preserva a retomada, porque o id sobrevive à reexecução e só morre na exclusão.
    */
   cacheSeed: string;
+  /**
+   * Impressão dos provedores efetivos no momento da execucao (URL/modelo/chave ativos de cada
+   * funcao). Entra nas chaves do cache de respostas: trocar de provedor muda a chave, e a
+   * resposta gravada pelo provedor anterior nunca e servida para o novo.
+   */
+  providerFingerprint: string;
 }
 
 export type StudyState = "pending" | "running" | "done" | "failed";

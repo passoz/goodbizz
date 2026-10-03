@@ -120,12 +120,15 @@ export async function generateAddition(
   const brief = input.brief;
   const existing = [...input.existing];
   const existingNames = existing.map((idea) => idea.name);
+  // Escopo do provedor em toda chave de cache: trocar de provedor nao serve a resposta antiga.
+  const providerScope = cfg.providerFingerprint ?? "";
   progress(`[1/6] Reaproveitando o brief ja gravado (${brief.length} caracteres)`);
 
   // O `kind` diferente ja separa a adicao do estudo original; o `requestId` separa um pedido do outro.
   const ideasKey = scopedKey(
     cfg.cacheSeed,
     "ideias-adicao",
+    providerScope,
     cfg.niche,
     cfg.city,
     String(count),
@@ -146,6 +149,7 @@ export async function generateAddition(
     const key = scopedKey(
       cfg.cacheSeed,
       "aval-adicao",
+      providerScope,
       cfg.niche,
       cfg.city,
       String(cfg.monthlyTicket),
@@ -198,6 +202,7 @@ export async function generateAddition(
     const key = scopedKey(
       cfg.cacheSeed,
       "doc",
+      providerScope,
       cfg.niche,
       String(cfg.monthlyTicket),
       evaluation.name,
@@ -259,6 +264,7 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
   const { llm, decider, cache } = deps;
   const usageBefore = { llm: llm.usage?.(), decider: decider.usage?.() };
   const progress = deps.onProgress ?? (() => {});
+  const providerScope = cfg.providerFingerprint ?? "";
   deps.logger.debug("study pipeline starting", {
     niche: cfg.niche,
     ideas: cfg.numIdeas,
@@ -266,7 +272,7 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
     mockDecider: cfg.mockDecider,
   });
 
-  const briefKey = scopedKey(cfg.cacheSeed, "brief", cfg.niche, cfg.city);
+  const briefKey = scopedKey(cfg.cacheSeed, "brief", providerScope, cfg.niche, cfg.city);
   let brief = await cache.get<string>(briefKey);
   if (brief === null) {
     brief = await generateBrief(llm, cfg);
@@ -279,7 +285,14 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
     ideas = loadIdeas(cfg.ideasFile);
     progress(`[2/6] ${ideas.length} ideias carregadas do arquivo ${cfg.ideasFile}`);
   } else {
-    const ideasKey = scopedKey(cfg.cacheSeed, "ideias", cfg.niche, cfg.city, String(cfg.numIdeas));
+    const ideasKey = scopedKey(
+      cfg.cacheSeed,
+      "ideias",
+      providerScope,
+      cfg.niche,
+      cfg.city,
+      String(cfg.numIdeas),
+    );
     const cached = await cache.get<Idea[]>(ideasKey);
     if (cached === null) {
       ideas = await generateIdeas(llm, cfg, brief, cfg.numIdeas);
@@ -294,6 +307,7 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
     const key = scopedKey(
       cfg.cacheSeed,
       "aval",
+      providerScope,
       cfg.niche,
       cfg.city,
       String(cfg.monthlyTicket),
@@ -358,6 +372,7 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
     const key = scopedKey(
       cfg.cacheSeed,
       "doc",
+      providerScope,
       cfg.niche,
       String(cfg.monthlyTicket),
       ordered.name,

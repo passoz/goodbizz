@@ -6,10 +6,12 @@ import { describe, expect, test } from "bun:test";
 
 import {
   activeProfile,
+  cacheFingerprint,
   effectiveProviders,
   envProviderDefaults,
   maskSecret,
   profileViews,
+  providerLabels,
 } from "../src/config/providers.ts";
 import type { Env } from "../src/config/env.ts";
 import type { ProviderProfile } from "../src/domain/types.ts";
@@ -139,5 +141,53 @@ describe("maskSecret", () => {
   test("esconde chaves curtas por inteiro e mantém vazio", () => {
     expect(maskSecret("123456")).toBe("••••••");
     expect(maskSecret("   ")).toBe("");
+  });
+});
+
+describe("cacheFingerprint", () => {
+  test("muda quando qualquer campo efetivo de provedor muda", () => {
+    const base = effectiveProviders(env(), { profiles: [], activeLlm: null, activeDecider: null });
+    const fingerprint = cacheFingerprint(base);
+    // Trocar o perfil ativo do LLM muda a impressao: as chaves de cache viram outras.
+    const withProfile = effectiveProviders(env(), {
+      profiles: [profile()],
+      activeLlm: "p-llm",
+      activeDecider: null,
+    });
+    expect(cacheFingerprint(withProfile)).not.toBe(fingerprint);
+    // O mesmo estado devolve a mesma impressao (determinismo das chaves).
+    expect(cacheFingerprint(withProfile)).toBe(cacheFingerprint(withProfile));
+    // mexer so no decisor tambem muda
+    const withDecider = effectiveProviders(env(), {
+      profiles: [profile({ id: "p-dec", kind: "decider" as const })],
+      activeLlm: null,
+      activeDecider: "p-dec",
+    });
+    expect(cacheFingerprint(withDecider)).not.toBe(fingerprint);
+  });
+});
+
+describe("providerLabels", () => {
+  test("o rotulo real nomeia o modelo do perfil ativo, nao o do ambiente", () => {
+    const labels = providerLabels(env(), {
+      profiles: [profile()],
+      activeLlm: "p-llm",
+      activeDecider: null,
+    });
+    expect(labels.llm).toBe("texto real (meu-modelo)");
+    // Sem perfil ativo de decisao, o modelo vem do ambiente.
+    expect(labels.decider).toBe("numeros reais (systemone-latest)");
+    // Rotulo nunca carrega segredo.
+    expect(JSON.stringify(labels)).not.toContain("sk-");
+  });
+
+  test("mock vence o perfil ativo", () => {
+    const labels = providerLabels(env({ GOODBIZZ_MOCK: true }), {
+      profiles: [profile()],
+      activeLlm: "p-llm",
+      activeDecider: null,
+    });
+    expect(labels.llm).toBe("texto simulado");
+    expect(labels.decider).toBe("números simulados");
   });
 });

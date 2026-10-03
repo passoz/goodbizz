@@ -1,0 +1,109 @@
+{
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun test"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0013/1.2-ac-1.log",
+      "log_sha256": "409fa7b39a1e9488bc97c231d526358f6f30cb714c9c3ae2a7d77d68b6cdf7bb",
+      "recorded_at": "2026-10-03T21:30:05.730Z"
+    },
+    "AC-2": {
+      "command": [
+        "bash",
+        "-lc",
+        "bun run check"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0013/1.2-ac-2.log",
+      "log_sha256": "ea8341cb7b9461976419b49d6059b761b1897b7f034ca39c585a19f034ef4c58",
+      "recorded_at": "2026-10-03T21:30:08.115Z"
+    },
+    "AC-3": {
+      "command": [
+        "bash",
+        "-lc",
+        "bunx eslint . && bunx prettier --check ."
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0013/1.2-ac-3.log",
+      "log_sha256": "3a751721802b067b66eb792adc0d84cdefd44e4fc55a4efd4695d1137b5bc915",
+      "recorded_at": "2026-10-03T21:30:10.946Z"
+    }
+  },
+  "baseline_implementation": {
+    "src/index.ts": {
+      "exists": true,
+      "sha256": "1577c0c26450e69526004d728d1cc6702f06dd40719d90dde4db55db530538e4"
+    },
+    "src/infrastructure/http/ui/routes.tsx": {
+      "exists": true,
+      "sha256": "90c17d58821eb4214b02f651b634afda6f3a844200b5608399a8dfa31a453b68"
+    }
+  },
+  "baseline_tests": {
+    "tests/providers.test.ts": {
+      "exists": true,
+      "sha256": "cd3441e9e0ef71f37491fdd8b645d306a214c9de81f073836d2708c5c881fa1b"
+    },
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "001c80a955b54f0c667918173cef17bf1a72a2a0ab59cde17864ed4faf938734"
+    }
+  },
+  "created_at": "2026-10-03T21:29:48.924Z",
+  "green_expect": null,
+  "green_implementation": {
+    "src/index.ts": {
+      "exists": true,
+      "sha256": "a7246f60a0439ad9727cd73eecc57e623c2748f670832f0a9c11130d230a2f81"
+    },
+    "src/infrastructure/http/ui/routes.tsx": {
+      "exists": true,
+      "sha256": "5454767221397ec8976329f72fc7d31e286707650e0ddf0ec3757885b89d25a6"
+    }
+  },
+  "green_tests": {
+    "tests/providers.test.ts": {
+      "exists": true,
+      "sha256": "f42c787bc557e24b3649cafe176cf1d3a9056459a3d024146580db2a002a708a"
+    },
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "dccd7af95d0552e1f54be26dd4c7481c374653e9eb7a06140244b78f2f2ab227"
+    }
+  },
+  "implementation_files": [
+    "src/index.ts",
+    "src/infrastructure/http/ui/routes.tsx"
+  ],
+  "red_command": [
+    "bun",
+    "test"
+  ],
+  "red_expect": "o rotulo dos provedores e recalculado a cada pagina",
+  "red_tests": {
+    "tests/providers.test.ts": {
+      "exists": true,
+      "sha256": "f42c787bc557e24b3649cafe176cf1d3a9056459a3d024146580db2a002a708a"
+    },
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "dccd7af95d0552e1f54be26dd4c7481c374653e9eb7a06140244b78f2f2ab227"
+    }
+  },
+  "task": "1.2",
+  "test_files": [
+    "tests/providers.test.ts",
+    "tests/ui.test.ts"
+  ]
+}

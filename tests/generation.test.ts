@@ -27,6 +27,7 @@ function makeConfig(overrides: Partial<StudyConfig> = {}): StudyConfig {
     niche: "clinicas",
     description: "",
     cacheSeed: "",
+    providerFingerprint: "",
     city: "",
     monthlyTicket: 300,
     numIdeas: 6,

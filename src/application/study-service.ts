@@ -32,6 +32,7 @@ import { fullHtml } from "./render.ts";
 import { mdToHtml } from "./render.ts";
 import { summarizeStudy } from "./summary.ts";
 import { scrub } from "../config/redact.ts";
+import { cacheFingerprint, type ProviderConfig } from "../config/providers.ts";
 import { resolveStudyConfig, studyContext } from "../config/runtime.ts";
 import { ConflictError, NotFoundError, ValidationError } from "../domain/errors.ts";
 import type { ArtifactFile, DeciderClient, LlmClient, Logger, StudyRepository } from "../domain/ports.ts";
@@ -63,6 +64,12 @@ export interface StudyServiceOptions {
   /** Providers configured as simulated at the service level; a study inherits them. */
   mockLlm?: boolean;
   mockDecider?: boolean;
+  /**
+   * Configuracao efetiva dos provedores no momento da execucao (perfil ativo sobre ambiente).
+   * Entra nas chaves de cache via impressao; sem ela (CLI de tiro unico usa o proprio caminho),
+   * a impressao e vazia e o cache fica escopado so pelo estudo.
+   */
+  providerConfig?: () => ProviderConfig;
   /** Configuração de provedores vinda da aba `/settings` (sobrepõe o ambiente). */
   settings?: ProviderSettingsStore;
 }
@@ -150,6 +157,9 @@ export class StudyService {
         // A semente é o id do estudo: separa dois estudos de mesmo título e preserva a retomada
         // deste, porque o id sobrevive à reexecução e só morre na exclusão.
         cacheSeed: record.id,
+        // A impressao dos provedores ativos entra em toda chave de cache: trocar de provedor faz
+        // a reexecucao gerar no provedor novo, em vez de servir a resposta gravada pelo antigo.
+        providerFingerprint: this.providerFingerprint(),
         city: record.city,
         monthlyTicket: record.monthlyTicket,
         numIdeas: record.numIdeas,
@@ -473,12 +483,19 @@ export class StudyService {
     return summary;
   }
 
+  /** Impressao dos provedores efetivos para as chaves de cache; vazia sem configuracao injetada. */
+  private providerFingerprint(): string {
+    const cfg = this.options.providerConfig?.();
+    return cfg === undefined ? "" : cacheFingerprint(cfg);
+  }
+
   /** Configuracao do estudo com o numero de ideias que ele tem agora (o `dados.json` deve casar). */
   private configForRecord(record: StudyRecord, numIdeas: number): StudyConfig {
     return resolveStudyConfig({
       niche: record.niche,
       description: record.description,
       cacheSeed: record.id,
+      providerFingerprint: this.providerFingerprint(),
       city: record.city,
       monthlyTicket: record.monthlyTicket,
       numIdeas,

@@ -71,6 +71,8 @@ const ActiveProviderInput = z
 const ProviderTestInput = z
   .object({
     kind: ProviderKindInput,
+    /** Provedor salvo: com `apiKey` vazio, a sonda usa a chave guardada (editar sem redigitar). */
+    id: z.string().trim().min(1).optional(),
     url: z.string().trim().min(1, "a URL do provedor é obrigatória").max(500),
     model: z.string().trim().max(200).optional(),
     apiKey: z.string().trim().max(500).optional(),
@@ -217,11 +219,18 @@ export function buildApiApp(deps: ApiDeps): Hono {
   /** Testa a configuração digitada contra o provedor (ping/ready), sem persistir nada. */
   api.post("/settings/test", async (c) => {
     const input = parseOrThrow(ProviderTestInput, await c.req.json());
+    let apiKey = input.apiKey ?? "";
+    if (apiKey === "" && input.id !== undefined) {
+      // No editar, a chave salva nao volta para a tela em claro: a sonda usa a guardada.
+      const settings = await deps.service.providerSettings();
+      const stored = (settings.profiles ?? []).find((profile) => profile.id === input.id);
+      if (stored !== undefined) apiKey = stored.apiKey;
+    }
     const result = await probeProvider({
       kind: input.kind,
       url: input.url,
       model: input.model ?? "",
-      apiKey: input.apiKey ?? "",
+      apiKey,
     });
     return c.json(result);
   });
