@@ -59,7 +59,7 @@
     "frozen_tests": [
       {
         "path": "tests/tournament-study.test.ts",
-        "sha256": "a548954171855093ac787c0529556ff66cf47746324361f6f0620e0967d433db"
+        "sha256": "1ea74c540c98c1e887fc572c35cf7b92b62bc49ce93e0337eae74700af1de992"
       }
     ]
   },
