@@ -55,6 +55,12 @@
     ],
     "required_evidence": [
       "evidence.json"
+    ],
+    "frozen_tests": [
+      {
+        "path": "tests/evidence-persistence.test.ts",
+        "sha256": "3d4a4924ce26ef422fca6f6020c2beae6cec38877fc16b2d8d907b2630731945"
+      }
     ]
   },
   "scope_contract": {
