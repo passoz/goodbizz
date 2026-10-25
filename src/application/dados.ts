@@ -5,7 +5,7 @@
 import { readFileSync } from "node:fs";
 
 import { ValidationError } from "../domain/errors.ts";
-import type { Idea, IdeaEvaluation, StudyConfig, StudySummary, Tier } from "../domain/types.ts";
+import type { Evidence, Idea, IdeaEvaluation, StudyConfig, StudySummary, Tier } from "../domain/types.ts";
 
 /**
  * Mapa campo do `StudyConfig` -> chave gravada em `config` dentro de dados.json.
@@ -108,12 +108,14 @@ export function evaluationFromJson(raw: unknown): IdeaEvaluation {
 /**
  * Serializa o conteúdo de dados.json.
  * @param _brief guardado no banco, não em dados.json (o baseline não o grava aqui).
+ * @param evidences chave aditiva `evidencias`: o leitor do baseline ignora chave que não conhece.
  */
 export function serializeDados(
   cfg: StudyConfig,
   _brief: string,
   summary: StudySummary,
   data: IdeaEvaluation[],
+  evidences: readonly Evidence[],
 ): string {
   const value = {
     config: {
@@ -135,6 +137,16 @@ export function serializeDados(
     grupos_dor: summary.painGroups,
     tiers: summary.tiers,
     ideias: data.map(evaluationToJson),
+    evidencias: evidences.map((evidence) => ({
+      id: evidence.id,
+      tipo: evidence.tipo,
+      afirmacao: evidence.afirmacao,
+      trecho: evidence.trecho,
+      url: evidence.url,
+      valor: evidence.valor,
+      unidade: evidence.unidade,
+      ideia: evidence.ideia,
+    })),
   };
   return JSON.stringify(value, null, 1);
 }

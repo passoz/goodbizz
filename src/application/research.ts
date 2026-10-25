@@ -159,9 +159,33 @@ async function runSearch(
   return results;
 }
 
+/** Espaços normalizados: quebra de linha e espaço duplo do conteúdo não reprovam um trecho fiel. */
+function squash(value: string): string {
+  return value.replace(/\s+/g, " ").trim();
+}
+
+/** URL comparável: sem fragmento e sem barra final (a mesma página volta assim de buscas diferentes). */
+function urlKey(url: string): string {
+  return url.trim().replace(/#.*$/, "").replace(/\/+$/, "");
+}
+
+/**
+ * Números escritos no trecho, lidos nos dois formatos (`1.200,50` e `1,200.50`). O `valor` que o
+ * extrator informou só fica se for um destes: número que não está no trecho é número inventado.
+ */
+function numbersIn(quote: string): number[] {
+  const values: number[] = [];
+  for (const token of quote.match(/\d[\d.,]*\d|\d/g) ?? []) {
+    const brazilian = Number(token.replace(/\./g, "").replace(",", "."));
+    const english = Number(token.replace(/,/g, ""));
+    for (const value of [brazilian, english]) if (Number.isFinite(value)) values.push(value);
+  }
+  return values;
+}
+
 /** Texto de um campo do JSON do extrator; ausente ou de outro tipo vira "". */
 function text(value: unknown): string {
-  return typeof value === "string" ? value.replace(/\s+/g, " ").trim() : "";
+  return typeof value === "string" ? squash(value) : "";
 }
 
 const KINDS: Record<string, true> = {
@@ -173,15 +197,23 @@ const KINDS: Record<string, true> = {
   regulacao: true,
 };
 
-/** Evidência candidata a partir do objeto do extrator; sem trecho ou URL não há o que citar. */
-function candidateOf(raw: unknown, ideia: string): Candidate | null {
+/**
+ * Evidência candidata a partir do objeto do extrator (FR-003): o trecho precisa aparecer, com
+ * espaços normalizados, no conteúdo do resultado da MESMA URL. Qualquer outra coisa é descartada.
+ * @param pages URL comparável -> conteúdo normalizado dos resultados desta pesquisa.
+ */
+function candidateOf(raw: unknown, ideia: string, pages: ReadonlyMap<string, string>): Candidate | null {
   if (raw === null || typeof raw !== "object" || Array.isArray(raw)) return null;
   const row = raw as Record<string, unknown>;
   const trecho = text(row.trecho);
   const url = text(row.url);
   if (trecho === "" || url === "") return null;
+  const content = pages.get(urlKey(url));
+  if (content === undefined || !content.includes(trecho)) return null;
   const tipo = text(row.tipo).toLowerCase();
-  const valor = typeof row.valor === "number" && Number.isFinite(row.valor) ? row.valor : null;
+  const informed = typeof row.valor === "number" && Number.isFinite(row.valor) ? row.valor : null;
+  const valor =
+    informed !== null && numbersIn(trecho).some((value) => Math.abs(value - informed) < 1e-9) ? informed : null;
   return {
     tipo: KINDS[tipo] === true ? tipo : "mercado",
     afirmacao: text(row.afirmacao) || trecho,
@@ -202,7 +234,14 @@ function resultsBlock(query: string, results: readonly SearchResult[]): string {
   return `BUSCA: ${query}\n\n${blocks.join("\n\n")}`;
 }
 
-/** Extração de evidências de uma busca, com cache por busca e conteúdo. */
+/** Tentativas de extração por busca (EC-002): JSON inválido ganha uma segunda chance, não três. */
+const EXTRACTION_ATTEMPTS = 2;
+
+/**
+ * Extração de evidências de uma busca, com cache por busca e conteúdo. A resposta crua do
+ * extrator fica no cache; a validação literal roda a cada leitura, então endurecer a regra vale
+ * também para o que já estava gravado.
+ */
 async function extract(
   query: string,
   results: readonly SearchResult[],
@@ -217,20 +256,40 @@ async function extract(
   let raw = await deps.cache.get<unknown[]>(key);
   if (raw === null) {
     const user = `${resultsBlock(query, results)}\n\nExtraia as evidências desta busca. Retorne apenas o array.`;
-    let parsed: unknown;
-    try {
-      parsed = extractJson(await deps.llm.generateText(EVIDENCE_SYSTEM_PROMPT, user));
-    } catch {
-      parsed = null;
+    for (let attempt = 0; attempt < EXTRACTION_ATTEMPTS && raw === null; attempt++) {
+      try {
+        const parsed = extractJson(await deps.llm.generateText(EVIDENCE_SYSTEM_PROMPT, user));
+        if (Array.isArray(parsed)) raw = parsed;
+      } catch {
+        // resposta sem JSON: a próxima volta pede de novo
+      }
     }
-    if (!Array.isArray(parsed)) {
-      issues.push(`pesquisa: o extrator não devolveu JSON válido para a busca "${query}"`);
+    if (raw === null) {
+      issues.push(
+        `pesquisa: o extrator não devolveu JSON válido para a busca "${query}" em ${EXTRACTION_ATTEMPTS} tentativas; ` +
+          "a busca ficou sem evidências",
+      );
       return [];
     }
-    raw = parsed;
     await deps.cache.put(key, raw);
   }
-  return raw.map((item) => candidateOf(item, ideia)).filter((item): item is Candidate => item !== null);
+  const pages = new Map(results.map((result) => [urlKey(result.url), squash(result.content)]));
+  return raw.map((item) => candidateOf(item, ideia, pages)).filter((item): item is Candidate => item !== null);
+}
+
+/**
+ * Tira dos resultados as URLs já vistas (EC-003): duas buscas que devolvem a mesma página geram
+ * uma única entrada antes da extração, na busca que a trouxe primeiro.
+ */
+function unseen(results: readonly SearchResult[], seen: Set<string>): SearchResult[] {
+  const fresh: SearchResult[] = [];
+  for (const result of results) {
+    const key = urlKey(result.url);
+    if (key === "" || seen.has(key)) continue;
+    seen.add(key);
+    fresh.push(result);
+  }
+  return fresh;
 }
 
 /**
@@ -248,7 +307,9 @@ export async function researchStudy(
     query,
     results: await runSearch(query, cfg, deps, scope, issues),
   }));
-  const extracted = await mapLimit(found, cfg.concurrency, (item) =>
+  const seen = new Set<string>();
+  const unique = found.map((item) => ({ query: item.query, results: unseen(item.results, seen) }));
+  const extracted = await mapLimit(unique, cfg.concurrency, (item) =>
     extract(item.query, item.results, "", cfg, deps, scope, issues),
   );
   // O id sai da ordem das buscas, não da ordem de chegada: a mesma pesquisa dá os mesmos ids.

@@ -1,0 +1,68 @@
+TASK: 1.2
+CHECK: GREEN
+COMMAND: bun --config=tests/bunfig.focus.toml test tests/research-evidence-cases.test.ts -t FR-003
+EXIT: 0
+OUTPUT:
+bun test v1.4.2 (744846f84)
+
+ 4 pass
+ 0 fail
+ 9 expect() calls
+Ran 4 tests across 1 file. [73.00ms]
+
+MUTATION_EXIT: 1
+MUTATION_OUTPUT:
+bun test v1.4.2 (744846f84)
+
+tests/research-evidence-cases.test.ts:
+67 |   test("FR-003 / EC-002: JSON inválido é extraído de novo uma vez e a segunda resposta vale", async () => {
+68 |     const { result, prompts } = await run({
+69 |       results: { b1: [PAGE] },
+70 |       extractor: (_user, attempt) => (attempt === 1 ? "sem json aqui" : LITERAL),
+71 |     });
+72 |     expect(prompts).toHaveLength(2);
+                         ^
+error: expect(received).toHaveLength(expected)
+
+Expected length: 2
+Received length: 1
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/research-evidence-cases.test.ts:72:21)
+(fail) extração de evidências > FR-003 / EC-002: JSON inválido é extraído de novo uma vez e a segunda resposta vale [15.92ms]
+73 |     expect(result.evidences.map((evidence) => evidence.trecho)).toEqual(["O pão francês custa R$ 18 o quilo."]);
+74 |   });
+75 | 
+76 |   test("FR-003 / EC-002: duas respostas inválidas deixam a busca sem evidência e registram em issues", async () => {
+77 |     const { result, prompts } = await run({ results: { b1: [PAGE] }, extractor: () => "{ quebrado" });
+78 |     expect(prompts).toHaveLength(2);
+                         ^
+error: expect(received).toHaveLength(expected)
+
+Expected length: 2
+Received length: 1
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/research-evidence-cases.test.ts:78:21)
+(fail) extração de evidências > FR-003 / EC-002: duas respostas inválidas deixam a busca sem evidência e registram em issues [3.25ms]
+85 |     const { prompts } = await run({
+86 |       results: { b1: [PAGE], b2: [{ ...PAGE, url: `${PAGE.url}/` }, other] },
+87 |       extractor: () => "[]",
+88 |     });
+89 |     const mentions = prompts.join("\n").split("https://padaria.test/pao").length - 1;
+90 |     expect(mentions).toBe(1);
+                          ^
+error: expect(received).toBe(expected)
+
+Expected: 1
+Received: 2
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/research-evidence-cases.test.ts:90:22)
+(fail) extração de evidências > FR-003 / EC-003: a mesma URL em duas buscas entra uma vez antes da extração [3.44ms]
+
+ 1 pass
+ 3 fail
+ 5 expect() calls
+Ran 4 tests across 1 file. [68.00ms]
+
+MUTATION_VERDICT: PASS
+VERDICT: PASS
+CHAIN_HASH: 3e9dc04d975deedc87b3c0f6e6382ff6f2115a369d18b9cf373db5d461ecd912

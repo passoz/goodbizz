@@ -3,7 +3,7 @@
  * Conteudo 100% determinístico: nenhum LLM entra aqui.
  */
 import type { ArtifactFile } from "../domain/ports.ts";
-import type { IdeaEvaluation, StudyConfig, StudyIdea, StudySummary } from "../domain/types.ts";
+import type { Evidence, IdeaEvaluation, StudyConfig, StudyIdea, StudySummary } from "../domain/types.ts";
 import { serializeDados } from "./dados.ts";
 import { indexMarkdown, indicatorsTableCsv, indicatorsTableMarkdown, scopeNotice } from "./reports.ts";
 
@@ -13,11 +13,12 @@ export interface ArtifactPlan {
 }
 
 /**
- * Arquivos do estudo: brief, tabelão (md/csv), índice, dados.json e o README de cada ideia.
+ * Arquivos do estudo: brief, evidências, tabelão (md/csv), índice, dados.json e o README de cada ideia.
  * @param folders nome da ideia -> pasta (`01-slug`).
  * @param documents nome da ideia -> markdown já gerado; ideia sem documento não vira pasta.
  * @param data ideias avaliadas; a data de geracao de cada uma assina o rodape do plano (a linha
  * `Data:` nao entra no corpo porque o guardrail de numeros confere digitos no texto do LLM).
+ * @param evidences evidências do estudo e das ideias (viram `00-evidencias.md` e `evidencias`).
  */
 export function buildArtifactFiles(
   cfg: StudyConfig,
@@ -26,19 +27,21 @@ export function buildArtifactFiles(
   data: IdeaEvaluation[],
   folders: Record<string, string>,
   documents: Record<string, string>,
+  evidences: readonly Evidence[],
 ): ArtifactFile[] {
   const files: ArtifactFile[] = [
     {
       path: "00-brief.md",
       content: `# Brief de contexto — ${cfg.niche}\n\n${scopeNotice(cfg)}\n${brief.trim()}\n`,
     },
+    { path: "00-evidencias.md", content: evidenceMarkdown(cfg, evidences) },
     { path: "00-tabelao.md", content: indicatorsTableMarkdown(cfg, data) },
     { path: "00-tabelao.csv", content: indicatorsTableCsv(data) },
   ];
   if (Object.keys(folders).length > 0) {
     files.push({ path: "README.md", content: indexMarkdown(cfg, brief, summary, folders) });
   }
-  files.push({ path: "dados.json", content: serializeDados(cfg, brief, summary, data) });
+  files.push({ path: "dados.json", content: serializeDados(cfg, brief, summary, data, evidences) });
   // O rodape de data sai aqui, nao do prompt: a resposta em cache volta intacta e a data gravada
   // com a avaliacao e a que identifica a geracao. Ideias homonimas partilham pasta por contrato,
   // entao a data acompanha o nome (a primeira que gerou vale).
@@ -59,6 +62,54 @@ export function buildArtifactFiles(
     }
   }
   return files;
+}
+
+/** Uma evidência em bloco: id e tipo no título, trecho literal citado e a URL de origem. */
+function evidenceEntry(evidence: Evidence): string {
+  const lines = [
+    `### ${evidence.id} — ${evidence.tipo}`,
+    "",
+    `- **Afirmação:** ${evidence.afirmacao}`,
+    `- **Trecho:** “${evidence.trecho}”`,
+    `- **URL:** <${evidence.url}>`,
+  ];
+  if (evidence.valor !== null) {
+    lines.push(`- **Valor:** ${evidence.valor}${evidence.unidade === "" ? "" : ` ${evidence.unidade}`}`);
+  }
+  return lines.join("\n");
+}
+
+/**
+ * `00-evidencias.md`: tudo o que a pesquisa trouxe com trecho literal, primeiro as do estudo e
+ * depois as de cada ideia. É a lista que dá sentido aos `[E#]` do brief e dos planos.
+ */
+function evidenceMarkdown(cfg: StudyConfig, evidences: readonly Evidence[]): string {
+  const lines = [
+    `# Evidências da pesquisa — ${cfg.niche}`,
+    "",
+    `${evidences.length} evidência(s) com trecho literal e URL. Cada \`[E#]\` do brief e dos planos ` +
+      "aponta para um item desta lista; o trecho foi conferido no conteúdo devolvido pelo provedor de busca.",
+    "",
+  ];
+  if (evidences.length === 0) {
+    lines.push(
+      "Nenhuma evidência entrou neste estudo: as buscas não trouxeram trecho verificável. " +
+        "Execute o estudo de novo ou confira o provedor de busca.",
+      "",
+    );
+    return lines.join("\n");
+  }
+  const groups = new Map<string, Evidence[]>();
+  for (const evidence of evidences) {
+    const group = groups.get(evidence.ideia) ?? [];
+    group.push(evidence);
+    groups.set(evidence.ideia, group);
+  }
+  for (const [idea, group] of [...groups].sort(([left], [right]) => (left === "" ? -1 : right === "" ? 1 : 0))) {
+    lines.push(idea === "" ? "## Evidências do estudo" : `## Evidências da ideia ${idea}`, "");
+    for (const evidence of group) lines.push(evidenceEntry(evidence), "");
+  }
+  return lines.join("\n");
 }
 
 /** Data curta pt-BR com hora, para o rodape do plano ("25/09/2026 14:32"). */
