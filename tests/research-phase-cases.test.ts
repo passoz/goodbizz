@@ -44,7 +44,8 @@ async function queriesFor(plannerAnswer: string): Promise<{ queries: string[]; i
     logger: QUIET,
   });
   handle.sqlite.close();
-  return { queries, issues: result.issues };
+  // As buscas próprias de cada ideia ("<ideia> para <nicho>: ...") ficam fora: aqui só o estudo.
+  return { queries: queries.filter((query) => !query.includes(": ")), issues: result.issues };
 }
 
 describe("planejamento das buscas", () => {
