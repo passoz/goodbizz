@@ -1,0 +1,80 @@
+TASK: 1.5
+CHECK: AC-1
+COMMAND: bun --config=tests/bunfig.focus.toml test tests/tournament-persistence.test.ts -t tournament_json
+EXIT: 0
+OUTPUT:
+bun test v1.4.2 (744846f84)
+
+ 3 pass
+ 0 fail
+ 16 expect() calls
+Ran 3 tests across 1 file. [107.00ms]
+
+MUTATION_EXIT: 1
+MUTATION_OUTPUT:
+bun test v1.4.2 (744846f84)
+
+tests/tournament-persistence.test.ts:
+115 |   test("tournament_json: os pontos voltam do banco e o rank segue o torneio", async () => {
+116 |     await repo.save(record("estudo-torneio"));
+117 |     await repo.saveEvaluations("estudo-torneio", played, summarizeStudy(played, tournament));
+118 | 
+119 |     const loaded = await repo.get("estudo-torneio");
+120 |     expect(loaded?.evaluations.map((item) => item.name)).toEqual(["Fiado Digital", "Agenda Viva"]);
+                                                               ^
+error: expect(received).toEqual(expected)
+
+  [
+-   "Fiado Digital",
+    "Agenda Viva",
++   "Fiado Digital",
+  ]
+
+- Expected  - 1
++ Received  + 1
+
+      at <anonymous> (/home/passoz/dev/goodbizz-w0017/tests/tournament-persistence.test.ts:120:58)
+(fail) persistencia do torneio > tournament_json: os pontos voltam do banco e o rank segue o torneio [7.66ms]
+143 | 
+144 |   test("estudo antigo: tournament_json nulo devolve a ordem pelo indice ao lado de um estudo novo", async () => {
+145 |     // O estudo novo, no mesmo banco, segue o torneio; o antigo continua no índice.
+146 |     await repo.save(record("estudo-novo"));
+147 |     await repo.saveEvaluations("estudo-novo", played, summarizeStudy(played, tournament));
+148 |     expect((await repo.get("estudo-novo"))?.evaluations.map((item) => item.name)).toEqual([
+                                                                                        ^
+error: expect(received).toEqual(expected)
+
+  [
+-   "Fiado Digital",
+    "Agenda Viva",
++   "Fiado Digital",
+  ]
+
+- Expected  - 1
++ Received  + 1
+
+      at <anonymous> (/home/passoz/dev/goodbizz-w0017/tests/tournament-persistence.test.ts:148:83)
+(fail) persistencia do torneio > estudo antigo: tournament_json nulo devolve a ordem pelo indice ao lado de um estudo novo [2.14ms]
+186 | 
+187 |     const detail = (await (await app.request(`/studies/${id}`)).json()) as {
+188 |       tournament: { rounds: number; matches: unknown[] } | null;
+189 |       evaluations: Array<{ tournament: { games: number } | null }>;
+190 |     };
+191 |     expect(detail.tournament?.rounds).toBe(3);
+                                            ^
+error: expect(received).toBe(expected)
+
+Expected: 3
+Received: undefined
+
+      at <anonymous> (/home/passoz/dev/goodbizz-w0017/tests/tournament-persistence.test.ts:191:39)
+(fail) detalhe do estudo na API > tournament_json: o detalhe expoe tournament.matches e o torneio de cada avaliacao [31.19ms]
+
+ 0 pass
+ 3 fail
+ 3 expect() calls
+Ran 3 tests across 1 file. [87.00ms]
+
+MUTATION_VERDICT: PASS
+VERDICT: PASS
+CHAIN_HASH: 9afe0a5165e38e259450b17912b239104eb1b0c4aa258506cbe093f7fe9fd2bf
