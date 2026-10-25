@@ -510,7 +510,8 @@
         "tests/api.test.ts",
         "tests/csrf.test.ts",
         "tests/settings-api.test.ts",
-        "tests/evaluate.test.ts"
+        "tests/evaluate.test.ts",
+        "tests/artifacts.test.ts"
       ],
       "implementation_files": [
         "src/infrastructure/search-mock.ts",
@@ -528,7 +529,8 @@
         "tests/api.test.ts",
         "tests/csrf.test.ts",
         "tests/settings-api.test.ts",
-        "tests/evaluate.test.ts"
+        "tests/evaluate.test.ts",
+        "tests/artifacts.test.ts"
       ],
       "red": {
         "command": "bun --config=tests/bunfig.focus.toml test tests/search-mock-cases.test.ts -t \"QR-001\"",

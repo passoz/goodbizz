@@ -37,7 +37,8 @@
       "tests/api.test.ts",
       "tests/csrf.test.ts",
       "tests/settings-api.test.ts",
-      "tests/evaluate.test.ts"
+      "tests/evaluate.test.ts",
+      "tests/artifacts.test.ts"
     ],
     "affected_components": [
       "search-provider"
@@ -79,7 +80,8 @@
       "tests/api.test.ts",
       "tests/csrf.test.ts",
       "tests/settings-api.test.ts",
-      "tests/evaluate.test.ts"
+      "tests/evaluate.test.ts",
+      "tests/artifacts.test.ts"
     ],
     "write_deny": [
       ".git/**",
