@@ -60,3 +60,16 @@ export class ArtifactError extends DomainError {
     super("ARTIFACT_FAILED", message, 500);
   }
 }
+
+/**
+ * Falha do provedor de busca. A mensagem já é a frase humana (credencial, limite, rede) com o
+ * detalhe cru entre parênteses; `providerStatus` guarda o HTTP quando houve resposta.
+ */
+export class SearchError extends DomainError {
+  readonly providerStatus: number | null;
+
+  constructor(message: string, providerStatus: number | null = null) {
+    super("SEARCH_FAILED", message, 502);
+    this.providerStatus = providerStatus;
+  }
+}

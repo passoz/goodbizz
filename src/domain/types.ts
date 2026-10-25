@@ -202,9 +202,9 @@ export interface StudyProgress {
 }
 
 /**
- * Provedor de IA: texto (LLM) ou decisao (System One).
+ * Provedor externo: texto (LLM), decisao (System One) ou busca na web (Tavily).
  */
-export type ProviderKind = "llm" | "decider";
+export type ProviderKind = "llm" | "decider" | "search";
 
 /**
  * Provedor nomeado pelo operador. O `name` e o que aparece na lista; `url`, `model` e `apiKey` sao

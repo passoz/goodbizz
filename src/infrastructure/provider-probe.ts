@@ -7,7 +7,9 @@
  * Decisor: uma pergunta `noul` minima, porque o contrato System One so tem `POST`.
  */
 import { scrub } from "../config/redact.ts";
+import { SearchError } from "../domain/errors.ts";
 import { extractAnswers, normalizeDeciderUrl } from "./decider.ts";
+import { SearchHttp } from "./search.ts";
 import type { ProviderKind } from "../domain/types.ts";
 
 export interface ProviderProbeInput {
@@ -245,6 +247,22 @@ async function probeDecider(input: ProviderProbeInput, timeoutMs: number): Promi
   };
 }
 
+/** Testar de busca: uma busca real mínima pelo adaptador Tavily; a chave nunca volta. */
+async function probeSearch(input: ProviderProbeInput, timeoutMs: number): Promise<ProviderProbeResult> {
+  const seconds = Math.max(1, Math.round(timeoutMs / 1000));
+  const adapter = new SearchHttp(input.url, input.apiKey, seconds, 1, 0);
+  try {
+    const results = await adapter.search("teste de conexão da busca");
+    return { ok: true, status: 200, detail: `busca respondeu com ${results.length} resultado(s).` };
+  } catch (error) {
+    if (error instanceof SearchError) {
+      return { ok: false, status: error.providerStatus, detail: error.message };
+    }
+    const message = error instanceof Error ? error.message : String(error);
+    return { ok: false, status: null, detail: scrub(message, [input.apiKey]) };
+  }
+}
+
 /** Fala com o provedor e devolve o veredito; nunca lanca por falha de rede. */
 export async function probeProvider(
   input: ProviderProbeInput,
@@ -253,5 +271,6 @@ export async function probeProvider(
   if (baseUrl(input.url).length === 0) {
     return { ok: false, status: null, detail: "informe a URL do provedor" };
   }
+  if (input.kind === "search") return probeSearch(input, timeoutMs);
   return input.kind === "decider" ? probeDecider(input, timeoutMs) : probeLlm(input, timeoutMs);
 }
