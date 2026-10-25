@@ -1,0 +1,68 @@
+TASK: 1.6
+CHECK: AC-1
+COMMAND: bun --config=tests/bunfig.focus.toml test tests/evidence-sources.test.ts -t FR-007
+EXIT: 0
+OUTPUT:
+bun test v1.4.2 (744846f84)
+
+ 3 pass
+ 0 fail
+ 24 expect() calls
+Ran 3 tests across 1 file. [69.00ms]
+
+MUTATION_EXIT: 1
+MUTATION_OUTPUT:
+bun test v1.4.2 (744846f84)
+
+tests/evidence-sources.test.ts:
+71 |     expect(readmes).toHaveLength(2);
+72 |     const e2 = result.evidences.find((evidence) => evidence.id === "E2");
+73 |     const e7 = result.evidences.find((evidence) => evidence.id === "E7");
+74 |     for (const readme of readmes) {
+75 |       const section = lastSection(readme);
+76 |       expect(section.title).toBe("Fontes");
+                                 ^
+error: expect(received).toBe(expected)
+
+Expected: "Fontes"
+Received: "1. Resumo executivo"
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/evidence-sources.test.ts:76:29)
+(fail) seção Fontes > FR-007: o README termina com Fontes listando exatamente E2 e E7 com URL [22.31ms]
+85 | 
+86 |   test("FR-007 / EC-004: citação de id inexistente fica fora de Fontes e vai para issues", async () => {
+87 |     const { result, readmes } = await run("# Plano\n\nPreço [E99] e fato [E1].\n");
+88 |     for (const readme of readmes) {
+89 |       const section = lastSection(readme);
+90 |       expect(section.title).toBe("Fontes");
+                                 ^
+error: expect(received).toBe(expected)
+
+Expected: "Fontes"
+Received: "# Plano"
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/evidence-sources.test.ts:90:29)
+(fail) seção Fontes > FR-007 / EC-004: citação de id inexistente fica fora de Fontes e vai para issues [4.73ms]
+ 96 | 
+ 97 |   test("FR-007: plano sem citação ainda termina com Fontes dizendo que nada foi citado", async () => {
+ 98 |     const { readmes } = await run("# Plano\n\nTexto sem fonte.\n");
+ 99 |     for (const readme of readmes) {
+100 |       const section = lastSection(readme);
+101 |       expect(section.title).toBe("Fontes");
+                                  ^
+error: expect(received).toBe(expected)
+
+Expected: "Fontes"
+Received: "# Plano"
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/evidence-sources.test.ts:101:29)
+(fail) seção Fontes > FR-007: plano sem citação ainda termina com Fontes dizendo que nada foi citado [6.65ms]
+
+ 0 pass
+ 3 fail
+ 4 expect() calls
+Ran 3 tests across 1 file. [72.00ms]
+
+MUTATION_VERDICT: PASS
+VERDICT: PASS
+CHAIN_HASH: 36b5d2a38ec7bec4fbe2232dd4e38034098a4036d9fb28dd42c3f92c7fe48122

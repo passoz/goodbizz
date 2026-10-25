@@ -5,7 +5,7 @@
  * Os textos e o alinhamento das colunas são copiados do baseline Python — não altere.
  */
 import { studySubject } from "../domain/naming.ts";
-import type { IdeaEvaluation, StudyConfig, StudySummary } from "../domain/types.ts";
+import type { Evidence, IdeaEvaluation, StudyConfig, StudySummary } from "../domain/types.ts";
 
 /** Normaliza um nome para pasta: NFD, sem acentos, minusculo, `-` no lugar do resto. */
 export function slug(name: string): string {
@@ -30,7 +30,8 @@ export function scopeNotice(cfg: StudyConfig): string {
     "> **Escopo e método:** este material foi gerado pelo goodbizz a partir do " +
     `nicho **${location}**. Os indicadores vêm de um decisor (System One) e o texto, de um ` +
     `LLM. O ticket assumido é de R$ ${cfg.monthlyTicket}/mês e a meta de clientes é de 10 a ` +
-    "15 em 24 meses. **Confira os números de mercado antes de usar isto com cliente:** " +
+    "15 em 24 meses. Afirmações com `[E#]` têm trecho e URL em `00-evidencias.md`. " +
+    "**Confira os números de mercado antes de usar isto com cliente:** " +
     "premissas marcadas `[INFERENCE]` são estimativa, não dado pesquisado.\n"
   );
 }
@@ -55,9 +56,10 @@ export function indexMarkdown(
     "",
     "## Como ler",
     "",
-    "1. `00-brief.md` — leitura de mercado que orientou a geração das ideias.",
-    "2. `00-tabelão.md` — todos os indicadores das ideias em uma tabela.",
-    "3. Uma pasta por ideia, cada uma com o plano completo.",
+    "1. `00-evidencias.md` — evidências da pesquisa na web, com trecho literal e URL de cada `[E#]`.",
+    "2. `00-brief.md` — leitura de mercado que orientou a geração das ideias.",
+    "3. `00-tabelão.md` — todos os indicadores das ideias em uma tabela.",
+    "4. Uma pasta por ideia, cada uma com o plano completo e as fontes citadas.",
     "",
     "## Ranking",
     "",
@@ -260,4 +262,36 @@ function fixed(value: number, decimals: number): string {
 function signed(value: number, decimals: number): string {
   const text = fixed(value, decimals);
   return text.startsWith("-") || text.startsWith("+") ? text : `+${text}`;
+}
+
+/** Ids citados no texto, na ordem da primeira citação: `[E2]`, `[E2, E7]` e `[E2; E7]`. */
+function citedIds(text: string): string[] {
+  const ids: string[] = [];
+  for (const match of text.matchAll(/\[(E\d+(?:\s*[,;]\s*E\d+)*)\]/g)) {
+    for (const id of (match[1] ?? "").split(/\s*[,;]\s*/)) if (!ids.includes(id)) ids.push(id);
+  }
+  return ids;
+}
+
+/**
+ * Seção "Fontes" de um plano (FR-007): as evidências citadas no texto, na ordem da primeira
+ * citação, com afirmação, trecho e URL. Id citado que não existe no estudo fica de fora e volta em
+ * `orphans`, para o pipeline registrar em `issues`.
+ */
+export function sourcesSection(
+  document: string,
+  evidences: readonly Evidence[],
+): { markdown: string; orphans: string[] } {
+  const byId = new Map(evidences.map((evidence) => [evidence.id, evidence]));
+  const cited = citedIds(document);
+  const orphans = cited.filter((id) => !byId.has(id));
+  const items = cited
+    .map((id) => byId.get(id))
+    .filter((evidence): evidence is Evidence => evidence !== undefined)
+    .map((evidence) => `- **[${evidence.id}]** ${evidence.afirmacao} — “${evidence.trecho}” — <${evidence.url}>`);
+  const body =
+    items.length > 0
+      ? items.join("\n")
+      : "Este plano não cita nenhuma evidência da pesquisa; a lista completa está em `00-evidencias.md`.";
+  return { markdown: `## Fontes\n\n${body}\n`, orphans };
 }

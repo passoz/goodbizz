@@ -1,0 +1,54 @@
+TASK: 1.6
+CHECK: GREEN
+COMMAND: bun --config=tests/bunfig.focus.toml test tests/evidence-sources-cases.test.ts -t FR-007
+EXIT: 0
+OUTPUT:
+bun test v1.4.2 (744846f84)
+
+ 2 pass
+ 0 fail
+ 5 expect() calls
+Ran 2 tests across 1 file. [22.00ms]
+
+MUTATION_EXIT: 1
+MUTATION_OUTPUT:
+bun test v1.4.2 (744846f84)
+
+tests/evidence-sources-cases.test.ts:
+40 |       { [IDEA.name]: "# Plano\n\nPreço e concorrente [E1, E3].\n" },
+41 |       [evidence("E1", "https://a.test"), evidence("E2", "https://b.test"), evidence("E3", "https://c.test")],
+42 |     );
+43 |     const readme = String(files.find((file) => file.path === "01-alerta-de-estoque/README.md")?.content);
+44 |     const fontes = readme.slice(readme.lastIndexOf("## Fontes"));
+45 |     expect(fontes).toContain("https://a.test");
+                        ^
+error: expect(received).toContain(expected)
+
+Expected to contain: "https://a.test"
+Received: "\n"
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/evidence-sources-cases.test.ts:45:20)
+(fail) seção Fontes em casos de borda > FR-007: citação agrupada [E1, E3] lista as duas evidências [3.19ms]
+58 |       { [IDEA.name]: "# Plano\n" },
+59 |       [],
+60 |     );
+61 |     const index = String(files.find((file) => file.path === "README.md")?.content);
+62 |     const brief = String(files.find((file) => file.path === "00-brief.md")?.content);
+63 |     expect(index).toContain("`00-evidencias.md`");
+                       ^
+error: expect(received).toContain(expected)
+
+Expected to contain: "`00-evidencias.md`"
+Received: "# Estudo de nicho: Deposito\n\n> **Escopo e método:** este material foi gerado pelo goodbizz a partir do nicho **Deposito**. Os indicadores vêm de um decisor (System One) e o texto, de um LLM. O ticket assumido é de R$ 300/mês e a meta de clientes é de 10 a 15 em 24 meses. **Confira os números de mercado antes de usar isto com cliente:** premissas marcadas `[INFERENCE]` são estimativa, não dado pesquisado.\n\n\n## Como ler\n\n1. `00-brief.md` — leitura de mercado que orientou a geração das ideias.\n2. `00-tabelão.md` — todos os indicadores das ideias em uma tabela.\n3. Uma pasta por ideia, cada uma com o plano completo.\n\n## Ranking\n\nOrdenado pelo Índice de Ação (média de fit e facilidade de venda).\n`WTP` = probabilidade de o dono pagar o ticket mensal assumido.\n\n| # | Ideia | Setor | Índice | Tier | WTP | Dor verificada |\n|---|---|---|---|---|---|---|\n| 01 | [Alerta de estoque](./01-alerta-de-estoque/) | estoque | **1.45** | C | 0.50 | FORTE |\n\n## Médias e grupos\n\n- fit **1.5** · venda **1.4** · disrupção **1.0** · suporte solo **0.6**\n- pagaria o ticket mensal (media): **0.5**\n- 30 clientes em 24 meses (media): **0.4**\n- tiers — A: 0 · B: 0 · C: 1\n\n**Agrupamento por natureza da dor** (o preditor mais forte):\n\n- Dor forte (dinheiro direto ou reputação): Alerta de estoque\n- Dor mista: nenhuma\n- Dor fraca (backoffice ou tecnologia): nenhuma\n\n## Avisos que valem para todas as ideias\n\n1. **O ticket de R$ 300/mês é teto, não piso.** A disposição a pagar medida ficou em 0.5 na media.\n2. **A meta de 30 clientes em 24 meses é otimista** (0.4 de probabilidade média). Planejar 10 a 15 clientes.\n3. **TAM nacional não serve como argumento.** Vender com o mercado da região e com o que um operador solo consegue atender.\n\n## Brief de contexto\n\nbrief\n"
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/evidence-sources-cases.test.ts:63:19)
+(fail) seção Fontes em casos de borda > FR-007: o índice e o aviso de escopo apontam para 00-evidencias.md [0.23ms]
+
+ 0 pass
+ 2 fail
+ 2 expect() calls
+Ran 2 tests across 1 file. [24.00ms]
+
+MUTATION_VERDICT: PASS
+VERDICT: PASS
+CHAIN_HASH: 0c5d7ebd18bd564db8ed18e581a6e72b6ff46e6ef890a5b282ed00158bdf34cf

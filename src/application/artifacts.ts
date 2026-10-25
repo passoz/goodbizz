@@ -5,7 +5,13 @@
 import type { ArtifactFile } from "../domain/ports.ts";
 import type { Evidence, IdeaEvaluation, StudyConfig, StudyIdea, StudySummary } from "../domain/types.ts";
 import { serializeDados } from "./dados.ts";
-import { indexMarkdown, indicatorsTableCsv, indicatorsTableMarkdown, scopeNotice } from "./reports.ts";
+import {
+  indexMarkdown,
+  indicatorsTableCsv,
+  indicatorsTableMarkdown,
+  scopeNotice,
+  sourcesSection,
+} from "./reports.ts";
 
 export interface ArtifactPlan {
   files: ArtifactFile[];
@@ -55,9 +61,11 @@ export function buildArtifactFiles(
   for (const [name, folder] of Object.entries(folders)) {
     const document = documents[name];
     if (document !== undefined && document.trim() !== "") {
+      // A seção Fontes fecha o arquivo: o operador acha a origem de cada [E#] sem abrir outro.
+      const sources = sourcesSection(document, evidences).markdown;
       files.push({
         path: `${folder}/README.md`,
-        content: `${document.trimEnd()}${generationFooter(generatedAtByName.get(name))}`,
+        content: `${document.trimEnd()}${generationFooter(generatedAtByName.get(name))}\n${sources}`,
       });
     }
   }

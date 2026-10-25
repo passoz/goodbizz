@@ -12,7 +12,7 @@ import { evaluateIdea } from "./evaluate.ts";
 import { generateBrief, generateDocument, generateIdeas } from "./generation.ts";
 import { DOC_LITERALS } from "./prompts.ts";
 import { fullHtml, mdToHtml } from "./render.ts";
-import { folderName } from "./reports.ts";
+import { folderName, sourcesSection } from "./reports.ts";
 import { evidenceHash, evidencesFor, mapLimit, researchIdeas, researchStudy } from "./research.ts";
 import { summarizeStudy } from "./summary.ts";
 import { checkDocument } from "./verification.ts";
@@ -411,6 +411,8 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
     ];
     const findings = checkDocument(text, numbers, DOC_LITERALS);
     const folder = folders[ordered.name] as string;
+    const orphans = sourcesSection(text, evidences).orphans;
+    if (orphans.length > 0) issues.push(`${folder}: citação de evidência inexistente: ${orphans.join(", ")}`);
     const status = findings.length === 0 ? "ok" : `ATENCAO: ${findings.join("; ")}`;
     progress(`[6/7] Escrevendo o plano de "${folder}" (${Math.floor(text.length / 1024)} KB) — ${status}`);
     if (findings.length > 0) issues.push(`${folder}: ${findings.join("; ")}`);

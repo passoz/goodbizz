@@ -1,0 +1,105 @@
+{
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bun",
+        "--config=tests/bunfig.focus.toml",
+        "test",
+        "tests/evidence-sources.test.ts",
+        "-t",
+        "FR-007"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0015/1.6-ac-1.log",
+      "log_sha256": "c8af4519f1b14316896fcdb1a3277a4d5842c436f1b54b8e206bc5c9d7a0b7c2",
+      "recorded_at": "2026-10-25T23:04:09.030Z",
+      "green_sha256": "ab86f17eb1ccc3c4be5c790680307390c5b3a95afb0f1e29cc45bf0ae1c4e211",
+      "vacuity": {
+        "exit_code": 1,
+        "verdict": "PASS"
+      }
+    }
+  },
+  "baseline_commit": "a67678ac0acdad2ba80f308efd361f1307d565fb",
+  "baseline_implementation": {
+    "src/application/artifacts.ts": {
+      "exists": true,
+      "sha256": "b00fdba47e2ddac02266fc02612a38d7d2e2229749d8ec08b691985876119335"
+    },
+    "src/application/reports.ts": {
+      "exists": true,
+      "sha256": "0e03e73271a7f7f999c12a5a3688f363b3147c7f5e390570ed7e06ab9397fd84"
+    },
+    "src/application/generate-study.ts": {
+      "exists": true,
+      "sha256": "e7fe0d19de1a47548dbf10f002ae3bcdca0bd933282d4b57cd94a231617bd0e2"
+    }
+  },
+  "baseline_tests": {
+    "tests/evidence-sources-cases.test.ts": {
+      "exists": false,
+      "sha256": null
+    }
+  },
+  "contract": {
+    "id": "CTR-006",
+    "sha256": "3cb7e9a0b69bedc84e669656eea61f983d9373fa61448c00bd51057ccec00aa7"
+  },
+  "created_at": "2026-10-25T23:03:36.262Z",
+  "frozen_tests": [
+    {
+      "path": "tests/evidence-sources.test.ts",
+      "sha256": "bf50df7594abaf2aff01d4eebbcc9c812e6db55ea137a840143f51e44637d18c"
+    }
+  ],
+  "green_expect": null,
+  "green_implementation": {
+    "src/application/artifacts.ts": {
+      "exists": true,
+      "sha256": "553381a66d63f4147e39b0443fdb173633806bb8b2c5a55fe4893675e404a28a"
+    },
+    "src/application/reports.ts": {
+      "exists": true,
+      "sha256": "505bb30f75006964cdaac1270d27d74f5c0c2de050b4ec548342d9bd67e10468"
+    },
+    "src/application/generate-study.ts": {
+      "exists": true,
+      "sha256": "4076d54bd6f071cbcea43a9b81e79c51d4923a557fecdee004594281805c23cf"
+    }
+  },
+  "green_tests": {
+    "tests/evidence-sources-cases.test.ts": {
+      "exists": true,
+      "sha256": "fb9afb4e198dae6be9b9bb18010e66b72039c7bccd0346c3d6cd613d9bbd50e3"
+    }
+  },
+  "implementation_files": [
+    "src/application/artifacts.ts",
+    "src/application/reports.ts",
+    "src/application/generate-study.ts"
+  ],
+  "plan_path": ".todo/0015-tasks.md",
+  "red_command": [
+    "bun",
+    "--config=tests/bunfig.focus.toml",
+    "test",
+    "tests/evidence-sources-cases.test.ts",
+    "-t",
+    "FR-007"
+  ],
+  "red_expect": "FR-007",
+  "red_tests": {
+    "tests/evidence-sources-cases.test.ts": {
+      "exists": true,
+      "sha256": "fb9afb4e198dae6be9b9bb18010e66b72039c7bccd0346c3d6cd613d9bbd50e3"
+    }
+  },
+  "state_version": 2,
+  "task": "1.6",
+  "task_definition_sha256": "19a6ae8cdcbac1fb963fea9167fb651fbc76b0471d83761c3dba62793ec7ae10",
+  "test_files": [
+    "tests/evidence-sources-cases.test.ts"
+  ]
+}
