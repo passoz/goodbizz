@@ -1,5 +1,6 @@
 /**
- * Study pipeline: brief -> ideas -> decider evaluation -> pain -> documents -> reports -> PDF.
+ * Study pipeline: brief -> ideas -> decider evaluation -> pairwise tournament -> pain -> documents ->
+ * reports -> PDF.
  *
  * Ported from `generate_study.py::execute`. Numbers are always produced by code; the LLM only
  * writes prose around the measured data block and is checked against it afterwards.
@@ -14,6 +15,7 @@ import { DOC_LITERALS } from "./prompts.ts";
 import { fullHtml, mdToHtml } from "./render.ts";
 import { folderName } from "./reports.ts";
 import { summarizeStudy } from "./summary.ts";
+import { runTournament } from "./tournament.ts";
 import { checkDocument } from "./verification.ts";
 import type { Logger, LlmClient, DeciderClient, ArtifactFile } from "../domain/ports.ts";
 import type {
@@ -165,8 +167,14 @@ export async function generateAddition(
   });
   progress(`[3/6] Avaliei as ${newEvaluations.length} ideias novas com o decisor`);
 
-  const evaluations = [...existing, ...newEvaluations];
-  const summary = summarizeStudy(evaluations);
+  // O torneio roda de novo sobre todas as ideias: partida já disputada vem do cache do duelo.
+  const tournament = await runTournament(cfg, [...existing, ...newEvaluations], {
+    decider,
+    cache,
+    onProgress: progress,
+  });
+  const evaluations = tournament.ideas;
+  const summary = summarizeStudy(evaluations, tournament.tournament);
   const folders: Record<string, string> = {};
   summary.ordered.forEach((evaluation, position) => {
     folders[evaluation.name] = folderName(position + 1, evaluation.name);
@@ -187,14 +195,14 @@ export async function generateAddition(
       folders: {},
       documents: {},
       files: [],
-      issues: [],
+      issues: [...(tournament.tournament?.issues ?? [])],
       cacheHits: cache.hits,
       cacheCount: await cache.count(),
     };
   }
 
   const byId = new Map(newEvaluations.map((evaluation) => [evaluation.id, evaluation]));
-  const issues: string[] = [];
+  const issues: string[] = [...(tournament.tournament?.issues ?? [])];
   const documents: Record<string, string> = {};
 
   // Só as novas ideias ganham documento: reescrever as antigas custaria o mesmo token de novo.
@@ -303,7 +311,7 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
     progress(`[2/6] ${ideas.length} ideias de produto geradas para o nicho`);
   }
 
-  const evaluations = await mapLimit(ideas, cfg.concurrency, async (idea) => {
+  const evaluated = await mapLimit(ideas, cfg.concurrency, async (idea) => {
     const key = scopedKey(
       cfg.cacheSeed,
       "aval",
@@ -321,7 +329,7 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
     return evaluated;
   });
 
-  for (const evaluation of [...evaluations].sort((a, b) => b.index - a.index)) {
+  for (const evaluation of [...evaluated].sort((a, b) => b.index - a.index)) {
     progress(
       `[3/6] Avaliei "${evaluation.name.slice(0, 38)}" com o decisor: índice ${evaluation.index.toFixed(3)} ` +
         `de 2 (maior é melhor), tier ${evaluation.tier}, dor ${evaluation.algorithm.label} ` +
@@ -329,7 +337,10 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
     );
   }
 
-  const summary = summarizeStudy(evaluations);
+  // Torneio par a par depois da avaliação: a ordem do ranking e das pastas sai dele.
+  const tournament = await runTournament(cfg, evaluated, { decider, cache, onProgress: progress });
+  const evaluations = tournament.ideas;
+  const summary = summarizeStudy(evaluations, tournament.tournament);
   const folders: Record<string, string> = {};
   summary.ordered.forEach((evaluation, position) => {
     folders[evaluation.name] = folderName(position + 1, evaluation.name);
@@ -351,7 +362,7 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
       folders: {},
       documents: {},
       files: [],
-      issues: [],
+      issues: [...(tournament.tournament?.issues ?? [])],
       cacheHits: cache.hits,
       cacheCount: await cache.count(),
     };
@@ -364,7 +375,7 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
   );
 
   const byName = new Map(evaluations.map((evaluation) => [evaluation.name, evaluation]));
-  const issues: string[] = [];
+  const issues: string[] = [...(tournament.tournament?.issues ?? [])];
   const documents: Record<string, string> = {};
 
   const written = await mapLimit(summary.ordered, cfg.concurrency, async (ordered) => {

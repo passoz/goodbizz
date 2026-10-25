@@ -4,12 +4,14 @@
  * Portado de `goodbizz/evaluation.py` (`group_by_pain` e `summary`).
  */
 import { populationMean, roundTo } from "./pain-algorithm.ts";
+import { rankIdeas } from "./tournament.ts";
 import type {
   IdeaEvaluation,
   PainGroups,
   StudyIdea,
   StudyMeans,
   StudySummary,
+  StudyTournament,
   Tier,
 } from "../domain/types.ts";
 
@@ -45,9 +47,12 @@ export function groupByPain(data: IdeaEvaluation[]): PainGroups {
   return groups;
 }
 
-/** Ordena por índice decrescente e resume médias, tiers, alvos e revisoes. */
-export function summarizeStudy(data: StudyIdea[]): StudySummary {
-  const ordered = [...data].sort((left, right) => right.index - left.index);
+/**
+ * Ordena pelo ranking (média do torneio, depois índice, depois nome) e resume médias, tiers, alvos,
+ * revisões e as partidas do torneio. Sem torneio, a ordem é a do índice.
+ */
+export function summarizeStudy(data: StudyIdea[], tournament: StudyTournament | null = null): StudySummary {
+  const ordered = rankIdeas(data);
 
   const means: StudyMeans = {
     fit: roundTo(populationMean(data.map((item) => item.indicators.fit)), 3),
@@ -72,5 +77,6 @@ export function summarizeStudy(data: StudyIdea[]): StudySummary {
     review: ordered
       .filter((item) => item.algorithm.label === "INDETERMINADO" || item.algorithm.label === "INSTAVEL")
       .map((item) => item.name),
+    tournament,
   };
 }

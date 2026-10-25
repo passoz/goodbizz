@@ -1,0 +1,56 @@
+TASK: 1.3
+CHECK: AC-1
+COMMAND: bun --config=tests/bunfig.focus.toml test tests/tournament-pipeline.test.ts -t 'pasta 01'
+EXIT: 0
+OUTPUT:
+bun test v1.4.2 (744846f84)
+
+ 2 pass
+ 2 filtered out
+ 0 fail
+ 9 expect() calls
+Ran 2 tests across 1 file. [75.00ms]
+
+MUTATION_EXIT: 1
+MUTATION_OUTPUT:
+bun test v1.4.2 (744846f84)
+
+tests/tournament-pipeline.test.ts:
+ 95 |     const decider = new ControlledDecider(EIGHT_SCORES, preferFiado);
+ 96 |     const result = await generateStudy(cfg, { llm: new LlmMock(), decider, cache, logger: silentLogger() });
+ 97 | 
+ 98 |     const fiado = result.evaluations.find((item) => item.name === "Fiado Digital");
+ 99 |     expect(Math.min(...result.evaluations.map((item) => item.index))).toBe(fiado?.index ?? -1);
+100 |     expect(result.summary.tournament?.rounds).toBe(4);
+                                                    ^
+error: expect(received).toBe(expected)
+
+Expected: 4
+Received: undefined
+
+      at <anonymous> (/home/passoz/dev/goodbizz-w0017/tests/tournament-pipeline.test.ts:100:47)
+(fail) torneio no pipeline > pasta 01: a ideia que o decisor sempre escolhe fica em primeiro com media 1.0 [22.00ms]
+108 | 
+109 |   test("pasta 01: o modo --so-avaliar tambem ordena pelo torneio", async () => {
+110 |     const { handle, cache, cfg } = setup(EIGHT, { evaluateOnly: true });
+111 |     const decider = new ControlledDecider(EIGHT_SCORES, preferFiado);
+112 |     const result = await generateStudy(cfg, { llm: new LlmMock(), decider, cache, logger: silentLogger() });
+113 |     expect(result.summary.ordered[0]?.name).toBe("Fiado Digital");
+                                                  ^
+error: expect(received).toBe(expected)
+
+Expected: "Fiado Digital"
+Received: "Gelo Garantido"
+
+      at <anonymous> (/home/passoz/dev/goodbizz-w0017/tests/tournament-pipeline.test.ts:113:45)
+(fail) torneio no pipeline > pasta 01: o modo --so-avaliar tambem ordena pelo torneio [2.95ms]
+
+ 0 pass
+ 2 filtered out
+ 2 fail
+ 3 expect() calls
+Ran 2 tests across 1 file. [62.00ms]
+
+MUTATION_VERDICT: PASS
+VERDICT: PASS
+CHAIN_HASH: 905073d89c2368a4db79bede561066ab7745fa671ec5d4838e3ec6b186db5fe7

@@ -106,7 +106,9 @@ describe("generateStudy", () => {
   test("reuses cached answers on a second run of the same configuration", async () => {
     const { handle, cache } = harness();
     const deps = { llm: new LlmMock(), decider: new DeciderMock(), cache, logger: silentLogger() };
-    const cfg = config();
+    // Três ideias: o torneio de 3 rodadas não repete partida, então a primeira execução não lê o
+    // cache (com 2 ideias a segunda rodada repete o duelo e já o serve do cache).
+    const cfg = config({ numIdeas: 3 });
 
     const first = await generateStudy(cfg, deps);
     expect(first.cacheHits).toBe(0);
@@ -122,16 +124,16 @@ describe("generateStudy", () => {
     const { handle, cache } = harness();
     const deps = { llm: new LlmMock(), decider: new DeciderMock(), cache, logger: silentLogger() };
 
-    await generateStudy(config({ cacheSeed: "estudo-a" }), deps);
+    await generateStudy(config({ cacheSeed: "estudo-a", numIdeas: 3 }), deps);
 
     // Estudo novo com a mesma configuração: nenhuma das respostas de A pode servir B.
     const before = cache.hits;
-    await generateStudy(config({ cacheSeed: "estudo-b" }), deps);
+    await generateStudy(config({ cacheSeed: "estudo-b", numIdeas: 3 }), deps);
     expect(cache.hits - before).toBe(0);
 
     // Reexecutar o mesmo estudo continua reaproveitando o cache dele (retomada).
     const beforeRerun = cache.hits;
-    await generateStudy(config({ cacheSeed: "estudo-a" }), deps);
+    await generateStudy(config({ cacheSeed: "estudo-a", numIdeas: 3 }), deps);
     expect(cache.hits - beforeRerun).toBeGreaterThan(0);
     handle.sqlite.close();
   });
@@ -140,17 +142,26 @@ describe("generateStudy", () => {
     const { handle, cache } = harness();
     const deps = { llm: new LlmMock(), decider: new DeciderMock(), cache, logger: silentLogger() };
 
-    await generateStudy(config({ cacheSeed: "mesmo-estudo", providerFingerprint: "urlA|m|kA" }), deps);
+    await generateStudy(
+      config({ cacheSeed: "mesmo-estudo", providerFingerprint: "urlA|m|kA", numIdeas: 3 }),
+      deps,
+    );
 
     // O estudo reexecutado com OUTRO provedor ativo nao pode receber a resposta gravada pelo
     // anterior: a impressao entra em toda chave de cache.
     const beforeSwitch = cache.hits;
-    await generateStudy(config({ cacheSeed: "mesmo-estudo", providerFingerprint: "urlB|m|kB" }), deps);
+    await generateStudy(
+      config({ cacheSeed: "mesmo-estudo", providerFingerprint: "urlB|m|kB", numIdeas: 3 }),
+      deps,
+    );
     expect(cache.hits - beforeSwitch).toBe(0);
 
     // Reexecutar no MESMO provedor novo retoma o que ele ja produziu.
     const beforeRerun = cache.hits;
-    await generateStudy(config({ cacheSeed: "mesmo-estudo", providerFingerprint: "urlB|m|kB" }), deps);
+    await generateStudy(
+      config({ cacheSeed: "mesmo-estudo", providerFingerprint: "urlB|m|kB", numIdeas: 3 }),
+      deps,
+    );
     expect(cache.hits - beforeRerun).toBeGreaterThan(0);
     handle.sqlite.close();
   });
