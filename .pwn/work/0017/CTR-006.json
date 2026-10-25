@@ -31,6 +31,7 @@
     "target_files": [
       "src/application/study-service.ts",
       "tests/tournament-study.test.ts",
+      "tests/study-service-tournament.test.ts",
       "tests/study-service.test.ts",
       "tests/api.test.ts"
     ],
@@ -48,6 +49,7 @@
   },
   "acceptance_contract": {
     "commands": [
+      "bun --config=tests/bunfig.focus.toml test tests/study-service-tournament.test.ts",
       "bun --config=tests/bunfig.focus.toml test tests/tournament-study.test.ts -t \"remocao\"",
       "bun --config=tests/bunfig.focus.toml test tests/tournament-study.test.ts -t \"adicao\""
     ],
@@ -59,6 +61,7 @@
     "write_allow": [
       "src/application/study-service.ts",
       "tests/tournament-study.test.ts",
+      "tests/study-service-tournament.test.ts",
       "tests/study-service.test.ts",
       "tests/api.test.ts"
     ],
@@ -68,7 +71,7 @@
       ".env*"
     ],
     "out_of_scope": [
-      "Arquivos fora de: src/application/study-service.ts, tests/tournament-study.test.ts, tests/study-service.test.ts, tests/api.test.ts"
+      "Arquivos fora de: src/application/study-service.ts, tests/tournament-study.test.ts, tests/study-service-tournament.test.ts, tests/study-service.test.ts, tests/api.test.ts"
     ]
   },
   "budget_contract": {

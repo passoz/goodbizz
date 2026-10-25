@@ -30,7 +30,8 @@
   "change_contract": {
     "target_files": [
       "src/infrastructure/decider-mock.ts",
-      "tests/tournament-mock.test.ts"
+      "tests/tournament-mock.test.ts",
+      "tests/decider-mock-duel.test.ts"
     ],
     "affected_components": [
       "decider-mock"
@@ -46,6 +47,7 @@
   },
   "acceptance_contract": {
     "commands": [
+      "bun --config=tests/bunfig.focus.toml test tests/decider-mock-duel.test.ts",
       "bun --config=tests/bunfig.focus.toml test tests/tournament-mock.test.ts -t \"duelo simulado\"",
       "bun --config=tests/bunfig.focus.toml test tests/tournament-mock.test.ts -t \"torneio simulado\""
     ],
@@ -56,7 +58,8 @@
   "scope_contract": {
     "write_allow": [
       "src/infrastructure/decider-mock.ts",
-      "tests/tournament-mock.test.ts"
+      "tests/tournament-mock.test.ts",
+      "tests/decider-mock-duel.test.ts"
     ],
     "write_deny": [
       ".git/**",
@@ -64,7 +67,7 @@
       ".env*"
     ],
     "out_of_scope": [
-      "Arquivos fora de: src/infrastructure/decider-mock.ts, tests/tournament-mock.test.ts"
+      "Arquivos fora de: src/infrastructure/decider-mock.ts, tests/tournament-mock.test.ts, tests/decider-mock-duel.test.ts"
     ]
   },
   "budget_contract": {

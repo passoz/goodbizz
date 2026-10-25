@@ -38,6 +38,7 @@
       "src/application/tournament.ts",
       "src/domain/types.ts",
       "tests/tournament.test.ts",
+      "tests/tournament-rules.test.ts",
       "tests/bunfig.focus.toml"
     ],
     "affected_components": [
@@ -54,7 +55,7 @@
   },
   "acceptance_contract": {
     "commands": [
-      "bun --config=tests/bunfig.focus.toml test tests/tournament.test.ts -t \"torneio suico\"",
+      "bun --config=tests/bunfig.focus.toml test tests/tournament-rules.test.ts",
       "bun --config=tests/bunfig.focus.toml test tests/tournament.test.ts -t \"rodadas\"",
       "bun --config=tests/bunfig.focus.toml test tests/tournament.test.ts -t \"vies de posicao\"",
       "bun --config=tests/bunfig.focus.toml test tests/tournament.test.ts -t \"folga\""
@@ -68,6 +69,7 @@
       "src/application/tournament.ts",
       "src/domain/types.ts",
       "tests/tournament.test.ts",
+      "tests/tournament-rules.test.ts",
       "tests/bunfig.focus.toml"
     ],
     "write_deny": [
@@ -76,7 +78,7 @@
       ".env*"
     ],
     "out_of_scope": [
-      "Arquivos fora de: src/application/tournament.ts, src/domain/types.ts, tests/tournament.test.ts, tests/bunfig.focus.toml"
+      "Arquivos fora de: src/application/tournament.ts, src/domain/types.ts, tests/tournament.test.ts, tests/tournament-rules.test.ts, tests/bunfig.focus.toml"
     ]
   },
   "budget_contract": {

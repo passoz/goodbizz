@@ -33,6 +33,7 @@
       "src/infrastructure/repositories.ts",
       "src/infrastructure/http/api.ts",
       "tests/tournament-persistence.test.ts",
+      "tests/repositories-tournament.test.ts",
       "drizzle/0006_tournament.sql",
       "drizzle/meta/_journal.json",
       "drizzle/meta/0006_snapshot.json"
@@ -51,6 +52,7 @@
   },
   "acceptance_contract": {
     "commands": [
+      "bun --config=tests/bunfig.focus.toml test tests/repositories-tournament.test.ts",
       "bun --config=tests/bunfig.focus.toml test tests/tournament-persistence.test.ts -t \"tournament_json\"",
       "bun --config=tests/bunfig.focus.toml test tests/tournament-persistence.test.ts -t \"estudo antigo\""
     ],
@@ -64,6 +66,7 @@
       "src/infrastructure/repositories.ts",
       "src/infrastructure/http/api.ts",
       "tests/tournament-persistence.test.ts",
+      "tests/repositories-tournament.test.ts",
       "drizzle/0006_tournament.sql",
       "drizzle/meta/_journal.json",
       "drizzle/meta/0006_snapshot.json"
@@ -74,7 +77,7 @@
       ".env*"
     ],
     "out_of_scope": [
-      "Arquivos fora de: src/infrastructure/schema.ts, src/infrastructure/repositories.ts, src/infrastructure/http/api.ts, tests/tournament-persistence.test.ts, drizzle/0006_tournament.sql, drizzle/meta/_journal.json, drizzle/meta/0006_snapshot.json"
+      "Arquivos fora de: src/infrastructure/schema.ts, src/infrastructure/repositories.ts, src/infrastructure/http/api.ts, tests/tournament-persistence.test.ts, tests/repositories-tournament.test.ts, drizzle/0006_tournament.sql, drizzle/meta/_journal.json, drizzle/meta/0006_snapshot.json"
     ]
   },
   "budget_contract": {

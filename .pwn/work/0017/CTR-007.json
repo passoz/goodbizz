@@ -33,6 +33,7 @@
       "src/infrastructure/http/ui/layout.tsx",
       "src/infrastructure/http/ui/routes.tsx",
       "tests/tournament-ui.test.ts",
+      "tests/ui-tournament.test.ts",
       "tests/ui.test.ts",
       "README.md",
       ".specs/system.json"
@@ -51,7 +52,7 @@
   },
   "acceptance_contract": {
     "commands": [
-      "bun --config=tests/bunfig.focus.toml test tests/tournament-ui.test.ts -t \"torneio\"",
+      "bun --config=tests/bunfig.focus.toml test tests/ui-tournament.test.ts",
       "bun --config=tests/bunfig.focus.toml test tests/tournament-ui.test.ts -t \"em 4 partidas\"",
       "bun --config=tests/bunfig.focus.toml test tests/tournament-ui.test.ts -t \"glossario\""
     ],
@@ -65,6 +66,7 @@
       "src/infrastructure/http/ui/layout.tsx",
       "src/infrastructure/http/ui/routes.tsx",
       "tests/tournament-ui.test.ts",
+      "tests/ui-tournament.test.ts",
       "tests/ui.test.ts",
       "README.md",
       ".specs/system.json"
@@ -75,7 +77,7 @@
       ".env*"
     ],
     "out_of_scope": [
-      "Arquivos fora de: src/infrastructure/http/ui/pages.tsx, src/infrastructure/http/ui/layout.tsx, src/infrastructure/http/ui/routes.tsx, tests/tournament-ui.test.ts, tests/ui.test.ts, README.md, .specs/system.json"
+      "Arquivos fora de: src/infrastructure/http/ui/pages.tsx, src/infrastructure/http/ui/layout.tsx, src/infrastructure/http/ui/routes.tsx, tests/tournament-ui.test.ts, tests/ui-tournament.test.ts, tests/ui.test.ts, README.md, .specs/system.json"
     ]
   },
   "budget_contract": {

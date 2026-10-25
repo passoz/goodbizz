@@ -52,6 +52,7 @@
         "src/application/tournament.ts",
         "src/domain/types.ts",
         "tests/tournament.test.ts",
+        "tests/tournament-rules.test.ts",
         "tests/bunfig.focus.toml"
       ],
       "implementation_files": [
@@ -59,11 +60,12 @@
         "src/domain/types.ts"
       ],
       "test_files": [
-        "tests/tournament.test.ts"
+        "tests/tournament.test.ts",
+        "tests/tournament-rules.test.ts"
       ],
       "red": {
-        "command": "bun --config=tests/bunfig.focus.toml test tests/tournament.test.ts -t \"torneio suico\"",
-        "description": "o esqueleto devolve zero rodadas e nenhum ponto, entao as assercoes de rodadas, folga e media falham"
+        "command": "bun --config=tests/bunfig.focus.toml test tests/tournament-rules.test.ts",
+        "description": "o esqueleto devolve zero rodadas, nenhuma probabilidade de duelo e ordena so pelo indice"
       },
       "implementation_steps": [
         "Escrever os testes que falham (RED): rodadas, emparelhamento, folga, duas ordens, sem probabilidade, cache e limite de 32 duelos",
@@ -103,17 +105,19 @@
       ],
       "files": [
         "src/infrastructure/decider-mock.ts",
-        "tests/tournament-mock.test.ts"
+        "tests/tournament-mock.test.ts",
+        "tests/decider-mock-duel.test.ts"
       ],
       "implementation_files": [
         "src/infrastructure/decider-mock.ts"
       ],
       "test_files": [
-        "tests/tournament-mock.test.ts"
+        "tests/tournament-mock.test.ts",
+        "tests/decider-mock-duel.test.ts"
       ],
       "red": {
-        "command": "bun --config=tests/bunfig.focus.toml test tests/tournament-mock.test.ts -t \"duelo simulado\"",
-        "description": "o mock antigo escolhe pela semente do estado e devolve A nas duas ordens, entao a preferencia muda com a posicao"
+        "command": "bun --config=tests/bunfig.focus.toml test tests/decider-mock-duel.test.ts",
+        "description": "o mock antigo escolhe o duelo pela semente do estado, nao pela forca do texto de cada opcao"
       },
       "implementation_steps": [
         "Escrever o teste que falha (RED): a ideia preferida e a mesma nas duas ordens e o torneio simulado repete ordem e pontos",
@@ -152,6 +156,7 @@
         "src/application/generate-study.ts",
         "src/cli.ts",
         "tests/tournament-pipeline.test.ts",
+        "tests/summary-ranking.test.ts",
         "tests/generate-study.test.ts",
         "tests/evaluate.test.ts",
         "tests/e2e.test.ts",
@@ -166,11 +171,12 @@
         "src/cli.ts"
       ],
       "test_files": [
-        "tests/tournament-pipeline.test.ts"
+        "tests/tournament-pipeline.test.ts",
+        "tests/summary-ranking.test.ts"
       ],
       "red": {
-        "command": "bun --config=tests/bunfig.focus.toml test tests/tournament-pipeline.test.ts -t \"pasta 01\"",
-        "description": "sem a etapa do torneio as pastas seguem o indice e a ideia preferida pelo decisor nao fica em 01-"
+        "command": "bun --config=tests/bunfig.focus.toml test tests/summary-ranking.test.ts",
+        "description": "summarizeStudy ainda ordena pelo indice e ignora a media do torneio e o resumo nao traz as partidas"
       },
       "implementation_steps": [
         "Escrever os testes que falham (RED): pasta 01 da ideia preferida e desempate por indice e nome",
@@ -208,6 +214,7 @@
         "src/application/reports.ts",
         "src/application/dados.ts",
         "tests/tournament-artifacts.test.ts",
+        "tests/reports-tournament.test.ts",
         "tests/reports.test.ts",
         "tests/artifacts.test.ts"
       ],
@@ -216,11 +223,12 @@
         "src/application/dados.ts"
       ],
       "test_files": [
-        "tests/tournament-artifacts.test.ts"
+        "tests/tournament-artifacts.test.ts",
+        "tests/reports-tournament.test.ts"
       ],
       "red": {
-        "command": "bun --config=tests/bunfig.focus.toml test tests/tournament-artifacts.test.ts -t \"coluna torneio\"",
-        "description": "o CSV antigo nao tem a coluna torneio e ordena pelo indice"
+        "command": "bun --config=tests/bunfig.focus.toml test tests/reports-tournament.test.ts",
+        "description": "o tabelao e o CSV nao tem a coluna torneio e ordenam pelo indice"
       },
       "implementation_steps": [
         "Escrever os testes que falham (RED): coluna torneio, chaves antigas intactas e ordem pelos pontos",
@@ -259,6 +267,7 @@
         "src/infrastructure/repositories.ts",
         "src/infrastructure/http/api.ts",
         "tests/tournament-persistence.test.ts",
+        "tests/repositories-tournament.test.ts",
         "drizzle/0006_tournament.sql",
         "drizzle/meta/_journal.json",
         "drizzle/meta/0006_snapshot.json"
@@ -269,11 +278,12 @@
         "src/infrastructure/http/api.ts"
       ],
       "test_files": [
-        "tests/tournament-persistence.test.ts"
+        "tests/tournament-persistence.test.ts",
+        "tests/repositories-tournament.test.ts"
       ],
       "red": {
-        "command": "bun --config=tests/bunfig.focus.toml test tests/tournament-persistence.test.ts -t \"tournament_json\"",
-        "description": "sem a coluna os pontos somem na leitura e o rank volta a seguir o indice"
+        "command": "bun --config=tests/bunfig.focus.toml test tests/repositories-tournament.test.ts",
+        "description": "o repositorio descarta os pontos do torneio na leitura e grava o rank pelo indice"
       },
       "implementation_steps": [
         "Escrever os testes que falham (RED): pontos sobrevivem a gravacao, estudo antigo ordena pelo indice e a API expoe as partidas",
@@ -310,6 +320,7 @@
       "files": [
         "src/application/study-service.ts",
         "tests/tournament-study.test.ts",
+        "tests/study-service-tournament.test.ts",
         "tests/study-service.test.ts",
         "tests/api.test.ts"
       ],
@@ -317,11 +328,12 @@
         "src/application/study-service.ts"
       ],
       "test_files": [
-        "tests/tournament-study.test.ts"
+        "tests/tournament-study.test.ts",
+        "tests/study-service-tournament.test.ts"
       ],
       "red": {
-        "command": "bun --config=tests/bunfig.focus.toml test tests/tournament-study.test.ts -t \"remocao\"",
-        "description": "a remocao antiga mantem as partidas da ideia excluida e as medias nao mudam"
+        "command": "bun --config=tests/bunfig.focus.toml test tests/study-service-tournament.test.ts",
+        "description": "a remocao mantem as partidas da ideia excluida e nao recalcula as medias"
       },
       "implementation_steps": [
         "Escrever os testes que falham (RED): remocao sem chamada de duelo e adicao com partidas antigas vindas do cache",
@@ -360,6 +372,7 @@
         "src/infrastructure/http/ui/layout.tsx",
         "src/infrastructure/http/ui/routes.tsx",
         "tests/tournament-ui.test.ts",
+        "tests/ui-tournament.test.ts",
         "tests/ui.test.ts",
         "README.md",
         ".specs/system.json"
@@ -370,11 +383,12 @@
         "src/infrastructure/http/ui/routes.tsx"
       ],
       "test_files": [
-        "tests/tournament-ui.test.ts"
+        "tests/tournament-ui.test.ts",
+        "tests/ui-tournament.test.ts"
       ],
       "red": {
-        "command": "bun --config=tests/bunfig.focus.toml test tests/tournament-ui.test.ts -t \"torneio\"",
-        "description": "a pagina antiga nao tem a coluna do torneio nem o termo no glossario"
+        "command": "bun --config=tests/bunfig.focus.toml test tests/ui-tournament.test.ts",
+        "description": "o ranking nao mostra a coluna do torneio e o glossario nao tem o termo"
       },
       "implementation_steps": [
         "Escrever os testes que falham (RED): coluna 'em 4 partidas', glossario e /como-ler",

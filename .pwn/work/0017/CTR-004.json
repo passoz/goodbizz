@@ -32,6 +32,7 @@
       "src/application/reports.ts",
       "src/application/dados.ts",
       "tests/tournament-artifacts.test.ts",
+      "tests/reports-tournament.test.ts",
       "tests/reports.test.ts",
       "tests/artifacts.test.ts"
     ],
@@ -49,6 +50,7 @@
   },
   "acceptance_contract": {
     "commands": [
+      "bun --config=tests/bunfig.focus.toml test tests/reports-tournament.test.ts",
       "bun --config=tests/bunfig.focus.toml test tests/tournament-artifacts.test.ts -t \"coluna torneio\"",
       "bun --config=tests/bunfig.focus.toml test tests/tournament-artifacts.test.ts -t \"chaves\""
     ],
@@ -61,6 +63,7 @@
       "src/application/reports.ts",
       "src/application/dados.ts",
       "tests/tournament-artifacts.test.ts",
+      "tests/reports-tournament.test.ts",
       "tests/reports.test.ts",
       "tests/artifacts.test.ts"
     ],
@@ -70,7 +73,7 @@
       ".env*"
     ],
     "out_of_scope": [
-      "Arquivos fora de: src/application/reports.ts, src/application/dados.ts, tests/tournament-artifacts.test.ts, tests/reports.test.ts, tests/artifacts.test.ts"
+      "Arquivos fora de: src/application/reports.ts, src/application/dados.ts, tests/tournament-artifacts.test.ts, tests/reports-tournament.test.ts, tests/reports.test.ts, tests/artifacts.test.ts"
     ]
   },
   "budget_contract": {

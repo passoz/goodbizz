@@ -33,6 +33,7 @@
       "src/application/generate-study.ts",
       "src/cli.ts",
       "tests/tournament-pipeline.test.ts",
+      "tests/summary-ranking.test.ts",
       "tests/generate-study.test.ts",
       "tests/evaluate.test.ts",
       "tests/e2e.test.ts",
@@ -55,6 +56,7 @@
   },
   "acceptance_contract": {
     "commands": [
+      "bun --config=tests/bunfig.focus.toml test tests/summary-ranking.test.ts",
       "bun --config=tests/bunfig.focus.toml test tests/tournament-pipeline.test.ts -t \"pasta 01\"",
       "bun --config=tests/bunfig.focus.toml test tests/tournament-pipeline.test.ts -t \"desempate\""
     ],
@@ -68,6 +70,7 @@
       "src/application/generate-study.ts",
       "src/cli.ts",
       "tests/tournament-pipeline.test.ts",
+      "tests/summary-ranking.test.ts",
       "tests/generate-study.test.ts",
       "tests/evaluate.test.ts",
       "tests/e2e.test.ts",
@@ -82,7 +85,7 @@
       ".env*"
     ],
     "out_of_scope": [
-      "Arquivos fora de: src/application/summary.ts, src/application/generate-study.ts, src/cli.ts, tests/tournament-pipeline.test.ts, tests/generate-study.test.ts, tests/evaluate.test.ts, tests/e2e.test.ts, tests/smoke.test.ts, tests/cli.test.ts, tests/workflows.test.ts, tests/mock-determinism.test.ts"
+      "Arquivos fora de: src/application/summary.ts, src/application/generate-study.ts, src/cli.ts, tests/tournament-pipeline.test.ts, tests/summary-ranking.test.ts, tests/generate-study.test.ts, tests/evaluate.test.ts, tests/e2e.test.ts, tests/smoke.test.ts, tests/cli.test.ts, tests/workflows.test.ts, tests/mock-determinism.test.ts"
     ]
   },
   "budget_contract": {
