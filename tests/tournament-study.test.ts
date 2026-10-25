@@ -76,7 +76,7 @@ function expectStandingsMatch(record: StudyRecord): void {
 /** As pastas no disco seguem a ordem gravada, de 01 em diante. */
 function expectFoldersFollowRanking(record: StudyRecord): void {
   const folders = readdirSync(record.artifactDir)
-    .filter((entry) => /^\d\d-/.test(entry))
+    .filter((entry) => /^\d\d-/.test(entry) && !entry.startsWith("00-"))
     .sort();
   expect(folders).toHaveLength(record.evaluations.length);
   expect(record.summary?.ordered.map((idea) => idea.id)).toEqual(record.evaluations.map((idea) => idea.id));
@@ -104,8 +104,10 @@ describe("torneio na remocao e na adicao", () => {
 
   test("remocao seguida de adicao: toda partida ja disputada vem do cache", async () => {
     const study = await studyWith(5);
+    // O cache do duelo é por texto da ideia (nome e descrição), então o par é comparado pelo nome:
+    // uma ideia nova com o mesmo texto de uma removida reaproveita as partidas dela.
     const oldPairs = new Set(
-      (study.summary?.tournament?.matches ?? []).map((match) => pairOf(match.a, match.b)),
+      (study.summary?.tournament?.matches ?? []).map((match) => pairOf(match.aName, match.bName)),
     );
 
     const removed = await service.removeIdea(study.id, study.summary?.ordered[4]?.id ?? "");
@@ -118,7 +120,7 @@ describe("torneio na remocao e na adicao", () => {
 
     const newPairs = new Set(
       (added.summary?.tournament?.matches ?? [])
-        .map((match) => pairOf(match.a, match.b))
+        .map((match) => pairOf(match.aName, match.bName))
         .filter((pair) => !oldPairs.has(pair)),
     );
     // Só as partidas inéditas chamam o decisor, duas vezes cada (as duas ordens).
