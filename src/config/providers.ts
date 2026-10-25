@@ -15,6 +15,10 @@ export interface ProviderConfig {
   deciderUrl: string;
   deciderApiKey: string;
   deciderModel: string;
+  /** Base do provedor de busca (protocolo Tavily: `POST {base}/search`). Sem modelo: busca não tem. */
+  searchBaseUrl: string;
+  /** Chave do provedor de busca; vazia fora do modo simulado impede o startup. */
+  searchApiKey: string;
 }
 
 /** Perfil ativo de um tipo, ou `null` quando a vez é do ambiente. */
@@ -35,6 +39,9 @@ export function effectiveProviders(env: Env, settings: ProviderSettings): Provid
     deciderUrl: decider?.url ?? env.DECISION_API_URL,
     deciderApiKey: decider?.apiKey ?? env.DECISION_API_KEY,
     deciderModel: decider?.model ?? env.DECISION_API_MODEL,
+    // A sobreposição do perfil de busca ativo entra na 1.14; aqui vale o ambiente.
+    searchBaseUrl: env.SEARCH_API_URL,
+    searchApiKey: env.SEARCH_API_KEY,
   };
 }
 

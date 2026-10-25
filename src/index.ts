@@ -52,6 +52,7 @@ export async function buildService(env: Env = loadEnv()): Promise<ServiceBundle>
   // e o caminho para validar um dos provedores sem gastar no outro.
   const mockLlm = mockAll || env.GOODBIZZ_MOCK_LLM;
   const mockDecider = mockAll || env.GOODBIZZ_MOCK_DECIDER;
+  const mockSearch = mockAll || env.GOODBIZZ_MOCK_SEARCH;
 
   const handle = openDatabase(env.DATABASE_URL);
   const applied = runMigrations(handle, MIGRATIONS_DIR);
@@ -68,6 +69,9 @@ export async function buildService(env: Env = loadEnv()): Promise<ServiceBundle>
   }
   if (!mockDecider && effective.deciderUrl === "") {
     throw new ConfigError("DECISION_API_URL is required unless the decider is mocked");
+  }
+  if (!mockSearch && effective.searchApiKey.trim() === "") {
+    throw new ConfigError("SEARCH_API_KEY is required unless the search is mocked");
   }
 
   // Clientes que releem a configuração a cada chamada: salvar na aba /settings vale na hora.

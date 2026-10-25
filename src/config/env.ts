@@ -39,8 +39,12 @@ export interface Env {
   GOODBIZZ_PRICE_LLM_OUTPUT_PER_MTOK: number;
   GOODBIZZ_PRICE_DECIDER_INPUT_PER_MTOK: number;
   GOODBIZZ_PRICE_DECIDER_OUTPUT_PER_MTOK: number;
-  /** US$ por mil chamadas ao provedor de busca (Tavily grátis até 1.000 por mês: padrão 0). */
-  GOODBIZZ_PRICE_SEARCH_PER_1K: number;
+  /** Base do provedor de busca (protocolo Tavily: `POST {base}/search`). */
+  SEARCH_API_URL: string;
+  /** Chave do provedor de busca; vazia fora do modo simulado impede o startup. */
+  SEARCH_API_KEY: string;
+  /** Simula apenas a busca (evidências determinísticas) mantendo LLM e decisor reais. */
+  GOODBIZZ_MOCK_SEARCH: boolean;
   GOODBIZZ_USD_BRL: number;
 }
 
@@ -71,6 +75,12 @@ function buildEnv() {
       GOODBIZZ_LLM_TIMEOUT: z.coerce.number().int().min(5).max(3600).default(300),
       /** Simula apenas o decisor (números deterministicos) mantendo o LLM real. */
       GOODBIZZ_MOCK_DECIDER: booleanFlag("0"),
+      /** Simula apenas a busca (evidências determinísticas) mantendo LLM e decisor reais. */
+      GOODBIZZ_MOCK_SEARCH: booleanFlag("0"),
+      /** Base do provedor de busca (protocolo Tavily: `POST {base}/search`). */
+      SEARCH_API_URL: z.string().min(1).default("https://api.tavily.com"),
+      /** Chave do provedor de busca; vazia fora do modo simulado impede o startup. */
+      SEARCH_API_KEY: z.string().default(""),
 
       // Preços para a estimativa de custo por estudo (US$ por 1M de tokens). Padrões = tabelas
       // OFICIAIS: decisor Jev 1.13 da TypeSafe (api.typesafe.ai — US$ 0,042/1M de entrada, saída
