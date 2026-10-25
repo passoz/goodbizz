@@ -26,6 +26,7 @@
       "src/infrastructure/search.ts",
       "src/infrastructure/provider-probe.ts",
       "src/domain/errors.ts",
+      "src/domain/types.ts",
       "tests/search-adapter.test.ts",
       "tests/search-adapter-cases.test.ts"
     ],
@@ -58,6 +59,7 @@
       "src/infrastructure/search.ts",
       "src/infrastructure/provider-probe.ts",
       "src/domain/errors.ts",
+      "src/domain/types.ts",
       "tests/search-adapter.test.ts",
       "tests/search-adapter-cases.test.ts"
     ],

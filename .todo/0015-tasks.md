@@ -208,7 +208,7 @@
 **Depends on:** none
 **Behavior:** o adaptador HTTP faz POST {url}/search com Bearer e corpo Tavily, traduz 401/403, 429 e rede em frases humanas com o detalhe cru, e o Testar do tipo search usa o adaptador sem devolver a chave
 **Components:** search-provider
-**Files:** `src/infrastructure/search.ts`, `src/infrastructure/provider-probe.ts`, `src/domain/errors.ts`, `tests/search-adapter.test.ts`, `tests/search-adapter-cases.test.ts`
+**Files:** `src/infrastructure/search.ts`, `src/infrastructure/provider-probe.ts`, `src/domain/errors.ts`, `src/domain/types.ts`, `tests/search-adapter.test.ts`, `tests/search-adapter-cases.test.ts`
 **Implementation files:** `src/infrastructure/search.ts`, `src/infrastructure/provider-probe.ts`, `src/domain/errors.ts`
 **Test files:** `tests/search-adapter-cases.test.ts`
 
