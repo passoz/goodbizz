@@ -27,7 +27,8 @@
       "src/application/artifacts.ts",
       "src/application/dados.ts",
       "src/domain/types.ts",
-      "tests/research-evidence.test.ts"
+      "tests/research-evidence.test.ts",
+      "tests/research-evidence-cases.test.ts"
     ],
     "affected_components": [
       "research-pipeline"
@@ -44,6 +45,7 @@
   "acceptance_contract": {
     "commands": [
       "bun --config=tests/bunfig.focus.toml test tests/research-evidence.test.ts -t \"FR-003\"",
+      "bun --config=tests/bunfig.focus.toml test tests/research-evidence-cases.test.ts -t \"FR-003\"",
       "bun test",
       "bun run check",
       "bunx eslint . && bunx prettier --check ."
@@ -58,7 +60,8 @@
       "src/application/artifacts.ts",
       "src/application/dados.ts",
       "src/domain/types.ts",
-      "tests/research-evidence.test.ts"
+      "tests/research-evidence.test.ts",
+      "tests/research-evidence-cases.test.ts"
     ],
     "write_deny": [
       ".git/**",

@@ -27,6 +27,7 @@
       "src/infrastructure/routing.ts",
       "src/index.ts",
       "tests/search-mock.test.ts",
+      "tests/search-mock-cases.test.ts",
       "tests/helpers.ts",
       "tests/generate-study.test.ts",
       "tests/generation.test.ts",
@@ -52,6 +53,7 @@
   "acceptance_contract": {
     "commands": [
       "bun --config=tests/bunfig.focus.toml test tests/search-mock.test.ts -t \"QR-001\"",
+      "bun --config=tests/bunfig.focus.toml test tests/search-mock-cases.test.ts -t \"QR-001\"",
       "bun test",
       "bun run check",
       "bunx eslint . && bunx prettier --check ."
@@ -66,6 +68,7 @@
       "src/infrastructure/routing.ts",
       "src/index.ts",
       "tests/search-mock.test.ts",
+      "tests/search-mock-cases.test.ts",
       "tests/helpers.ts",
       "tests/generate-study.test.ts",
       "tests/generation.test.ts",

@@ -29,7 +29,8 @@
       "src/domain/types.ts",
       "src/domain/ports.ts",
       "tests/bunfig.focus.toml",
-      "tests/research-phase.test.ts"
+      "tests/research-phase.test.ts",
+      "tests/research-phase-cases.test.ts"
     ],
     "affected_components": [
       "research-pipeline"
@@ -46,6 +47,7 @@
   "acceptance_contract": {
     "commands": [
       "bun --config=tests/bunfig.focus.toml test tests/research-phase.test.ts -t \"FR-002\"",
+      "bun --config=tests/bunfig.focus.toml test tests/research-phase-cases.test.ts -t \"FR-002\"",
       "bun test",
       "bun run check",
       "bunx eslint . && bunx prettier --check ."
@@ -62,7 +64,8 @@
       "src/domain/types.ts",
       "src/domain/ports.ts",
       "tests/bunfig.focus.toml",
-      "tests/research-phase.test.ts"
+      "tests/research-phase.test.ts",
+      "tests/research-phase-cases.test.ts"
     ],
     "write_deny": [
       ".git/**",

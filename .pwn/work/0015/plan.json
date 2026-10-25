@@ -46,7 +46,8 @@
         "src/domain/types.ts",
         "src/domain/ports.ts",
         "tests/bunfig.focus.toml",
-        "tests/research-phase.test.ts"
+        "tests/research-phase.test.ts",
+        "tests/research-phase-cases.test.ts"
       ],
       "implementation_files": [
         "src/application/research.ts",
@@ -54,10 +55,10 @@
         "src/application/prompts.ts"
       ],
       "test_files": [
-        "tests/research-phase.test.ts"
+        "tests/research-phase-cases.test.ts"
       ],
       "red": {
-        "command": "bun --config=tests/bunfig.focus.toml test tests/research-phase.test.ts -t \"FR-002\"",
+        "command": "bun --config=tests/bunfig.focus.toml test tests/research-phase-cases.test.ts -t \"FR-002\"",
         "description": "sem a fase de pesquisa o provedor de busca não recebe nenhuma busca antes do brief e a asserção da ordem falha"
       },
       "implementation_steps": [
@@ -91,7 +92,8 @@
         "src/application/artifacts.ts",
         "src/application/dados.ts",
         "src/domain/types.ts",
-        "tests/research-evidence.test.ts"
+        "tests/research-evidence.test.ts",
+        "tests/research-evidence-cases.test.ts"
       ],
       "implementation_files": [
         "src/application/research.ts",
@@ -99,10 +101,10 @@
         "src/application/dados.ts"
       ],
       "test_files": [
-        "tests/research-evidence.test.ts"
+        "tests/research-evidence-cases.test.ts"
       ],
       "red": {
-        "command": "bun --config=tests/bunfig.focus.toml test tests/research-evidence.test.ts -t \"FR-003\"",
+        "command": "bun --config=tests/bunfig.focus.toml test tests/research-evidence-cases.test.ts -t \"FR-003\"",
         "description": "sem a validação literal o trecho inventado chega ao resultado e a asserção de descarte falha"
       },
       "implementation_steps": [
@@ -134,17 +136,18 @@
       "files": [
         "src/application/research.ts",
         "src/application/generate-study.ts",
-        "tests/research-ideas.test.ts"
+        "tests/research-ideas.test.ts",
+        "tests/research-ideas-cases.test.ts"
       ],
       "implementation_files": [
         "src/application/research.ts",
         "src/application/generate-study.ts"
       ],
       "test_files": [
-        "tests/research-ideas.test.ts"
+        "tests/research-ideas-cases.test.ts"
       ],
       "red": {
-        "command": "bun --config=tests/bunfig.focus.toml test tests/research-ideas.test.ts -t \"FR-005\"",
+        "command": "bun --config=tests/bunfig.focus.toml test tests/research-ideas-cases.test.ts -t \"FR-005\"",
         "description": "sem a pesquisa por ideia o provedor recebe só as buscas do estudo e a asserção das duas buscas por ideia falha"
       },
       "implementation_steps": [
@@ -176,17 +179,18 @@
       "files": [
         "src/application/evaluate.ts",
         "src/application/generate-study.ts",
-        "tests/evaluate-evidence.test.ts"
+        "tests/evaluate-evidence.test.ts",
+        "tests/evaluate-evidence-cases.test.ts"
       ],
       "implementation_files": [
         "src/application/evaluate.ts",
         "src/application/generate-study.ts"
       ],
       "test_files": [
-        "tests/evaluate-evidence.test.ts"
+        "tests/evaluate-evidence-cases.test.ts"
       ],
       "red": {
-        "command": "bun --config=tests/bunfig.focus.toml test tests/evaluate-evidence.test.ts -t \"FR-006\"",
+        "command": "bun --config=tests/bunfig.focus.toml test tests/evaluate-evidence-cases.test.ts -t \"FR-006\"",
         "description": "sem as evidências no estado o texto enviado ao decisor não cita E1 e a asserção falha"
       },
       "implementation_steps": [
@@ -219,7 +223,8 @@
         "src/application/generation.ts",
         "src/application/prompts.ts",
         "src/infrastructure/llm-mock.ts",
-        "tests/evidence-prompts.test.ts"
+        "tests/evidence-prompts.test.ts",
+        "tests/evidence-prompts-cases.test.ts"
       ],
       "implementation_files": [
         "src/application/generation.ts",
@@ -227,10 +232,10 @@
         "src/infrastructure/llm-mock.ts"
       ],
       "test_files": [
-        "tests/evidence-prompts.test.ts"
+        "tests/evidence-prompts-cases.test.ts"
       ],
       "red": {
-        "command": "bun --config=tests/bunfig.focus.toml test tests/evidence-prompts.test.ts -t \"FR-004\"",
+        "command": "bun --config=tests/bunfig.focus.toml test tests/evidence-prompts-cases.test.ts -t \"FR-004\"",
         "description": "sem as evidências no prompt o texto enviado ao LLM não traz [E1] e a asserção falha"
       },
       "implementation_steps": [
@@ -263,7 +268,8 @@
         "src/application/artifacts.ts",
         "src/application/reports.ts",
         "src/application/generate-study.ts",
-        "tests/evidence-sources.test.ts"
+        "tests/evidence-sources.test.ts",
+        "tests/evidence-sources-cases.test.ts"
       ],
       "implementation_files": [
         "src/application/artifacts.ts",
@@ -271,10 +277,10 @@
         "src/application/generate-study.ts"
       ],
       "test_files": [
-        "tests/evidence-sources.test.ts"
+        "tests/evidence-sources-cases.test.ts"
       ],
       "red": {
-        "command": "bun --config=tests/bunfig.focus.toml test tests/evidence-sources.test.ts -t \"FR-007\"",
+        "command": "bun --config=tests/bunfig.focus.toml test tests/evidence-sources-cases.test.ts -t \"FR-007\"",
         "description": "sem a seção Fontes o README termina no rodapé de data e a asserção do fim do arquivo falha"
       },
       "implementation_steps": [
@@ -308,7 +314,8 @@
         "src/application/generate-study.ts",
         "src/config/env.ts",
         "src/domain/types.ts",
-        "tests/search-usage.test.ts"
+        "tests/search-usage.test.ts",
+        "tests/search-usage-cases.test.ts"
       ],
       "implementation_files": [
         "src/application/costs.ts",
@@ -316,10 +323,10 @@
         "src/config/env.ts"
       ],
       "test_files": [
-        "tests/search-usage.test.ts"
+        "tests/search-usage-cases.test.ts"
       ],
       "red": {
-        "command": "bun --config=tests/bunfig.focus.toml test tests/search-usage.test.ts -t \"FR-010\"",
+        "command": "bun --config=tests/bunfig.focus.toml test tests/search-usage-cases.test.ts -t \"FR-010\"",
         "description": "sem a medição o usage não tem search e a asserção das chamadas de busca falha"
       },
       "implementation_steps": [
@@ -356,7 +363,8 @@
         "drizzle/0006_study_evidences.sql",
         "drizzle/meta/0006_snapshot.json",
         "drizzle/meta/_journal.json",
-        "tests/evidence-persistence.test.ts"
+        "tests/evidence-persistence.test.ts",
+        "tests/evidence-persistence-cases.test.ts"
       ],
       "implementation_files": [
         "src/infrastructure/schema.ts",
@@ -364,10 +372,10 @@
         "src/application/study-service.ts"
       ],
       "test_files": [
-        "tests/evidence-persistence.test.ts"
+        "tests/evidence-persistence-cases.test.ts"
       ],
       "red": {
-        "command": "bun --config=tests/bunfig.focus.toml test tests/evidence-persistence.test.ts -t \"EC-005\"",
+        "command": "bun --config=tests/bunfig.focus.toml test tests/evidence-persistence-cases.test.ts -t \"EC-005\"",
         "description": "sem a coluna e a gravação o registro do estudo volta sem evidências e a asserção da contagem falha"
       },
       "implementation_steps": [
@@ -400,7 +408,8 @@
         "src/infrastructure/search.ts",
         "src/infrastructure/provider-probe.ts",
         "src/domain/errors.ts",
-        "tests/search-adapter.test.ts"
+        "tests/search-adapter.test.ts",
+        "tests/search-adapter-cases.test.ts"
       ],
       "implementation_files": [
         "src/infrastructure/search.ts",
@@ -408,10 +417,10 @@
         "src/domain/errors.ts"
       ],
       "test_files": [
-        "tests/search-adapter.test.ts"
+        "tests/search-adapter-cases.test.ts"
       ],
       "red": {
-        "command": "bun --config=tests/bunfig.focus.toml test tests/search-adapter.test.ts -t \"QR-002\"",
+        "command": "bun --config=tests/bunfig.focus.toml test tests/search-adapter-cases.test.ts -t \"QR-002\"",
         "description": "sem o tipo search na sonda o Testar fala com o caminho do LLM e a asserção do POST /search falha"
       },
       "implementation_steps": [
@@ -445,7 +454,8 @@
         "src/config/providers.ts",
         "src/index.ts",
         ".env.example",
-        "tests/search-startup.test.ts"
+        "tests/search-startup.test.ts",
+        "tests/search-startup-cases.test.ts"
       ],
       "implementation_files": [
         "src/config/env.ts",
@@ -453,10 +463,10 @@
         "src/index.ts"
       ],
       "test_files": [
-        "tests/search-startup.test.ts"
+        "tests/search-startup-cases.test.ts"
       ],
       "red": {
-        "command": "bun --config=tests/bunfig.focus.toml test tests/search-startup.test.ts -t \"FR-008\"",
+        "command": "bun --config=tests/bunfig.focus.toml test tests/search-startup-cases.test.ts -t \"FR-008\"",
         "description": "sem a validação o serviço sobe sem chave de busca e a asserção da rejeição falha"
       },
       "implementation_steps": [
@@ -490,6 +500,7 @@
         "src/infrastructure/routing.ts",
         "src/index.ts",
         "tests/search-mock.test.ts",
+        "tests/search-mock-cases.test.ts",
         "tests/helpers.ts",
         "tests/generate-study.test.ts",
         "tests/generation.test.ts",
@@ -506,7 +517,7 @@
         "src/index.ts"
       ],
       "test_files": [
-        "tests/search-mock.test.ts",
+        "tests/search-mock-cases.test.ts",
         "tests/helpers.ts",
         "tests/generate-study.test.ts",
         "tests/generation.test.ts",
@@ -518,7 +529,7 @@
         "tests/settings-api.test.ts"
       ],
       "red": {
-        "command": "bun --config=tests/bunfig.focus.toml test tests/search-mock.test.ts -t \"QR-001\"",
+        "command": "bun --config=tests/bunfig.focus.toml test tests/search-mock-cases.test.ts -t \"QR-001\"",
         "description": "sem o cliente de busca no serviço o estudo simulado não grava evidências e a asserção da contagem falha"
       },
       "implementation_steps": [
@@ -550,17 +561,18 @@
       "files": [
         "src/application/generate-study.ts",
         "src/application/study-service.ts",
-        "tests/research-addition.test.ts"
+        "tests/research-addition.test.ts",
+        "tests/research-addition-cases.test.ts"
       ],
       "implementation_files": [
         "src/application/generate-study.ts",
         "src/application/study-service.ts"
       ],
       "test_files": [
-        "tests/research-addition.test.ts"
+        "tests/research-addition-cases.test.ts"
       ],
       "red": {
-        "command": "bun --config=tests/bunfig.focus.toml test tests/research-addition.test.ts -t \"FR-012\"",
+        "command": "bun --config=tests/bunfig.focus.toml test tests/research-addition-cases.test.ts -t \"FR-012\"",
         "description": "sem o reaproveitamento a adição não pesquisa as ideias novas e a asserção das buscas falha"
       },
       "implementation_steps": [
@@ -594,6 +606,7 @@
         "src/config/runtime.ts",
         "src/domain/types.ts",
         "tests/cli-research.test.ts",
+        "tests/cli-research-cases.test.ts",
         "tests/cli.test.ts"
       ],
       "implementation_files": [
@@ -601,11 +614,11 @@
         "src/config/runtime.ts"
       ],
       "test_files": [
-        "tests/cli-research.test.ts",
+        "tests/cli-research-cases.test.ts",
         "tests/cli.test.ts"
       ],
       "red": {
-        "command": "bun --config=tests/bunfig.focus.toml test tests/cli-research.test.ts -t \"SC-002\"",
+        "command": "bun --config=tests/bunfig.focus.toml test tests/cli-research-cases.test.ts -t \"SC-002\"",
         "description": "sem a busca na CLI o estudo --mock não grava 00-evidencias.md e a asserção do artefato falha"
       },
       "implementation_steps": [
@@ -639,7 +652,8 @@
         "src/application/settings.ts",
         "src/infrastructure/settings-repository.ts",
         "src/domain/types.ts",
-        "tests/search-cache.test.ts"
+        "tests/search-cache.test.ts",
+        "tests/search-cache-cases.test.ts"
       ],
       "implementation_files": [
         "src/config/providers.ts",
@@ -647,10 +661,10 @@
         "src/infrastructure/settings-repository.ts"
       ],
       "test_files": [
-        "tests/search-cache.test.ts"
+        "tests/search-cache-cases.test.ts"
       ],
       "red": {
-        "command": "bun --config=tests/bunfig.focus.toml test tests/search-cache.test.ts -t \"QR-003\"",
+        "command": "bun --config=tests/bunfig.focus.toml test tests/search-cache-cases.test.ts -t \"QR-003\"",
         "description": "sem o tipo search no catálogo o perfil de busca é recusado e a asserção da troca falha"
       },
       "implementation_steps": [
@@ -683,7 +697,8 @@
         "src/infrastructure/http/api.ts",
         "src/infrastructure/http/ui/pages.tsx",
         "src/infrastructure/http/ui/routes.tsx",
-        "tests/search-settings.test.ts"
+        "tests/search-settings.test.ts",
+        "tests/search-settings-cases.test.ts"
       ],
       "implementation_files": [
         "src/infrastructure/http/api.ts",
@@ -691,10 +706,10 @@
         "src/infrastructure/http/ui/routes.tsx"
       ],
       "test_files": [
-        "tests/search-settings.test.ts"
+        "tests/search-settings-cases.test.ts"
       ],
       "red": {
-        "command": "bun --config=tests/bunfig.focus.toml test tests/search-settings.test.ts -t \"FR-009\"",
+        "command": "bun --config=tests/bunfig.focus.toml test tests/search-settings-cases.test.ts -t \"FR-009\"",
         "description": "sem o tipo search no schema da API o cadastro responde 422 e a asserção do 201 falha"
       },
       "implementation_steps": [
@@ -726,17 +741,18 @@
       "files": [
         "src/infrastructure/http/ui/pages.tsx",
         "src/infrastructure/http/api.ts",
-        "tests/study-evidence-page.test.ts"
+        "tests/study-evidence-page.test.ts",
+        "tests/study-evidence-page-cases.test.ts"
       ],
       "implementation_files": [
         "src/infrastructure/http/ui/pages.tsx",
         "src/infrastructure/http/api.ts"
       ],
       "test_files": [
-        "tests/study-evidence-page.test.ts"
+        "tests/study-evidence-page-cases.test.ts"
       ],
       "red": {
-        "command": "bun --config=tests/bunfig.focus.toml test tests/study-evidence-page.test.ts -t \"FR-011\"",
+        "command": "bun --config=tests/bunfig.focus.toml test tests/study-evidence-page-cases.test.ts -t \"FR-011\"",
         "description": "sem a contagem a página não mostra evidências nem aviso e a asserção do aviso falha"
       },
       "implementation_steps": [
@@ -770,17 +786,18 @@
         "README.md",
         ".specs/system.json",
         "tests/study-progress.test.ts",
+        "tests/study-progress-cases.test.ts",
         "tests/ui.test.ts"
       ],
       "implementation_files": [
         "src/infrastructure/http/ui/pages.tsx"
       ],
       "test_files": [
-        "tests/study-progress.test.ts",
+        "tests/study-progress-cases.test.ts",
         "tests/ui.test.ts"
       ],
       "red": {
-        "command": "bun --config=tests/bunfig.focus.toml test tests/study-progress.test.ts -t \"FR-001\"",
+        "command": "bun --config=tests/bunfig.focus.toml test tests/study-progress-cases.test.ts -t \"FR-001\"",
         "description": "com 6 fases a página rotula a fase 1 como brief e a asserção do rótulo de pesquisa falha"
       },
       "implementation_steps": [

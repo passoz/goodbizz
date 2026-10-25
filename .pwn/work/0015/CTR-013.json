@@ -27,6 +27,7 @@
       "src/config/runtime.ts",
       "src/domain/types.ts",
       "tests/cli-research.test.ts",
+      "tests/cli-research-cases.test.ts",
       "tests/cli.test.ts"
     ],
     "affected_components": [
@@ -44,6 +45,7 @@
   "acceptance_contract": {
     "commands": [
       "bun --config=tests/bunfig.focus.toml test tests/cli-research.test.ts -t \"SC-002\"",
+      "bun --config=tests/bunfig.focus.toml test tests/cli-research-cases.test.ts -t \"SC-002\"",
       "bun test",
       "bun run check",
       "bunx eslint . && bunx prettier --check ."
@@ -58,6 +60,7 @@
       "src/config/runtime.ts",
       "src/domain/types.ts",
       "tests/cli-research.test.ts",
+      "tests/cli-research-cases.test.ts",
       "tests/cli.test.ts"
     ],
     "write_deny": [

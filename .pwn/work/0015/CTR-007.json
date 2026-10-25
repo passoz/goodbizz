@@ -27,7 +27,8 @@
       "src/application/generate-study.ts",
       "src/config/env.ts",
       "src/domain/types.ts",
-      "tests/search-usage.test.ts"
+      "tests/search-usage.test.ts",
+      "tests/search-usage-cases.test.ts"
     ],
     "affected_components": [
       "search-provider"
@@ -44,6 +45,7 @@
   "acceptance_contract": {
     "commands": [
       "bun --config=tests/bunfig.focus.toml test tests/search-usage.test.ts -t \"FR-010\"",
+      "bun --config=tests/bunfig.focus.toml test tests/search-usage-cases.test.ts -t \"FR-010\"",
       "bun test",
       "bun run check",
       "bunx eslint . && bunx prettier --check ."
@@ -58,7 +60,8 @@
       "src/application/generate-study.ts",
       "src/config/env.ts",
       "src/domain/types.ts",
-      "tests/search-usage.test.ts"
+      "tests/search-usage.test.ts",
+      "tests/search-usage-cases.test.ts"
     ],
     "write_deny": [
       ".git/**",

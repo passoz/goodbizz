@@ -30,7 +30,8 @@
       "drizzle/0006_study_evidences.sql",
       "drizzle/meta/0006_snapshot.json",
       "drizzle/meta/_journal.json",
-      "tests/evidence-persistence.test.ts"
+      "tests/evidence-persistence.test.ts",
+      "tests/evidence-persistence-cases.test.ts"
     ],
     "affected_components": [
       "research-pipeline"
@@ -47,6 +48,7 @@
   "acceptance_contract": {
     "commands": [
       "bun --config=tests/bunfig.focus.toml test tests/evidence-persistence.test.ts -t \"EC-005\"",
+      "bun --config=tests/bunfig.focus.toml test tests/evidence-persistence-cases.test.ts -t \"EC-005\"",
       "bun test",
       "bun run check",
       "bunx eslint . && bunx prettier --check ."
@@ -64,7 +66,8 @@
       "drizzle/0006_study_evidences.sql",
       "drizzle/meta/0006_snapshot.json",
       "drizzle/meta/_journal.json",
-      "tests/evidence-persistence.test.ts"
+      "tests/evidence-persistence.test.ts",
+      "tests/evidence-persistence-cases.test.ts"
     ],
     "write_deny": [
       ".git/**",

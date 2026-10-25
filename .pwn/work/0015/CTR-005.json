@@ -26,7 +26,8 @@
       "src/application/generation.ts",
       "src/application/prompts.ts",
       "src/infrastructure/llm-mock.ts",
-      "tests/evidence-prompts.test.ts"
+      "tests/evidence-prompts.test.ts",
+      "tests/evidence-prompts-cases.test.ts"
     ],
     "affected_components": [
       "research-pipeline"
@@ -43,6 +44,7 @@
   "acceptance_contract": {
     "commands": [
       "bun --config=tests/bunfig.focus.toml test tests/evidence-prompts.test.ts -t \"FR-004\"",
+      "bun --config=tests/bunfig.focus.toml test tests/evidence-prompts-cases.test.ts -t \"FR-004\"",
       "bun test",
       "bun run check",
       "bunx eslint . && bunx prettier --check ."
@@ -56,7 +58,8 @@
       "src/application/generation.ts",
       "src/application/prompts.ts",
       "src/infrastructure/llm-mock.ts",
-      "tests/evidence-prompts.test.ts"
+      "tests/evidence-prompts.test.ts",
+      "tests/evidence-prompts-cases.test.ts"
     ],
     "write_deny": [
       ".git/**",

@@ -26,7 +26,8 @@
       "src/infrastructure/search.ts",
       "src/infrastructure/provider-probe.ts",
       "src/domain/errors.ts",
-      "tests/search-adapter.test.ts"
+      "tests/search-adapter.test.ts",
+      "tests/search-adapter-cases.test.ts"
     ],
     "affected_components": [
       "search-provider"
@@ -43,6 +44,7 @@
   "acceptance_contract": {
     "commands": [
       "bun --config=tests/bunfig.focus.toml test tests/search-adapter.test.ts -t \"QR-002\"",
+      "bun --config=tests/bunfig.focus.toml test tests/search-adapter-cases.test.ts -t \"QR-002\"",
       "bun test",
       "bun run check",
       "bunx eslint . && bunx prettier --check ."
@@ -56,7 +58,8 @@
       "src/infrastructure/search.ts",
       "src/infrastructure/provider-probe.ts",
       "src/domain/errors.ts",
-      "tests/search-adapter.test.ts"
+      "tests/search-adapter.test.ts",
+      "tests/search-adapter-cases.test.ts"
     ],
     "write_deny": [
       ".git/**",

@@ -27,6 +27,7 @@
       "README.md",
       ".specs/system.json",
       "tests/study-progress.test.ts",
+      "tests/study-progress-cases.test.ts",
       "tests/ui.test.ts"
     ],
     "affected_components": [
@@ -44,6 +45,7 @@
   "acceptance_contract": {
     "commands": [
       "bun --config=tests/bunfig.focus.toml test tests/study-progress.test.ts -t \"FR-001\"",
+      "bun --config=tests/bunfig.focus.toml test tests/study-progress-cases.test.ts -t \"FR-001\"",
       "bun test",
       "bun run check",
       "bunx eslint . && bunx prettier --check ."
@@ -58,6 +60,7 @@
       "README.md",
       ".specs/system.json",
       "tests/study-progress.test.ts",
+      "tests/study-progress-cases.test.ts",
       "tests/ui.test.ts"
     ],
     "write_deny": [

@@ -26,7 +26,8 @@
       "src/application/artifacts.ts",
       "src/application/reports.ts",
       "src/application/generate-study.ts",
-      "tests/evidence-sources.test.ts"
+      "tests/evidence-sources.test.ts",
+      "tests/evidence-sources-cases.test.ts"
     ],
     "affected_components": [
       "evidence-artifacts"
@@ -43,6 +44,7 @@
   "acceptance_contract": {
     "commands": [
       "bun --config=tests/bunfig.focus.toml test tests/evidence-sources.test.ts -t \"FR-007\"",
+      "bun --config=tests/bunfig.focus.toml test tests/evidence-sources-cases.test.ts -t \"FR-007\"",
       "bun test",
       "bun run check",
       "bunx eslint . && bunx prettier --check ."
@@ -56,7 +58,8 @@
       "src/application/artifacts.ts",
       "src/application/reports.ts",
       "src/application/generate-study.ts",
-      "tests/evidence-sources.test.ts"
+      "tests/evidence-sources.test.ts",
+      "tests/evidence-sources-cases.test.ts"
     ],
     "write_deny": [
       ".git/**",

@@ -25,7 +25,8 @@
     "target_files": [
       "src/infrastructure/http/ui/pages.tsx",
       "src/infrastructure/http/api.ts",
-      "tests/study-evidence-page.test.ts"
+      "tests/study-evidence-page.test.ts",
+      "tests/study-evidence-page-cases.test.ts"
     ],
     "affected_components": [
       "study-page"
@@ -42,6 +43,7 @@
   "acceptance_contract": {
     "commands": [
       "bun --config=tests/bunfig.focus.toml test tests/study-evidence-page.test.ts -t \"FR-011\"",
+      "bun --config=tests/bunfig.focus.toml test tests/study-evidence-page-cases.test.ts -t \"FR-011\"",
       "bun test",
       "bun run check",
       "bunx eslint . && bunx prettier --check ."
@@ -54,7 +56,8 @@
     "write_allow": [
       "src/infrastructure/http/ui/pages.tsx",
       "src/infrastructure/http/api.ts",
-      "tests/study-evidence-page.test.ts"
+      "tests/study-evidence-page.test.ts",
+      "tests/study-evidence-page-cases.test.ts"
     ],
     "write_deny": [
       ".git/**",

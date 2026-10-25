@@ -25,7 +25,8 @@
     "target_files": [
       "src/application/generate-study.ts",
       "src/application/study-service.ts",
-      "tests/research-addition.test.ts"
+      "tests/research-addition.test.ts",
+      "tests/research-addition-cases.test.ts"
     ],
     "affected_components": [
       "research-pipeline"
@@ -42,6 +43,7 @@
   "acceptance_contract": {
     "commands": [
       "bun --config=tests/bunfig.focus.toml test tests/research-addition.test.ts -t \"FR-012\"",
+      "bun --config=tests/bunfig.focus.toml test tests/research-addition-cases.test.ts -t \"FR-012\"",
       "bun test",
       "bun run check",
       "bunx eslint . && bunx prettier --check ."
@@ -54,7 +56,8 @@
     "write_allow": [
       "src/application/generate-study.ts",
       "src/application/study-service.ts",
-      "tests/research-addition.test.ts"
+      "tests/research-addition.test.ts",
+      "tests/research-addition-cases.test.ts"
     ],
     "write_deny": [
       ".git/**",

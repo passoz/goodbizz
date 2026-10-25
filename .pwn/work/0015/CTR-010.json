@@ -27,7 +27,8 @@
       "src/config/providers.ts",
       "src/index.ts",
       ".env.example",
-      "tests/search-startup.test.ts"
+      "tests/search-startup.test.ts",
+      "tests/search-startup-cases.test.ts"
     ],
     "affected_components": [
       "search-provider"
@@ -44,6 +45,7 @@
   "acceptance_contract": {
     "commands": [
       "bun --config=tests/bunfig.focus.toml test tests/search-startup.test.ts -t \"FR-008\"",
+      "bun --config=tests/bunfig.focus.toml test tests/search-startup-cases.test.ts -t \"FR-008\"",
       "bun test",
       "bun run check",
       "bunx eslint . && bunx prettier --check ."
@@ -58,7 +60,8 @@
       "src/config/providers.ts",
       "src/index.ts",
       ".env.example",
-      "tests/search-startup.test.ts"
+      "tests/search-startup.test.ts",
+      "tests/search-startup-cases.test.ts"
     ],
     "write_deny": [
       ".git/**",

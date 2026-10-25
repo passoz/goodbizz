@@ -25,7 +25,8 @@
     "target_files": [
       "src/application/evaluate.ts",
       "src/application/generate-study.ts",
-      "tests/evaluate-evidence.test.ts"
+      "tests/evaluate-evidence.test.ts",
+      "tests/evaluate-evidence-cases.test.ts"
     ],
     "affected_components": [
       "research-pipeline"
@@ -42,6 +43,7 @@
   "acceptance_contract": {
     "commands": [
       "bun --config=tests/bunfig.focus.toml test tests/evaluate-evidence.test.ts -t \"FR-006\"",
+      "bun --config=tests/bunfig.focus.toml test tests/evaluate-evidence-cases.test.ts -t \"FR-006\"",
       "bun test",
       "bun run check",
       "bunx eslint . && bunx prettier --check ."
@@ -54,7 +56,8 @@
     "write_allow": [
       "src/application/evaluate.ts",
       "src/application/generate-study.ts",
-      "tests/evaluate-evidence.test.ts"
+      "tests/evaluate-evidence.test.ts",
+      "tests/evaluate-evidence-cases.test.ts"
     ],
     "write_deny": [
       ".git/**",
