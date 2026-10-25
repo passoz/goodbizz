@@ -54,6 +54,12 @@
     ],
     "required_evidence": [
       "evidence.json"
+    ],
+    "frozen_tests": [
+      {
+        "path": "tests/research-phase.test.ts",
+        "sha256": "c6979d82c981260e5db450f0d4c8278cc62f977807f0ea0c747974a31f31bc99"
+      }
     ]
   },
   "scope_contract": {
