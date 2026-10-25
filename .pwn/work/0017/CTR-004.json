@@ -1,0 +1,90 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.4",
+  "work_id": "0017",
+  "title": "Tabelao, CSV e dados.json com a coluna torneio",
+  "risk": {
+    "level": "L2",
+    "reasons": [
+      "A mudanca altera a ordem do ranking e o que fica gravado no estudo",
+      "Sem segredo, sem auth e sem pagamento"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.4-01",
+        "given": "Dado o comportamento declarado: tabelao, CSV, indice e dados.json seguem a ordem do torneio e ganham a coluna torneio no fim, sem mudar as chaves existentes",
+        "when": "Quando `bun --config=tests/bunfig.focus.toml test tests/tournament-artifacts.test.ts -t \"coluna torneio\"` e executado",
+        "then": "Entao tabelao e CSV trazem a media e as partidas de cada ideia"
+      },
+      {
+        "id": "SCENARIO-1.4-02",
+        "given": "Dado o comportamento declarado: tabelao, CSV, indice e dados.json seguem a ordem do torneio e ganham a coluna torneio no fim, sem mudar as chaves existentes",
+        "when": "Quando `bun --config=tests/bunfig.focus.toml test tests/tournament-artifacts.test.ts -t \"chaves\"` e executado",
+        "then": "Entao as chaves antigas do CSV e do dados.json nao mudam e torneio_partidas entra no fim"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/application/reports.ts",
+      "src/application/dados.ts",
+      "tests/tournament-artifacts.test.ts",
+      "tests/reports.test.ts",
+      "tests/artifacts.test.ts"
+    ],
+    "affected_components": [
+      "reports"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "src/domain nao importa application nem infrastructure",
+      "Drizzle sem SQL cru",
+      "Indice de acao e tier continuam calculados so das notas",
+      "Nenhum segredo em log, resposta ou artefato"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun --config=tests/bunfig.focus.toml test tests/tournament-artifacts.test.ts -t \"coluna torneio\"",
+      "bun --config=tests/bunfig.focus.toml test tests/tournament-artifacts.test.ts -t \"chaves\""
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/application/reports.ts",
+      "src/application/dados.ts",
+      "tests/tournament-artifacts.test.ts",
+      "tests/reports.test.ts",
+      "tests/artifacts.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env*"
+    ],
+    "out_of_scope": [
+      "Arquivos fora de: src/application/reports.ts, src/application/dados.ts, tests/tournament-artifacts.test.ts, tests/reports.test.ts, tests/artifacts.test.ts"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 50000,
+    "max_cost_usd": 0.5,
+    "max_duration_minutes": 15,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 30,
+    "max_tool_calls": 60,
+    "max_shell_executions": 15
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

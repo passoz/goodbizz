@@ -1,0 +1,96 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.1",
+  "work_id": "0017",
+  "title": "Torneio suico com duelo nas duas ordens",
+  "risk": {
+    "level": "L2",
+    "reasons": [
+      "A mudanca altera a ordem do ranking e o que fica gravado no estudo",
+      "Sem segredo, sem auth e sem pagamento"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.1-01",
+        "given": "Dado o comportamento declarado: o modulo do torneio calcula as rodadas, emparelha medias proximas sem repetir, da a folga a pior posicao, pergunta o duelo nas duas ordens com cache e soma a media das probabilidades",
+        "when": "Quando `bun --config=tests/bunfig.focus.toml test tests/tournament.test.ts -t \"rodadas\"` e executado",
+        "then": "Entao 8 ideias jogam 4 rodadas sem repetir adversario e no maximo 32 duelos"
+      },
+      {
+        "id": "SCENARIO-1.1-02",
+        "given": "Dado o comportamento declarado: o modulo do torneio calcula as rodadas, emparelha medias proximas sem repetir, da a folga a pior posicao, pergunta o duelo nas duas ordens com cache e soma a media das probabilidades",
+        "when": "Quando `bun --config=tests/bunfig.focus.toml test tests/tournament.test.ts -t \"vies de posicao\"` e executado",
+        "then": "Entao o decisor que sempre escolhe A deixa 0.5 para cada lado"
+      },
+      {
+        "id": "SCENARIO-1.1-03",
+        "given": "Dado o comportamento declarado: o modulo do torneio calcula as rodadas, emparelha medias proximas sem repetir, da a folga a pior posicao, pergunta o duelo nas duas ordens com cache e soma a media das probabilidades",
+        "when": "Quando `bun --config=tests/bunfig.focus.toml test tests/tournament.test.ts -t \"folga\"` e executado",
+        "then": "Entao com 3 ideias cada uma folga uma vez, sem partida nem ponto"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/application/tournament.ts",
+      "src/domain/types.ts",
+      "tests/tournament.test.ts",
+      "tests/bunfig.focus.toml"
+    ],
+    "affected_components": [
+      "tournament"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "src/domain nao importa application nem infrastructure",
+      "Drizzle sem SQL cru",
+      "Indice de acao e tier continuam calculados so das notas",
+      "Nenhum segredo em log, resposta ou artefato"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun --config=tests/bunfig.focus.toml test tests/tournament.test.ts -t \"torneio suico\"",
+      "bun --config=tests/bunfig.focus.toml test tests/tournament.test.ts -t \"rodadas\"",
+      "bun --config=tests/bunfig.focus.toml test tests/tournament.test.ts -t \"vies de posicao\"",
+      "bun --config=tests/bunfig.focus.toml test tests/tournament.test.ts -t \"folga\""
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/application/tournament.ts",
+      "src/domain/types.ts",
+      "tests/tournament.test.ts",
+      "tests/bunfig.focus.toml"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env*"
+    ],
+    "out_of_scope": [
+      "Arquivos fora de: src/application/tournament.ts, src/domain/types.ts, tests/tournament.test.ts, tests/bunfig.focus.toml"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 50000,
+    "max_cost_usd": 0.5,
+    "max_duration_minutes": 15,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 30,
+    "max_tool_calls": 60,
+    "max_shell_executions": 15
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "work_id": "0017",
+  "requirements": [
+    {
+      "id": "FR-001",
+      "title": "O torneio tem teto de log2 de N mais 1 rodadas e emparelha medias proximas sem repetir partida",
+      "acceptance_criteria": [
+        "bun --config=tests/bunfig.focus.toml test tests/tournament.test.ts -t \"rodadas\" — 8 ideias jogam 4 rodadas e ninguem repete adversario"
+      ]
+    },
+    {
+      "id": "FR-002",
+      "title": "Cada partida e perguntada nas duas ordens e X recebe a media das duas probabilidades",
+      "acceptance_criteria": [
+        "bun --config=tests/bunfig.focus.toml test tests/tournament.test.ts -t \"vies de posicao\" — o decisor que sempre escolhe A da 0.5 a cada lado"
+      ]
+    },
+    {
+      "id": "FR-003",
+      "title": "Com numero impar, a pior posicao que ainda nao folgou recebe a folga, sem partida nem ponto",
+      "acceptance_criteria": [
+        "bun --config=tests/bunfig.focus.toml test tests/tournament.test.ts -t \"folga\" — 3 ideias, 3 rodadas, uma folga por ideia"
+      ]
+    },
+    {
+      "id": "FR-004",
+      "title": "summary.ordered, pastas, tabelao, CSV, dados.json e UI seguem a media por partida, com desempate por indice e nome",
+      "acceptance_criteria": [
+        "bun --config=tests/bunfig.focus.toml test tests/tournament-pipeline.test.ts -t \"pasta 01\" — a ideia preferida pelo decisor ocupa a pasta 01-"
+      ]
+    },
+    {
+      "id": "FR-005",
+      "title": "A remocao recalcula as medias das partidas restantes sem chamar o decisor e a adicao roda o torneio de novo",
+      "acceptance_criteria": [
+        "bun --config=tests/bunfig.focus.toml test tests/tournament-study.test.ts -t \"remocao\" — zero chamadas de duelo na remocao"
+      ]
+    },
+    {
+      "id": "FR-006",
+      "title": "Cada pergunta de duelo usa chave de cache com semente, impressao dos provedores, nomes, descricoes e ordem",
+      "acceptance_criteria": [
+        "bun --config=tests/bunfig.focus.toml test tests/tournament.test.ts -t \"cache\" — a segunda execucao nao chama o decisor e a ordem inversa e outra chave"
+      ]
+    },
+    {
+      "id": "FR-007",
+      "title": "Pagina do estudo, glossario, /como-ler, tabelao e CSV mostram a media do torneio e as partidas",
+      "acceptance_criteria": [
+        "bun --config=tests/bunfig.focus.toml test tests/tournament-ui.test.ts -t \"torneio\" — o ranking mostra 'em 4 partidas' e o glossario tem o termo"
+      ]
+    },
+    {
+      "id": "QR-001",
+      "title": "Com o decisor simulado, o torneio produz a mesma ordem e os mesmos pontos para a mesma entrada",
+      "acceptance_criteria": [
+        "bun --config=tests/bunfig.focus.toml test tests/tournament-mock.test.ts -t \"simulado\" — duelo simulado deterministico e independente da ordem"
+      ]
+    },
+    {
+      "id": "QR-002",
+      "title": "Indice e tier continuam das notas e as chaves existentes do dados.json e do CSV nao mudam",
+      "acceptance_criteria": [
+        "bun --config=tests/bunfig.focus.toml test tests/tournament-artifacts.test.ts -t \"chaves\" — colunas novas so no fim, chaves antigas intactas"
+      ]
+    },
+    {
+      "id": "QR-003",
+      "title": "Estudo antigo sem torneio abre com a ordem pelo indice e a coluna do torneio vazia",
+      "acceptance_criteria": [
+        "bun --config=tests/bunfig.focus.toml test tests/tournament-persistence.test.ts -t \"estudo antigo\" — tournament_json nulo devolve ordem pelo indice"
+      ]
+    },
+    {
+      "id": "QR-004",
+      "title": "Um estudo de 8 ideias faz no maximo 32 chamadas de duelo",
+      "acceptance_criteria": [
+        "bun --config=tests/bunfig.focus.toml test tests/tournament.test.ts -t \"32\" — 8 ideias, no maximo 32 perguntas de duelo"
+      ]
+    },
+    {
+      "id": "EC-001",
+      "title": "Uma ideia so nao roda torneio e fica em primeiro sem pontos",
+      "acceptance_criteria": [
+        "bun --config=tests/bunfig.focus.toml test tests/tournament.test.ts -t \"uma ideia\" — nenhuma chamada e torneio nulo"
+      ]
+    },
+    {
+      "id": "EC-002",
+      "title": "Com 3 ideias, cada uma folga no maximo uma vez nas 3 rodadas",
+      "acceptance_criteria": [
+        "bun --config=tests/bunfig.focus.toml test tests/tournament.test.ts -t \"folga\" — 3 folgas distintas"
+      ]
+    },
+    {
+      "id": "EC-003",
+      "title": "Sem combinacao livre, o emparelhamento repete a partida de menor diferenca em vez de travar",
+      "acceptance_criteria": [
+        "bun --config=tests/bunfig.focus.toml test tests/tournament.test.ts -t \"repete\" — 2 ideias jogam 2 rodadas"
+      ]
+    },
+    {
+      "id": "EC-004",
+      "title": "Duelo sem probabilities usa a choice como 1; sem choice conta 0.5 e entra em issues",
+      "acceptance_criteria": [
+        "bun --config=tests/bunfig.focus.toml test tests/tournament.test.ts -t \"sem probabilidade\" — 0.5 e issue registrada"
+      ]
+    },
+    {
+      "id": "SC-001",
+      "title": "bun test passa com as assercoes de rodadas, vies, folga, desempate, remocao, adicao e contagem",
+      "acceptance_criteria": [
+        "bun test — a suite completa passa com exit 0"
+      ]
+    },
+    {
+      "id": "SC-002",
+      "title": "bun run cli generate \"depositos de bebidas\" --ideas 5 --mock grava tabelao e CSV com a coluna torneio e pastas na ordem do torneio",
+      "acceptance_criteria": [
+        "bun run cli generate \"depositos de bebidas\" --ideas 5 --mock — smoke manual com os artefatos conferidos"
+      ]
+    },
+    {
+      "id": "SC-003",
+      "title": "bun run check, bunx eslint . e bunx prettier --check . passam",
+      "acceptance_criteria": [
+        "bun run check — typecheck estrito passa"
+      ]
+    },
+    {
+      "id": "SC-004",
+      "title": "pwn work gate --all aprovado e .specs/system.json reconciliada com BR-001 e BR-010 novas",
+      "acceptance_criteria": [
+        "pwn work gate --all --work 0017 — os 5 gates aprovados"
+      ]
+    }
+  ]
+}
