@@ -1,0 +1,1 @@
+ALTER TABLE `studies` ADD `evidences_json` text;

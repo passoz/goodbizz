@@ -10,6 +10,7 @@ import type { Db } from "./db.ts";
 import { evaluations, studies } from "./schema.ts";
 import type { StudyRepository } from "../domain/ports.ts";
 import type {
+  Evidence,
   IdeaEvaluation,
   PainMethod,
   StudyListItem,
@@ -134,6 +135,18 @@ function ideaJsonToEvaluation(j: IdeaJson): IdeaEvaluation {
   };
 }
 
+const NO_SEARCH = { calls: 0, inputTokens: 0, cachedInputTokens: 0, outputTokens: 0 };
+
+/**
+ * Consumo gravado. Estudos anteriores à busca não têm `search`: a leitura completa com zero para o
+ * custo e a página tratarem todo estudo do mesmo jeito.
+ */
+function usageOf(json: string | null): StudyUsage | null {
+  if (!json) return null;
+  const usage = JSON.parse(json) as Omit<StudyUsage, "search"> & { search?: StudyUsage["search"] };
+  return { ...usage, search: usage.search ?? { ...NO_SEARCH } };
+}
+
 export class SqliteStudyRepository implements StudyRepository {
   private readonly db: Db;
 
@@ -160,6 +173,7 @@ export class SqliteStudyRepository implements StudyRepository {
       error: record.progress.error,
       summaryJson: record.summary ? JSON.stringify(record.summary) : null,
       usageJson: record.usage ? JSON.stringify(record.usage) : null,
+      evidencesJson: JSON.stringify(record.evidences),
     };
     this.db
       .insert(studies)
@@ -183,6 +197,7 @@ export class SqliteStudyRepository implements StudyRepository {
           error: values.error,
           summaryJson: values.summaryJson,
           usageJson: values.usageJson,
+          evidencesJson: values.evidencesJson,
         },
       })
       .run();
@@ -207,6 +222,7 @@ export class SqliteStudyRepository implements StudyRepository {
     if (patch.usage !== undefined) {
       set.usageJson = patch.usage ? JSON.stringify(patch.usage) : null;
     }
+    if (patch.evidences !== undefined) set.evidencesJson = JSON.stringify(patch.evidences);
     if (patch.progress !== undefined) {
       set.state = patch.progress.state;
       set.step = patch.progress.step;
@@ -259,7 +275,8 @@ export class SqliteStudyRepository implements StudyRepository {
       },
       evaluations: ideas,
       summary,
-      usage: row.usageJson ? (JSON.parse(row.usageJson) as StudyUsage) : null,
+      usage: usageOf(row.usageJson),
+      evidences: row.evidencesJson ? (JSON.parse(row.evidencesJson) as Evidence[]) : [],
     };
   }
 
@@ -279,7 +296,7 @@ export class SqliteStudyRepository implements StudyRepository {
         ideaCount: summary ? summary.ordered.length : 0,
         topIdea: top ? top.name : null,
         topIndex: top ? top.index : null,
-        usage: row.usageJson ? (JSON.parse(row.usageJson) as StudyUsage) : null,
+        usage: usageOf(row.usageJson),
       };
     });
   }

@@ -35,7 +35,14 @@ import { scrub } from "../config/redact.ts";
 import { cacheFingerprint, type ProviderConfig } from "../config/providers.ts";
 import { resolveStudyConfig, studyContext } from "../config/runtime.ts";
 import { ConflictError, NotFoundError, ValidationError } from "../domain/errors.ts";
-import type { ArtifactFile, DeciderClient, LlmClient, Logger, StudyRepository } from "../domain/ports.ts";
+import type {
+  ArtifactFile,
+  DeciderClient,
+  LlmClient,
+  Logger,
+  SearchClient,
+  StudyRepository,
+} from "../domain/ports.ts";
 import type { ProviderKind, ProviderSettings } from "../domain/types.ts";
 import type {
   Idea,
@@ -52,8 +59,13 @@ export interface StudyServiceOptions {
   cache: StudyCache;
   llm: LlmClient;
   decider: DeciderClient;
-  /** Clientes por estudo (permite um timeout diferente por configuração); sem isso valem `llm`/`decider`. */
-  clientsFor?: (cfg: StudyConfig) => { llm: LlmClient; decider: DeciderClient };
+  /** Provedor de busca da fase de pesquisa. */
+  search: SearchClient;
+  /**
+   * Clientes por estudo (permite um timeout diferente por configuração); sem isso valem `llm`,
+   * `decider` e `search`.
+   */
+  clientsFor?: (cfg: StudyConfig) => { llm: LlmClient; decider: DeciderClient; search: SearchClient };
   logger: Logger;
   /** Root directory that holds one subdirectory per study. */
   artifactsRoot: string;
@@ -113,6 +125,7 @@ export class StudyService {
       evaluations: [],
       summary: null,
       usage: null,
+      evidences: [],
     };
     await this.options.repo.save(record);
     this.options.logger.info("study created", { id, niche: cfg.niche });
@@ -182,10 +195,12 @@ export class StudyService {
       const clients = this.options.clientsFor?.(cfg) ?? {
         llm: this.options.llm,
         decider: this.options.decider,
+        search: this.options.search,
       };
       const result = await generateStudy(cfg, {
         llm: clients.llm,
         decider: clients.decider,
+        search: clients.search,
         cache: this.options.cache,
         logger: this.options.logger,
         onProgress: (step) => {
@@ -202,7 +217,11 @@ export class StudyService {
         this.options.logger.info("pdf compilation", { id, message: pdfResult.message, ok: pdfResult.ok });
       }
 
-      await this.options.repo.update(id, { brief: result.brief, usage: result.usage });
+      await this.options.repo.update(id, {
+        brief: result.brief,
+        usage: result.usage,
+        evidences: result.evidences,
+      });
       await this.options.repo.saveEvaluations(id, result.evaluations, result.summary);
       await setProgress("done", "concluído", null);
 
@@ -443,6 +462,7 @@ export class StudyService {
       [...remaining],
       folders,
       {},
+      record.evidences,
       // Só a raiz: os `NN-slug/README.md` de cada ideia foram preservados pela renomeação.
     ).filter((file) => !file.path.includes("/"));
     if (remaining.length === 0) {
@@ -560,6 +580,7 @@ export class StudyService {
       const clients = this.options.clientsFor?.(cfg) ?? {
         llm: this.options.llm,
         decider: this.options.decider,
+        search: this.options.search,
       };
       const result = await generateAddition(
         cfg,
@@ -570,6 +591,7 @@ export class StudyService {
         {
           llm: clients.llm,
           decider: clients.decider,
+          search: clients.search,
           cache: this.options.cache,
           logger: this.options.logger,
           onProgress: (step) => {

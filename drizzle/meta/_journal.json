@@ -43,6 +43,13 @@
       "when": 1791038408014,
       "tag": "0005_tan_giant_man",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1792969661359,
+      "tag": "0006_study_evidences",
+      "breakpoints": true
     }
   ]
 }

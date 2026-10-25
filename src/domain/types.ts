@@ -266,6 +266,8 @@ export interface StudyRecord {
   summary: StudySummary | null;
   /** Consumo medido no pipeline; `null` em estudos gerados antes desta versão. */
   usage: StudyUsage | null;
+  /** Evidências da pesquisa (estudo e ideias); vazia em estudos anteriores à fase de pesquisa. */
+  evidences: Evidence[];
 }
 
 export interface StudyListItem {

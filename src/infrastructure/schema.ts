@@ -24,6 +24,8 @@ export const studies = sqliteTable("studies", {
   summaryJson: text("summary_json"),
   /** Consumo medido no pipeline (LLM + decisor), em JSON. Nulo em estudos antigos. */
   usageJson: text("usage_json"),
+  /** Evidências da pesquisa (estudo e ideias), em JSON. Nulo em estudos anteriores à pesquisa. */
+  evidencesJson: text("evidences_json"),
 });
 
 export const settings = sqliteTable("settings", {
