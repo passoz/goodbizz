@@ -58,6 +58,12 @@
     ],
     "required_evidence": [
       "evidence.json"
+    ],
+    "frozen_tests": [
+      {
+        "path": "tests/tournament-persistence.test.ts",
+        "sha256": "e128d454decf1ab29dafb902011bc754ee8504e61c7fb5571bb529f9bbf4dcc3"
+      }
     ]
   },
   "scope_contract": {
