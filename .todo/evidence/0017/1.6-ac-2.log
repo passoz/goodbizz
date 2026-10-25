@@ -1,0 +1,50 @@
+TASK: 1.6
+CHECK: AC-2
+COMMAND: bun --config=tests/bunfig.focus.toml test tests/tournament-study.test.ts -t adicao
+EXIT: 0
+OUTPUT:
+bun test v1.4.2 (744846f84)
+
+ 2 pass
+ 0 fail
+ 53 expect() calls
+Ran 2 tests across 1 file. [109.00ms]
+
+MUTATION_EXIT: 1
+MUTATION_OUTPUT:
+bun test v1.4.2 (744846f84)
+
+tests/tournament-study.test.ts:
+94 | 
+95 |     const after = await service.removeIdea(study.id, removed?.id ?? "");
+96 |     expect(decider.duels).toBe(before);
+97 | 
+98 |     const matches = after.summary?.tournament?.matches ?? [];
+99 |     expect(matches.length).toBeGreaterThan(0);
+                                ^
+error: expect(received).toBeGreaterThan(expected)
+
+Expected: > 0
+Received: 0
+
+      at <anonymous> (/home/passoz/dev/goodbizz-w0017/tests/tournament-study.test.ts:99:28)
+(fail) torneio na remocao e na adicao > remocao: zero duelos e medias recalculadas sem as partidas da ideia excluida [38.23ms]
+109 |     const oldPairs = new Set(
+110 |       (study.summary?.tournament?.matches ?? []).map((match) => pairOf(match.aName, match.bName)),
+111 |     );
+112 | 
+113 |     const removed = await service.removeIdea(study.id, study.summary?.ordered[4]?.id ?? "");
+114 |     expect(removed.summary?.tournament?.matches.length).toBeGreaterThan(0);
+                                                              ^
+error: Expected and actual values must be numbers or bigints
+      at <anonymous> (/home/passoz/dev/goodbizz-w0017/tests/tournament-study.test.ts:114:57)
+(fail) torneio na remocao e na adicao > remocao seguida de adicao: toda partida ja disputada vem do cache [10.76ms]
+
+ 0 pass
+ 2 fail
+ 4 expect() calls
+Ran 2 tests across 1 file. [90.00ms]
+
+MUTATION_VERDICT: PASS
+VERDICT: PASS
+CHAIN_HASH: dd440eb93d07798f700d87b26b01a77aa9ccbcbc022f56ea220069bba49c3ba9
