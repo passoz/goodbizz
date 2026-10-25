@@ -23,7 +23,7 @@ export interface ProviderConfig {
 
 /** Perfil ativo de um tipo, ou `null` quando a vez é do ambiente. */
 export function activeProfile(settings: ProviderSettings, kind: ProviderKind): ProviderProfile | null {
-  const id = kind === "llm" ? settings.activeLlm : settings.activeDecider;
+  const id = kind === "llm" ? settings.activeLlm : kind === "decider" ? settings.activeDecider : settings.activeSearch;
   if (typeof id !== "string" || id.length === 0) return null;
   return (settings.profiles ?? []).find((profile) => profile.id === id && profile.kind === kind) ?? null;
 }
@@ -32,6 +32,7 @@ export function activeProfile(settings: ProviderSettings, kind: ProviderKind): P
 export function effectiveProviders(env: Env, settings: ProviderSettings): ProviderConfig {
   const llm = activeProfile(settings, "llm");
   const decider = activeProfile(settings, "decider");
+  const search = activeProfile(settings, "search");
   return {
     llmBaseUrl: llm?.url ?? env.LLM_API_URL,
     llmApiKey: llm?.apiKey ?? env.LLM_API_KEY,
@@ -39,9 +40,9 @@ export function effectiveProviders(env: Env, settings: ProviderSettings): Provid
     deciderUrl: decider?.url ?? env.DECISION_API_URL,
     deciderApiKey: decider?.apiKey ?? env.DECISION_API_KEY,
     deciderModel: decider?.model ?? env.DECISION_API_MODEL,
-    // A sobreposição do perfil de busca ativo entra na 1.14; aqui vale o ambiente.
-    searchBaseUrl: env.SEARCH_API_URL,
-    searchApiKey: env.SEARCH_API_KEY,
+    // A busca não tem modelo: o perfil ativo sobrepõe URL e chave; sem perfil, vale o ambiente.
+    searchBaseUrl: search?.url ?? env.SEARCH_API_URL,
+    searchApiKey: search?.apiKey ?? env.SEARCH_API_KEY,
   };
 }
 
@@ -59,6 +60,8 @@ export function cacheFingerprint(cfg: ProviderConfig): string {
     cfg.deciderUrl,
     cfg.deciderModel,
     cfg.deciderApiKey,
+    cfg.searchBaseUrl,
+    cfg.searchApiKey,
   ].join("|");
 }
 

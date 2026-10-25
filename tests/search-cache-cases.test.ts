@@ -77,4 +77,18 @@ describe("perfil de busca em casos de borda", () => {
       restoreEnv();
     }
   });
+  test("QR-003: excluir o perfil de busca ativo volta ao ambiente", async () => {
+    const { db, store: settings } = store();
+    const created = await settings.create({
+      name: "Busca",
+      kind: "search",
+      url: "https://busca.test",
+      model: "",
+    });
+    const profile = created.profiles?.find((candidate) => candidate.kind === "search");
+    expect(created.activeSearch).toBe(profile?.id ?? null);
+    const removed = await settings.remove(profile?.id ?? "");
+    expect(removed.activeSearch).toBeNull();
+    db.sqlite.close();
+  });
 });

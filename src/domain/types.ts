@@ -230,6 +230,8 @@ export interface ProviderSettings {
   profiles?: ProviderProfile[];
   activeLlm?: string | null;
   activeDecider?: string | null;
+  /** Perfil de busca ativo; `null` ou ausente herda SEARCH_API_URL/SEARCH_API_KEY. */
+  activeSearch?: string | null;
 }
 
 /** Consumo acumulado de um provedor. Tokens só quando o provedor informa. */

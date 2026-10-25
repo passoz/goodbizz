@@ -252,7 +252,7 @@ export class StudyService {
   async providerSettings(): Promise<ProviderSettings> {
     return this.options.settings
       ? this.options.settings.current()
-      : { profiles: [], activeLlm: null, activeDecider: null };
+      : { profiles: [], activeLlm: null, activeDecider: null, activeSearch: null };
   }
 
   /** O catálogo só existe quando a composição injetou o store; sem ele, a borda responde 422. */

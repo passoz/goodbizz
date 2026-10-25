@@ -25,7 +25,7 @@ function asString(value: unknown): string {
 function asProfile(value: unknown): ProviderProfile | null {
   if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
   const raw = value as Record<string, unknown>;
-  const kind = raw.kind === "decider" ? "decider" : raw.kind === "llm" ? "llm" : null;
+  const kind = raw.kind === "decider" ? "decider" : raw.kind === "llm" ? "llm" : raw.kind === "search" ? "search" : null;
   const id = asString(raw.id).trim();
   const name = asString(raw.name).trim();
   if (kind === null || id.length === 0 || name.length === 0) return null;
@@ -86,6 +86,7 @@ function readSettings(raw: Record<string, unknown>): ProviderSettings {
     profiles,
     activeLlm: active(raw.activeLlm, "llm"),
     activeDecider: active(raw.activeDecider, "decider"),
+    activeSearch: active(raw.activeSearch, "search"),
   };
 }
 
@@ -107,6 +108,7 @@ export function normalizeSettings(value: ProviderSettings): ProviderSettings {
     profiles,
     activeLlm: pick(value.activeLlm, "llm"),
     activeDecider: pick(value.activeDecider, "decider"),
+    activeSearch: pick(value.activeSearch, "search"),
   };
 }
 
@@ -115,15 +117,15 @@ export class SqliteSettingsRepository implements SettingsRepository {
 
   async get(): Promise<ProviderSettings> {
     const row = this.db.select().from(settings).where(eq(settings.id, SINGLETON)).get();
-    if (!row) return { profiles: [], activeLlm: null, activeDecider: null };
+    if (!row) return { profiles: [], activeLlm: null, activeDecider: null, activeSearch: null };
     try {
       const parsed: unknown = JSON.parse(row.data);
       if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
-        return { profiles: [], activeLlm: null, activeDecider: null };
+        return { profiles: [], activeLlm: null, activeDecider: null, activeSearch: null };
       }
       return readSettings(parsed as Record<string, unknown>);
     } catch {
-      return { profiles: [], activeLlm: null, activeDecider: null };
+      return { profiles: [], activeLlm: null, activeDecider: null, activeSearch: null };
     }
   }
 
