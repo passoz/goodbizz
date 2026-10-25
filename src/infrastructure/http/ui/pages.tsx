@@ -14,6 +14,7 @@ import { tierOf } from "../../../application/evaluate.ts";
 import { MAX_IDEAS_PER_STUDY } from "../../../application/study-service.ts";
 import { explainFailure } from "../../../application/failures.ts";
 import { folderName } from "../../../application/reports.ts";
+import { rankIdeas } from "../../../application/tournament.ts";
 import { MAX_DESCRIPTION_LENGTH, MAX_NICHE_LENGTH } from "../../../domain/naming.ts";
 import type { ProviderDefaultView, ProviderProfileView } from "../../../config/providers.ts";
 import type {
@@ -258,12 +259,21 @@ export const Legend: FC = () => (
     <dl class="legend">
       <div>
         <dt>
+          <Term of="torneio">Torneio</Term> <Hint>média de pontos por partida; maior é melhor</Hint>
+        </dt>
+        <dd>
+          É a ordem do ranking e das pastas. {GLOSSARY["torneio"] ?? ""} Empate na média é decidido pelo
+          Índice de Ação e depois pelo nome. Estudo anterior ao torneio continua ordenado pelo índice.
+        </dd>
+      </div>
+      <div>
+        <dt>
           <Term of="Índice de Ação">Índice de Ação</Term>{" "}
           <Hint>média entre fit e facilidade de venda; maior é melhor</Hint>
         </dt>
         <dd>
-          Tier A a partir de 1.84, Tier B a partir de 1.60, Tier C abaixo disso. É o critério de priorização,
-          não uma previsão de faturamento.
+          Tier A a partir de 1.84, Tier B a partir de 1.60, Tier C abaixo disso. Desempata o torneio e
+          continua calculado só das notas; não é previsão de faturamento.
         </dd>
       </div>
       <div>
@@ -1599,9 +1609,7 @@ const AddIdeasForm: FC<{ id: string; token: string; remaining: number }> = (prop
 export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; token: string }> = (props) => {
   const { study } = props;
   // `StudyIdea`, e nao `IdeaEvaluation`: e ela que carrega o id usado nas acoes por linha.
-  const ranked: StudyIdea[] = study.summary
-    ? study.summary.ordered
-    : [...study.evaluations].sort((left, right) => right.index - left.index);
+  const ranked: StudyIdea[] = study.summary ? study.summary.ordered : rankIdeas(study.evaluations);
   const summary = study.summary;
   const running = study.progress.state === "pending" || study.progress.state === "running";
   const current = parsePhase(study.progress.step);
@@ -1715,6 +1723,9 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; token: s
                   <th>Ideia</th>
                   <th>Setor</th>
                   <th class="num">
+                    <Term of="torneio">Torneio</Term> <Hint>média por partida, 0 a 1; maior é melhor</Hint>
+                  </th>
+                  <th class="num">
                     <Term of="Índice de Ação">Índice</Term> <Hint>0 a 2; maior é melhor</Hint>
                   </th>
                   <th>
@@ -1764,6 +1775,18 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; token: s
                         )}
                       </td>
                       <td>{idea.sector !== "" ? idea.sector : "-"}</td>
+                      {idea.tournament ? (
+                        <td
+                          class={`num tone-${probabilityTone(idea.tournament.score)} tone-text`}
+                          title="Média de pontos por partida no torneio par a par do decisor: maior é melhor. É ela que ordena o ranking."
+                        >
+                          {`${idea.tournament.score.toFixed(2)} em ${idea.tournament.games} partidas`}
+                        </td>
+                      ) : (
+                        <td class="num" title="Estudo anterior ao torneio: a ordem segue o índice de ação">
+                          -
+                        </td>
+                      )}
                       <td
                         class={`num tone-${indexTone(idea.index)} tone-text`}
                         title={`Índice de Ação: média entre fit e venda, maior é melhor. Tier ${idea.tier}: ${TIER_NOTE[idea.tier]}`}
@@ -1814,7 +1837,8 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; token: s
           <h3>Acrescentar ideias</h3>
           <p class="sub">
             As {ranked.length} ideias atuais ficam como estão: o que já foi medido e documentado não é
-            refeito, e o ranking inteiro é renumerado.
+            refeito. O torneio roda de novo sobre todas as ideias (partida já disputada vem do cache) e o
+            ranking inteiro é renumerado.
           </p>
           <AddIdeasForm
             id={study.id}

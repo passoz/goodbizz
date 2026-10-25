@@ -1,0 +1,137 @@
+{
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bun",
+        "--config=tests/bunfig.focus.toml",
+        "test",
+        "tests/tournament-ui.test.ts",
+        "-t",
+        "em 4 partidas"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0017/1.7-ac-1.log",
+      "log_sha256": "344580fe81e8166d3bfa3f938c49aa4b9bf8d512bcbd9a97a5068376bef3b9f8",
+      "recorded_at": "2026-10-25T22:54:05.370Z",
+      "green_sha256": "f17e5a652424e9a0b84e60d1e2779cb4907c5e85aea25855434fcced32c61460",
+      "vacuity": {
+        "exit_code": 1,
+        "verdict": "PASS"
+      }
+    },
+    "AC-2": {
+      "command": [
+        "bun",
+        "--config=tests/bunfig.focus.toml",
+        "test",
+        "tests/tournament-ui.test.ts",
+        "-t",
+        "glossario"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0017/1.7-ac-2.log",
+      "log_sha256": "6c9fd3d7e46f7496c3f7346dfa13b00d1288f2d0dc3b1db7f8746fe6e64aa2b6",
+      "recorded_at": "2026-10-25T22:54:05.556Z",
+      "green_sha256": "f17e5a652424e9a0b84e60d1e2779cb4907c5e85aea25855434fcced32c61460",
+      "vacuity": {
+        "exit_code": 1,
+        "verdict": "PASS"
+      }
+    }
+  },
+  "baseline_commit": "fce102c23a251ae2e22e15dca1de5051ed9813c3",
+  "baseline_implementation": {
+    "src/infrastructure/http/ui/pages.tsx": {
+      "exists": true,
+      "sha256": "55d24410b2f6e67c4ca273aff550922ec491c7cd4f069a97fcaf28cb98998fff"
+    },
+    "src/infrastructure/http/ui/layout.tsx": {
+      "exists": true,
+      "sha256": "fcf0083bea139cbc2a8dc936e64c6b8ebe51dfeba2fe157fd3929783a36512c5"
+    },
+    "src/infrastructure/http/ui/routes.tsx": {
+      "exists": true,
+      "sha256": "5454767221397ec8976329f72fc7d31e286707650e0ddf0ec3757885b89d25a6"
+    }
+  },
+  "baseline_tests": {
+    "tests/tournament-ui.test.ts": {
+      "exists": true,
+      "sha256": "a521ad06b8dd256bd6f1883430c81218d40385cc62e7a1460908f69be6bc1150"
+    },
+    "tests/ui-tournament.test.ts": {
+      "exists": false,
+      "sha256": null
+    }
+  },
+  "contract": {
+    "id": "CTR-007",
+    "sha256": "fb096113699f964c9964ca408d6af406c4c5052914f62fbeb9ac6ef8eab36130"
+  },
+  "created_at": "2026-10-25T22:53:12.479Z",
+  "frozen_tests": [
+    {
+      "path": "tests/tournament-ui.test.ts",
+      "sha256": "a521ad06b8dd256bd6f1883430c81218d40385cc62e7a1460908f69be6bc1150"
+    }
+  ],
+  "green_expect": null,
+  "green_implementation": {
+    "src/infrastructure/http/ui/pages.tsx": {
+      "exists": true,
+      "sha256": "35e556a19e349770099e0f76b63b19c994dbdcf64ea8d1fc8b937b0fbd1687ef"
+    },
+    "src/infrastructure/http/ui/layout.tsx": {
+      "exists": true,
+      "sha256": "f912dbfc900942cc9cabf5beec4eae3b01de13cb6471b36e82d7ddbe969c1a71"
+    },
+    "src/infrastructure/http/ui/routes.tsx": {
+      "exists": true,
+      "sha256": "a90191ddc94d2676f966db86aaa773c90f72ad4b1108f06157ed98f0438629e7"
+    }
+  },
+  "green_tests": {
+    "tests/tournament-ui.test.ts": {
+      "exists": true,
+      "sha256": "a521ad06b8dd256bd6f1883430c81218d40385cc62e7a1460908f69be6bc1150"
+    },
+    "tests/ui-tournament.test.ts": {
+      "exists": true,
+      "sha256": "9eb91d9b14fc8b8fdddb045f83aced31a48ed23c595381f290d8b58c8365477f"
+    }
+  },
+  "implementation_files": [
+    "src/infrastructure/http/ui/pages.tsx",
+    "src/infrastructure/http/ui/layout.tsx",
+    "src/infrastructure/http/ui/routes.tsx"
+  ],
+  "plan_path": ".todo/0017-tasks.md",
+  "red_command": [
+    "bun",
+    "--config=tests/bunfig.focus.toml",
+    "test",
+    "tests/ui-tournament.test.ts"
+  ],
+  "red_expect": "sem resumo gravado, o plano da posicao 1 e o da ideia que lidera o torneio",
+  "red_tests": {
+    "tests/tournament-ui.test.ts": {
+      "exists": true,
+      "sha256": "a521ad06b8dd256bd6f1883430c81218d40385cc62e7a1460908f69be6bc1150"
+    },
+    "tests/ui-tournament.test.ts": {
+      "exists": true,
+      "sha256": "9eb91d9b14fc8b8fdddb045f83aced31a48ed23c595381f290d8b58c8365477f"
+    }
+  },
+  "state_version": 2,
+  "task": "1.7",
+  "task_definition_sha256": "7e57c50aebd9edf623157eae90e7dde37bcab4cc249832473f32863e6b473026",
+  "test_files": [
+    "tests/tournament-ui.test.ts",
+    "tests/ui-tournament.test.ts"
+  ]
+}

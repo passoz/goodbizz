@@ -14,6 +14,7 @@ import { envProviderDefaults, profileViews } from "../../../config/providers.ts"
 import { folderName } from "../../../application/reports.ts";
 import { mdToHtml } from "../../../application/render.ts";
 import { MAX_IDEAS_PER_STUDY, type StudyService } from "../../../application/study-service.ts";
+import { rankIdeas } from "../../../application/tournament.ts";
 import { ConflictError, NotFoundError, ValidationError } from "../../../domain/errors.ts";
 import type { StudyRecord } from "../../../domain/types.ts";
 import { Layout, Term } from "./layout.tsx";
@@ -140,9 +141,8 @@ export function buildUiApp(deps: UiDeps): Hono {
       }
       throw error;
     }
-    const ranked = study.summary
-      ? study.summary.ordered
-      : [...study.evaluations].sort((left, right) => right.index - left.index);
+    // Mesma ordem das pastas: torneio, depois índice, depois nome.
+    const ranked = study.summary ? study.summary.ordered : rankIdeas(study.evaluations);
     const idea = ranked[position - 1];
     if (idea === undefined) {
       return c.html('<p class="alert">ideia não encontrada neste estudo</p>', 404);

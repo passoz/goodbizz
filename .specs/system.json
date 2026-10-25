@@ -81,9 +81,9 @@
     {
       "id": "CAP-002",
       "title": "Avaliacao probabilistica por ideia",
-      "value": "mede fit, venda, disrupcao, dor, suporte solo, WTP, meta 30 e preco por ideia",
+      "value": "mede fit, venda, disrupcao, dor, suporte solo, WTP, meta 30 e preco por ideia e compara as ideias duas a duas num torneio suico",
       "actors": ["ACT-001", "ACT-005"],
-      "behavior": "monta perguntas tipadas e agrega respostas em indicadores, indice de acao e tier",
+      "behavior": "monta perguntas tipadas e agrega respostas em indicadores, indice de acao e tier; depois roda teto(log2 N)+1 rodadas de duelo choice {A, B}, cada partida perguntada nas duas ordens, e soma a media das probabilidades de cada ideia",
       "failures": "resposta sem probabilidade reconhecivel gera erro explicito",
       "rules": ["BR-003", "BR-004"],
       "contracts": ["CON-005", "CON-006"],
@@ -160,7 +160,7 @@
       "title": "Relatorios deterministas",
       "value": "produz indice, tabelao markdown, CSV e dados.json sem chamar LLM",
       "actors": ["ACT-001", "ACT-002", "ACT-003"],
-      "behavior": "ordena por indice de acao e agrupa por natureza da dor",
+      "behavior": "ordena pela media do torneio (desempate pelo indice de acao e pelo nome), mostra a coluna torneio no tabelao e no CSV e agrupa por natureza da dor",
       "failures": "colisao de nome de pasta e resolvida por slug deterministico",
       "rules": ["BR-010"],
       "contracts": ["CON-006"],
@@ -182,7 +182,7 @@
       "title": "Cache de respostas de API",
       "value": "evita gastar tokens em reexecucao do mesmo estudo",
       "actors": ["ACT-001", "ACT-002"],
-      "behavior": "guarda respostas por chave hash de parametros e reaproveita em reexecucoes",
+      "behavior": "guarda respostas por chave hash de parametros e reaproveita em reexecucoes; cada ordem de cada duelo do torneio tem chave propria",
       "failures": "cache ausente ou invalido e simplesmente ignorado",
       "rules": ["BR-015"],
       "contracts": ["CON-006"],
@@ -226,7 +226,7 @@
       "title": "Persistencia de estudos",
       "value": "guarda estudos, ideias e avaliacoes para consulta posterior",
       "actors": ["ACT-002", "ACT-003"],
-      "behavior": "grava estudo e avaliacoes em SQLite via Drizzle e le por id",
+      "behavior": "grava estudo e avaliacoes em SQLite via Drizzle e le por id; os pontos do torneio vivem na coluna nullable tournament_json e as partidas no resumo do estudo",
       "failures": "estudo inexistente retorna nulo e a API responde 404",
       "rules": ["BR-019"],
       "contracts": ["CON-002"],
@@ -259,7 +259,7 @@
   "rules": [
     {
       "id": "BR-001",
-      "statement": "A geracao de estudo executa as etapas na ordem brief, ideias, avaliacao, dor, documentos, relatorios e PDF opcional.",
+      "statement": "A geracao de estudo executa as etapas na ordem brief, ideias, avaliacao, torneio par a par no decisor, dor, documentos, relatorios e PDF opcional; a adicao de ideias roda o torneio de novo sobre todas as ideias.",
       "coverage": ["CAP-001"],
       "evidence": "generate_study.py::execute"
     },
@@ -313,7 +313,7 @@
     },
     {
       "id": "BR-010",
-      "statement": "As pastas de ideia sao numeradas pela ordem do ranking, com slug deterministico do nome.",
+      "statement": "A ordem do ranking, e portanto a numeracao das pastas, segue a media de pontos por partida no torneio suico do decisor, com desempate pelo indice de acao e depois pelo nome; estudo sem torneio ordena pelo indice. O slug da pasta e deterministico a partir do nome.",
       "coverage": ["CAP-001", "CAP-009"],
       "evidence": "reports.folder"
     },
@@ -413,7 +413,7 @@
       "title": "API HTTP /api",
       "consumers": ["ACT-002", "ACT-003"],
       "inputs": "JSON de criacao de estudo, parametros de consulta",
-      "outputs": "JSON com id, status, resumo, avaliacoes e links de artefato",
+      "outputs": "JSON com id, status, resumo, avaliacoes (com tournament por ideia), tournament (rodadas, partidas, folgas, issues) e links de artefato",
       "errors": "422 payload invalido; 404 estudo inexistente; 500 erro interno sem stack",
       "compatibility": "versionado sob /api; sem CSRF (autenticacao propria)",
       "evidence": "src/infrastructure/http/app.ts"
@@ -423,7 +423,7 @@
       "title": "Interface web",
       "consumers": ["ACT-003"],
       "inputs": "formularios HTML e fetch na mesma origem",
-      "outputs": "paginas renderizadas (lista, formulario, detalhe do estudo)",
+      "outputs": "paginas renderizadas (lista, formulario, detalhe do estudo com a coluna torneio, /como-ler com o glossario do torneio)",
       "errors": "403 origem ou token CSRF invalido",
       "compatibility": "mesma origem que a API; consome /api por fetch",
       "evidence": "src/infrastructure/http/ui/routes.tsx"
@@ -442,7 +442,7 @@
       "id": "CON-005",
       "title": "Protocolo do decisor System One",
       "consumers": ["ACT-005"],
-      "inputs": "POST {DECISION_API_URL} com state e questions tipadas",
+      "inputs": "POST {DECISION_API_URL} com state e questions tipadas, inclusive a pergunta choice duelo com criteria A e B",
       "outputs": "answers com probabilidades, escolha ou score por id",
       "errors": "400/401/403 abortam sem retentativa; demais erros com backoff",
       "compatibility": "Jev, Laya, gateways e runtimes locais que implementem o padrao System One",
@@ -455,7 +455,7 @@
       "inputs": "dados avaliados e textos gerados",
       "outputs": "README.md, 00-brief.md, 00-tabelao.md, 00-tabelao.csv, dados.json, pastas 01-<slug>/README.md e estudo-completo.html/.pdf",
       "errors": "arquivo nao escrito quando nao ha conteudo aplicavel",
-      "compatibility": "mesmo esquema de chaves e layout do baseline Python (dados.json consumivel pelo recalibrate)",
+      "compatibility": "mesmo esquema de chaves e layout do baseline Python (dados.json consumivel pelo recalibrate); acrescimos no fim: colunas torneio e partidas no CSV, chave torneio por ideia e torneio_partidas (a, b, p_a) no dados.json",
       "evidence": "src/application/reports.ts"
     }
   ],
@@ -476,7 +476,7 @@
     {
       "id": "ENT-003",
       "name": "IdeaEvaluation",
-      "description": "indicadores, bloco de negocio, bloco de dor, indice e tier de uma ideia",
+      "description": "indicadores, bloco de negocio, bloco de dor, indice e tier de uma ideia; no estudo, ganha pontos, partidas, vitorias, folgas e media do torneio",
       "evidence": "evaluation.evaluate_idea"
     },
     {
@@ -531,7 +531,7 @@
     {
       "id": "INT-002",
       "name": "Decisor HTTP System One",
-      "description": "endpoint de decisao probabilistica",
+      "description": "endpoint de decisao probabilistica; responde tambem o duelo entre duas ideias do torneio",
       "coverage": ["CAP-002", "CAP-003", "CAP-004", "CAP-005"],
       "evidence": "src/infrastructure/decider/http.ts"
     },
