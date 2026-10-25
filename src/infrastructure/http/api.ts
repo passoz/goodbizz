@@ -153,6 +153,8 @@ function publicStudy(record: StudyRecord) {
     evaluations: record.evaluations,
     summary: record.summary,
     usage: record.usage,
+    /** Número de evidências da pesquisa (estudo + ideias); estudo antigo abre com zero. */
+    evidenceCount: record.evidences.length,
     /** Estimativa com os preços do ambiente (`GOODBIZZ_PRICE_*`); `null` sem consumo medido. */
     cost: estimateCost(record.usage),
   };

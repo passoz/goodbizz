@@ -214,6 +214,13 @@ const UsagePanel: FC<{ usage: StudyUsage | null }> = (props) => {
           tone="neutral"
         />
         <Metric
+          term="busca"
+          label="buscas na web"
+          value={props.usage.search.calls.toLocaleString("pt-BR")}
+          hint="consultas ao provedor de busca na fase de pesquisa"
+          tone="neutral"
+        />
+        <Metric
           term="tokens"
           label="tokens de entrada"
           value={totals.input.toLocaleString("pt-BR")}
@@ -1699,6 +1706,32 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; token: s
           <script>{raw(RUN_SCRIPT)}</script>
         </section>
       ) : null}
+      <section class="panel glass" id="evidence-panel">
+        <h3>
+          Pesquisa na web <Hint>evidências com trecho literal e URL</Hint>
+        </h3>
+        <p class="sub" id="evidence-count">
+          {study.evidences.length === 1
+            ? "1 evidência"
+            : `${study.evidences.length.toLocaleString("pt-BR")} evidências`}
+          {study.usage !== null
+            ? ` em ${study.usage.search.calls.toLocaleString("pt-BR")} buscas`
+            : ""}
+          .
+        </p>
+        {study.evidences.length < 5 ? (
+          <p class="alert" id="weak-research-warning" role="alert">
+            pesquisa fraca: este estudo tem poucas evidências. Execute de novo para pesquisar outra
+            vez.
+          </p>
+        ) : null}
+        {study.evidences.length < 5 ? (
+          <div class="form-actions">
+            <RunForm id={study.id} token={props.token} />
+          </div>
+        ) : null}
+      </section>
+
 
       <section class="panel glass">
         <h3>Ranking</h3>

@@ -1,0 +1,68 @@
+TASK: 1.16
+CHECK: AC-1
+COMMAND: bun --config=tests/bunfig.focus.toml test tests/study-evidence-page.test.ts -t FR-011
+EXIT: 0
+OUTPUT:
+bun test v1.4.2 (744846f84)
+
+ 3 pass
+ 0 fail
+ 12 expect() calls
+Ran 3 tests across 1 file. [92.00ms]
+
+MUTATION_EXIT: 1
+MUTATION_OUTPUT:
+bun test v1.4.2 (744846f84)
+
+tests/study-evidence-page.test.ts:
+115 |     });
+116 | 
+117 |     const response = await harness.api.request(`/studies/${weak.id}`);
+118 |     expect(response.status).toBe(200);
+119 |     const body = (await response.json()) as { evidenceCount: number; usage: { search: { calls: number } } };
+120 |     expect(body.evidenceCount).toBe(2);
+                                     ^
+error: expect(received).toBe(expected)
+
+Expected: 2
+Received: undefined
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/study-evidence-page.test.ts:120:32)
+(fail) evidencias na pagina do estudo > FR-011: a API conta as evidencias e o estudo antigo volta com zero [15.33ms]
+137 |         decider: [REDACTED]
+138 |         search: [REDACTED]
+139 |       },
+140 |     });
+141 |     const body = await (await harness.app.request(`/studies/${study.id}`)).text();
+142 |     expect(body).toContain('id="evidence-panel"');
+                       ^
+error: expect(received).toContain(expected)
+
+Expected to contain: "id=\"evidence-panel\""
+Received: [REDACTED]
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/study-evidence-page.test.ts:142:18)
+(fail) evidencias na pagina do estudo > FR-011: estudo com 2 evidencias mostra o aviso e o Executar de novo [11.11ms]
+151 |     await harness.repo.update(strong.id, {
+152 |       evidences: [evidence(1), evidence(2), evidence(3), evidence(4), evidence(5)],
+153 |       summary: summary(),
+154 |     });
+155 |     const strongBody = await (await harness.app.request(`/studies/${strong.id}`)).text();
+156 |     expect(strongBody).toContain("5 evidências");
+                             ^
+error: expect(received).toContain(expected)
+
+Expected to contain: "5 evidências"
+Received: [REDACTED]
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/study-evidence-page.test.ts:156:24)
+(fail) evidencias na pagina do estudo > FR-011: estudo com 5 ou mais nao avisa e estudo sem evidencias mostra zero [8.48ms]
+
+ 0 pass
+ 3 fail
+ 4 expect() calls
+Ran 3 tests across 1 file. [92.00ms]
+
+MUTATION_VERDICT: PASS
+VERDICT: PASS
+CHAIN_HASH: 2178e5b8e1ebcf5880298d854d3381de8fa6b5f9465b355abfcc12751c31fbd5
