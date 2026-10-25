@@ -39,6 +39,8 @@ export interface Env {
   GOODBIZZ_PRICE_LLM_OUTPUT_PER_MTOK: number;
   GOODBIZZ_PRICE_DECIDER_INPUT_PER_MTOK: number;
   GOODBIZZ_PRICE_DECIDER_OUTPUT_PER_MTOK: number;
+  /** US$ por mil chamadas ao provedor de busca (Tavily grátis até 1.000 por mês: padrão 0). */
+  GOODBIZZ_PRICE_SEARCH_PER_1K: number;
   GOODBIZZ_USD_BRL: number;
 }
 
@@ -80,6 +82,8 @@ function buildEnv() {
       GOODBIZZ_PRICE_LLM_OUTPUT_PER_MTOK: z.coerce.number().min(0).default(0.6),
       GOODBIZZ_PRICE_DECIDER_INPUT_PER_MTOK: z.coerce.number().min(0).default(0.042),
       GOODBIZZ_PRICE_DECIDER_OUTPUT_PER_MTOK: z.coerce.number().min(0).default(0),
+      // Busca: cobrada por chamada, não por token. O plano grátis da Tavily dá 1.000 buscas por mês.
+      GOODBIZZ_PRICE_SEARCH_PER_1K: z.coerce.number().min(0).default(0),
       /** Cotação US$->R$ só para exibir; 0 desliga a conversão. */
       GOODBIZZ_USD_BRL: z.coerce.number().min(0).default(0),
     },

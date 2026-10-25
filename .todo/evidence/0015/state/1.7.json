@@ -1,0 +1,105 @@
+{
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bun",
+        "--config=tests/bunfig.focus.toml",
+        "test",
+        "tests/search-usage.test.ts",
+        "-t",
+        "FR-010"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0015/1.7-ac-1.log",
+      "log_sha256": "7bb2c165e0836b56d5777ae0d369ad33e851a315f93816ff3e94c39e898adc74",
+      "recorded_at": "2026-10-25T23:06:12.824Z",
+      "green_sha256": "8d34e21a707ec11e1e935f8061c7a5f960c7a88f72bae84dbd3cb256f2834e2e",
+      "vacuity": {
+        "exit_code": 1,
+        "verdict": "PASS"
+      }
+    }
+  },
+  "baseline_commit": "04a4e9880cced4167978eac937f5aaecf03c69e9",
+  "baseline_implementation": {
+    "src/application/costs.ts": {
+      "exists": true,
+      "sha256": "01cdc61c88ee42ba755cf314ffec95b3446acf87ff325ecbd2f15580e120bc30"
+    },
+    "src/application/generate-study.ts": {
+      "exists": true,
+      "sha256": "4076d54bd6f071cbcea43a9b81e79c51d4923a557fecdee004594281805c23cf"
+    },
+    "src/config/env.ts": {
+      "exists": true,
+      "sha256": "f992576fdbc4d48dea2f409a85b7b31521547a67d9a67c1ca40cea50648c4044"
+    }
+  },
+  "baseline_tests": {
+    "tests/search-usage-cases.test.ts": {
+      "exists": false,
+      "sha256": null
+    }
+  },
+  "contract": {
+    "id": "CTR-007",
+    "sha256": "a24845c6fc00ca8cfc9ce3d2073e5bd622c913b25cd6076f6b6a1770766212f6"
+  },
+  "created_at": "2026-10-25T23:05:50.183Z",
+  "frozen_tests": [
+    {
+      "path": "tests/search-usage.test.ts",
+      "sha256": "8661244584e0f3f398e13a879564560e46c35191d5f6cfb591597e3357fcc49b"
+    }
+  ],
+  "green_expect": null,
+  "green_implementation": {
+    "src/application/costs.ts": {
+      "exists": true,
+      "sha256": "74ef02d27e2260083f8765713a1fcf9dd7b96e1b9e45715af0003bc2381f186c"
+    },
+    "src/application/generate-study.ts": {
+      "exists": true,
+      "sha256": "a3ac567c93ef45c0c4903bf8c438acebf19d4cca7e1a137d0ff5e76061cf9255"
+    },
+    "src/config/env.ts": {
+      "exists": true,
+      "sha256": "b728076fdf321388e540e744ea6a9ea4c16db88721cf32460a1230724eab6769"
+    }
+  },
+  "green_tests": {
+    "tests/search-usage-cases.test.ts": {
+      "exists": true,
+      "sha256": "cdd822e73cd8922582c834b6c12b7b456b2a8b14e86376c21e87d84d0da5208b"
+    }
+  },
+  "implementation_files": [
+    "src/application/costs.ts",
+    "src/application/generate-study.ts",
+    "src/config/env.ts"
+  ],
+  "plan_path": ".todo/0015-tasks.md",
+  "red_command": [
+    "bun",
+    "--config=tests/bunfig.focus.toml",
+    "test",
+    "tests/search-usage-cases.test.ts",
+    "-t",
+    "FR-010"
+  ],
+  "red_expect": "FR-010",
+  "red_tests": {
+    "tests/search-usage-cases.test.ts": {
+      "exists": true,
+      "sha256": "cdd822e73cd8922582c834b6c12b7b456b2a8b14e86376c21e87d84d0da5208b"
+    }
+  },
+  "state_version": 2,
+  "task": "1.7",
+  "task_definition_sha256": "a8d92e407a77c7492fec93dd2a599d4b40e29d734f976e0c261e7b1facafb84f",
+  "test_files": [
+    "tests/search-usage-cases.test.ts"
+  ]
+}

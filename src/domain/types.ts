@@ -240,10 +240,11 @@ export interface ProviderUsage {
   outputTokens: number;
 }
 
-/** Consumo de um estudo: LLM (texto) + decisor (System One). */
+/** Consumo de um estudo: LLM (texto) + decisor (System One) + busca na web (só chamadas). */
 export interface StudyUsage {
   llm: ProviderUsage;
   decider: ProviderUsage;
+  search: ProviderUsage;
 }
 
 export interface StudyRecord {

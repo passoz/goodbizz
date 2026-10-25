@@ -19,6 +19,8 @@ export interface PriceTable {
   llmOutputPerMTok: number;
   deciderInputPerMTok: number;
   deciderOutputPerMTok: number;
+  /** US$ por mil chamadas ao provedor de busca. */
+  searchPer1k: number;
   /** Cotação usada só para exibir em R$; 0 desliga a conversão. */
   usdBrl: number;
 }
@@ -39,6 +41,7 @@ export function pricesFromEnv(): PriceTable {
     llmOutputPerMTok: env.GOODBIZZ_PRICE_LLM_OUTPUT_PER_MTOK,
     deciderInputPerMTok: env.GOODBIZZ_PRICE_DECIDER_INPUT_PER_MTOK,
     deciderOutputPerMTok: env.GOODBIZZ_PRICE_DECIDER_OUTPUT_PER_MTOK,
+    searchPer1k: env.GOODBIZZ_PRICE_SEARCH_PER_1K,
     usdBrl: env.GOODBIZZ_USD_BRL,
   };
 }
@@ -75,7 +78,8 @@ export function estimateCost(
         prices.deciderInputPerMTok,
         prices.deciderInputPerMTok,
         prices.deciderOutputPerMTok,
-      ),
+      ) +
+      (usage.search.calls / 1_000) * prices.searchPer1k,
   );
   const brl = prices.usdBrl > 0 ? round6(usd * prices.usdBrl) : null;
   const deciderFree = prices.deciderInputPerMTok + prices.deciderOutputPerMTok === 0;
@@ -87,6 +91,7 @@ export function estimateCost(
       `US$ ${prices.llmCachedInputPerMTok}/1M entrada em cache, US$ ${prices.llmOutputPerMTok}/1M saída` +
       (deciderFree
         ? "; decisor a custo zero"
-        : `; decisor US$ ${prices.deciderInputPerMTok}/1M entrada e US$ ${prices.deciderOutputPerMTok}/1M saída`),
+        : `; decisor US$ ${prices.deciderInputPerMTok}/1M entrada e US$ ${prices.deciderOutputPerMTok}/1M saída`) +
+      (prices.searchPer1k > 0 ? `; busca US$ ${prices.searchPer1k} por mil chamadas` : ""),
   };
 }

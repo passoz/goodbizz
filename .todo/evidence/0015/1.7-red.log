@@ -1,0 +1,40 @@
+TASK: 1.7
+CHECK: RED
+COMMAND: bun --config=tests/bunfig.focus.toml test tests/search-usage-cases.test.ts -t FR-010
+EXIT: 1
+OUTPUT:
+bun test v1.4.2 (744846f84)
+
+tests/search-usage-cases.test.ts:
+33 |   test("FR-010: com preço zero a busca não custa nem aparece na nota", () => {
+34 |     const cost = estimateCost({ llm: ZERO, decider: ZERO, search: { ...ZERO, calls: 500 } }, { ...PRICES, searchPer1k: 0 });
+35 |     expect(cost?.usd).toBe(0);
+36 |     expect(cost?.note).not.toContain("busca");
+37 |     const paid = estimateCost({ llm: ZERO, decider: ZERO, search: { ...ZERO, calls: 500 } }, { ...PRICES, searchPer1k: 4 });
+38 |     expect(paid?.usd).toBe(2);
+                           ^
+error: expect(received).toBe(expected)
+
+Expected: 2
+Received: 0
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/search-usage-cases.test.ts:38:23)
+(fail) consumo de busca em casos de borda > FR-010: com preço zero a busca não custa nem aparece na nota [0.22ms]
+56 |     };
+57 |     const deps = { llm: new LlmMock(), decider: new DeciderMock(), search, cache, logger: QUIET };
+58 |     const first = await generateStudy(cfg, deps);
+59 |     const second = await generateStudy(cfg, deps);
+60 |     handle.sqlite.close();
+61 |     expect(first.usage.search.calls).toBeGreaterThan(0);
+                            ^
+TypeError: undefined is not an object (evaluating 'first.usage.search.calls')
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/search-usage-cases.test.ts:61:24)
+(fail) consumo de busca em casos de borda > FR-010: reexecutar com o cache cheio não conta chamada de busca [17.60ms]
+
+ 0 pass
+ 2 fail
+ 3 expect() calls
+Ran 2 tests across 1 file. [58.00ms]
+
+VERDICT: PASS
+CHAIN_HASH: d30734bc273e771bb292d0a29caa86f793e42d0749f828d8c3d4e7186216ef10

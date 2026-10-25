@@ -103,7 +103,7 @@ export async function generateAddition(
   deps: GenerateStudyDeps,
 ): Promise<GenerateStudyResult> {
   const { llm, decider, cache } = deps;
-  const usageBefore = { llm: llm.usage?.(), decider: decider.usage?.() };
+  const usageBefore = { llm: llm.usage?.(), decider: decider.usage?.(), search: deps.search.usage?.() };
   const progress = deps.onProgress ?? (() => {});
   const brief = input.brief;
   const existing = [...input.existing];
@@ -163,6 +163,7 @@ export async function generateAddition(
   const usageNow = (): StudyUsage => ({
     llm: usageDelta(usageBefore.llm, llm.usage?.()),
     decider: usageDelta(usageBefore.decider, decider.usage?.()),
+    search: usageDelta(usageBefore.search, deps.search.usage?.()),
   });
 
   if (cfg.evaluateOnly) {
@@ -252,7 +253,7 @@ export async function generateAddition(
 
 export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): Promise<GenerateStudyResult> {
   const { llm, decider, cache } = deps;
-  const usageBefore = { llm: llm.usage?.(), decider: decider.usage?.() };
+  const usageBefore = { llm: llm.usage?.(), decider: decider.usage?.(), search: deps.search.usage?.() };
   const progress = deps.onProgress ?? (() => {});
   const providerScope = cfg.providerFingerprint ?? "";
   deps.logger.debug("study pipeline starting", {
@@ -349,6 +350,7 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
   const usageNow = (): StudyUsage => ({
     llm: usageDelta(usageBefore.llm, llm.usage?.()),
     decider: usageDelta(usageBefore.decider, decider.usage?.()),
+    search: usageDelta(usageBefore.search, deps.search.usage?.()),
   });
 
   if (cfg.evaluateOnly) {
