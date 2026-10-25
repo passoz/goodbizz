@@ -12,7 +12,7 @@ import { EVIDENCE_SYSTEM_PROMPT, QUERIES_SYSTEM_PROMPT } from "./prompts.ts";
 import { studySubject } from "../domain/naming.ts";
 import { extractJson } from "../infrastructure/json.ts";
 import type { LlmClient, SearchClient } from "../domain/ports.ts";
-import type { Evidence, SearchResult, StudyConfig } from "../domain/types.ts";
+import type { Evidence, Idea, SearchResult, StudyConfig } from "../domain/types.ts";
 
 /** Faixa de buscas do estudo (FR-002): menos que isso não cobre o nicho; mais gasta crédito à toa. */
 export const MIN_QUERIES = 6;
@@ -52,6 +52,14 @@ export async function mapLimit<T, R>(
   });
   await Promise.all(runners);
   return results;
+}
+
+/**
+ * Evidências que valem para uma ideia: as do estudo (`ideia` vazia) mais as da pesquisa própria
+ * dela. É o recorte que o plano e o decisor daquela ideia recebem.
+ */
+export function evidencesFor(evidences: readonly Evidence[], ideaName: string): Evidence[] {
+  return evidences.filter((evidence) => evidence.ideia === "" || evidence.ideia === ideaName);
 }
 
 /** Impressão das evidências para as chaves de cache: mudou a pesquisa, muda o texto gerado. */
@@ -303,16 +311,66 @@ export async function researchStudy(
 ): Promise<ResearchOutcome> {
   const issues: string[] = [];
   const queries = await planQueries(cfg, deps, scope, issues);
-  const found = await mapLimit(queries, cfg.concurrency, async (query) => ({
-    query,
-    results: await runSearch(query, cfg, deps, scope, issues),
-  }));
-  const seen = new Set<string>();
-  const unique = found.map((item) => ({ query: item.query, results: unseen(item.results, seen) }));
+  const jobs = queries.map((query) => ({ query, ideia: "" }));
+  const evidences = await searchAndExtract(jobs, new Set(), 1, cfg, deps, scope, issues);
+  return { queries, evidences, issues };
+}
+
+/** Busca + extração de uma lista de buscas, com a URL repetida entrando uma vez só. */
+async function searchAndExtract(
+  jobs: ReadonlyArray<{ query: string; ideia: string }>,
+  seen: Set<string>,
+  firstId: number,
+  cfg: StudyConfig,
+  deps: ResearchDeps,
+  scope: string,
+  issues: string[],
+): Promise<Evidence[]> {
+  const found = await mapLimit(jobs, cfg.concurrency, async (job) => {
+    const local: string[] = [];
+    const results = await runSearch(job.query, cfg, deps, scope, local);
+    // Aviso de busca de ideia leva o nome dela: o operador sabe qual pesquisa ficou fraca.
+    issues.push(...local.map((issue) => (job.ideia === "" ? issue : `${issue} (ideia ${job.ideia})`)));
+    return { ...job, results };
+  });
+  const unique = found.map((item) => ({ ...item, results: unseen(item.results, seen) }));
   const extracted = await mapLimit(unique, cfg.concurrency, (item) =>
-    extract(item.query, item.results, "", cfg, deps, scope, issues),
+    extract(item.query, item.results, item.ideia, cfg, deps, scope, issues),
   );
   // O id sai da ordem das buscas, não da ordem de chegada: a mesma pesquisa dá os mesmos ids.
-  const evidences = extracted.flat().map((candidate, offset) => ({ id: `E${offset + 1}`, ...candidate }));
-  return { queries, evidences, issues };
+  return extracted.flat().map((candidate, offset) => ({ id: `E${firstId + offset}`, ...candidate }));
+}
+
+/** As duas buscas próprias de uma ideia (FR-005): concorrente direto e preço da solução. */
+export function ideaQueries(idea: Idea, cfg: StudyConfig): { concorrente: string; preco: string } {
+  const niche = cfg.niche.toLowerCase();
+  return {
+    concorrente: `${idea.name} para ${niche}: concorrentes e sistemas parecidos`,
+    preco: `${idea.name} para ${niche}: preço da mensalidade`,
+  };
+}
+
+/**
+ * Pesquisa própria de cada ideia. As evidências guardam o nome da ideia e continuam a numeração
+ * de `known` (as que o estudo já tem): o id `E#` nunca se repete dentro do estudo.
+ */
+export async function researchIdeas(
+  cfg: StudyConfig,
+  ideas: readonly Idea[],
+  known: readonly Evidence[],
+  deps: ResearchDeps,
+  scope: string,
+): Promise<{ evidences: Evidence[]; issues: string[] }> {
+  const issues: string[] = [];
+  const jobs = ideas.flatMap((idea) => {
+    const queries = ideaQueries(idea, cfg);
+    return [
+      { query: queries.concorrente, ideia: idea.name },
+      { query: queries.preco, ideia: idea.name },
+    ];
+  });
+  const lastId = Math.max(0, ...known.map((evidence) => Number(evidence.id.slice(1)) || 0));
+  const seen = new Set(known.map((evidence) => urlKey(evidence.url)));
+  const evidences = await searchAndExtract(jobs, seen, lastId + 1, cfg, deps, scope, issues);
+  return { evidences, issues };
 }

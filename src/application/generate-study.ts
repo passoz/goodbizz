@@ -13,7 +13,7 @@ import { generateBrief, generateDocument, generateIdeas } from "./generation.ts"
 import { DOC_LITERALS } from "./prompts.ts";
 import { fullHtml, mdToHtml } from "./render.ts";
 import { folderName } from "./reports.ts";
-import { evidenceHash, mapLimit, researchStudy } from "./research.ts";
+import { evidenceHash, evidencesFor, mapLimit, researchIdeas, researchStudy } from "./research.ts";
 import { summarizeStudy } from "./summary.ts";
 import { checkDocument } from "./verification.ts";
 import type { Logger, LlmClient, DeciderClient, ArtifactFile, SearchClient } from "../domain/ports.ts";
@@ -262,19 +262,20 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
     mockDecider: cfg.mockDecider,
   });
 
-  const research = await researchStudy(cfg, { llm, search: deps.search, cache }, providerScope);
-  const evidences = research.evidences;
+  const researchDeps = { llm, search: deps.search, cache };
+  const research = await researchStudy(cfg, researchDeps, providerScope);
+  const studyEvidences = research.evidences;
   progress(
-    `[1/7] Pesquisando a web: ${research.queries.length} buscas e ${evidences.length} evidências ` +
+    `[1/7] Pesquisando a web: ${research.queries.length} buscas e ${studyEvidences.length} evidências ` +
       "com trecho literal e URL",
   );
   // As evidências entram na chave: pesquisa nova (ou provedor de busca novo) escreve brief novo.
-  const evidenceScope = evidenceHash(evidences);
+  const evidenceScope = evidenceHash(studyEvidences);
 
   const briefKey = scopedKey(cfg.cacheSeed, "brief", providerScope, cfg.niche, cfg.city, evidenceScope);
   let brief = await cache.get<string>(briefKey);
   if (brief === null) {
-    brief = await generateBrief(llm, cfg, evidences);
+    brief = await generateBrief(llm, cfg, studyEvidences);
     await cache.put(briefKey, brief);
   }
   progress(`[2/7] Lendo o nicho e escrevendo o brief de mercado (${brief.length} caracteres)`);
@@ -295,13 +296,21 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
     );
     const cached = await cache.get<Idea[]>(ideasKey);
     if (cached === null) {
-      ideas = await generateIdeas(llm, cfg, brief, cfg.numIdeas, [], evidences);
+      ideas = await generateIdeas(llm, cfg, brief, cfg.numIdeas, [], studyEvidences);
       await cache.put(ideasKey, ideas);
     } else {
       ideas = cached;
     }
     progress(`[3/7] ${ideas.length} ideias de produto geradas para o nicho`);
   }
+
+  const ideaResearch = await researchIdeas(cfg, ideas, studyEvidences, researchDeps, providerScope);
+  const evidences = [...studyEvidences, ...ideaResearch.evidences];
+  const researchIssues = [...research.issues, ...ideaResearch.issues];
+  progress(
+    `[3/7] Pesquisei concorrente e preço de ${ideas.length} ideias: ` +
+      `${ideaResearch.evidences.length} evidências próprias`,
+  );
 
   const evaluations = await mapLimit(ideas, cfg.concurrency, async (idea) => {
     const key = scopedKey(
@@ -351,7 +360,7 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
       folders: {},
       documents: {},
       files: [],
-      issues: research.issues,
+      issues: researchIssues,
       evidences,
       cacheHits: cache.hits,
       cacheCount: await cache.count(),
@@ -365,11 +374,12 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
   );
 
   const byName = new Map(evaluations.map((evaluation) => [evaluation.name, evaluation]));
-  const issues: string[] = [...research.issues];
+  const issues: string[] = [...researchIssues];
   const documents: Record<string, string> = {};
 
   const written = await mapLimit(summary.ordered, cfg.concurrency, async (ordered) => {
     const evaluation = byName.get(ordered.name) as StudyIdea;
+    const own = evidencesFor(evidences, ordered.name);
     const key = scopedKey(
       cfg.cacheSeed,
       "doc",
@@ -378,10 +388,11 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
       String(cfg.monthlyTicket),
       ordered.name,
       String(ordered.index),
+      evidenceHash(own),
     );
     let text = await cache.get<string>(key);
     if (text === null) {
-      text = await generateDocument(llm, evaluation, cfg, brief);
+      text = await generateDocument(llm, evaluation, cfg, brief, own);
       await cache.put(key, text);
     }
     text = `${text.replace(/\r\n/g, "\n").trim()}\n`;

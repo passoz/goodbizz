@@ -1,0 +1,54 @@
+TASK: 1.3
+CHECK: AC-1
+COMMAND: bun --config=tests/bunfig.focus.toml test tests/research-ideas.test.ts -t FR-005
+EXIT: 0
+OUTPUT:
+bun test v1.4.2 (744846f84)
+
+ 2 pass
+ 0 fail
+ 11 expect() calls
+Ran 2 tests across 1 file. [68.00ms]
+
+MUTATION_EXIT: 1
+MUTATION_OUTPUT:
+bun test v1.4.2 (744846f84)
+
+tests/research-ideas.test.ts:
+67 | describe("pesquisa por ideia", () => {
+68 |   test("FR-005: cada ideia recebe uma busca de concorrente e uma de preço", async () => {
+69 |     const { queries } = await run();
+70 |     for (const idea of IDEAS) {
+71 |       const own = queries.filter((query) => query.includes(idea.nome));
+72 |       expect(own).toHaveLength(2);
+                       ^
+error: expect(received).toHaveLength(expected)
+
+Expected length: 2
+Received length: 0
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/research-ideas.test.ts:72:19)
+(fail) pesquisa por ideia > FR-005: cada ideia recebe uma busca de concorrente e uma de preço [20.22ms]
+78 |   test("FR-005: as evidências da ideia guardam o nome dela e continuam a numeração do estudo", async () => {
+79 |     const { result } = await run();
+80 |     const study = result.evidences.filter((evidence) => evidence.ideia === "");
+81 |     expect(study).toHaveLength(6);
+82 |     for (const idea of IDEAS) {
+83 |       expect(result.evidences.filter((evidence) => evidence.ideia === idea.nome)).toHaveLength(2);
+                                                                                       ^
+error: expect(received).toHaveLength(expected)
+
+Expected length: 2
+Received length: 0
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/research-ideas.test.ts:83:83)
+(fail) pesquisa por ideia > FR-005: as evidências da ideia guardam o nome dela e continuam a numeração do estudo [4.33ms]
+
+ 0 pass
+ 2 fail
+ 3 expect() calls
+Ran 2 tests across 1 file. [58.00ms]
+
+MUTATION_VERDICT: PASS
+VERDICT: PASS
+CHAIN_HASH: 0a346fb5f3922e83f5efb0a7111530ab99503f783b616ae23f4f6676509a4bfc
