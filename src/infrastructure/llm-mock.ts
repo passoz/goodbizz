@@ -50,6 +50,83 @@ Premissas fixas do modo --mock. Substitua por um LLM real para um brief de verda
 - Volume de mensagens: alto e concentrado em poucos horários.
 `;
 
+/** Temas das buscas simuladas: os seis que a pesquisa exige, mais dois de mercado. */
+const MOCK_QUERY_TOPICS = [
+  "preço de sistema para",
+  "concorrentes de automação para",
+  "reclamações de clientes de",
+  "custos e perdas na operação de",
+  "quantos negócios de",
+  "regulação e licença para",
+  "atendimento pelo WhatsApp em",
+  "ticket médio de",
+];
+
+/** Oito buscas a partir do nicho e da cidade que o prompt de planejamento informa. */
+function mockQueries(user: string): string[] {
+  const niche = (/^Nicho: (.+)$/m.exec(user)?.[1] ?? "o nicho").trim().toLowerCase();
+  const city = (/^Cidade ou região alvo: (.+)$/m.exec(user)?.[1] ?? "").trim();
+  const place = city === "" || city === "não informada" ? "" : ` em ${city}`;
+  return MOCK_QUERY_TOPICS.map((topic) => `${topic} ${niche}${place}`);
+}
+
+/** Tipo da evidência pelo tema da busca, como um extrator real faria. */
+function mockKind(query: string): string {
+  const text = query.toLowerCase();
+  if (text.includes("preço")) return "preco";
+  if (text.includes("concorrente")) return "concorrente";
+  if (text.includes("reclama")) return "reclamacao";
+  if (text.includes("custo")) return "custo";
+  if (text.includes("regula")) return "regulacao";
+  return "mercado";
+}
+
+/**
+ * Extração simulada: a primeira frase do conteúdo de cada resultado (no máximo dois), copiada
+ * literalmente, com o primeiro número dela como valor. Assim o mock passa pela validação literal
+ * do código sem nenhuma regra especial.
+ */
+function mockEvidences(user: string): Array<Record<string, unknown>> {
+  const query = (/^BUSCA: (.+)$/m.exec(user)?.[1] ?? "").trim();
+  const pattern = /URL: (\S+)\nTÍTULO: (.*)\nCONTEÚDO:\n([\s\S]*?)\nFIM DO RESULTADO/g;
+  const evidences: Array<Record<string, unknown>> = [];
+  for (const match of user.matchAll(pattern)) {
+    if (evidences.length >= 2) break;
+    const content = (match[3] ?? "").replace(/\s+/g, " ").trim();
+    const sentence = (/^.*?[.!?](?=\s|$)/.exec(content)?.[0] ?? content).trim();
+    if (sentence === "") continue;
+    const number = /\d+(?:[.,]\d+)?/.exec(sentence)?.[0];
+    evidences.push({
+      tipo: mockKind(query),
+      afirmacao: `Achado da busca "${query}": ${(match[2] ?? "").trim()}`,
+      trecho: sentence,
+      url: match[1],
+      valor: number === undefined ? null : Number(number.replace(",", ".")),
+      unidade: number === undefined ? "" : sentence.includes("R$") ? "R$" : "unidades",
+    });
+  }
+  return evidences;
+}
+
+/** Ids e afirmações do bloco de evidências do prompt (`[E1] (tipo) afirmação — trecho: ...`). */
+function promptEvidences(user: string): Array<{ id: string; claim: string }> {
+  return [...user.matchAll(/^\[(E\d+)\] \(\w+\) (.+?) — trecho: /gm)].map((match) => ({
+    id: match[1] as string,
+    claim: match[2] as string,
+  }));
+}
+
+/**
+ * Citação simulada: até três evidências recebidas, cada uma com o id entre colchetes. Sem bloco de
+ * evidências no prompt (chamada antiga), nada muda; bloco vazio vira a marca de [INFERENCE].
+ */
+function mockCitations(user: string, title: string): string {
+  if (!user.includes("EVIDÊNCIAS DA PESQUISA")) return "";
+  const cited = promptEvidences(user).slice(0, 3);
+  if (cited.length === 0) return `\n${title}\n\n- Sem evidência pesquisada: as premissas acima são [INFERENCE].\n`;
+  return `\n${title}\n\n${cited.map((item) => `- ${item.claim} [${item.id}]`).join("\n")}\n`;
+}
+
 /** Texto após a primeira ocorrencia de `marker`, ou null se ausente (maxsplit=1). */
 function afterFirst(text: string, marker: string): string | null {
   const index = text.indexOf(marker);
@@ -140,8 +217,8 @@ ${algo}
 ### 2.3 Mercado
 
 Em execução real, esta seção recebe as âncoras de mercado do brief. Nenhum número de
-mercado é gerado pelo modelo: ou vem do brief, ou é marcado \`[INFERENCE]\`.
-
+mercado é gerado pelo modelo: ou vem de uma evidência citada, ou é marcado \`[INFERENCE]\`.
+${mockCitations(user, "Âncoras pesquisadas:")}
 ### 2.4 Validação de preço e meta
 
 ${val}
@@ -290,14 +367,14 @@ export class LlmMock implements LlmClient {
 
   generateText(system: string, user: string): Promise<string> {
     this.calls += 1;
-    void system;
-    void user;
     if (system.includes("PALAVRA-CHAVE: IDEIAS") || system.includes("KEYWORD: IDEAS")) {
       return Promise.resolve(JSON.stringify(distinctIdeas(user)));
     }
     if (system.includes("PALAVRA-CHAVE: BRIEF") || system.includes("KEYWORD: BRIEF")) {
-      return Promise.resolve(MOCK_BRIEF);
+      return Promise.resolve(`${MOCK_BRIEF}${mockCitations(user, "## Evidências da pesquisa")}`);
     }
+    if (system.includes("PALAVRA-CHAVE: BUSCAS")) return Promise.resolve(JSON.stringify(mockQueries(user)));
+    if (system.includes("PALAVRA-CHAVE: EVIDENCIAS")) return Promise.resolve(JSON.stringify(mockEvidences(user)));
     return Promise.resolve(documentFixture(user));
   }
 }

@@ -33,8 +33,9 @@ Você é analista de mercado. Escreva um brief curto em markdown sobre o nicho i
 em português do Brasil com acentuação correta. Cubra, em tópicos: quem compra (perfil do
 decisor), quanto ele pode gastar por mês, onde ele está, como se comunica, quais dores ele já
 verbaliza, quem já atende esse mercado hoje e o que costuma ser caro ou frágil na operação dele.
-Seja concreto e curto. Não invente número de mercado; quando precisar de ordem de grandeza,
-escreva a faixa e marque [INFERENCE].`;
+Seja concreto e curto. Use o bloco EVIDÊNCIAS DA PESQUISA: ao lado de cada afirmação factual
+tirada dele, cite o id entre colchetes no formato [E#] (ex.: [E3]). Nunca cite id que não está no
+bloco. O que não tiver evidência é estimativa: escreva a faixa e marque [INFERENCE].`;
 
 export const IDEAS_SYSTEM_PROMPT = `PALAVRA-CHAVE: IDEIAS
 Você propõe ideias de produto de automação com IA para o nicho informado.
@@ -45,6 +46,8 @@ Regras:
 - Nada de "chatbot genérico". Cada ideia precisa de um mecanismo claro e de um dono da dor.
 - Cubra mecanismos diferentes entre si (triagem, agenda, documento, reputação, preço,
   rede, estoque, verificação), sem repetir o mesmo mecanismo duas vezes.
+- Apoie cada ideia nas EVIDÊNCIAS DA PESQUISA: quando a dor, o concorrente ou o preço vier de
+  uma evidência, cite o id no formato [E#] dentro da "descricao". Nunca cite id que não recebeu.
 - Português do Brasil com acentuação correta. Sem número inventado de mercado.
 - As CHAVES do JSON ("nome", "setor", "descricao") ficam exatamente assim, sem acento.`;
 
@@ -52,10 +55,15 @@ export const DOC_SYSTEM_PROMPT = `Você é consultor de negócios escrevendo um 
 Escreva em markdown, em português do Brasil com acentuação correta, tom direto e técnico,
 frases curtas, sem marketing vazio.
 
-REGRA ABSOLUTA SOBRE NÚMEROS: use exatamente os números do bloco DADOS MEDIDOS. Você não
-pode inventar, arredondar de forma diferente, nem criar número de mercado novo. Se precisar
-de um dado que não está no bloco, escreva a estimativa e marque com [INFERENCE], mostrando
-o cálculo, ou omita. Nunca cite fonte que não esteja no bloco.
+REGRA ABSOLUTA SOBRE NÚMEROS: use exatamente os números do bloco DADOS MEDIDOS ou o valor de
+uma evidência do bloco EVIDÊNCIAS DA PESQUISA, citando o id dela no formato [E#] ao lado do
+número. Você não pode inventar, arredondar de forma diferente, nem criar número de mercado
+novo. Se precisar de um dado que não está nos blocos, escreva a estimativa e marque com
+[INFERENCE], mostrando o cálculo, ou omita.
+
+REGRA DE FONTES: ao lado de cada afirmação factual tirada das evidências (concorrente, preço,
+reclamação, custo, regulação), cite o id no formato [E#]. Nunca cite fonte ou id que não esteja
+nos blocos. Não escreva seção de fontes: o sistema a acrescenta ao fim do documento.
 
 Estrutura obrigatória, exatamente estes títulos de nível 2 e nesta ordem:
 ## 1. Resumo executivo

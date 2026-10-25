@@ -9,7 +9,7 @@ import { ValidationError } from "../domain/errors.ts";
 import { extractJson } from "../infrastructure/json.ts";
 import { studySubject } from "../domain/naming.ts";
 import type { LlmClient } from "../domain/ports.ts";
-import type { Idea, IdeaEvaluation, StudyConfig } from "../domain/types.ts";
+import type { Evidence, Idea, IdeaEvaluation, StudyConfig } from "../domain/types.ts";
 import { BRIEF_SYSTEM_PROMPT, DOC_SYSTEM_PROMPT, IDEAS_SYSTEM_PROMPT } from "./prompts.ts";
 
 /**
@@ -49,28 +49,52 @@ export function parseIdeas(data: unknown): Idea[] {
   return ideas;
 }
 
-/** Writes a short market brief for the configured niche. */
-export async function generateBrief(llm: LlmClient, cfg: StudyConfig): Promise<string> {
+/**
+ * Bloco de evidências que acompanha os prompts (FR-004): cada linha traz o id citável, o tipo, a
+ * afirmação, o trecho literal e a URL. Sem evidência, o bloco diz isso — e o prompt manda marcar
+ * a estimativa com [INFERENCE] em vez de inventar fonte.
+ */
+export function evidenceBlock(evidences: readonly Evidence[]): string {
+  const body =
+    evidences.length === 0
+      ? "Nenhuma evidência foi encontrada pela pesquisa: toda afirmação de mercado é estimativa [INFERENCE]."
+      : evidences
+          .map(
+            (evidence) =>
+              `[${evidence.id}] (${evidence.tipo}) ${evidence.afirmacao} — trecho: "${evidence.trecho}" — fonte: ${evidence.url}`,
+          )
+          .join("\n");
+  return `EVIDÊNCIAS DA PESQUISA\n${body}\nFIM DAS EVIDÊNCIAS`;
+}
+
+/** Writes a short market brief for the configured niche, grounded on the study evidences. */
+export async function generateBrief(
+  llm: LlmClient,
+  cfg: StudyConfig,
+  evidences: readonly Evidence[],
+): Promise<string> {
   const user =
     `Nicho: ${studySubject(cfg)}\n` +
     `Cidade ou região alvo: ${cfg.city || "não informada"}\n` +
-    `Ticket mensal considerado: R$ ${cfg.monthlyTicket}\n`;
+    `Ticket mensal considerado: R$ ${cfg.monthlyTicket}\n\n` +
+    `${evidenceBlock(evidences)}\n`;
   const text = await llm.generateText(BRIEF_SYSTEM_PROMPT, user);
   return text.trim();
 }
 
-/** Asks the LLM for `count` product ideas grounded on the brief. */
 /**
- * Ideias novas para o nicho. `existingNames` são as que o estudo já tem: elas entram no prompt
- * porque pedir N ideias sem dizer quais já existem devolve as mesmas de novo, e o operador
- * receberia um pedido que ele acabou de pagar para não receber.
+ * Ideias novas para o nicho, apoiadas no brief e nas evidências do estudo. `existingNames` são as
+ * que o estudo já tem: elas entram no prompt porque pedir N ideias sem dizer quais já existem
+ * devolve as mesmas de novo, e o operador receberia um pedido que ele acabou de pagar para não
+ * receber.
  */
 export async function generateIdeas(
   llm: LlmClient,
   cfg: StudyConfig,
   brief: string,
   count: number,
-  existingNames: readonly string[] = [],
+  existingNames: readonly string[],
+  evidences: readonly Evidence[],
 ): Promise<Idea[]> {
   const avoid =
     existingNames.length > 0
@@ -82,6 +106,7 @@ export async function generateIdeas(
     `Cidade ou região alvo: ${cfg.city || "não informada"}\n` +
     `Ticket mensal considerado: R$ ${cfg.monthlyTicket}\n\n` +
     `Brief de mercado:\n${brief}\n\n` +
+    `${evidenceBlock(evidences)}\n\n` +
     avoid +
     `Gere exatamente ${count} ideias em JSON. Retorne apenas o array.`;
   const text = await llm.generateText(IDEAS_SYSTEM_PROMPT, user);
@@ -138,15 +163,20 @@ export function dataBlock(evaluation: IdeaEvaluation, cfg: StudyConfig): string 
   ].join("\n");
 }
 
-/** Writes the full strategy document for one evaluated idea. */
+/**
+ * Writes the full strategy document for one evaluated idea.
+ * @param evidences evidências do estudo e da própria ideia; o plano cita `[E#]` a partir delas.
+ */
 export async function generateDocument(
   llm: LlmClient,
   evaluation: IdeaEvaluation,
   cfg: StudyConfig,
   brief: string,
+  evidences: readonly Evidence[],
 ): Promise<string> {
   const user =
     `DADOS MEDIDOS\n${dataBlock(evaluation, cfg)}\nFIM DOS DADOS\n\n` +
+    `${evidenceBlock(evidences)}\n\n` +
     `Brief de contexto do nicho:\n${brief}\n\n` +
     "Escreva o documento desta ideia seguindo a estrutura obrigatoria.";
   const text = await llm.generateText(DOC_SYSTEM_PROMPT, user);
