@@ -229,24 +229,25 @@ describe("indicatorsTableMarkdown", () => {
 });
 
 describe("indicatorsTableCsv", () => {
-  test("cabecalho igual ao do baseline", () => {
+  test("cabecalho igual ao do baseline, com as colunas do torneio no fim", () => {
     const header = indicatorsTableCsv(sampleData()).split("\n")[0];
     expect(header).toBe(
       "ideia,setor,indice,tier,fit,fit_conf,venda,venda_conf,disrupcao,disrupcao_conf," +
         "dor,dor_conf,solo,algo,algo_dor,algo_interna,algo_margem,algo_desvio,wtp,meta30," +
-        "preco,preco_conf",
+        "preco,preco_conf,torneio,partidas",
     );
   });
 
   test("linha conhecida com os valores arredondados", () => {
     const rows = indicatorsTableCsv(sampleData()).split("\n");
+    // Sem torneio (ideias de antes do Work 0017), as duas colunas novas ficam vazias.
     expect(rows[1]).toBe(
       '"Clinica Sorriso","Odontologia",1.000,C,1.00,1.00,1.00,0.75,0.50,0.12,' +
-        '"dinheiro_direto",0.90,1.00,FORTE,0.750,0.500,+0.250,0.005,0.85,0.25,1.50,0.70',
+        '"dinheiro_direto",0.90,1.00,FORTE,0.750,0.500,+0.250,0.005,0.85,0.25,1.50,0.70,,',
     );
     expect(rows[3]).toBe(
       '"Oficina Rapida","Automotivo",0.600,C,0.50,0.50,0.70,0.50,0.30,0.50,' +
-        '"backoffice",0.60,0.50,FRACA,0.250,0.100,-0.150,0.125,0.40,0.10,1.25,0.12',
+        '"backoffice",0.60,0.50,FRACA,0.250,0.100,-0.150,0.125,0.40,0.10,1.25,0.12,,',
     );
     expect(rows).toHaveLength(5); // cabecalho + 3 ideias + linha vazia final
   });
@@ -279,7 +280,7 @@ describe("indexMarkdown", () => {
       .map((line) => /\[(.+?)\]/.exec(line)?.[1]);
     expect(ranking).toEqual(["Clinica Sorriso", "Adega Central", "Oficina Rapida"]);
     expect(text).toContain(
-      "| 01 | [Clinica Sorriso](./01-clinica-sorriso/) | Odontologia | **1.0** | C | 0.85 | FORTE |",
+      "| 01 | [Clinica Sorriso](./01-clinica-sorriso/) | Odontologia | - | **1.0** | C | 0.85 | FORTE |",
     );
   });
 

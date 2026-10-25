@@ -192,11 +192,18 @@ describe("buildArtifactFiles", () => {
     expect(plain?.content).not.toContain("Gerada em");
   });
 
-  test("dados.json traz config, medias, grupos_dor, tiers e ideias", () => {
+  test("dados.json traz config, medias, grupos_dor, tiers, ideias e as partidas do torneio", () => {
     const files = buildArtifactFiles(config, brief, summary, data, folders, {});
     const raw = files.find((file) => file.path === "dados.json")?.content;
     const parsed = JSON.parse(String(raw)) as Record<string, any>;
-    expect(Object.keys(parsed)).toEqual(["config", "medias", "grupos_dor", "tiers", "ideias"]);
+    expect(Object.keys(parsed)).toEqual([
+      "config",
+      "medias",
+      "grupos_dor",
+      "tiers",
+      "ideias",
+      "torneio_partidas",
+    ]);
     expect(Object.keys(parsed["config"])).toEqual(Object.values(DADOS_CONFIG_KEYS));
     expect(parsed["config"]).toEqual({
       nicho: "Clinica Odontologica",

@@ -5,7 +5,15 @@
 import { readFileSync } from "node:fs";
 
 import { ValidationError } from "../domain/errors.ts";
-import type { Idea, IdeaEvaluation, StudyConfig, StudySummary, Tier } from "../domain/types.ts";
+import type {
+  Idea,
+  IdeaEvaluation,
+  RankedEvaluation,
+  StudyConfig,
+  StudySummary,
+  Tier,
+} from "../domain/types.ts";
+import { rankIdeas } from "./tournament.ts";
 
 /**
  * Mapa campo do `StudyConfig` -> chave gravada em `config` dentro de dados.json.
@@ -105,15 +113,31 @@ export function evaluationFromJson(raw: unknown): IdeaEvaluation {
   };
 }
 
+/** Resultado do torneio de uma ideia em `dados.json`; `null` quando não houve torneio. */
+function tournamentToJson(evaluation: RankedEvaluation): Record<string, number> | null {
+  const standing = evaluation.tournament;
+  if (!standing) return null;
+  return {
+    pontos: standing.points,
+    partidas: standing.games,
+    vitorias: standing.wins,
+    folgas: standing.byes,
+    media: standing.score,
+  };
+}
+
 /**
- * Serializa o conteúdo de dados.json.
+ * Serializa o conteúdo de dados.json, com as ideias na ordem do ranking.
+ *
+ * As chaves do baseline não mudam; o torneio entra como acréscimo: `torneio` no fim de cada ideia
+ * e `torneio_partidas` no fim do documento (`a`, `b` e `p_a`, a probabilidade média de `a`).
  * @param _brief guardado no banco, não em dados.json (o baseline não o grava aqui).
  */
 export function serializeDados(
   cfg: StudyConfig,
   _brief: string,
   summary: StudySummary,
-  data: IdeaEvaluation[],
+  data: RankedEvaluation[],
 ): string {
   const value = {
     config: {
@@ -134,7 +158,16 @@ export function serializeDados(
     },
     grupos_dor: summary.painGroups,
     tiers: summary.tiers,
-    ideias: data.map(evaluationToJson),
+    ideias: rankIdeas(data).map((evaluation) => ({
+      ...evaluationToJson(evaluation),
+      torneio: tournamentToJson(evaluation),
+    })),
+    torneio_partidas: (summary.tournament?.matches ?? []).map((match) => ({
+      rodada: match.round,
+      a: match.aName,
+      b: match.bName,
+      p_a: match.pA,
+    })),
   };
   return JSON.stringify(value, null, 1);
 }

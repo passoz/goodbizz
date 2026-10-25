@@ -105,7 +105,15 @@ describe("end-to-end smoke (mock mode)", () => {
       tiers: Record<string, string[]>;
       ideias: Array<Record<string, unknown>>;
     };
-    expect(Object.keys(parsed)).toEqual(["config", "medias", "grupos_dor", "tiers", "ideias"]);
+    // As chaves do baseline vêm primeiro; `torneio_partidas` é acréscimo no fim (Work 0017).
+    expect(Object.keys(parsed)).toEqual([
+      "config",
+      "medias",
+      "grupos_dor",
+      "tiers",
+      "ideias",
+      "torneio_partidas",
+    ]);
     expect(parsed.config).toHaveProperty("nicho");
     expect(parsed.config).toHaveProperty("ticket_mes");
     expect(parsed.medias).toHaveProperty("fit");
