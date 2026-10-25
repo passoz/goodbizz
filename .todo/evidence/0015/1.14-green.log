@@ -1,0 +1,58 @@
+TASK: 1.14
+CHECK: GREEN
+COMMAND: bun --config=tests/bunfig.focus.toml test tests/search-cache-cases.test.ts -t QR-003
+EXIT: 0
+OUTPUT:
+bun test v1.4.2 (744846f84)
+
+ 4 pass
+ 0 fail
+ 5 expect() calls
+Ran 4 tests across 1 file. [45.00ms]
+
+MUTATION_EXIT: 1
+MUTATION_OUTPUT:
+bun test v1.4.2 (744846f84)
+
+tests/search-cache-cases.test.ts:
+32 | 
+33 | /** Valida e normaliza o que a borda mandou: sem nome, URL ou modelo nao ha provedor utilizavel. */
+34 | function validate(input: ProviderProfileInput | Partial<ProviderProfileInput>): void {
+35 |   if (input.name !== undefined) requires("o nome do provedor", clean(input.name));
+36 |   if (input.kind !== undefined && input.kind !== "llm" && input.kind !== "decider") {
+37 |     throw new ValidationError("tipo de provedor inválido");
+               ^
+ValidationError: tipo de provedor inválido
+  status: 422,
+ details: undefined,
+    code: "VALIDATION_FAILED"
+
+      at validate (/home/passoz/dev/goodbizz/src/application/settings.ts:37:11)
+      at create (/home/passoz/dev/goodbizz/src/application/settings.ts:70:5)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/search-cache-cases.test.ts:63:38)
+(fail) perfil de busca em casos de borda > QR-003: editar o perfil de busca muda a impressao de cache [2.03ms]
+32 | 
+33 | /** Valida e normaliza o que a borda mandou: sem nome, URL ou modelo nao ha provedor utilizavel. */
+34 | function validate(input: ProviderProfileInput | Partial<ProviderProfileInput>): void {
+35 |   if (input.name !== undefined) requires("o nome do provedor", clean(input.name));
+36 |   if (input.kind !== undefined && input.kind !== "llm" && input.kind !== "decider") {
+37 |     throw new ValidationError("tipo de provedor inválido");
+               ^
+ValidationError: tipo de provedor inválido
+  status: 422,
+ details: undefined,
+    code: "VALIDATION_FAILED"
+
+      at validate (/home/passoz/dev/goodbizz/src/application/settings.ts:37:11)
+      at create (/home/passoz/dev/goodbizz/src/application/settings.ts:70:5)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/search-cache-cases.test.ts:82:36)
+(fail) perfil de busca em casos de borda > QR-003: excluir o perfil de busca ativo volta ao ambiente [1.37ms]
+
+ 2 pass
+ 2 fail
+ 2 expect() calls
+Ran 4 tests across 1 file. [55.00ms]
+
+MUTATION_VERDICT: PASS
+VERDICT: PASS
+CHAIN_HASH: 89dc708724c164c21717478e14cf3dae69b5fa8495375a7b92862d40012ed12e

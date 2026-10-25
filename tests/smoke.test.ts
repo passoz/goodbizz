@@ -21,6 +21,7 @@ import { buildHttpApp } from "../src/infrastructure/http/app.ts";
 import { buildHealthApp } from "../src/infrastructure/http/health.ts";
 import { buildUiApp } from "../src/infrastructure/http/ui/routes.tsx";
 import { LlmMock } from "../src/infrastructure/llm-mock.ts";
+import { SearchMock } from "../src/infrastructure/search-mock.ts";
 import { SqliteCacheStore } from "../src/infrastructure/cache-repository.ts";
 import { SqliteStudyRepository } from "../src/infrastructure/repositories.ts";
 import { silentLogger, tempDir } from "./helpers.ts";
@@ -261,6 +262,7 @@ describe("migrations", () => {
       cache,
       llm: new LlmMock(),
       decider: new DeciderMock(),
+      search: new SearchMock(),
       logger: silentLogger(),
       artifactsRoot: tempDir("goodbizz-boot-artifacts-"),
     });

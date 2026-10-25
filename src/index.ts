@@ -25,7 +25,7 @@ import { buildHttpApp } from "./infrastructure/http/app.ts";
 import { buildUiApp } from "./infrastructure/http/ui/routes.tsx";
 import { SqliteStudyRepository } from "./infrastructure/repositories.ts";
 import { SqliteSettingsRepository } from "./infrastructure/settings-repository.ts";
-import { RoutingDeciderClient, RoutingLlmClient } from "./infrastructure/routing.ts";
+import { RoutingDeciderClient, RoutingLlmClient, RoutingSearchClient } from "./infrastructure/routing.ts";
 import type { Logger } from "./domain/ports.ts";
 import type { Server } from "bun";
 
@@ -86,6 +86,11 @@ export async function buildService(env: Env = loadEnv()): Promise<ServiceBundle>
     mock: mockDecider,
     timeout: env.GOODBIZZ_LLM_TIMEOUT,
   });
+  const search = new RoutingSearchClient({
+    resolve: resolveProviders,
+    mock: mockSearch,
+    timeout: env.GOODBIZZ_LLM_TIMEOUT,
+  });
 
   const repo = new SqliteStudyRepository(handle.db);
   const cache = new StudyCache(new SqliteCacheStore(handle.db));
@@ -120,6 +125,7 @@ export async function buildService(env: Env = loadEnv()): Promise<ServiceBundle>
     cache,
     llm,
     decider,
+    search,
     logger,
     // Um estudo pode pedir timeout próprio (`POST /api/studies {"timeout":N}`): os clientes daquele
     // estudo saem daqui com o valor resolvido da configuração; sem isso, o campo era aceito e ignorado.
@@ -130,6 +136,7 @@ export async function buildService(env: Env = loadEnv()): Promise<ServiceBundle>
         mock: mockDecider,
         timeout: cfg.timeout,
       }),
+      search: new RoutingSearchClient({ resolve: resolveProviders, mock: mockSearch, timeout: cfg.timeout }),
     }),
     artifactsRoot: env.GOODBIZZ_STUDIES_DIR,
     pdf: false,

@@ -254,6 +254,7 @@ describe("exclusão de estudo", () => {
       cache: new StudyCache(new SqliteCacheStore(harness.db.db)),
       llm: { generateText: () => new Promise<string>(() => {}) },
       decider: new DeciderMock(),
+      search: new SearchMock(),
       logger: silentLogger(),
       artifactsRoot: harness.artifactsRoot,
     });

@@ -125,7 +125,7 @@ export async function generateAddition(
   );
   let ideas = await cache.get<Idea[]>(ideasKey);
   if (ideas === null) {
-    ideas = await generateIdeas(llm, cfg, brief, count, existingNames);
+    ideas = await generateIdeas(llm, cfg, brief, count, existingNames, []);
     await cache.put(ideasKey, ideas);
   }
   progress(`[3/7] ${ideas.length} ideias novas geradas sem repetir as ${existing.length} existentes`);
@@ -200,7 +200,7 @@ export async function generateAddition(
     );
     let text = await cache.get<string>(key);
     if (text === null) {
-      text = await generateDocument(llm, evaluation, cfg, brief);
+      text = await generateDocument(llm, evaluation, cfg, brief, []);
       await cache.put(key, text);
     }
     text = `${text.replace(/\r\n/g, "\n").trim()}\n`;
@@ -230,7 +230,7 @@ export async function generateAddition(
   // pastas antigas continuam no disco com o documento que ja tinham. O filtro casa pela pasta e nao
   // pelo slug: `documents` e indexado por nome, e o caminho da pasta e `NN-slug`.
   const newFolders = new Set(newEvaluations.map((idea) => folders[idea.name]));
-  const files = buildArtifactFiles(cfg, brief, summary, evaluations, folders, documents).filter(
+  const files = buildArtifactFiles(cfg, brief, summary, evaluations, folders, documents, []).filter(
     (file) => !file.path.includes("/") || newFolders.has(file.path.split("/")[0] as string),
   );
   progress(`[7/7] Montando os artefatos do estudo (${files.length} arquivos)`);

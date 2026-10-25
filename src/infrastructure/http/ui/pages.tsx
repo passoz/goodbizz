@@ -976,6 +976,11 @@ const PROVIDER_KIND_TEXT: Record<ProviderKind, { title: string; description: str
     description:
       "Responde as probabilidades que viram índice de ação, tier e natureza da dor. Não escreve prosa.",
   },
+  search: {
+    title: "Provedor de busca (Tavily)",
+    description:
+      "Pesquisa a web na fase de pesquisa; cada afirmação cita evidência com trecho literal e URL.",
+  },
 };
 
 /**

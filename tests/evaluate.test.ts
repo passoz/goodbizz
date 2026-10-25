@@ -153,7 +153,7 @@ describe("extratores e indices", () => {
 
 describe("evaluateIdea", () => {
   test("avalia indicadores, dor por escolha, indice e tier", async () => {
-    const evaluation = await evaluateIdea(strongIdea, evaluationDecider(strongProfile), studyConfig());
+    const evaluation = await evaluateIdea(strongIdea, evaluationDecider(strongProfile), studyConfig(), []);
 
     expect(evaluation.name).toBe("Forte");
     expect(evaluation.sector).toBe("hospedagem");
@@ -185,7 +185,7 @@ describe("evaluateIdea", () => {
   });
 
   test("usa as sondas do algoritmo quando o metodo e noul", async () => {
-    const evaluation = await evaluateIdea(strongIdea, evaluationDecider(strongProfile), studyConfig("noul"));
+    const evaluation = await evaluateIdea(strongIdea, evaluationDecider(strongProfile), studyConfig("noul"), []);
 
     expect(evaluation.algorithm.label).toBe("FORTE");
     expect(evaluation.algorithm.painScore).toBe(0.85);
@@ -200,7 +200,7 @@ describe("evaluateIdea", () => {
 
   test("a ideia sai com a data de geracao", async () => {
     const before = Date.now();
-    const evaluation = await evaluateIdea(strongIdea, evaluationDecider(strongProfile), studyConfig());
+    const evaluation = await evaluateIdea(strongIdea, evaluationDecider(strongProfile), studyConfig(), []);
 
     // ISO exigido pela coluna `generated_at`; a UI formata e o plano assina o rodape com ela.
     expect(typeof evaluation.generatedAt).toBe("string");
@@ -212,8 +212,8 @@ describe("evaluateIdea", () => {
 
 describe("summary", () => {
   test("agrupa por dor dominante", async () => {
-    const strong = await evaluateIdea(strongIdea, evaluationDecider(strongProfile), studyConfig());
-    const weak = await evaluateIdea(weakIdea, evaluationDecider(weakProfile), studyConfig());
+    const strong = await evaluateIdea(strongIdea, evaluationDecider(strongProfile), studyConfig(), []);
+    const weak = await evaluateIdea(weakIdea, evaluationDecider(weakProfile), studyConfig(), []);
 
     expect(groupByPain([strong, weak])).toEqual({
       forte: ["Forte"],
@@ -223,8 +223,8 @@ describe("summary", () => {
   });
 
   test("ordena, agrega medias e separa tiers, alvos e revisoes", async () => {
-    const strong = await evaluateIdea(strongIdea, evaluationDecider(strongProfile), studyConfig());
-    const weak = await evaluateIdea(weakIdea, evaluationDecider(weakProfile), studyConfig());
+    const strong = await evaluateIdea(strongIdea, evaluationDecider(strongProfile), studyConfig(), []);
+    const weak = await evaluateIdea(weakIdea, evaluationDecider(weakProfile), studyConfig(), []);
     const summary = summarizeStudy([weak, strong]);
 
     expect(strong.tier).toBe("A");

@@ -136,7 +136,7 @@ describe("buildArtifactFiles", () => {
   test("lista os arquivos na ordem do baseline", () => {
     const files = buildArtifactFiles(config, brief, summary, data, folders, {
       "Clinica Sorriso": "# Plano\n\nconteudo do plano\n",
-    });
+    }, []);
     expect(files.map((file) => file.path)).toEqual([
       "00-brief.md",
       "00-tabelao.md",
@@ -148,7 +148,7 @@ describe("buildArtifactFiles", () => {
   });
 
   test("00-brief.md junta titulo, aviso de escopo e brief", () => {
-    const files = buildArtifactFiles(config, brief, summary, data, folders, {});
+    const files = buildArtifactFiles(config, brief, summary, data, folders, {}, []);
     const file = files.find((candidate) => candidate.path === "00-brief.md");
     expect(file?.content).toBe(
       `# Brief de contexto — ${config.niche}\n\n${scopeNotice(config)}\n${brief.trim()}\n`,
@@ -156,11 +156,11 @@ describe("buildArtifactFiles", () => {
   });
 
   test("README.md e o indice e nao existe quando nao ha pastas", () => {
-    const withFolders = buildArtifactFiles(config, brief, summary, data, folders, {});
+    const withFolders = buildArtifactFiles(config, brief, summary, data, folders, {}, []);
     const index = withFolders.find((file) => file.path === "README.md");
     expect(index?.content).toBe(indexMarkdown(config, brief, summary, folders));
 
-    const withoutFolders = buildArtifactFiles(config, brief, summary, data, {}, {});
+    const withoutFolders = buildArtifactFiles(config, brief, summary, data, {}, {}, []);
     expect(withoutFolders.map((file) => file.path)).toEqual([
       "00-brief.md",
       "00-tabelao.md",
@@ -172,7 +172,7 @@ describe("buildArtifactFiles", () => {
   test("ideia sem documento nao vira pasta", () => {
     const files = buildArtifactFiles(config, brief, summary, data, folders, {
       "Oficina Rapida": "   ",
-    });
+    }, []);
     expect(files.some((file) => file.path.includes("README.md") && file.path !== "README.md")).toBe(false);
   });
 
@@ -181,19 +181,19 @@ describe("buildArtifactFiles", () => {
     const dated = [...data];
     dated[0] = { ...data[0]!, generatedAt: "2026-09-25T14:32:00.000Z" };
 
-    const withDate = buildArtifactFiles(config, brief, summary, dated, folders, documents);
+    const withDate = buildArtifactFiles(config, brief, summary, dated, folders, documents, []);
     const plan = withDate.find((file) => file.path === "01-clinica-sorriso/README.md");
     // A data sai no rodape, nao no corpo do prompt (o guardrail de numeros confere o texto do LLM).
     expect(plan?.content).toMatch(/\n\n---\n\n_Gerada em \d{2}\/\d{2}\/\d{4}, \d{2}:\d{2}_\n$/);
     expect(plan?.content).toContain("conteudo do plano");
 
-    const withoutDate = buildArtifactFiles(config, brief, summary, data, folders, documents);
+    const withoutDate = buildArtifactFiles(config, brief, summary, data, folders, documents, []);
     const plain = withoutDate.find((file) => file.path === "01-clinica-sorriso/README.md");
     expect(plain?.content).not.toContain("Gerada em");
   });
 
   test("dados.json traz config, medias, grupos_dor, tiers e ideias", () => {
-    const files = buildArtifactFiles(config, brief, summary, data, folders, {});
+    const files = buildArtifactFiles(config, brief, summary, data, folders, {}, []);
     const raw = files.find((file) => file.path === "dados.json")?.content;
     const parsed = JSON.parse(String(raw)) as Record<string, any>;
     expect(Object.keys(parsed)).toEqual(["config", "medias", "grupos_dor", "tiers", "ideias"]);

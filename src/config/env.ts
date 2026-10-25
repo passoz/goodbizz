@@ -39,6 +39,8 @@ export interface Env {
   GOODBIZZ_PRICE_LLM_OUTPUT_PER_MTOK: number;
   GOODBIZZ_PRICE_DECIDER_INPUT_PER_MTOK: number;
   GOODBIZZ_PRICE_DECIDER_OUTPUT_PER_MTOK: number;
+  /** Preço de mil buscas na web (US$); a Tavily cobra por chamada. */
+  GOODBIZZ_PRICE_SEARCH_PER_1K: number;
   /** Base do provedor de busca (protocolo Tavily: `POST {base}/search`). */
   SEARCH_API_URL: string;
   /** Chave do provedor de busca; vazia fora do modo simulado impede o startup. */

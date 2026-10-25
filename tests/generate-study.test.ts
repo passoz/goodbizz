@@ -14,6 +14,7 @@ import { openMigratedDatabase } from "../src/infrastructure/db.ts";
 import { DeciderMock } from "../src/infrastructure/decider-mock.ts";
 import { SqliteCacheStore } from "../src/infrastructure/cache-repository.ts";
 import { LlmMock } from "../src/infrastructure/llm-mock.ts";
+import { SearchMock } from "../src/infrastructure/search-mock.ts";
 import { silentLogger } from "./helpers.ts";
 import type { LlmClient } from "../src/domain/ports.ts";
 import type { StudyConfig } from "../src/domain/types.ts";
@@ -43,6 +44,7 @@ describe("generateStudy", () => {
     const result = await generateStudy(config({ evaluateOnly: true }), {
       llm: new LlmMock(),
       decider: new DeciderMock(),
+      search: new SearchMock(),
       cache,
       logger: silentLogger(),
       onProgress: (step) => steps.push(step),
@@ -75,6 +77,7 @@ describe("generateStudy", () => {
     const result = await generateStudy(config({ ideasFile: ideasPath, numIdeas: 5 }), {
       llm: spy,
       decider: new DeciderMock(),
+      search: new SearchMock(),
       cache,
       logger: silentLogger(),
     });
@@ -90,6 +93,7 @@ describe("generateStudy", () => {
     const result = await generateStudy(config({ pdf: true }), {
       llm: new LlmMock(),
       decider: new DeciderMock(),
+      search: new SearchMock(),
       cache,
       logger: silentLogger(),
     });
@@ -105,7 +109,7 @@ describe("generateStudy", () => {
 
   test("reuses cached answers on a second run of the same configuration", async () => {
     const { handle, cache } = harness();
-    const deps = { llm: new LlmMock(), decider: new DeciderMock(), cache, logger: silentLogger() };
+    const deps = { llm: new LlmMock(), decider: new DeciderMock(), search: new SearchMock(), cache, logger: silentLogger() };
     const cfg = config();
 
     const first = await generateStudy(cfg, deps);
@@ -120,7 +124,7 @@ describe("generateStudy", () => {
 
   test("estudos de mesmo titulo nao compartilham cache, e o mesmo estudo retoma o dele", async () => {
     const { handle, cache } = harness();
-    const deps = { llm: new LlmMock(), decider: new DeciderMock(), cache, logger: silentLogger() };
+    const deps = { llm: new LlmMock(), decider: new DeciderMock(), search: new SearchMock(), cache, logger: silentLogger() };
 
     await generateStudy(config({ cacheSeed: "estudo-a" }), deps);
 
@@ -138,7 +142,7 @@ describe("generateStudy", () => {
 
   test("trocar de provedor invalida o cache; o mesmo provedor continua retomando", async () => {
     const { handle, cache } = harness();
-    const deps = { llm: new LlmMock(), decider: new DeciderMock(), cache, logger: silentLogger() };
+    const deps = { llm: new LlmMock(), decider: new DeciderMock(), search: new SearchMock(), cache, logger: silentLogger() };
 
     await generateStudy(config({ cacheSeed: "mesmo-estudo", providerFingerprint: "urlA|m|kA" }), deps);
 
@@ -170,6 +174,7 @@ describe("generateStudy", () => {
     const result = await generateStudy(config({ numIdeas: 1 }), {
       llm: broken,
       decider: new DeciderMock(),
+      search: new SearchMock(),
       cache,
       logger: silentLogger(),
     });
@@ -199,6 +204,7 @@ describe("generateStudy", () => {
     const result = await generateStudy(config({ numIdeas: 1 }), {
       llm: accented,
       decider: new DeciderMock(),
+      search: new SearchMock(),
       cache,
       logger: silentLogger(),
     });

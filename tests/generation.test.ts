@@ -5,6 +5,7 @@ import { cacheKeyFor } from "../src/application/cache.ts";
 import { ValidationError } from "../src/domain/errors.ts";
 import type { CacheStore, LlmClient } from "../src/domain/ports.ts";
 import { DeciderMock } from "../src/infrastructure/decider-mock.ts";
+import { SearchMock } from "../src/infrastructure/search-mock.ts";
 import { silentLogger } from "./helpers.ts";
 import type { IdeaEvaluation, StudyConfig, StudyIdea } from "../src/domain/types.ts";
 import {
@@ -178,7 +179,7 @@ describe("prompts", () => {
 describe("generation calls", () => {
   test("generateBrief trims the reply and sends the measured ticket", async () => {
     const llm = new StubLlm("  brief texto  \n");
-    const brief = await generateBrief(llm, makeConfig());
+    const brief = await generateBrief(llm, makeConfig(), []);
     expect(brief).toBe("brief texto");
     expect(llm.calls[0]?.system).toBe(BRIEF_SYSTEM_PROMPT);
     expect(llm.calls[0]?.user).toBe(
@@ -195,7 +196,7 @@ describe("generation calls", () => {
       })),
     );
     const llm = new StubLlm("Aqui estao:\n```json\n" + payload + "\n```\n");
-    const ideas = await generateIdeas(llm, makeConfig(), "brief de teste", 6);
+    const ideas = await generateIdeas(llm, makeConfig(), "brief de teste", 6, [], []);
     expect(ideas).toHaveLength(6);
     expect(ideas[0]?.name).toBe("Ideia 1");
     expect(ideas[5]?.description).toBe("descricao 6");
@@ -211,12 +212,12 @@ describe("generation calls", () => {
 
   test("generateIdeas rejects a JSON payload that is not an array", async () => {
     const llm = new StubLlm('{"nome": "so um objeto"}');
-    await expect(generateIdeas(llm, makeConfig(), "brief", 3)).rejects.toThrow(ValidationError);
+    await expect(generateIdeas(llm, makeConfig(), "brief", 3, [], [])).rejects.toThrow(ValidationError);
   });
 
   test("generateDocument wraps the measured data block", async () => {
     const llm = new StubLlm("  # documento  ");
-    const doc = await generateDocument(llm, makeEvaluation(), makeConfig(), "brief ctx");
+    const doc = await generateDocument(llm, makeEvaluation(), makeConfig(), "brief ctx", []);
     expect(doc).toBe("# documento");
     expect(llm.calls[0]?.system).toBe(DOC_SYSTEM_PROMPT);
     const user = llm.calls[0]?.user ?? "";
@@ -333,7 +334,7 @@ describe("pipeline incremental", () => {
       { brief: "BRIEF JA GRAVADO", existing },
       5,
       "lote-1",
-      { llm, decider, cache, logger: silentLogger() },
+      { llm, decider, search: new SearchMock(), cache, logger: silentLogger() },
     );
 
     // O brief vem pronto: nenhum prompt de brief pode ter ido ao LLM.
@@ -367,6 +368,7 @@ describe("pipeline incremental", () => {
     await generateAddition(makeConfig({ numIdeas: 5 }), { brief: "brief", existing }, 5, "lote-1", {
       llm,
       decider: new DeciderMock(),
+      search: new SearchMock(),
       cache: new StudyCache(new MemoryCacheStore()),
       logger: silentLogger(),
     });
@@ -383,7 +385,7 @@ describe("pipeline incremental", () => {
     const store = new MemoryCacheStore();
     const cache = new StudyCache(store);
     const { llm } = recordingLlm();
-    const deps = { llm, decider: new DeciderMock(), cache, logger: silentLogger() };
+    const deps = { llm, decider: new DeciderMock(), search: new SearchMock(), cache, logger: silentLogger() };
     const existing = [existingEvaluation("Agenda Vazada", "id-1", 1.2)];
     const cfg = makeConfig({ numIdeas: 5 });
 
@@ -403,7 +405,7 @@ describe("pipeline incremental", () => {
     const store = new MemoryCacheStore();
     const cache = new StudyCache(store);
     const { llm, prompts } = recordingLlm();
-    const deps = { llm, decider: new DeciderMock(), cache, logger: silentLogger() };
+    const deps = { llm, decider: new DeciderMock(), search: new SearchMock(), cache, logger: silentLogger() };
     const existing = [existingEvaluation("Agenda Vazada", "id-1", 1.2)];
     const cfg = makeConfig({ numIdeas: 5 });
 

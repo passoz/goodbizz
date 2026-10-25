@@ -1,0 +1,42 @@
+TASK: 1.14
+CHECK: AC-1
+COMMAND: bun --config=tests/bunfig.focus.toml test tests/search-cache.test.ts -t QR-003
+EXIT: 0
+OUTPUT:
+bun test v1.4.2 (744846f84)
+
+ 2 pass
+ 0 fail
+ 12 expect() calls
+Ran 2 tests across 1 file. [102.00ms]
+
+MUTATION_EXIT: 1
+MUTATION_OUTPUT:
+bun test v1.4.2 (744846f84)
+
+tests/search-cache.test.ts:
+32 | 
+33 | /** Valida e normaliza o que a borda mandou: sem nome, URL ou modelo nao ha provedor utilizavel. */
+34 | function validate(input: ProviderProfileInput | Partial<ProviderProfileInput>): void {
+35 |   if (input.name !== undefined) requires("o nome do provedor", clean(input.name));
+36 |   if (input.kind !== undefined && input.kind !== "llm" && input.kind !== "decider") {
+37 |     throw new ValidationError("tipo de provedor inválido");
+               ^
+ValidationError: tipo de provedor inválido
+  status: 422,
+ details: undefined,
+    code: "VALIDATION_FAILED"
+
+      at validate (/home/passoz/dev/goodbizz/src/application/settings.ts:37:11)
+      at create (/home/passoz/dev/goodbizz/src/application/settings.ts:70:5)
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/search-cache.test.ts:72:35)
+(fail) perfil de busca no catalogo > QR-003: o perfil de busca ativo sobrepoe o ambiente e entra na impressao de cache [8.20ms]
+
+ 1 pass
+ 1 fail
+ 7 expect() calls
+Ran 2 tests across 1 file. [110.00ms]
+
+MUTATION_VERDICT: PASS
+VERDICT: PASS
+CHAIN_HASH: e01b62cf17644520b972fb1535428da4a7359f7114b6e1fd1dcc71462d622298

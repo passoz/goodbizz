@@ -16,6 +16,7 @@ import { openMigratedDatabase, type DatabaseHandle } from "../src/infrastructure
 import { DeciderMock } from "../src/infrastructure/decider-mock.ts";
 import { buildUiApp } from "../src/infrastructure/http/ui/routes.tsx";
 import { LlmMock } from "../src/infrastructure/llm-mock.ts";
+import { SearchMock } from "../src/infrastructure/search-mock.ts";
 import { SqliteStudyRepository } from "../src/infrastructure/repositories.ts";
 import { SqliteSettingsRepository } from "../src/infrastructure/settings-repository.ts";
 
@@ -77,6 +78,7 @@ beforeEach(() => {
     cache: new StudyCache(new SqliteCacheStore(db.db)),
     llm: new LlmMock(),
     decider: new DeciderMock(),
+    search: new SearchMock(),
     logger: createLogger("error"),
     artifactsRoot: "estudos-teste",
     settings,

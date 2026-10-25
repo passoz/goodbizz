@@ -14,6 +14,7 @@ import { SqliteCacheStore } from "../src/infrastructure/cache-repository.ts";
 import { openMigratedDatabase } from "../src/infrastructure/db.ts";
 import { DeciderMock } from "../src/infrastructure/decider-mock.ts";
 import { LlmMock } from "../src/infrastructure/llm-mock.ts";
+import { SearchMock } from "../src/infrastructure/search-mock.ts";
 import { SqliteStudyRepository } from "../src/infrastructure/repositories.ts";
 import type { SearchClient } from "../src/domain/ports.ts";
 

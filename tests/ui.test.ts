@@ -20,6 +20,7 @@ import { DeciderMock } from "../src/infrastructure/decider-mock.ts";
 import { buildUiApp } from "../src/infrastructure/http/ui/routes.tsx";
 import { CSRF_COOKIE } from "../src/infrastructure/http/ui/security.ts";
 import { LlmMock } from "../src/infrastructure/llm-mock.ts";
+import { SearchMock } from "../src/infrastructure/search-mock.ts";
 import { SqliteStudyRepository } from "../src/infrastructure/repositories.ts";
 import { SqliteSettingsRepository } from "../src/infrastructure/settings-repository.ts";
 
@@ -42,6 +43,7 @@ function makeUiHarness(): UiHarness {
     cache: new StudyCache(new SqliteCacheStore(db.db)),
     llm: new LlmMock(),
     decider: new DeciderMock(),
+    search: new SearchMock(),
     logger: createLogger("error"),
     artifactsRoot,
     settings,
@@ -1000,6 +1002,7 @@ describe("rotas de UI para ideia", () => {
       cache: new StudyCache(new SqliteCacheStore(db.db)),
       llm: { generateText: () => new Promise<string>(() => {}) },
       decider: new DeciderMock(),
+      search: new SearchMock(),
       logger: createLogger("error"),
       artifactsRoot: mkdtempSync(join(tmpdir(), "goodbizz-ui-hanging-")),
     });

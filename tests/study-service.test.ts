@@ -26,6 +26,7 @@ import type { StudyConfig } from "../src/domain/types.ts";
 import { DeciderMock } from "../src/infrastructure/decider-mock.ts";
 import { openMigratedDatabase } from "../src/infrastructure/db.ts";
 import { LlmMock } from "../src/infrastructure/llm-mock.ts";
+import { SearchMock } from "../src/infrastructure/search-mock.ts";
 import { SqliteCacheStore } from "../src/infrastructure/cache-repository.ts";
 import { SqliteStudyRepository } from "../src/infrastructure/repositories.ts";
 import { silentLogger, tempDir } from "./helpers.ts";
@@ -67,6 +68,7 @@ async function captureRunConfig(): Promise<StudyConfig> {
     cache: new StudyCache(new SqliteCacheStore(db.db)),
     llm: new LlmMock(),
     decider: new DeciderMock(),
+    search: new SearchMock(),
     logger: silentLogger(),
     artifactsRoot: tempDir("goodbizz-timeout-"),
     clientsFor: (cfg) => {
@@ -118,6 +120,7 @@ describe("limite por chamada de IA na execução do estudo", () => {
       cache: new StudyCache(new SqliteCacheStore(db.db)),
       llm: new LlmMock(),
       decider: new DeciderMock(),
+      search: new SearchMock(),
       logger: silentLogger(),
       artifactsRoot: tempDir("goodbizz-timeout-"),
       timeout: 900,
@@ -181,6 +184,9 @@ describe("identidade estavel por ideia", () => {
       decider: new DeciderMock(),
       cache,
       logger: silentLogger(),
+search: new SearchMock(),
+      cache,
+      logger: silentLogger(),
     });
 
     const ids = result.evaluations.map((e) => e.id);
@@ -225,6 +231,7 @@ async function completedStudy(numIdeas: number) {
     cache: new StudyCache(new SqliteCacheStore(db.db)),
     llm: new LlmMock(),
     decider: new DeciderMock(),
+    search: new SearchMock(),
     logger: silentLogger(),
     artifactsRoot: dir,
   });
@@ -357,6 +364,7 @@ describe("remocao de ideia por id", () => {
       cache: new StudyCache(new SqliteCacheStore(db.db)),
       llm: blockingLlm,
       decider: new DeciderMock(),
+      search: new SearchMock(),
       logger: silentLogger(),
       artifactsRoot: dir,
     });
@@ -438,6 +446,7 @@ describe("adicao de ideias por quantidade", () => {
       cache: new StudyCache(new SqliteCacheStore(db.db)),
       llm: countingLlm,
       decider: new DeciderMock(),
+      search: new SearchMock(),
       logger: silentLogger(),
       artifactsRoot: dir,
     });
@@ -554,6 +563,7 @@ describe("adicao de ideias por quantidade", () => {
       cache: new StudyCache(new SqliteCacheStore(db.db)),
       llm: blockingLlm,
       decider: new DeciderMock(),
+      search: new SearchMock(),
       logger: silentLogger(),
       artifactsRoot: dir,
     });
@@ -611,6 +621,7 @@ describe("regeracao do HTML completo (DEC-006)", () => {
       cache: new StudyCache(new SqliteCacheStore(db.db)),
       llm: new LlmMock(),
       decider: new DeciderMock(),
+      search: new SearchMock(),
       logger: silentLogger(),
       artifactsRoot: dir,
     });
@@ -706,6 +717,7 @@ describe("cache por estudo", () => {
       cache,
       llm,
       decider: new DeciderMock(),
+      search: new SearchMock(),
       logger: silentLogger(),
       artifactsRoot: dir,
     });
@@ -761,6 +773,7 @@ describe("cache por estudo", () => {
       cache: new StudyCache(new SqliteCacheStore(db.db)),
       llm,
       decider: new DeciderMock(),
+      search: new SearchMock(),
       logger: silentLogger(),
       artifactsRoot: dir,
     });

@@ -11,6 +11,7 @@ import { StudyService } from "../src/application/study-service.ts";
 import { DeciderMock } from "../src/infrastructure/decider-mock.ts";
 import { openMigratedDatabase, type DatabaseHandle } from "../src/infrastructure/db.ts";
 import { LlmMock } from "../src/infrastructure/llm-mock.ts";
+import { SearchMock } from "../src/infrastructure/search-mock.ts";
 import { SqliteCacheStore } from "../src/infrastructure/cache-repository.ts";
 import { SqliteSettingsRepository } from "../src/infrastructure/settings-repository.ts";
 import { SqliteStudyRepository } from "../src/infrastructure/repositories.ts";
@@ -44,6 +45,7 @@ export function makeHarness(): TestHarness {
     cache: new StudyCache(new SqliteCacheStore(db.db)),
     llm: new LlmMock(),
     decider: new DeciderMock(),
+    search: new SearchMock(),
     logger: silentLogger(),
     artifactsRoot,
     settings,

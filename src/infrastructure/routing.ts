@@ -7,12 +7,14 @@
  * uma edição de URL/chave.
  */
 import type { ProviderConfig } from "../config/providers.ts";
-import type { DeciderClient, LlmClient } from "../domain/ports.ts";
-import type { DeciderAnswers, ProviderUsage, QuestionSet } from "../domain/types.ts";
+import type { DeciderClient, LlmClient, SearchClient } from "../domain/ports.ts";
+import type { DeciderAnswers, ProviderUsage, QuestionSet, SearchResult } from "../domain/types.ts";
 import { DeciderHttp } from "./decider.ts";
 import { DeciderMock } from "./decider-mock.ts";
 import { LlmHttp } from "./llm.ts";
 import { LlmMock } from "./llm-mock.ts";
+import { SearchHttp } from "./search.ts";
+import { SearchMock } from "./search-mock.ts";
 
 const ZERO: ProviderUsage = { calls: 0, inputTokens: 0, cachedInputTokens: 0, outputTokens: 0 };
 
@@ -98,6 +100,42 @@ export class RoutingDeciderClient implements DeciderClient {
     return this.client().queryProbes(state, probes);
   }
 
+  usage(): ProviderUsage {
+    return sumUsage(this.retired, this.inner?.usage?.());
+  }
+}
+
+/**
+ * Busca que resolve a configuração a cada chamada: simulada determinística com mock, adaptador
+ * Tavily com chave. A troca por impressão digital segue os clientes de texto e de decisor.
+ */
+export class RoutingSearchClient implements SearchClient {
+  private inner: SearchClient | null = null;
+  private fingerprint = "";
+  private retired: ProviderUsage = { ...ZERO };
+
+  constructor(private readonly options: RoutingOptions) {}
+
+  private client(): SearchClient {
+    const cfg = this.options.resolve();
+    const fingerprint = `${cfg.searchBaseUrl}|${cfg.searchApiKey}`;
+    if (this.inner === null || fingerprint !== this.fingerprint) {
+      this.retired = sumUsage(this.retired, this.inner?.usage?.());
+      this.inner = this.options.mock
+        ? new SearchMock()
+        : new SearchHttp(cfg.searchBaseUrl, cfg.searchApiKey, this.options.timeout ?? 60);
+      this.fingerprint = fingerprint;
+    }
+    const inner = this.inner;
+    if (inner === null) throw new Error("cliente de busca não inicializado");
+    return inner;
+  }
+
+  search(query: string): Promise<SearchResult[]> {
+    return this.client().search(query);
+  }
+
+  /** Consumo acumulado, incluindo o dos clientes já trocados por mudança de configuração. */
   usage(): ProviderUsage {
     return sumUsage(this.retired, this.inner?.usage?.());
   }
