@@ -53,6 +53,12 @@
     ],
     "required_evidence": [
       "evidence.json"
+    ],
+    "frozen_tests": [
+      {
+        "path": "tests/tournament-mock.test.ts",
+        "sha256": "b5d0c411675521848039e53583ad47e012d823d5a3a3b1043e905612bfe67807"
+      }
     ]
   },
   "scope_contract": {
