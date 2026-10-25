@@ -1,0 +1,104 @@
+TASK: 1.1
+CHECK: RED
+COMMAND: bun --config=tests/bunfig.focus.toml test tests/tournament-rules.test.ts
+EXIT: 1
+OUTPUT:
+bun test v1.4.2 (744846f84)
+
+tests/tournament-rules.test.ts:
+50 | 
+51 | describe("regras do torneio", () => {
+52 |   test("teto de log2 do numero de ideias mais 1 rodadas", () => {
+53 |     expect(tournamentRounds(0)).toBe(0);
+54 |     expect(tournamentRounds(1)).toBe(0);
+55 |     expect(tournamentRounds(2)).toBe(2);
+                                     ^
+error: expect(received).toBe(expected)
+
+Expected: 2
+Received: 0
+
+      at <anonymous> (/home/passoz/dev/goodbizz-w0017/tests/tournament-rules.test.ts:55:33)
+(fail) regras do torneio > teto de log2 do numero de ideias mais 1 rodadas [0.15ms]
+62 | 
+63 |   test("a pergunta de duelo e choice com as ideias em A e B", () => {
+64 |     const question = duelQuestions(ranked("Fiado Digital", 1.8, null), ranked("Rota Certa", 1.7, null))[
+65 |       DUEL_QUESTION_ID
+66 |     ];
+67 |     expect(question?.type).toBe("choice");
+                                ^
+error: expect(received).toBe(expected)
+
+Expected: "choice"
+Received: undefined
+
+      at <anonymous> (/home/passoz/dev/goodbizz-w0017/tests/tournament-rules.test.ts:67:28)
+(fail) regras do torneio > a pergunta de duelo e choice com as ideias em A e B [0.12ms]
+69 |     expect(question.criteria["A"]).toBe("Fiado Digital — descrição de Fiado Digital");
+70 |     expect(question.criteria["B"]).toBe("Rota Certa — descrição de Rota Certa");
+71 |   });
+72 | 
+73 |   test("probabilities parciais sao normalizadas entre A e B", () => {
+74 |     expect(duelProbability({ probabilities: { A: 0.6, B: 0.2 } })).toBe(0.75);
+                                                                        ^
+error: expect(received).toBe(expected)
+
+Expected: 0.75
+Received: null
+
+      at <anonymous> (/home/passoz/dev/goodbizz-w0017/tests/tournament-rules.test.ts:74:68)
+(fail) regras do torneio > probabilities parciais sao normalizadas entre A e B [0.07ms]
+87 |       ranked("Alfa", 1.2, 0.75),
+88 |       ranked("Beta", 1.5, 0.5),
+89 |       ranked("Gama", 1.5, 0.5),
+90 |       ranked("Antigo", 2, null),
+91 |     ];
+92 |     expect([...ideas].sort(compareRanking).map((idea) => idea.name)).toEqual([
+                                                                          ^
+error: expect(received).toEqual(expected)
+
+@@ -1,3 +1,3 @@
+  [
+-   "Alfa",
++   "Antigo",
+    "Zeta",
+@@ -5,3 +5,3 @@
+    "Gama",
+-   "Antigo",
++   "Alfa",
+  ]
+
+- Expected  - 2
++ Received  + 2
+
+      at <anonymous> (/home/passoz/dev/goodbizz-w0017/tests/tournament-rules.test.ts:92:70)
+(fail) regras do torneio > a ordem segue a media do torneio, depois o indice, depois o nome [2.10ms]
+ 98 |     ]);
+ 99 |   });
+100 | 
+101 |   test("sem torneio a ordem e a do indice", () => {
+102 |     const ideas = [ranked("B", 1.2, null), ranked("A", 1.2, null), ranked("C", 1.9, null)];
+103 |     expect([...ideas].sort(compareRanking).map((idea) => idea.name)).toEqual(["C", "A", "B"]);
+                                                                           ^
+error: expect(received).toEqual(expected)
+
+@@ -2,4 +2,4 @@
+    "C",
+-   "A",
+    "B",
++   "A",
+  ]
+
+- Expected  - 1
++ Received  + 1
+
+      at <anonymous> (/home/passoz/dev/goodbizz-w0017/tests/tournament-rules.test.ts:103:70)
+(fail) regras do torneio > sem torneio a ordem e a do indice [0.11ms]
+
+ 0 pass
+ 5 fail
+ 7 expect() calls
+Ran 5 tests across 1 file. [4.00ms]
+
+VERDICT: PASS
+CHAIN_HASH: aaf8964709be54dea62cb17bc5fb2ce9dc9dc34d2e8e5be43225c87139b940d1

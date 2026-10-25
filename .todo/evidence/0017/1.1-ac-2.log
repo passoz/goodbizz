@@ -1,0 +1,42 @@
+TASK: 1.1
+CHECK: AC-2
+COMMAND: bun --config=tests/bunfig.focus.toml test tests/tournament.test.ts -t 'vies de posicao'
+EXIT: 0
+OUTPUT:
+bun test v1.4.2 (744846f84)
+
+ 1 pass
+ 8 filtered out
+ 0 fail
+ 6 expect() calls
+Ran 1 test across 1 file. [49.00ms]
+
+MUTATION_EXIT: 1
+MUTATION_OUTPUT:
+bun test v1.4.2 (744846f84)
+
+tests/tournament.test.ts:
+161 |     const decider = new ScriptedDecider(() => ({ choice: "A", probabilities: { A: 1, B: 0 } }));
+162 |     const pair = [idea("Fiado Digital", 1.8), idea("Rota Certa", 1.7)];
+163 |     const outcome = await runTournament(cfg, pair, { decider, cache });
+164 | 
+165 |     // A mesma partida foi perguntada nas duas ordens.
+166 |     expect(decider.duels[0]?.a.startsWith("Fiado Digital")).toBe(true);
+                                                                  ^
+error: expect(received).toBe(expected)
+
+Expected: true
+Received: undefined
+
+      at <anonymous> (/home/passoz/dev/goodbizz-w0017/tests/tournament.test.ts:166:61)
+(fail) torneio suico > vies de posicao: o decisor que sempre escolhe A deixa 0.5 para cada lado [4.10ms]
+
+ 0 pass
+ 8 filtered out
+ 1 fail
+ 1 expect() calls
+Ran 1 test across 1 file. [41.00ms]
+
+MUTATION_VERDICT: PASS
+VERDICT: PASS
+CHAIN_HASH: 76f14eb276145756d8d372f8ed0b6b95121b134d4afed6e01975fd6c517b71eb

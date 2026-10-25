@@ -85,6 +85,54 @@ export interface IdeaEvaluation {
   tier: Tier;
 }
 
+/** Desempenho de uma ideia no torneio par a par do decisor. */
+export interface TournamentStanding {
+  /** Soma das probabilidades médias de ser escolhida em cada partida. */
+  points: number;
+  /** Partidas disputadas; a folga não conta. */
+  games: number;
+  /** Partidas em que a probabilidade média passou de 0.5. */
+  wins: number;
+  /** Rodadas em que a ideia folgou. */
+  byes: number;
+  /** Média de pontos por partida (0 a 1; maior é melhor). Decide a ordem do ranking. */
+  score: number;
+}
+
+/** Uma partida: o duelo perguntado nas duas ordens. `a`/`b` são ids das ideias. */
+export interface TournamentMatch {
+  round: number;
+  a: string;
+  b: string;
+  aName: string;
+  bName: string;
+  /** Média das duas probabilidades de `a` ser escolhida; `b` recebe 1 menos esse valor. */
+  pA: number;
+}
+
+/** Folga de uma rodada com número ímpar de ideias. */
+export interface TournamentBye {
+  round: number;
+  idea: string;
+  name: string;
+}
+
+/** Torneio suíço de um estudo: rodadas, partidas, folgas e duelos sem resposta utilizável. */
+export interface StudyTournament {
+  rounds: number;
+  matches: TournamentMatch[];
+  byes: TournamentBye[];
+  issues: string[];
+}
+
+/**
+ * Avaliação com o resultado do torneio. O torneio fica fora de `IdeaEvaluation` pela mesma razão
+ * do `id`: a forma do baseline (`payload_json`) não o carrega, e estudo antigo não tem torneio.
+ */
+export interface RankedEvaluation extends IdeaEvaluation {
+  tournament?: TournamentStanding | null;
+}
+
 /**
  * Avaliacao com a identidade da ideia dentro do estudo.
  *
@@ -94,7 +142,7 @@ export interface IdeaEvaluation {
  * reconstruir um id que nunca foi serializado. Como subtipo, toda leitura so do baseline
  * continua aceitando `IdeaEvaluation`, e o `id` aparece so onde a ideia tem identidade.
  */
-export interface StudyIdea extends IdeaEvaluation {
+export interface StudyIdea extends RankedEvaluation {
   id: string;
   /**
    * Momento em que a ideia foi gerada e avaliada (ISO). Opcional porque ideias anteriores à
@@ -125,6 +173,8 @@ export interface StudySummary {
   tiers: Record<Tier, string[]>;
   attack: string[];
   review: string[];
+  /** Partidas do torneio par a par. Ausente ou `null` em estudo antigo ou com uma ideia só. */
+  tournament?: StudyTournament | null;
 }
 
 export interface StudyConfig {
