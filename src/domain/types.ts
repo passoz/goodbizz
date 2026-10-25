@@ -11,6 +11,32 @@ export interface Idea {
   description: string;
 }
 
+/** Resultado bruto do provedor de busca: o `content` é o texto que valida o trecho citado. */
+export interface SearchResult {
+  title: string;
+  url: string;
+  content: string;
+}
+
+/**
+ * Evidência pesquisada: afirmação com trecho literal e URL de origem.
+ *
+ * As chaves ficam em português sem acento porque são as mesmas do `dados.json` (chave
+ * `evidencias`) e do JSON pedido ao extrator. `ideia` vazia = evidência do estudo; preenchida =
+ * evidência da pesquisa própria daquela ideia. `valor` só fica quando o número aparece no trecho.
+ */
+export interface Evidence {
+  /** `E1`, `E2`... único dentro do estudo; é o id citado como `[E#]` no texto. */
+  id: string;
+  tipo: string;
+  afirmacao: string;
+  trecho: string;
+  url: string;
+  valor: number | null;
+  unidade: string;
+  ideia: string;
+}
+
 export type StrongProbe = "dinheiro" | "reputacao";
 export type InternalProbe = "processo" | "tecnologia";
 export type ProbeKey = StrongProbe | InternalProbe;

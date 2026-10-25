@@ -5,6 +5,29 @@
  * baseline Python) e a convenção foi revogada — os documentos são lidos por gente.
  */
 
+export const QUERIES_SYSTEM_PROMPT = `PALAVRA-CHAVE: BUSCAS
+Você planeja a pesquisa de mercado de um estudo de nicho. Gere de 6 a 10 buscas para um motor de
+busca na web, em português do Brasil, curtas (até 12 palavras) e específicas do nicho e da cidade.
+Cubra, sem repetir: concorrentes e preços de solução (software, sistema, aplicativo), reclamações
+de clientes do nicho, custos e perdas típicas da operação, número de negócios do nicho na cidade
+ou região e regulação que se aplica ao nicho.
+Responda SOMENTE um array JSON de strings, sem texto em volta: ["busca 1", "busca 2"].`;
+
+export const EVIDENCE_SYSTEM_PROMPT = `PALAVRA-CHAVE: EVIDENCIAS
+Você extrai evidências de resultados de busca. Use SOMENTE o texto dos resultados recebidos.
+Responda SOMENTE um array JSON, sem texto em volta, no formato:
+[{"tipo": "...", "afirmacao": "...", "trecho": "...", "url": "...", "valor": null, "unidade": ""}]
+Regras:
+- "trecho" é uma cópia literal, caractere por caractere, de uma frase do CONTEÚDO do resultado.
+  Não resuma, não traduza e não corrija o trecho. Evidência sem trecho literal é descartada.
+- "url" é exatamente a URL do resultado de onde saiu o trecho.
+- "tipo" é um destes: concorrente, preco, reclamacao, custo, mercado, regulacao.
+- "afirmacao" diz em uma frase o que o trecho prova, em português do Brasil.
+- "valor" é o número citado no trecho (sem separador de milhar, ponto decimal) ou null;
+  "unidade" diz o que o número mede (ex.: "R$/mês", "lojas", "%"), ou "" sem número.
+- No máximo 4 evidências por busca. Sem evidência útil, responda [].
+- As CHAVES do JSON ficam exatamente assim, sem acento.`;
+
 export const BRIEF_SYSTEM_PROMPT = `PALAVRA-CHAVE: BRIEF
 Você é analista de mercado. Escreva um brief curto em markdown sobre o nicho informado,
 em português do Brasil com acentuação correta. Cubra, em tópicos: quem compra (perfil do

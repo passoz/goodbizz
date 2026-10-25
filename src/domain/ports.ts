@@ -6,6 +6,7 @@ import type {
   StudyIdea,
   ProviderSettings,
   ProviderUsage,
+  SearchResult,
   QuestionSet,
   StudyListItem,
   StudyProgress,
@@ -27,6 +28,13 @@ export interface DeciderClient {
   ask(state: string, questions: QuestionSet): Promise<DeciderAnswers>;
   queryProbes(state: string, probes: Record<string, string>): Promise<Record<string, number>>;
   /** Consumo acumulado desde o início do processo (chamadas sempre; tokens quando informados). */
+  usage?(): ProviderUsage;
+}
+
+/** Web search provider (Tavily protocol): results carry the extracted page content. */
+export interface SearchClient {
+  search(query: string): Promise<SearchResult[]>;
+  /** Consumo acumulado desde o início do processo (só chamadas: busca não tem tokens). */
   usage?(): ProviderUsage;
 }
 
