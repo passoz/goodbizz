@@ -21,7 +21,7 @@
 - [ ] `bunx eslint .` — lint passa com exit 0.
 - [ ] `bunx prettier --check .` — formatacao passa com exit 0.
 
-### [ ] [1.1] Torneio suico com duelo nas duas ordens
+### [x] [1.1] Torneio suico com duelo nas duas ordens
 
 **Requirement:** FR-001
 **Depends on:** none
@@ -46,7 +46,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.2] Decisor simulado responde o duelo de forma deterministica
+### [x] [1.2] Decisor simulado responde o duelo de forma deterministica
 
 **Requirement:** QR-001
 **Depends on:** 1.1
@@ -70,7 +70,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.3] O pipeline roda o torneio e as pastas seguem os pontos
+### [x] [1.3] O pipeline roda o torneio e as pastas seguem os pontos
 
 **Requirement:** FR-004
 **Depends on:** 1.2
@@ -94,7 +94,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.4] Tabelao, CSV e dados.json com a coluna torneio
+### [x] [1.4] Tabelao, CSV e dados.json com a coluna torneio
 
 **Requirement:** QR-002
 **Depends on:** 1.3
@@ -118,7 +118,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.5] Coluna tournament_json e partidas no detalhe do estudo
+### [x] [1.5] Coluna tournament_json e partidas no detalhe do estudo
 
 **Requirement:** QR-003
 **Depends on:** 1.4
@@ -142,7 +142,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.6] Remocao e adicao mantem o torneio coerente
+### [x] [1.6] Remocao e adicao mantem o torneio coerente
 
 **Requirement:** FR-005
 **Depends on:** 1.5
@@ -166,7 +166,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.7] Ranking, glossario e /como-ler mostram o torneio
+### [x] [1.7] Ranking, glossario e /como-ler mostram o torneio
 
 **Requirement:** FR-007
 **Depends on:** 1.6
