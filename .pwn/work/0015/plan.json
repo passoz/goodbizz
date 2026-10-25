@@ -1,0 +1,804 @@
+{
+  "$schema": "../../../pwn/schemas/plan.schema.json",
+  "work_id": "0015",
+  "title": "O estudo pesquisa a web sozinho e cita a evidência de cada afirmação",
+  "components": [
+    {
+      "name": "research-pipeline",
+      "purpose": "Fase de pesquisa do estudo: buscas, extração literal, pesquisa por ideia, evidências nos prompts, no decisor e na adição"
+    },
+    {
+      "name": "evidence-artifacts",
+      "purpose": "Artefato 00-evidencias.md, chave evidencias no dados.json e seção Fontes do plano"
+    },
+    {
+      "name": "search-provider",
+      "purpose": "Porta SearchClient, adaptador Tavily, mock determinístico, roteamento, ambiente, CLI, consumo e fail-fast"
+    },
+    {
+      "name": "provider-catalog",
+      "purpose": "Tipo search no catálogo de provedores: precedência, impressão de cache, API, Testar e página /settings"
+    },
+    {
+      "name": "study-page",
+      "purpose": "Página do estudo: contagem de evidências, aviso de pesquisa fraca e progresso em 7 fases"
+    }
+  ],
+  "global_gates": [
+    "`bun test` — a suíte completa passa com exit 0.",
+    "`bun run check` — typecheck estrito passa com exit 0.",
+    "`bunx eslint . && bunx prettier --check .` — lint e formatação passam."
+  ],
+  "tasks": [
+    {
+      "id": "1.1",
+      "title": "A fase de pesquisa roda antes do brief com 6 a 10 buscas geradas pelo LLM",
+      "requirement_id": "FR-002",
+      "depends_on": [],
+      "behavior": "antes do brief o pipeline pede as buscas ao LLM, limita a lista a 6 a 10 itens, consulta o provedor de busca e extrai evidências que entram no resultado do estudo",
+      "components": [
+        "research-pipeline"
+      ],
+      "files": [
+        "src/application/research.ts",
+        "src/application/generate-study.ts",
+        "src/application/prompts.ts",
+        "src/domain/types.ts",
+        "src/domain/ports.ts",
+        "tests/bunfig.focus.toml",
+        "tests/research-phase.test.ts"
+      ],
+      "implementation_files": [
+        "src/application/research.ts",
+        "src/application/generate-study.ts",
+        "src/application/prompts.ts"
+      ],
+      "test_files": [
+        "tests/research-phase.test.ts"
+      ],
+      "red": {
+        "command": "bun --config=tests/bunfig.focus.toml test tests/research-phase.test.ts -t \"FR-002\"",
+        "description": "sem a fase de pesquisa o provedor de busca não recebe nenhuma busca antes do brief e a asserção da ordem falha"
+      },
+      "implementation_steps": [
+        "Escrever o teste que falha (RED): a busca acontece antes do brief, com 6 a 10 buscas, e as evidências voltam no resultado",
+        "Criar research.ts com geração, execução e extração e chamar a fase em generateStudy como [1/7] (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun --config=tests/bunfig.focus.toml test tests/research-phase.test.ts -t \"FR-002\"",
+          "description": "o pipeline pesquisa antes do brief e devolve as evidências extraídas"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-001",
+      "contract_id": "CTR-001",
+      "complexity": "standard",
+      "status": "pending"
+    },
+    {
+      "id": "1.2",
+      "title": "Só entra a evidência com trecho literal e ela vai para 00-evidencias.md e dados.json",
+      "requirement_id": "FR-003",
+      "depends_on": [],
+      "behavior": "o código descarta a evidência cujo trecho não aparece no conteúdo da mesma URL, deduplica URLs, tenta extrair de novo uma vez e grava as que sobram em 00-evidencias.md e na chave evidencias do dados.json",
+      "components": [
+        "research-pipeline"
+      ],
+      "files": [
+        "src/application/research.ts",
+        "src/application/artifacts.ts",
+        "src/application/dados.ts",
+        "src/domain/types.ts",
+        "tests/research-evidence.test.ts"
+      ],
+      "implementation_files": [
+        "src/application/research.ts",
+        "src/application/artifacts.ts",
+        "src/application/dados.ts"
+      ],
+      "test_files": [
+        "tests/research-evidence.test.ts"
+      ],
+      "red": {
+        "command": "bun --config=tests/bunfig.focus.toml test tests/research-evidence.test.ts -t \"FR-003\"",
+        "description": "sem a validação literal o trecho inventado chega ao resultado e a asserção de descarte falha"
+      },
+      "implementation_steps": [
+        "Escrever o teste que falha (RED): trecho ausente do conteúdo, URL repetida, JSON inválido e busca vazia",
+        "Validar o trecho literal, deduplicar URLs, repetir a extração uma vez e gravar 00-evidencias.md e evidencias no dados.json (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun --config=tests/bunfig.focus.toml test tests/research-evidence.test.ts -t \"FR-003\"",
+          "description": "o trecho inventado não entra e as evidências válidas aparecem nos dois artefatos"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-001",
+      "contract_id": "CTR-002",
+      "complexity": "standard",
+      "status": "pending"
+    },
+    {
+      "id": "1.3",
+      "title": "Cada ideia tem a própria pesquisa de concorrente e de preço",
+      "requirement_id": "FR-005",
+      "depends_on": [],
+      "behavior": "depois de gerar as ideias o pipeline faz duas buscas por ideia, uma de concorrente direto e uma de preço da solução, e as evidências guardam o nome da ideia",
+      "components": [
+        "research-pipeline"
+      ],
+      "files": [
+        "src/application/research.ts",
+        "src/application/generate-study.ts",
+        "tests/research-ideas.test.ts"
+      ],
+      "implementation_files": [
+        "src/application/research.ts",
+        "src/application/generate-study.ts"
+      ],
+      "test_files": [
+        "tests/research-ideas.test.ts"
+      ],
+      "red": {
+        "command": "bun --config=tests/bunfig.focus.toml test tests/research-ideas.test.ts -t \"FR-005\"",
+        "description": "sem a pesquisa por ideia o provedor recebe só as buscas do estudo e a asserção das duas buscas por ideia falha"
+      },
+      "implementation_steps": [
+        "Escrever o teste que falha (RED): duas buscas por ideia e evidências com o nome da ideia",
+        "Pesquisar cada ideia com as buscas de concorrente e de preço e numerar as evidências em sequência (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun --config=tests/bunfig.focus.toml test tests/research-ideas.test.ts -t \"FR-005\"",
+          "description": "cada ideia ganha as duas buscas e evidências com o nome dela"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-001",
+      "contract_id": "CTR-003",
+      "complexity": "standard",
+      "status": "pending"
+    },
+    {
+      "id": "1.4",
+      "title": "O decisor vê as evidências da ideia e do estudo",
+      "requirement_id": "FR-006",
+      "depends_on": [],
+      "behavior": "o estado enviado ao decisor em evaluateIdea contém as evidências da ideia e as do estudo, e o hash delas entra na chave de cache da avaliação",
+      "components": [
+        "research-pipeline"
+      ],
+      "files": [
+        "src/application/evaluate.ts",
+        "src/application/generate-study.ts",
+        "tests/evaluate-evidence.test.ts"
+      ],
+      "implementation_files": [
+        "src/application/evaluate.ts",
+        "src/application/generate-study.ts"
+      ],
+      "test_files": [
+        "tests/evaluate-evidence.test.ts"
+      ],
+      "red": {
+        "command": "bun --config=tests/bunfig.focus.toml test tests/evaluate-evidence.test.ts -t \"FR-006\"",
+        "description": "sem as evidências no estado o texto enviado ao decisor não cita E1 e a asserção falha"
+      },
+      "implementation_steps": [
+        "Escrever o teste que falha (RED): o estado do decisor cita as evidências e a chave de cache muda com elas",
+        "Passar as evidências para evaluateIdea e o hash delas para a chave da avaliação (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun --config=tests/bunfig.focus.toml test tests/evaluate-evidence.test.ts -t \"FR-006\"",
+          "description": "o estado do decisor contém as evidências e a avaliação é refeita quando elas mudam"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-001",
+      "contract_id": "CTR-004",
+      "complexity": "standard",
+      "status": "pending"
+    },
+    {
+      "id": "1.5",
+      "title": "Brief, ideias e plano recebem as evidências e citam [E#]",
+      "requirement_id": "FR-004",
+      "depends_on": [],
+      "behavior": "os prompts do brief, das ideias e do plano recebem a lista de evidências e obrigam a citar [E#]; o LLM simulado gera as buscas, extrai evidências literais e cita evidências existentes",
+      "components": [
+        "research-pipeline"
+      ],
+      "files": [
+        "src/application/generation.ts",
+        "src/application/prompts.ts",
+        "src/infrastructure/llm-mock.ts",
+        "tests/evidence-prompts.test.ts"
+      ],
+      "implementation_files": [
+        "src/application/generation.ts",
+        "src/application/prompts.ts",
+        "src/infrastructure/llm-mock.ts"
+      ],
+      "test_files": [
+        "tests/evidence-prompts.test.ts"
+      ],
+      "red": {
+        "command": "bun --config=tests/bunfig.focus.toml test tests/evidence-prompts.test.ts -t \"FR-004\"",
+        "description": "sem as evidências no prompt o texto enviado ao LLM não traz [E1] e a asserção falha"
+      },
+      "implementation_steps": [
+        "Escrever o teste que falha (RED): os três prompts trazem as evidências e o brief gravado cita um [E#] existente",
+        "Montar o bloco de evidências nos prompts e ensinar o LLM simulado a gerar buscas, extrair e citar (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun --config=tests/bunfig.focus.toml test tests/evidence-prompts.test.ts -t \"FR-004\"",
+          "description": "os prompts trazem as evidências e o brief simulado cita um id existente"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-001",
+      "contract_id": "CTR-005",
+      "complexity": "standard",
+      "status": "pending"
+    },
+    {
+      "id": "1.6",
+      "title": "O README de cada ideia termina com a seção Fontes",
+      "requirement_id": "FR-007",
+      "depends_on": [],
+      "behavior": "o código anexa ao README de cada ideia a seção Fontes com as evidências citadas no texto e registra em issues a citação de id inexistente",
+      "components": [
+        "evidence-artifacts"
+      ],
+      "files": [
+        "src/application/artifacts.ts",
+        "src/application/reports.ts",
+        "src/application/generate-study.ts",
+        "tests/evidence-sources.test.ts"
+      ],
+      "implementation_files": [
+        "src/application/artifacts.ts",
+        "src/application/reports.ts",
+        "src/application/generate-study.ts"
+      ],
+      "test_files": [
+        "tests/evidence-sources.test.ts"
+      ],
+      "red": {
+        "command": "bun --config=tests/bunfig.focus.toml test tests/evidence-sources.test.ts -t \"FR-007\"",
+        "description": "sem a seção Fontes o README termina no rodapé de data e a asserção do fim do arquivo falha"
+      },
+      "implementation_steps": [
+        "Escrever o teste que falha (RED): plano que cita E2, E7 e E99 termina com Fontes de E2 e E7 e E99 vai para issues",
+        "Anexar a seção Fontes no buildArtifactFiles e registrar as citações órfãs no pipeline (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun --config=tests/bunfig.focus.toml test tests/evidence-sources.test.ts -t \"FR-007\"",
+          "description": "o README termina com Fontes exatas e a citação órfã aparece em issues"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-002",
+      "contract_id": "CTR-006",
+      "complexity": "standard",
+      "status": "pending"
+    },
+    {
+      "id": "1.7",
+      "title": "O consumo do estudo conta as buscas e o custo soma o preço por mil",
+      "requirement_id": "FR-010",
+      "depends_on": [],
+      "behavior": "o usage do estudo traz search.calls medido no cliente de busca e o custo soma GOODBIZZ_PRICE_SEARCH_PER_1K por mil chamadas",
+      "components": [
+        "search-provider"
+      ],
+      "files": [
+        "src/application/costs.ts",
+        "src/application/generate-study.ts",
+        "src/config/env.ts",
+        "src/domain/types.ts",
+        "tests/search-usage.test.ts"
+      ],
+      "implementation_files": [
+        "src/application/costs.ts",
+        "src/application/generate-study.ts",
+        "src/config/env.ts"
+      ],
+      "test_files": [
+        "tests/search-usage.test.ts"
+      ],
+      "red": {
+        "command": "bun --config=tests/bunfig.focus.toml test tests/search-usage.test.ts -t \"FR-010\"",
+        "description": "sem a medição o usage não tem search e a asserção das chamadas de busca falha"
+      },
+      "implementation_steps": [
+        "Escrever o teste que falha (RED): usage.search.calls e custo com preço por mil buscas",
+        "Medir a diferença de consumo do cliente de busca e somar o preço configurado no custo (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun --config=tests/bunfig.focus.toml test tests/search-usage.test.ts -t \"FR-010\"",
+          "description": "o usage conta as buscas e o custo inclui o preço delas"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-003",
+      "contract_id": "CTR-007",
+      "complexity": "standard",
+      "status": "pending"
+    },
+    {
+      "id": "1.8",
+      "title": "O estudo guarda as evidências e o estudo antigo abre com zero",
+      "requirement_id": "EC-005",
+      "depends_on": [],
+      "behavior": "o serviço passa o cliente de busca ao pipeline, grava as evidências do estudo no banco e devolve lista vazia para o estudo anterior à coluna",
+      "components": [
+        "research-pipeline"
+      ],
+      "files": [
+        "src/infrastructure/schema.ts",
+        "src/infrastructure/repositories.ts",
+        "src/application/study-service.ts",
+        "src/domain/types.ts",
+        "drizzle/0006_study_evidences.sql",
+        "drizzle/meta/0006_snapshot.json",
+        "drizzle/meta/_journal.json",
+        "tests/evidence-persistence.test.ts"
+      ],
+      "implementation_files": [
+        "src/infrastructure/schema.ts",
+        "src/infrastructure/repositories.ts",
+        "src/application/study-service.ts"
+      ],
+      "test_files": [
+        "tests/evidence-persistence.test.ts"
+      ],
+      "red": {
+        "command": "bun --config=tests/bunfig.focus.toml test tests/evidence-persistence.test.ts -t \"EC-005\"",
+        "description": "sem a coluna e a gravação o registro do estudo volta sem evidências e a asserção da contagem falha"
+      },
+      "implementation_steps": [
+        "Escrever o teste que falha (RED): o estudo executado guarda as evidências e o estudo antigo volta com lista vazia",
+        "Adicionar a coluna evidences_json com migração gerada, gravar e ler as evidências e passar a busca ao pipeline (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun --config=tests/bunfig.focus.toml test tests/evidence-persistence.test.ts -t \"EC-005\"",
+          "description": "as evidências do estudo persistem e o estudo antigo abre com zero"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-001",
+      "contract_id": "CTR-008",
+      "complexity": "standard",
+      "status": "pending"
+    },
+    {
+      "id": "1.9",
+      "title": "Adaptador Tavily com erros humanos e Testar sem vazar a chave",
+      "requirement_id": "QR-002",
+      "depends_on": [],
+      "behavior": "o adaptador HTTP faz POST {url}/search com Bearer e corpo Tavily, traduz 401/403, 429 e rede em frases humanas com o detalhe cru, e o Testar do tipo search usa o adaptador sem devolver a chave",
+      "components": [
+        "search-provider"
+      ],
+      "files": [
+        "src/infrastructure/search.ts",
+        "src/infrastructure/provider-probe.ts",
+        "src/domain/errors.ts",
+        "tests/search-adapter.test.ts"
+      ],
+      "implementation_files": [
+        "src/infrastructure/search.ts",
+        "src/infrastructure/provider-probe.ts",
+        "src/domain/errors.ts"
+      ],
+      "test_files": [
+        "tests/search-adapter.test.ts"
+      ],
+      "red": {
+        "command": "bun --config=tests/bunfig.focus.toml test tests/search-adapter.test.ts -t \"QR-002\"",
+        "description": "sem o tipo search na sonda o Testar fala com o caminho do LLM e a asserção do POST /search falha"
+      },
+      "implementation_steps": [
+        "Escrever o teste que falha (RED): protocolo Tavily, frases de 401, 429 e rede e chave ausente da resposta",
+        "Criar SearchHttp com retentativa e SearchError e ligar a sonda do tipo search ao adaptador (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun --config=tests/bunfig.focus.toml test tests/search-adapter.test.ts -t \"QR-002\"",
+          "description": "o Testar de busca segue o protocolo Tavily e nunca devolve a chave"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-003",
+      "contract_id": "CTR-009",
+      "complexity": "standard",
+      "status": "pending"
+    },
+    {
+      "id": "1.10",
+      "title": "O serviço não sobe sem chave de busca fora do modo simulado",
+      "requirement_id": "FR-008",
+      "depends_on": [],
+      "behavior": "o ambiente aceita SEARCH_API_URL, SEARCH_API_KEY e GOODBIZZ_MOCK_SEARCH e o startup falha com a mensagem da chave ausente quando a busca é real e não há chave",
+      "components": [
+        "search-provider"
+      ],
+      "files": [
+        "src/config/env.ts",
+        "src/config/providers.ts",
+        "src/index.ts",
+        ".env.example",
+        "tests/search-startup.test.ts"
+      ],
+      "implementation_files": [
+        "src/config/env.ts",
+        "src/config/providers.ts",
+        "src/index.ts"
+      ],
+      "test_files": [
+        "tests/search-startup.test.ts"
+      ],
+      "red": {
+        "command": "bun --config=tests/bunfig.focus.toml test tests/search-startup.test.ts -t \"FR-008\"",
+        "description": "sem a validação o serviço sobe sem chave de busca e a asserção da rejeição falha"
+      },
+      "implementation_steps": [
+        "Escrever o teste que falha (RED): startup sem chave rejeita sem expor segredo e com busca simulada sobe",
+        "Declarar as variáveis de busca, levar a busca à configuração efetiva e validar no buildService (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun --config=tests/bunfig.focus.toml test tests/search-startup.test.ts -t \"FR-008\"",
+          "description": "o startup sem chave de busca falha com a mensagem certa"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-003",
+      "contract_id": "CTR-010",
+      "complexity": "standard",
+      "status": "pending"
+    },
+    {
+      "id": "1.11",
+      "title": "Busca simulada determinística e sem rede no serviço",
+      "requirement_id": "QR-001",
+      "depends_on": [],
+      "behavior": "com GOODBIZZ_MOCK=1 ou GOODBIZZ_MOCK_SEARCH=1 o serviço usa a busca simulada, não abre conexão de rede para busca e produz as mesmas evidências para a mesma entrada; com chave usa o adaptador Tavily",
+      "components": [
+        "search-provider"
+      ],
+      "files": [
+        "src/infrastructure/search-mock.ts",
+        "src/infrastructure/routing.ts",
+        "src/index.ts",
+        "tests/search-mock.test.ts",
+        "tests/helpers.ts",
+        "tests/generate-study.test.ts",
+        "tests/generation.test.ts",
+        "tests/study-service.test.ts",
+        "tests/e2e.test.ts",
+        "tests/smoke.test.ts",
+        "tests/api.test.ts",
+        "tests/csrf.test.ts",
+        "tests/settings-api.test.ts"
+      ],
+      "implementation_files": [
+        "src/infrastructure/search-mock.ts",
+        "src/infrastructure/routing.ts",
+        "src/index.ts"
+      ],
+      "test_files": [
+        "tests/search-mock.test.ts",
+        "tests/helpers.ts",
+        "tests/generate-study.test.ts",
+        "tests/generation.test.ts",
+        "tests/study-service.test.ts",
+        "tests/e2e.test.ts",
+        "tests/smoke.test.ts",
+        "tests/api.test.ts",
+        "tests/csrf.test.ts",
+        "tests/settings-api.test.ts"
+      ],
+      "red": {
+        "command": "bun --config=tests/bunfig.focus.toml test tests/search-mock.test.ts -t \"QR-001\"",
+        "description": "sem o cliente de busca no serviço o estudo simulado não grava evidências e a asserção da contagem falha"
+      },
+      "implementation_steps": [
+        "Escrever o teste que falha (RED): dois serviços simulados geram as mesmas evidências sem fetch de busca",
+        "Criar SearchMock e RoutingSearchClient e ligar o cliente de busca no buildService (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun --config=tests/bunfig.focus.toml test tests/search-mock.test.ts -t \"QR-001\"",
+          "description": "o modo simulado não usa rede e repete as mesmas evidências"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-003",
+      "contract_id": "CTR-011",
+      "complexity": "standard",
+      "status": "pending"
+    },
+    {
+      "id": "1.12",
+      "title": "A adição de ideias reaproveita as evidências e pesquisa só as novas",
+      "requirement_id": "FR-012",
+      "depends_on": [],
+      "behavior": "generateAddition recebe as evidências do estudo, usa as do estudo no prompt, pesquisa só as ideias novas e o serviço grava a lista somada",
+      "components": [
+        "research-pipeline"
+      ],
+      "files": [
+        "src/application/generate-study.ts",
+        "src/application/study-service.ts",
+        "tests/research-addition.test.ts"
+      ],
+      "implementation_files": [
+        "src/application/generate-study.ts",
+        "src/application/study-service.ts"
+      ],
+      "test_files": [
+        "tests/research-addition.test.ts"
+      ],
+      "red": {
+        "command": "bun --config=tests/bunfig.focus.toml test tests/research-addition.test.ts -t \"FR-012\"",
+        "description": "sem o reaproveitamento a adição não pesquisa as ideias novas e a asserção das buscas falha"
+      },
+      "implementation_steps": [
+        "Escrever o teste que falha (RED): a adição pesquisa só as ideias novas e preserva as evidências anteriores",
+        "Passar as evidências do estudo para generateAddition e gravar a lista somada no serviço (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun --config=tests/bunfig.focus.toml test tests/research-addition.test.ts -t \"FR-012\"",
+          "description": "a adição pesquisa só as ideias novas e mantém as evidências do estudo"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-001",
+      "contract_id": "CTR-012",
+      "complexity": "standard",
+      "status": "pending"
+    },
+    {
+      "id": "1.13",
+      "title": "CLI com flags de busca e estudo simulado com evidências e Fontes",
+      "requirement_id": "SC-002",
+      "depends_on": [],
+      "behavior": "a CLI aceita --mock-search, --search-url e --search-key, exige chave de busca fora do modo simulado e o estudo --mock grava 00-evidencias.md e READMEs terminados em Fontes",
+      "components": [
+        "search-provider"
+      ],
+      "files": [
+        "src/cli.ts",
+        "src/config/runtime.ts",
+        "src/domain/types.ts",
+        "tests/cli-research.test.ts",
+        "tests/cli.test.ts"
+      ],
+      "implementation_files": [
+        "src/cli.ts",
+        "src/config/runtime.ts"
+      ],
+      "test_files": [
+        "tests/cli-research.test.ts",
+        "tests/cli.test.ts"
+      ],
+      "red": {
+        "command": "bun --config=tests/bunfig.focus.toml test tests/cli-research.test.ts -t \"SC-002\"",
+        "description": "sem a busca na CLI o estudo --mock não grava 00-evidencias.md e a asserção do artefato falha"
+      },
+      "implementation_steps": [
+        "Escrever o teste que falha (RED): generate --mock grava evidências e Fontes e --search-key leva ao adaptador",
+        "Ler as flags de busca na configuração e criar o cliente de busca no runGenerate (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun --config=tests/bunfig.focus.toml test tests/cli-research.test.ts -t \"SC-002\"",
+          "description": "a CLI simulada grava 00-evidencias.md e Fontes em cada README"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-003",
+      "contract_id": "CTR-013",
+      "complexity": "standard",
+      "status": "pending"
+    },
+    {
+      "id": "1.14",
+      "title": "Perfil de busca sobrepõe o ambiente e troca invalida o cache",
+      "requirement_id": "QR-003",
+      "depends_on": [],
+      "behavior": "o perfil de busca ativo sobrepõe o ambiente, entra na impressão de cache, e reexecutar com o mesmo provedor não repete nenhuma busca enquanto trocar de perfil faz buscar de novo",
+      "components": [
+        "provider-catalog"
+      ],
+      "files": [
+        "src/config/providers.ts",
+        "src/application/settings.ts",
+        "src/infrastructure/settings-repository.ts",
+        "src/domain/types.ts",
+        "tests/search-cache.test.ts"
+      ],
+      "implementation_files": [
+        "src/config/providers.ts",
+        "src/application/settings.ts",
+        "src/infrastructure/settings-repository.ts"
+      ],
+      "test_files": [
+        "tests/search-cache.test.ts"
+      ],
+      "red": {
+        "command": "bun --config=tests/bunfig.focus.toml test tests/search-cache.test.ts -t \"QR-003\"",
+        "description": "sem o tipo search no catálogo o perfil de busca é recusado e a asserção da troca falha"
+      },
+      "implementation_steps": [
+        "Escrever o teste que falha (RED): perfil de busca ativo, reexecução sem busca repetida e troca com busca nova",
+        "Aceitar o tipo search no store e no repositório e levar o perfil ativo à configuração e à impressão (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun --config=tests/bunfig.focus.toml test tests/search-cache.test.ts -t \"QR-003\"",
+          "description": "a troca de perfil de busca invalida o cache e a reexecução não repete buscas"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-004",
+      "contract_id": "CTR-014",
+      "complexity": "standard",
+      "status": "pending"
+    },
+    {
+      "id": "1.15",
+      "title": "O tipo search existe na API de settings, no Testar e na página /settings",
+      "requirement_id": "FR-009",
+      "depends_on": [],
+      "behavior": "a API de settings aceita perfis do tipo search sem modelo e devolve só a chave mascarada, o Testar sonda o provedor de busca e a página /settings mostra a terceira lista",
+      "components": [
+        "provider-catalog"
+      ],
+      "files": [
+        "src/infrastructure/http/api.ts",
+        "src/infrastructure/http/ui/pages.tsx",
+        "src/infrastructure/http/ui/routes.tsx",
+        "tests/search-settings.test.ts"
+      ],
+      "implementation_files": [
+        "src/infrastructure/http/api.ts",
+        "src/infrastructure/http/ui/pages.tsx",
+        "src/infrastructure/http/ui/routes.tsx"
+      ],
+      "test_files": [
+        "tests/search-settings.test.ts"
+      ],
+      "red": {
+        "command": "bun --config=tests/bunfig.focus.toml test tests/search-settings.test.ts -t \"FR-009\"",
+        "description": "sem o tipo search no schema da API o cadastro responde 422 e a asserção do 201 falha"
+      },
+      "implementation_steps": [
+        "Escrever o teste que falha (RED): cadastrar, ativar e testar perfil search pela API e ver a terceira lista",
+        "Aceitar o tipo search nos schemas, no ativo e no Testar e desenhar a lista de busca na página (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun --config=tests/bunfig.focus.toml test tests/search-settings.test.ts -t \"FR-009\"",
+          "description": "perfis de busca entram pela API com chave mascarada e aparecem na página"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-004",
+      "contract_id": "CTR-015",
+      "complexity": "standard",
+      "status": "pending"
+    },
+    {
+      "id": "1.16",
+      "title": "A página do estudo mostra a contagem de evidências e avisa pesquisa fraca",
+      "requirement_id": "FR-011",
+      "depends_on": [],
+      "behavior": "o detalhe do estudo traz evidenceCount e a página mostra a contagem, o consumo de busca e o aviso de pesquisa fraca com Executar de novo quando há menos de 5 evidências",
+      "components": [
+        "study-page"
+      ],
+      "files": [
+        "src/infrastructure/http/ui/pages.tsx",
+        "src/infrastructure/http/api.ts",
+        "tests/study-evidence-page.test.ts"
+      ],
+      "implementation_files": [
+        "src/infrastructure/http/ui/pages.tsx",
+        "src/infrastructure/http/api.ts"
+      ],
+      "test_files": [
+        "tests/study-evidence-page.test.ts"
+      ],
+      "red": {
+        "command": "bun --config=tests/bunfig.focus.toml test tests/study-evidence-page.test.ts -t \"FR-011\"",
+        "description": "sem a contagem a página não mostra evidências nem aviso e a asserção do aviso falha"
+      },
+      "implementation_steps": [
+        "Escrever o teste que falha (RED): estudo com 2 evidências e estudo antigo mostram contagem e aviso; a API traz evidenceCount",
+        "Desenhar o painel de evidências com aviso e Executar de novo e expor evidenceCount na API (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun --config=tests/bunfig.focus.toml test tests/study-evidence-page.test.ts -t \"FR-011\"",
+          "description": "a página avisa pesquisa fraca e a API conta as evidências"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-005",
+      "contract_id": "CTR-016",
+      "complexity": "standard",
+      "status": "pending"
+    },
+    {
+      "id": "1.17",
+      "title": "O progresso mostra a fase de pesquisa com rótulo próprio",
+      "requirement_id": "FR-001",
+      "depends_on": [],
+      "behavior": "a barra de progresso tem 7 fases e a fase 1 aparece como pesquisa na web, no estudo novo e na reexecução",
+      "components": [
+        "study-page"
+      ],
+      "files": [
+        "src/infrastructure/http/ui/pages.tsx",
+        "README.md",
+        ".specs/system.json",
+        "tests/study-progress.test.ts",
+        "tests/ui.test.ts"
+      ],
+      "implementation_files": [
+        "src/infrastructure/http/ui/pages.tsx"
+      ],
+      "test_files": [
+        "tests/study-progress.test.ts",
+        "tests/ui.test.ts"
+      ],
+      "red": {
+        "command": "bun --config=tests/bunfig.focus.toml test tests/study-progress.test.ts -t \"FR-001\"",
+        "description": "com 6 fases a página rotula a fase 1 como brief e a asserção do rótulo de pesquisa falha"
+      },
+      "implementation_steps": [
+        "Escrever o teste que falha (RED): passo [1/7] vira Fase 1 de 7 com o rótulo de pesquisa",
+        "Trocar as fases da página para 7 com o rótulo de pesquisa e documentar a fase no README e na spec (GREEN)"
+      ],
+      "acceptance_criteria": [
+        {
+          "command": "bun --config=tests/bunfig.focus.toml test tests/study-progress.test.ts -t \"FR-001\"",
+          "description": "o progresso mostra a fase de pesquisa como fase 1 de 7"
+        }
+      ],
+      "visual": "N/A",
+      "documentation": "N/A",
+      "spec_reference": "CAP-005",
+      "contract_id": "CTR-017",
+      "complexity": "standard",
+      "status": "pending"
+    }
+  ]
+}

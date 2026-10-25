@@ -1,0 +1,84 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.16",
+  "work_id": "0015",
+  "title": "A página do estudo mostra a contagem de evidências e avisa pesquisa fraca",
+  "risk": {
+    "level": "L2",
+    "reasons": [
+      "A mudança atravessa pipeline, cache, persistência ou credencial de provedor",
+      "A task altera o que o operador lê no estudo e o que fica gravado"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.16-01",
+        "given": "Dado o comportamento declarado: o detalhe do estudo traz evidenceCount e a página mostra a contagem, o consumo de busca e o aviso de pesquisa fraca com Executar de novo quando há menos de 5 evidências",
+        "when": "Quando `bun --config=tests/bunfig.focus.toml test tests/study-evidence-page.test.ts -t \"FR-011\"` é executado",
+        "then": "Então a página avisa pesquisa fraca e a API conta as evidências (FR-011)"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/infrastructure/http/ui/pages.tsx",
+      "src/infrastructure/http/api.ts",
+      "tests/study-evidence-page.test.ts"
+    ],
+    "affected_components": [
+      "study-page"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "src/domain não importa application nem infrastructure",
+      "Acesso a dados novo passa por Drizzle, sem SQL cru",
+      "A chave de busca nunca aparece em log, resposta HTTP, artefato ou página",
+      "Testes offline e determinísticos"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun --config=tests/bunfig.focus.toml test tests/study-evidence-page.test.ts -t \"FR-011\"",
+      "bun test",
+      "bun run check",
+      "bunx eslint . && bunx prettier --check ."
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/infrastructure/http/ui/pages.tsx",
+      "src/infrastructure/http/api.ts",
+      "tests/study-evidence-page.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env",
+      ".env.local"
+    ],
+    "out_of_scope": [
+      "Seção 11 e cálculo de valor (Work 0016)",
+      "Ordem do ranking (Work 0017)"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 200000,
+    "max_cost_usd": 2,
+    "max_duration_minutes": 60,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 60,
+    "max_tool_calls": 120,
+    "max_shell_executions": 40
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

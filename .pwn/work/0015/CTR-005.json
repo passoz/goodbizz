@@ -1,0 +1,86 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.5",
+  "work_id": "0015",
+  "title": "Brief, ideias e plano recebem as evidências e citam [E#]",
+  "risk": {
+    "level": "L2",
+    "reasons": [
+      "A mudança atravessa pipeline, cache, persistência ou credencial de provedor",
+      "A task altera o que o operador lê no estudo e o que fica gravado"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.5-01",
+        "given": "Dado o comportamento declarado: os prompts do brief, das ideias e do plano recebem a lista de evidências e obrigam a citar [E#]; o LLM simulado gera as buscas, extrai evidências literais e cita evidências existentes",
+        "when": "Quando `bun --config=tests/bunfig.focus.toml test tests/evidence-prompts.test.ts -t \"FR-004\"` é executado",
+        "then": "Então os prompts trazem as evidências e o brief simulado cita um id existente (FR-004)"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/application/generation.ts",
+      "src/application/prompts.ts",
+      "src/infrastructure/llm-mock.ts",
+      "tests/evidence-prompts.test.ts"
+    ],
+    "affected_components": [
+      "research-pipeline"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "src/domain não importa application nem infrastructure",
+      "Acesso a dados novo passa por Drizzle, sem SQL cru",
+      "A chave de busca nunca aparece em log, resposta HTTP, artefato ou página",
+      "Testes offline e determinísticos"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun --config=tests/bunfig.focus.toml test tests/evidence-prompts.test.ts -t \"FR-004\"",
+      "bun test",
+      "bun run check",
+      "bunx eslint . && bunx prettier --check ."
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/application/generation.ts",
+      "src/application/prompts.ts",
+      "src/infrastructure/llm-mock.ts",
+      "tests/evidence-prompts.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env",
+      ".env.local"
+    ],
+    "out_of_scope": [
+      "Seção 11 e cálculo de valor (Work 0016)",
+      "Ordem do ranking (Work 0017)"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 200000,
+    "max_cost_usd": 2,
+    "max_duration_minutes": 60,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 60,
+    "max_tool_calls": 120,
+    "max_shell_executions": 40
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

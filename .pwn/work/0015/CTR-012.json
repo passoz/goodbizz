@@ -1,0 +1,84 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.12",
+  "work_id": "0015",
+  "title": "A adição de ideias reaproveita as evidências e pesquisa só as novas",
+  "risk": {
+    "level": "L2",
+    "reasons": [
+      "A mudança atravessa pipeline, cache, persistência ou credencial de provedor",
+      "A task altera o que o operador lê no estudo e o que fica gravado"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.12-01",
+        "given": "Dado o comportamento declarado: generateAddition recebe as evidências do estudo, usa as do estudo no prompt, pesquisa só as ideias novas e o serviço grava a lista somada",
+        "when": "Quando `bun --config=tests/bunfig.focus.toml test tests/research-addition.test.ts -t \"FR-012\"` é executado",
+        "then": "Então a adição pesquisa só as ideias novas e mantém as evidências do estudo (FR-012)"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/application/generate-study.ts",
+      "src/application/study-service.ts",
+      "tests/research-addition.test.ts"
+    ],
+    "affected_components": [
+      "research-pipeline"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "src/domain não importa application nem infrastructure",
+      "Acesso a dados novo passa por Drizzle, sem SQL cru",
+      "A chave de busca nunca aparece em log, resposta HTTP, artefato ou página",
+      "Testes offline e determinísticos"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun --config=tests/bunfig.focus.toml test tests/research-addition.test.ts -t \"FR-012\"",
+      "bun test",
+      "bun run check",
+      "bunx eslint . && bunx prettier --check ."
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/application/generate-study.ts",
+      "src/application/study-service.ts",
+      "tests/research-addition.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env",
+      ".env.local"
+    ],
+    "out_of_scope": [
+      "Seção 11 e cálculo de valor (Work 0016)",
+      "Ordem do ranking (Work 0017)"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 200000,
+    "max_cost_usd": 2,
+    "max_duration_minutes": 60,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 60,
+    "max_tool_calls": 120,
+    "max_shell_executions": 40
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

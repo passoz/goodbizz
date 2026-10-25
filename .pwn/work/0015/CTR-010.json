@@ -1,0 +1,88 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.10",
+  "work_id": "0015",
+  "title": "O serviço não sobe sem chave de busca fora do modo simulado",
+  "risk": {
+    "level": "L2",
+    "reasons": [
+      "A mudança atravessa pipeline, cache, persistência ou credencial de provedor",
+      "A task altera o que o operador lê no estudo e o que fica gravado"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.10-01",
+        "given": "Dado o comportamento declarado: o ambiente aceita SEARCH_API_URL, SEARCH_API_KEY e GOODBIZZ_MOCK_SEARCH e o startup falha com a mensagem da chave ausente quando a busca é real e não há chave",
+        "when": "Quando `bun --config=tests/bunfig.focus.toml test tests/search-startup.test.ts -t \"FR-008\"` é executado",
+        "then": "Então o startup sem chave de busca falha com a mensagem certa (FR-008)"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/config/env.ts",
+      "src/config/providers.ts",
+      "src/index.ts",
+      ".env.example",
+      "tests/search-startup.test.ts"
+    ],
+    "affected_components": [
+      "search-provider"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "src/domain não importa application nem infrastructure",
+      "Acesso a dados novo passa por Drizzle, sem SQL cru",
+      "A chave de busca nunca aparece em log, resposta HTTP, artefato ou página",
+      "Testes offline e determinísticos"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun --config=tests/bunfig.focus.toml test tests/search-startup.test.ts -t \"FR-008\"",
+      "bun test",
+      "bun run check",
+      "bunx eslint . && bunx prettier --check ."
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/config/env.ts",
+      "src/config/providers.ts",
+      "src/index.ts",
+      ".env.example",
+      "tests/search-startup.test.ts"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env",
+      ".env.local"
+    ],
+    "out_of_scope": [
+      "Seção 11 e cálculo de valor (Work 0016)",
+      "Ordem do ranking (Work 0017)"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 200000,
+    "max_cost_usd": 2,
+    "max_duration_minutes": 60,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 60,
+    "max_tool_calls": 120,
+    "max_shell_executions": 40
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}
