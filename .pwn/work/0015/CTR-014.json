@@ -52,6 +52,12 @@
     ],
     "required_evidence": [
       "evidence.json"
+    ],
+    "frozen_tests": [
+      {
+        "path": "tests/search-cache.test.ts",
+        "sha256": "8dec5ac6c1f2a49eb535bd9b1ce93fd9a2ad680d639fbb4f4724bf5e2b17c402"
+      }
     ]
   },
   "scope_contract": {
