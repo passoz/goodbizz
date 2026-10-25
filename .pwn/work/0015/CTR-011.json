@@ -36,7 +36,8 @@
       "tests/smoke.test.ts",
       "tests/api.test.ts",
       "tests/csrf.test.ts",
-      "tests/settings-api.test.ts"
+      "tests/settings-api.test.ts",
+      "tests/evaluate.test.ts"
     ],
     "affected_components": [
       "search-provider"
@@ -77,7 +78,8 @@
       "tests/smoke.test.ts",
       "tests/api.test.ts",
       "tests/csrf.test.ts",
-      "tests/settings-api.test.ts"
+      "tests/settings-api.test.ts",
+      "tests/evaluate.test.ts"
     ],
     "write_deny": [
       ".git/**",

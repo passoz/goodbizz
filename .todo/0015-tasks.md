@@ -254,9 +254,9 @@
 **Depends on:** none
 **Behavior:** com GOODBIZZ_MOCK=1 ou GOODBIZZ_MOCK_SEARCH=1 o serviço usa a busca simulada, não abre conexão de rede para busca e produz as mesmas evidências para a mesma entrada; com chave usa o adaptador Tavily
 **Components:** search-provider
-**Files:** `src/infrastructure/search-mock.ts`, `src/infrastructure/routing.ts`, `src/index.ts`, `tests/search-mock.test.ts`, `tests/search-mock-cases.test.ts`, `tests/helpers.ts`, `tests/generate-study.test.ts`, `tests/generation.test.ts`, `tests/study-service.test.ts`, `tests/e2e.test.ts`, `tests/smoke.test.ts`, `tests/api.test.ts`, `tests/csrf.test.ts`, `tests/settings-api.test.ts`
+**Files:** `src/infrastructure/search-mock.ts`, `src/infrastructure/routing.ts`, `src/index.ts`, `tests/search-mock.test.ts`, `tests/search-mock-cases.test.ts`, `tests/helpers.ts`, `tests/generate-study.test.ts`, `tests/generation.test.ts`, `tests/study-service.test.ts`, `tests/e2e.test.ts`, `tests/smoke.test.ts`, `tests/api.test.ts`, `tests/csrf.test.ts`, `tests/settings-api.test.ts`, `tests/evaluate.test.ts`
 **Implementation files:** `src/infrastructure/search-mock.ts`, `src/infrastructure/routing.ts`, `src/index.ts`
-**Test files:** `tests/search-mock-cases.test.ts`, `tests/helpers.ts`, `tests/generate-study.test.ts`, `tests/generation.test.ts`, `tests/study-service.test.ts`, `tests/e2e.test.ts`, `tests/smoke.test.ts`, `tests/api.test.ts`, `tests/csrf.test.ts`, `tests/settings-api.test.ts`
+**Test files:** `tests/search-mock-cases.test.ts`, `tests/helpers.ts`, `tests/generate-study.test.ts`, `tests/generation.test.ts`, `tests/study-service.test.ts`, `tests/e2e.test.ts`, `tests/smoke.test.ts`, `tests/api.test.ts`, `tests/csrf.test.ts`, `tests/settings-api.test.ts`, `tests/evaluate.test.ts`
 
 **RED:**
 - `bun --config=tests/bunfig.focus.toml test tests/search-mock-cases.test.ts -t "QR-001"` — sem o cliente de busca no serviço o estudo simulado não grava evidências e a asserção da contagem falha
