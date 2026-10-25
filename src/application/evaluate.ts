@@ -12,6 +12,7 @@ import { PAIN_OPTIONS, measurePainChoice, painResultFromChoice } from "./pain-ch
 import type { DeciderClient } from "../domain/ports.ts";
 import type {
   BusinessBlock,
+  Evidence,
   Idea,
   StudyIdea,
   Indicators,
@@ -158,9 +159,27 @@ function hasAnswer(answer: unknown): boolean {
   return true;
 }
 
-/** Avalia todos os indicadores de UMA ideia e devolve o bloco completo de dados. */
-export async function evaluateIdea(idea: Idea, decider: DeciderClient, cfg: StudyConfig): Promise<StudyIdea> {
-  const context = studyContext(cfg);
+/**
+ * Evidências como o decisor as lê: id, afirmação e o trecho literal da fonte. A URL fica de fora
+ * (não muda o julgamento e só gasta token); sem evidência, nada é acrescentado ao estado.
+ */
+function evidenceState(evidences: readonly Evidence[]): string {
+  if (evidences.length === 0) return "";
+  const lines = evidences.map((evidence) => `[${evidence.id}] ${evidence.afirmacao} — "${evidence.trecho}"`);
+  return `\nEvidências pesquisadas na web (afirmação e trecho literal da fonte):\n${lines.join("\n")}`;
+}
+
+/**
+ * Avalia todos os indicadores de UMA ideia e devolve o bloco completo de dados.
+ * @param evidences evidências do estudo e da própria ideia; entram no estado de toda pergunta.
+ */
+export async function evaluateIdea(
+  idea: Idea,
+  decider: DeciderClient,
+  cfg: StudyConfig,
+  evidences: readonly Evidence[],
+): Promise<StudyIdea> {
+  const context = `${studyContext(cfg)}${evidenceState(evidences)}`;
   const state = `${context}\nIdeia: ${idea.name} — ${idea.description}`;
 
   const indicatorAnswers = await decider.ask(state, indicatorQuestions());

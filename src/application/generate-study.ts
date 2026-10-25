@@ -147,7 +147,7 @@ export async function generateAddition(
     );
     const cached = await cache.get<StudyIdea>(key);
     if (cached !== null) return cached;
-    const evaluated = await evaluateIdea(idea, decider, cfg);
+    const evaluated = await evaluateIdea(idea, decider, cfg, []);
     await cache.put(key, evaluated);
     return evaluated;
   });
@@ -322,10 +322,12 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
       String(cfg.monthlyTicket),
       idea.name,
       idea.description,
+      // O decisor vê as evidências da ideia: pesquisa nova refaz a avaliação em vez de servir a antiga.
+      evidenceHash(evidencesFor(evidences, idea.name)),
     );
     const cached = await cache.get<StudyIdea>(key);
     if (cached !== null) return cached;
-    const evaluated = await evaluateIdea(idea, decider, cfg);
+    const evaluated = await evaluateIdea(idea, decider, cfg, evidencesFor(evidences, idea.name));
     await cache.put(key, evaluated);
     return evaluated;
   });

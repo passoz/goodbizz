@@ -1,0 +1,96 @@
+{
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bun",
+        "--config=tests/bunfig.focus.toml",
+        "test",
+        "tests/evaluate-evidence.test.ts",
+        "-t",
+        "FR-006"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0015/1.4-ac-1.log",
+      "log_sha256": "0e833fded6274f80a0add49237346c6285268dd95a955da21dcd1841b6faeb68",
+      "recorded_at": "2026-10-25T22:59:05.705Z",
+      "green_sha256": "f35479d82d71f9c5b1b26527b293a698aac853f52d28ea691aebe7a798efa79c",
+      "vacuity": {
+        "exit_code": 1,
+        "verdict": "PASS"
+      }
+    }
+  },
+  "baseline_commit": "fd6be05ec843a903f85a878388e8852cd65326ad",
+  "baseline_implementation": {
+    "src/application/evaluate.ts": {
+      "exists": true,
+      "sha256": "9e7f76a7cee4a4bb5b876672b9bfde638ee499b6f99f0c05620b6ee72e585e73"
+    },
+    "src/application/generate-study.ts": {
+      "exists": true,
+      "sha256": "34a3166cb48eecd1dca62a433691ae29420deddb4812ed51eb8ad028680c1299"
+    }
+  },
+  "baseline_tests": {
+    "tests/evaluate-evidence-cases.test.ts": {
+      "exists": false,
+      "sha256": null
+    }
+  },
+  "contract": {
+    "id": "CTR-004",
+    "sha256": "4d826a49410d773fe9cb391526aed5533f8927dab79d71063c70b1def8964615"
+  },
+  "created_at": "2026-10-25T22:58:30.815Z",
+  "frozen_tests": [
+    {
+      "path": "tests/evaluate-evidence.test.ts",
+      "sha256": "24660ccf77c2865322f5c1796ffa7d03d497e053ec82b23d9c8df993693d23d8"
+    }
+  ],
+  "green_expect": null,
+  "green_implementation": {
+    "src/application/evaluate.ts": {
+      "exists": true,
+      "sha256": "0c5f01c2509c353b02adb5844332f08e007c021409aecb0515584a95a56daa38"
+    },
+    "src/application/generate-study.ts": {
+      "exists": true,
+      "sha256": "e7fe0d19de1a47548dbf10f002ae3bcdca0bd933282d4b57cd94a231617bd0e2"
+    }
+  },
+  "green_tests": {
+    "tests/evaluate-evidence-cases.test.ts": {
+      "exists": true,
+      "sha256": "bec7a964e36e26164bb7be4dc16cd49a27788ab43bb8af3b680d89db020d51d8"
+    }
+  },
+  "implementation_files": [
+    "src/application/evaluate.ts",
+    "src/application/generate-study.ts"
+  ],
+  "plan_path": ".todo/0015-tasks.md",
+  "red_command": [
+    "bun",
+    "--config=tests/bunfig.focus.toml",
+    "test",
+    "tests/evaluate-evidence-cases.test.ts",
+    "-t",
+    "FR-006"
+  ],
+  "red_expect": "FR-006",
+  "red_tests": {
+    "tests/evaluate-evidence-cases.test.ts": {
+      "exists": true,
+      "sha256": "bec7a964e36e26164bb7be4dc16cd49a27788ab43bb8af3b680d89db020d51d8"
+    }
+  },
+  "state_version": 2,
+  "task": "1.4",
+  "task_definition_sha256": "b8e2edeab834ad3c78ce144eb985ee018e0ee62cf854eeb29f38afbc7e2cb0b5",
+  "test_files": [
+    "tests/evaluate-evidence-cases.test.ts"
+  ]
+}

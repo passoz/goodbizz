@@ -1,0 +1,40 @@
+TASK: 1.4
+CHECK: GREEN
+COMMAND: bun --config=tests/bunfig.focus.toml test tests/evaluate-evidence-cases.test.ts -t FR-006
+EXIT: 0
+OUTPUT:
+bun test v1.4.2 (744846f84)
+
+ 2 pass
+ 0 fail
+ 3 expect() calls
+Ran 2 tests across 1 file. [25.00ms]
+
+MUTATION_EXIT: 1
+MUTATION_OUTPUT:
+bun test v1.4.2 (744846f84)
+
+tests/evaluate-evidence-cases.test.ts:
+38 |     const { decider, states } = recording();
+39 |     const cfg = resolveStudyConfig({ niche: "deposito", mock: true, painMethod: "noul" });
+40 |     const idea = { name: "Controle de quebra", sector: "estoque", description: "Registra a quebra." };
+41 |     await evaluateIdea(idea, decider, cfg, [EVIDENCE]);
+42 |     expect(states.length).toBeGreaterThan(0);
+43 |     expect(states.every((state) => state.includes("[E4]") && state.includes(EVIDENCE.trecho))).toBe(true);
+                                                                                                    ^
+error: expect(received).toBe(expected)
+
+Expected: true
+Received: false
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/evaluate-evidence-cases.test.ts:43:96)
+(fail) evidências no decisor em casos de borda > FR-006: as sondas do método noul recebem as evidências [3.77ms]
+
+ 1 pass
+ 1 fail
+ 3 expect() calls
+Ran 2 tests across 1 file. [30.00ms]
+
+MUTATION_VERDICT: PASS
+VERDICT: PASS
+CHAIN_HASH: 363654b064159f5c9c8bf74100811f8bb95a1c9bd052e48ab8f4ee1e47836a81
