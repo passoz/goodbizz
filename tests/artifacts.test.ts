@@ -29,6 +29,7 @@ const config: StudyConfig = {
   description: "",
   cacheSeed: "",
   providerFingerprint: "",
+  setupFee: 1500,
   city: "Recife",
   monthlyTicket: 300,
   numIdeas: 2,

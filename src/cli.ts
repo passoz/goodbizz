@@ -172,6 +172,7 @@ const GENERATE_SPEC: CommandSpec = {
   description: { aliases: ["--description", "--descricao"] },
   city: { aliases: ["--city", "--cidade"] },
   ticket: { aliases: ["--ticket"] },
+  setup: { aliases: ["--setup", "--implantacao"] },
   ideas: { aliases: ["--ideas", "--ideias"] },
   output: { aliases: ["--output", "--output-dir", "--saida"] },
   "ideas-file": { aliases: ["--ideas-file", "--ideias-arquivo"] },
@@ -223,7 +224,7 @@ Opcoes:
   --description, --descricao <texto> contexto do estudo; entra concatenado ao titulo nos prompts
   --city, --cidade <texto>           cidade ou região alvo
   --ticket <inteiro>                 ticket mensal em BRL (padrão: 300)
-  --ideas, --ideias <inteiro>        número de ideias a gerar (padrão: 8)
+  --setup, --implantacao <inteiro>   taxa de implantação em BRL (padrão: 1500, 0 a 100000)
   --output, --output-dir, --saída <dir>  diretorio de saída (padrão: estudo)
   --ideas-file, --ideias-arquivo <arquivo>  JSON com ideias (pula a geração por LLM)
   --pain-method, --metodo-dor <choice|escolha|noul>  método de medição de dor (padrão: choice)
@@ -363,6 +364,7 @@ async function runGenerate(argv: string[]): Promise<number> {
     description: values["description"],
     city: values["city"],
     monthlyTicket: parseIntFlag(values, "ticket", 300),
+    setupFee: parseIntFlag(values, "setup", 1500),
     numIdeas: parseIntFlag(values, "ideas", 8),
     outputDir: values["output"] ?? "estudo",
     ideasFile: values["ideas-file"] ?? "",

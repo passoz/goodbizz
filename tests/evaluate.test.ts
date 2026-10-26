@@ -59,6 +59,7 @@ function studyConfig(painMethod: StudyConfig["painMethod"] = "choice"): StudyCon
     description: "",
     cacheSeed: "",
     providerFingerprint: "",
+    setupFee: 1500,
     city: "Gramado",
     monthlyTicket: 300,
     numIdeas: 2,
@@ -79,9 +80,9 @@ function studyConfig(painMethod: StudyConfig["painMethod"] = "choice"): StudyCon
     deciderUrl: "",
     deciderModel: "",
     deciderKey: "",
-  mockSearch: true,
-  searchBaseUrl: "https://api.tavily.com",
-  searchApiKey: "",
+    mockSearch: true,
+    searchBaseUrl: "https://api.tavily.com",
+    searchApiKey: "",
   };
 }
 
@@ -188,7 +189,12 @@ describe("evaluateIdea", () => {
   });
 
   test("usa as sondas do algoritmo quando o metodo e noul", async () => {
-    const evaluation = await evaluateIdea(strongIdea, evaluationDecider(strongProfile), studyConfig("noul"), []);
+    const evaluation = await evaluateIdea(
+      strongIdea,
+      evaluationDecider(strongProfile),
+      studyConfig("noul"),
+      [],
+    );
 
     expect(evaluation.algorithm.label).toBe("FORTE");
     expect(evaluation.algorithm.painScore).toBe(0.85);

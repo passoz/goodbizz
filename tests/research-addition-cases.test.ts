@@ -21,6 +21,7 @@ function makeConfig(): StudyConfig {
     description: "",
     cacheSeed: "adicao-casos",
     providerFingerprint: "",
+    setupFee: 1500,
     city: "",
     monthlyTicket: 300,
     numIdeas: 2,
@@ -102,7 +103,12 @@ describe("adição com pesquisa em casos de borda", () => {
         if (system.includes("PALAVRA-CHAVE: EVIDENCIAS")) {
           const url = /URL: (\S+)/.exec(user)?.[1] ?? "";
           return JSON.stringify([
-            { tipo: "concorrente", afirmacao: "existe concorrente", trecho: "Concorrente vende por R$ 150.", url },
+            {
+              tipo: "concorrente",
+              afirmacao: "existe concorrente",
+              trecho: "Concorrente vende por R$ 150.",
+              url,
+            },
           ]);
         }
         if (user.includes("Gere exatamente")) {
@@ -179,9 +185,7 @@ describe("adição com pesquisa em casos de borda", () => {
           ]);
         }
         if (user.includes("Gere exatamente")) {
-          return JSON.stringify([
-            { name: "Ideia Firme", sector: "vendas", description: "cobra o fiado" },
-          ]);
+          return JSON.stringify([{ name: "Ideia Firme", sector: "vendas", description: "cobra o fiado" }]);
         }
         return "Plano da ideia nova com numero 1.2 medido.";
       },
@@ -189,7 +193,9 @@ describe("adição com pesquisa em casos de borda", () => {
     const search: SearchClient = {
       search(query: string) {
         if (query.includes("concorrentes")) return Promise.reject(new Error("provedor de busca fora do ar"));
-        return Promise.resolve([{ title: "Preco", url: "https://preco.test/nova", content: "Plano de assinatura a R$ 49." }]);
+        return Promise.resolve([
+          { title: "Preco", url: "https://preco.test/nova", content: "Plano de assinatura a R$ 49." },
+        ]);
       },
     };
     const handle = openMigratedDatabase(":memory:");
@@ -198,12 +204,20 @@ describe("adição com pesquisa em casos de borda", () => {
       { brief: "BRIEF JA GRAVADO", existing: [oldIdea("Ideia Antiga")], evidences: [] },
       1,
       "pedido-falha",
-      { llm, decider: new DeciderMock(), search, cache: new StudyCache(new SqliteCacheStore(handle.db)), logger: QUIET },
+      {
+        llm,
+        decider: new DeciderMock(),
+        search,
+        cache: new StudyCache(new SqliteCacheStore(handle.db)),
+        logger: QUIET,
+      },
     );
     handle.sqlite.close();
 
     expect(result.evaluations.map((evaluation) => evaluation.name)).toContain("Ideia Firme");
     expect(result.evidences.map((evidence) => evidence.id)).toEqual(["E1"]);
-    expect(result.issues.some((issue) => issue.includes("Ideia Firme") && issue.includes("fora do ar"))).toBe(true);
+    expect(result.issues.some((issue) => issue.includes("Ideia Firme") && issue.includes("fora do ar"))).toBe(
+      true,
+    );
   });
 });

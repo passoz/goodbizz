@@ -30,6 +30,7 @@ function makeConfig(overrides: Partial<StudyConfig> = {}): StudyConfig {
     description: "",
     cacheSeed: "adicao",
     providerFingerprint: "",
+    setupFee: 1500,
     city: "",
     monthlyTicket: 300,
     numIdeas: 3,
@@ -118,7 +119,12 @@ describe("adição com pesquisa", () => {
         if (system.includes("PALAVRA-CHAVE: EVIDENCIAS")) {
           const url = /URL: (\S+)/.exec(user)?.[1] ?? "";
           return JSON.stringify([
-            { tipo: "concorrente", afirmacao: "existe concorrente", trecho: "Concorrente vende por R$ 150.", url },
+            {
+              tipo: "concorrente",
+              afirmacao: "existe concorrente",
+              trecho: "Concorrente vende por R$ 150.",
+              url,
+            },
           ]);
         }
         if (user.includes("Gere exatamente")) return JSON.stringify(FRESH);
@@ -144,7 +150,13 @@ describe("adição com pesquisa", () => {
       { brief: "BRIEF JA GRAVADO", existing: [oldIdea("Ideia Antiga", "id-antiga")], evidences: known },
       2,
       "pedido-1",
-      { llm, decider: new DeciderMock(), search, cache: new StudyCache(new SqliteCacheStore(handle.db)), logger: QUIET },
+      {
+        llm,
+        decider: new DeciderMock(),
+        search,
+        cache: new StudyCache(new SqliteCacheStore(handle.db)),
+        logger: QUIET,
+      },
     );
     handle.sqlite.close();
 
@@ -209,7 +221,9 @@ describe("adição com pesquisa", () => {
 
       const added = queries.slice(callsBefore);
       expect(added.length).toBeGreaterThan(0);
-      const freshNames = after.evaluations.filter((idea) => !before.evaluations.some((old) => old.id === idea.id));
+      const freshNames = after.evaluations.filter(
+        (idea) => !before.evaluations.some((old) => old.id === idea.id),
+      );
       expect(freshNames).toHaveLength(1);
       const freshName = freshNames[0]?.name ?? "";
       for (const query of added) expect(query).toContain(freshName);

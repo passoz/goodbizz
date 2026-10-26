@@ -16,6 +16,7 @@ function makeConfig(overrides: Partial<StudyConfig> = {}): StudyConfig {
     description: "",
     cacheSeed: "",
     providerFingerprint: "",
+    setupFee: 1500,
     city: "Sao Paulo",
     monthlyTicket: 300,
     numIdeas: 8,
@@ -36,9 +37,9 @@ function makeConfig(overrides: Partial<StudyConfig> = {}): StudyConfig {
     deciderUrl: "",
     deciderModel: "",
     deciderKey: "",
-  mockSearch: true,
-  searchBaseUrl: "https://api.tavily.com",
-  searchApiKey: "",
+    mockSearch: true,
+    searchBaseUrl: "https://api.tavily.com",
+    searchApiKey: "",
     ...overrides,
   };
 }

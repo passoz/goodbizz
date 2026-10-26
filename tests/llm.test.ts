@@ -24,6 +24,7 @@ function baseConfig(overrides: Partial<StudyConfig> = {}): StudyConfig {
     description: "",
     cacheSeed: "",
     providerFingerprint: "",
+    setupFee: 1500,
     city: "Niteroi",
     monthlyTicket: 300,
     numIdeas: 6,
@@ -44,9 +45,9 @@ function baseConfig(overrides: Partial<StudyConfig> = {}): StudyConfig {
     deciderUrl: "",
     deciderModel: "",
     deciderKey: "",
-  mockSearch: true,
-  searchBaseUrl: "https://api.tavily.com",
-  searchApiKey: "",
+    mockSearch: true,
+    searchBaseUrl: "https://api.tavily.com",
+    searchApiKey: "",
     ...overrides,
   };
 }

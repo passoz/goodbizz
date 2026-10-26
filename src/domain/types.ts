@@ -187,6 +187,8 @@ export interface StudyConfig {
    * novo — e que preserva a retomada, porque o id sobrevive à reexecução e só morre na exclusão.
    */
   cacheSeed: string;
+  /** Taxa de implantação cobrada pelo consultor solo (inteiro de 0 a 100000, padrão 1500). */
+  setupFee: number;
   /**
    * Impressão dos provedores efetivos no momento da execucao (URL/modelo/chave ativos de cada
    * funcao). Entra nas chaves do cache de respostas: trocar de provedor muda a chave, e a

@@ -45,6 +45,8 @@ export interface StudyConfigOverrides {
   deciderModel?: string;
   deciderKey?: string;
   mockSearch?: boolean;
+  /** Taxa de implantação em BRL (inteiro de 0 a 100000, padrão 1500). */
+  setupFee?: number;
   searchBaseUrl?: string;
   searchApiKey?: string;
   /** Semente do cache: o id do estudo no serviço; vazio na CLI de tiro único. */
@@ -84,11 +86,16 @@ export function resolveStudyConfig(overrides: StudyConfigOverrides): StudyConfig
   const mockDecider = mock || (overrides.mockDecider ?? false);
   const mockSearch = mock || (overrides.mockSearch ?? env.GOODBIZZ_MOCK_SEARCH);
 
+  const setupFee = overrides.setupFee ?? 1500;
+  if (!Number.isInteger(setupFee) || setupFee < 0 || setupFee > 100000) {
+    throw new ValidationError("setupFee deve ser inteiro de 0 a 100000");
+  }
   const cfg: StudyConfig = {
     niche,
     description: (overrides.description ?? "").trim(),
     cacheSeed: overrides.cacheSeed ?? "",
     providerFingerprint: overrides.providerFingerprint ?? "",
+    setupFee,
     city: (overrides.city ?? "").trim(),
     monthlyTicket: overrides.monthlyTicket ?? 300,
     numIdeas: overrides.numIdeas ?? 8,
