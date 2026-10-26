@@ -10,21 +10,33 @@ import { buildApiApp } from "../src/infrastructure/http/api.ts";
 import { buildUiApp } from "../src/infrastructure/http/ui/routes.tsx";
 import { makeHarness, type TestHarness } from "./helpers.ts";
 
+interface CreatedBody {
+  profiles: Array<{ id: string; kind: string; apiKey: string; hasKey: boolean }>;
+  active: { search: string | null };
+}
+
+interface ProbeBody {
+  ok: boolean;
+}
+
 let harness: TestHarness;
 let api: Hono;
 let ui: Hono;
 
-function jsonRequest(path: string, method: string, body: unknown): Promise<Response> {
-  return api.request(path, {
+function jsonRequest(target: Hono, path: string, method: string, body: unknown): Promise<Response> {
+  return target.request(path, {
     method,
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
-  });
+  }) as Promise<Response>;
 }
 
 beforeEach(() => {
   harness = makeHarness();
-  api = buildApiApp({ service: harness.service });
+  api = buildApiApp({
+    service: harness.service,
+    providerStatus: () => ({ llm: false, decider: false, mockByDefault: true }),
+  });
   ui = buildUiApp({ service: harness.service, sessionSecret: loadEnv().SESSION_SECRET, production: false });
 });
 
@@ -34,17 +46,14 @@ afterEach(() => {
 
 describe("tipo search na pagina de configuracoes", () => {
   test("FR-009: cadastro search responde 201 e devolve so a chave mascarada", async () => {
-    const response = await jsonRequest("/settings/providers", "POST", {
+    const response = await jsonRequest(api, "/settings/providers", "POST", {
       name: "Busca Tavily",
       kind: "search",
       url: "https://api.tavily.test",
       apiKey: "tvly-chave-boa-1234",
     });
     expect(response.status).toBe(201);
-    const body = (await response.json()) as {
-      profiles: Array<{ kind: string; apiKey: string; hasKey: boolean }>;
-      active: { search: string | null };
-    };
+    const body = (await response.json()) as CreatedBody;
     expect(body.profiles).toHaveLength(1);
     expect(body.profiles[0]?.kind).toBe("search");
     expect(body.profiles[0]?.apiKey).not.toContain("boa");
@@ -56,18 +65,18 @@ describe("tipo search na pagina de configuracoes", () => {
   test("FR-009: Testar sonda o provedor de busca sem vazar a chave", async () => {
     const realFetch = globalThis.fetch;
     const seen: string[] = [];
-    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    globalThis.fetch = (async (input: string | URL | Request) => {
       seen.push(String(input));
       return Response.json({ query: "teste", results: [] });
     }) as typeof fetch;
     try {
-      const response = await jsonRequest("/settings/test", "POST", {
+      const response = await jsonRequest(api, "/settings/test", "POST", {
         kind: "search",
         url: "https://api.tavily.test",
         apiKey: "tvly-chave-sonda",
       });
       expect(response.status).toBe(200);
-      const body = (await response.json()) as { ok: boolean };
+      const body = (await response.json()) as ProbeBody;
       expect(body.ok).toBe(true);
       expect(seen).toHaveLength(1);
       expect(seen[0]).toBe("https://api.tavily.test/search");
