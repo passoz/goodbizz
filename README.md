@@ -73,7 +73,9 @@ bun test             # suite offline
 
 Segredos vivem **apenas** no ambiente. O contrato das chaves esta versionado em `.env.example`.
 
-| Variavel                                   | Padrao                      | Descrição                                                                               |
+| `SEARCH_API_URL` | `https://api.tavily.com` | base do provedor de busca (protocolo Tavily `POST /search`) |
+
+| `SEARCH_API_KEY`                           | —                           | chave do provedor de busca (obrigatoria fora do modo mock)                              |
 | ------------------------------------------ | --------------------------- | --------------------------------------------------------------------------------------- |
 | `LLM_API_URL`                              | `https://api.openai.com/v1` | base URL compativel com `/chat/completions`                                             |
 | `LLM_API_KEY`                              | —                           | chave do provedor LLM (obrigatoria fora do modo mock)                                   |
@@ -87,20 +89,22 @@ Segredos vivem **apenas** no ambiente. O contrato das chaves esta versionado em 
 | `APP_ENV`                                  | `development`               | `production` liga HTTPS/HSTS e cookies `secure`                                         |
 | `SESSION_SECRET`                           | placeholder de dev          | >= 32 caracteres, assina o cookie de CSRF                                               |
 | `GOODBIZZ_STUDIES_DIR`                     | `estudo`                    | raiz dos artefatos por estudo                                                           |
-| `GOODBIZZ_MOCK`                            | `0`                         | `1` simula LLM e decisor                                                                |
+| `GOODBIZZ_MOCK`                            | `0`                         | `1` simula LLM, decisor e busca                                                         |
 | `GOODBIZZ_MOCK_LLM`                        | `0`                         | `1` simula apenas o texto, mantendo o decisor real                                      |
 | `GOODBIZZ_MOCK_DECIDER`                    | `0`                         | `1` simula apenas os numeros, mantendo o LLM real                                       |
+| `GOODBIZZ_MOCK_SEARCH`                     | `0`                         | `1` simula apenas a busca, mantendo LLM e decisor reais                                 |
 | `GOODBIZZ_LLM_TIMEOUT`                     | `300`                       | segundos por chamada de IA (5–3600); o default antigo (60) cortava os documentos longos |
 | `GOODBIZZ_PRICE_LLM_INPUT_PER_MTOK`        | `0.15`                      | US$/1M de tokens de entrada, tabela oficial off-peak do `deepseek-flash`                |
 | `GOODBIZZ_PRICE_LLM_CACHED_INPUT_PER_MTOK` | `0.0028`                    | US$/1M de tokens de entrada servidos do cache                                           |
 | `GOODBIZZ_PRICE_LLM_OUTPUT_PER_MTOK`       | `0.28`                      | US$/1M de tokens de saída                                                               |
 | `GOODBIZZ_PRICE_DECIDER_INPUT_PER_MTOK`    | `0`                         | US$/1M de tokens de entrada do decisor (0 = grátis)                                     |
 | `GOODBIZZ_PRICE_DECIDER_OUTPUT_PER_MTOK`   | `0`                         | US$/1M de tokens de saída do decisor                                                    |
+| `GOODBIZZ_PRICE_SEARCH_PER_1K`             | `0`                         | US$/1.000 buscas para a estimativa de custo                                             |
 | `GOODBIZZ_USD_BRL`                         | `0`                         | Cotação só para exibir o custo também em R$ (0 desliga)                                 |
 
-Modo misto: o serviço aceita simular um provedor e usar o outro de verdade, igual a CLI
-(`--mock-llm`, `--mock-decider`). A pagina `/new` mostra o que esta ativo. Provedores reais
-impoem fail-fast no startup: sem `LLM_API_KEY` (ou `DECISION_API_URL`) o processo não sobe, a
+Modo misto: o serviço aceita simular um provedor e usar os outros de verdade, igual a CLI
+(`--mock-llm`, `--mock-decider`, `--mock-search`). A pagina `/new` mostra o que esta ativo. Provedores reais
+impoem fail-fast no startup: sem `LLM_API_KEY` (ou `DECISION_API_URL`, ou `SEARCH_API_KEY`) o processo não sobe, a
 menos que aquele provedor esteja marcado como simulado.
 
 O processo falha no startup quando uma chave obrigatoria do modo real esta ausente, e nenhuma chave
@@ -126,9 +130,9 @@ digitados, cada palavra capitalizada), `--description/--descricao` (contexto con
 prompts), `--city/--cidade`, `--ticket`,
 `--ideas/--ideias`, `--output/--saida`, `--ideas-file/--ideias-arquivo`,
 `--pain-method/--método-dor`, `--eval-only/--so-avaliar`, `--mock`, `--mock-llm`,
-`--mock-decider/--mock-decisor`, `--pdf`, `--concurrency/--paralelo`, `--timeout` (padrão: `GOODBIZZ_LLM_TIMEOUT`, 300 s), `--llm-url`,
+`--mock-decider/--mock-decisor`, `--mock-search`, `--pdf`, `--concurrency/--paralelo`, `--timeout` (padrão: `GOODBIZZ_LLM_TIMEOUT`, 300 s), `--llm-url`,
 `--llm-model`, `--llm-key`, `--decider-url/--decisor-url`, `--decider-model/--decisor-model`,
-`--decider-key/--decisor-key`.
+`--decider-key/--decisor-key`, `--search-url`, `--search-key`.
 
 Codigos de saida: `0` sucesso, `1` falha (ou menos de 3 sondas úteis no diagnose), `2` erro de
 configuração/subcomando desconhecido, `130` interrupcao por teclado.
@@ -139,15 +143,28 @@ configuração/subcomando desconhecido, `130` interrupcao por teclado.
 estudo/
 ├── README.md              # indice executivo: ranking, medias e grupos de dor
 ├── 00-brief.md            # leitura de mercado que orientou as ideias
+├── 00-evidencias.md       # evidências da pesquisa web: afirmação, trecho literal e URL
 ├── 00-tabelao.md          # tabela comparativa de todos os indicadores
 ├── 00-tabelao.csv         # a mesma tabela para planilha
-├── dados.json             # dump completo (chaves do baseline, consumivel pelo recalibrate)
+├── dados.json             # dump completo (chaves do baseline, mais `evidencias`; consumivel pelo recalibrate)
 ├── .cache.db              # cache de respostas por chave hash, escopada pelo id do estudo (SQLite)
 ├── 01-<ideia-campea>/README.md   # plano completo da ideia #1 do ranking
 ├── 02-<segunda-ideia>/README.md
 ├── estudo-completo.html   # com --pdf
 └── estudo-completo.pdf    # com --pdf e Chromium instalado
 ```
+
+### Pesquisa web e evidências
+
+Antes do brief, o app pesquisa a web sozinho: gera de 6 a 10 buscas sobre o nicho (concorrentes e
+preços, reclamações de clientes, custos e perdas, tamanho do mercado local, regulação) e mais 2 por
+ideia (concorrente direto e preço da solução). Cada evidência guarda afirmação, trecho literal do
+resultado e URL; trecho que não aparece literalmente no conteúdo é descartado. Brief, ideias, estado
+do decisor e plano recebem as evidências e citam `[E#]`; o plano de cada ideia termina com a seção
+"Fontes". O estudo grava `00-evidencias.md` e a chave `evidencias` no `dados.json`, e a página do
+estudo mostra a contagem com aviso de pesquisa fraca (menos de 5 evidências). O provedor padrão é o
+Tavily (1.000 créditos grátis por mês, sem cartão; 1 busca básica = 1 crédito): cadastre a chave em
+`/settings` ou em `SEARCH_API_KEY`. As buscas entram no cache do estudo e no consumo medido.
 
 ---
 
@@ -421,8 +438,8 @@ pwn validate --work 0001
    acentuação correta — a convenção anterior (remover diacríticos antes de gravar, herdada do baseline
    Python) foi revogada. Fica em ASCII apenas o que é identificador: nome de pasta (`01-nome-slug`),
    chaves de `dados.json`, cabeçalho do CSV e nome de flag da CLI.
-2. **Hipótese vs pesquisa.** O brief e as ideias vêm de modelos sem navegação em tempo real; números de
-   mercado são estimativas marcadas `[INFERENCE]`.
+2. **Hipótese vs pesquisa.** O estudo pesquisa a web antes de escrever (ver "Pesquisa web e
+   evidências"); afirmação com fonte cita `[E#]`, e número sem fonte sai marcado `[INFERENCE]`.
 3. **Uso em rede confiável.** Não há autenticação multiusuário nem multitenancy: coloque a API atrás de
    um proxy autenticado se for exposta.
 4. **Privacidade.** Nunca coloque dado pessoal, segredo comercial ou informacao sensivel no nicho: o

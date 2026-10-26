@@ -49,9 +49,9 @@ function makeConfig(overrides: Partial<StudyConfig> = {}): StudyConfig {
     deciderUrl: "http://localhost",
     deciderModel: "model",
     deciderKey: "key",
-  mockSearch: true,
-  searchBaseUrl: "https://api.tavily.com",
-  searchApiKey: "",
+    mockSearch: true,
+    searchBaseUrl: "https://api.tavily.com",
+    searchApiKey: "",
     ...overrides,
   };
 }
@@ -383,13 +383,19 @@ describe("pipeline incremental", () => {
       existingEvaluation("Cobranca Manual", "id-3", 0.8),
     ];
 
-    await generateAddition(makeConfig({ numIdeas: 5 }), { brief: "brief", existing, evidences: [] }, 5, "lote-1", {
-      llm,
-      decider: new DeciderMock(),
-      search: new SearchMock(),
-      cache: new StudyCache(new MemoryCacheStore()),
-      logger: silentLogger(),
-    });
+    await generateAddition(
+      makeConfig({ numIdeas: 5 }),
+      { brief: "brief", existing, evidences: [] },
+      5,
+      "lote-1",
+      {
+        llm,
+        decider: new DeciderMock(),
+        search: new SearchMock(),
+        cache: new StudyCache(new MemoryCacheStore()),
+        logger: silentLogger(),
+      },
+    );
 
     const ideasPrompt = prompts.find((prompt) => prompt.includes("Gere exatamente"))!;
     for (const name of ["Agenda Vazada", "Ficha Repetida", "Cobranca Manual"]) {

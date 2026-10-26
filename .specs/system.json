@@ -1,20 +1,16 @@
 {
   "$schema": "../schemas/system.schema.json",
-
   "meta": {
     "title": "goodbizz — Estudo de nicho com decisor System One (port Bun)",
-    "version": 1,
-    "last_reconciled": "2026-09-29",
-    "scope": "a aplicacao goodbizz reescrita em Bun/TypeScript: geracao de estudio de nicho (brief, ideias, avaliacao probabilistica em decisor System One, medicao da dor, redacao de planos por LLM com guardrail numerico, relatorios deterministas, HTML/PDF), CLI, API HTTP com persistencia SQLite e interface web. Provedores LLM e Decisor sao externos (HTTP). Backend de decisao e o protocolo System One."
+    "version": 2,
+    "last_reconciled": "2026-10-26",
+    "scope": "a aplicacao goodbizz reescrita em Bun/TypeScript: geracao de estudio de nicho (brief, ideias, avaliacao probabilistica em decisor System One, medicao da dor, redacao de planos por LLM com guardrail numerico, relatorios deterministas, HTML/PDF), CLI, API HTTP com persistencia SQLite e interface web. Provedores LLM, Decisor e Busca sao externos (HTTP). Backend de decisao e o protocolo System One."
   },
-
   "status": "Baseline parcial",
-
   "purpose": {
     "problem": "a implementacao de referencia em Python concentra todas as capacidades em biblioteca + 3 scripts de CLI, sem servico, sem persistencia e sem interface web; migrar de runtime exige preservar numeros, formatos de artefato e o guardrail de prompt.",
     "result": "o operador obtem um runtime Bun unico (CLI + API + web) que preserva a metodologia do decisor System One, o guardrail numerico dos planos, os artefatos deterministas em disco e a calibracao de limiares."
   },
-
   "boundary": {
     "inside": [
       "CLI goodbizz (generate, diagnose, recalibrate, serve, help)",
@@ -32,7 +28,6 @@
       "Navegador Chromium do sistema usado apenas para gerar PDF"
     ]
   },
-
   "actors": [
     {
       "id": "ACT-001",
@@ -65,344 +60,549 @@
       "evidence": "DeciderHttp no baseline Python"
     }
   ],
-
   "capabilities": [
     {
       "id": "CAP-001",
       "title": "Geracao de estudo de nicho",
       "value": "transforma uma frase de nicho em estudo completo com ranking, tabelao e planos",
-      "actors": ["ACT-001", "ACT-002", "ACT-003"],
-      "behavior": "executa as etapas brief, ideias, avaliacao, dor, documentos, relatorios e PDF opcional",
+      "actors": [
+        "ACT-001",
+        "ACT-002",
+        "ACT-003"
+      ],
+      "behavior": "executa as etapas pesquisa web, brief, ideias, avaliacao, dor, documentos, relatorios e PDF opcional",
       "failures": "erro de configuracao aborta antes de consumir API; falha de provedor propaga erro com mensagem",
-      "rules": ["BR-001", "BR-002", "BR-010"],
-      "contracts": ["CON-001", "CON-002", "CON-006"],
-      "evidence": "generate_study.py::execute no baseline Python"
+      "rules": [
+        "BR-001",
+        "BR-002",
+        "BR-010"
+      ],
+      "contracts": [
+        "CON-001",
+        "CON-002",
+        "CON-006"
+      ],
+      "evidence": "src/application/research.ts, src/application/generate-study.ts"
     },
     {
       "id": "CAP-002",
       "title": "Avaliacao probabilistica por ideia",
       "value": "mede fit, venda, disrupcao, dor, suporte solo, WTP, meta 30 e preco por ideia",
-      "actors": ["ACT-001", "ACT-005"],
-      "behavior": "monta perguntas tipadas e agrega respostas em indicadores, indice de acao e tier",
+      "actors": [
+        "ACT-001",
+        "ACT-005"
+      ],
+      "behavior": "monta perguntas tipadas com as evidencias da ideia e do estudo no estado, e agrega respostas em indicadores, indice de acao e tier",
       "failures": "resposta sem probabilidade reconhecivel gera erro explicito",
-      "rules": ["BR-003", "BR-004"],
-      "contracts": ["CON-005", "CON-006"],
-      "evidence": "goodbizz/evaluation.py no baseline Python"
+      "rules": [
+        "BR-003",
+        "BR-004"
+      ],
+      "contracts": [
+        "CON-005",
+        "CON-006"
+      ],
+      "evidence": "src/application/evaluate.ts, src/application/generate-study.ts"
     },
     {
       "id": "CAP-003",
       "title": "Medicao da dor por escolha forcada",
       "value": "classifica a dor como dinheiro direto, reputacao ou backoffice sem o ima da sonda tecnologia",
-      "actors": ["ACT-001", "ACT-005"],
+      "actors": [
+        "ACT-001",
+        "ACT-005"
+      ],
       "behavior": "pergunta 3 redacoes independentes de escolha e agrega probabilidades por opcao",
       "failures": "resposta de escolha sem probabilidades cai para o rotulo escolhido com peso 1.0",
-      "rules": ["BR-005"],
-      "contracts": ["CON-005"],
+      "rules": [
+        "BR-005"
+      ],
+      "contracts": [
+        "CON-005"
+      ],
       "evidence": "goodbizz/pain_choice.py no baseline Python"
     },
     {
       "id": "CAP-004",
       "title": "Classificacao de dor com limiares",
       "value": "decide FORTE/FRACA/INDETERMINADO/INSTAVEL com ensemble, variancia e escalonamento",
-      "actors": ["ACT-001", "ACT-005"],
+      "actors": [
+        "ACT-001",
+        "ACT-005"
+      ],
       "behavior": "roda 4 sondas em 3 parafrases, calcula media e desvio e aplica os limiares calibrados",
       "failures": "menos de 3 parafrases e rejeitado; desvio acima do limiar classifica INSTAVEL",
-      "rules": ["BR-006", "BR-007"],
-      "contracts": ["CON-005", "CON-006"],
+      "rules": [
+        "BR-006",
+        "BR-007"
+      ],
+      "contracts": [
+        "CON-005",
+        "CON-006"
+      ],
       "evidence": "goodbizz/algorithm.py no baseline Python"
     },
     {
       "id": "CAP-005",
       "title": "Diagnostico de coerencia das sondas",
       "value": "detecta sondas contraditorias ou instaveis antes de confiar nos limiares",
-      "actors": ["ACT-001", "ACT-005"],
+      "actors": [
+        "ACT-001",
+        "ACT-005"
+      ],
       "behavior": "compara afirmacao e negacao de cada sonda e mede desvio entre parafrases",
       "failures": "menos de 3 sondas uteis retorna exit code 1",
-      "rules": ["BR-008"],
-      "contracts": ["CON-001", "CON-005"],
+      "rules": [
+        "BR-008"
+      ],
+      "contracts": [
+        "CON-001",
+        "CON-005"
+      ],
       "evidence": "diagnose.py no baseline Python"
     },
     {
       "id": "CAP-006",
       "title": "Recalibracao de limiares",
       "value": "busca em grade os limiares que zeram falso FORTE em conjunto rotulado",
-      "actors": ["ACT-001"],
+      "actors": [
+        "ACT-001"
+      ],
       "behavior": "varre grades de limiares e ordena por falso positivo, acerto e escalonamento",
       "failures": "menos de 12 casos ou classe com menos de 3 casos emite aviso de sobreajuste",
-      "rules": ["BR-009"],
-      "contracts": ["CON-001", "CON-006"],
+      "rules": [
+        "BR-009"
+      ],
+      "contracts": [
+        "CON-001",
+        "CON-006"
+      ],
       "evidence": "recalibrate.py no baseline Python"
     },
     {
       "id": "CAP-007",
       "title": "Redacao de planos com guardrail numerico",
       "value": "gera prosa executiva usando somente os numeros medidos pelo codigo",
-      "actors": ["ACT-001", "ACT-004"],
-      "behavior": "monta o bloco DADOS MEDIDOS e instrui o LLM a nao inventar numeros de mercado",
+      "actors": [
+        "ACT-001",
+        "ACT-004"
+      ],
+      "behavior": "monta o bloco DADOS MEDIDOS e o bloco EVIDENCIAS DA PESQUISA e instrui o LLM a citar [E#] e a nao inventar numeros de mercado",
       "failures": "estimativa fora do bloco deve ser marcada [INFERENCE] ou omitida",
-      "rules": ["BR-011"],
-      "contracts": ["CON-004"],
-      "evidence": "goodbizz/generation.py no baseline Python"
+      "rules": [
+        "BR-011"
+      ],
+      "contracts": [
+        "CON-004"
+      ],
+      "evidence": "src/application/generation.ts, src/application/prompts.ts"
     },
     {
       "id": "CAP-008",
       "title": "Verificacao estrutural dos documentos",
       "value": "confere secoes obrigatorias, acentos, alinhamento de tabela e presenca dos numeros medidos",
-      "actors": ["ACT-001"],
+      "actors": [
+        "ACT-001"
+      ],
       "behavior": "retorna lista de achados; vazia significa aprovado",
       "failures": "documento abaixo do minimo de linhas e sinalizado",
-      "rules": ["BR-012", "BR-013"],
-      "contracts": ["CON-006"],
+      "rules": [
+        "BR-012",
+        "BR-013"
+      ],
+      "contracts": [
+        "CON-006"
+      ],
       "evidence": "goodbizz/verification.py no baseline Python"
     },
     {
       "id": "CAP-009",
       "title": "Relatorios deterministas",
       "value": "produz indice, tabelao markdown, CSV e dados.json sem chamar LLM",
-      "actors": ["ACT-001", "ACT-002", "ACT-003"],
-      "behavior": "ordena por indice de acao e agrupa por natureza da dor",
+      "actors": [
+        "ACT-001",
+        "ACT-002",
+        "ACT-003"
+      ],
+      "behavior": "ordena por indice de acao, agrupa por natureza da dor e grava 00-evidencias.md e a chave evidencias no dados.json",
       "failures": "colisao de nome de pasta e resolvida por slug deterministico",
-      "rules": ["BR-010"],
-      "contracts": ["CON-006"],
-      "evidence": "goodbizz/reports.py no baseline Python"
+      "rules": [
+        "BR-010"
+      ],
+      "contracts": [
+        "CON-006"
+      ],
+      "evidence": "src/application/reports.ts, src/application/artifacts.ts, src/application/dados.ts"
     },
     {
       "id": "CAP-010",
       "title": "Renderizacao HTML e PDF",
       "value": "compila o estudo num documento unico para leitura e impressao",
-      "actors": ["ACT-001", "ACT-003"],
+      "actors": [
+        "ACT-001",
+        "ACT-003"
+      ],
       "behavior": "converte markdown em HTML sanitizado e, com --pdf, usa Chromium headless",
       "failures": "sem Chromium, o HTML permanece e a mensagem explica a ausencia",
-      "rules": ["BR-014"],
-      "contracts": ["CON-006"],
+      "rules": [
+        "BR-014"
+      ],
+      "contracts": [
+        "CON-006"
+      ],
       "evidence": "goodbizz/render.py no baseline Python"
     },
     {
       "id": "CAP-011",
       "title": "Cache de respostas de API",
       "value": "evita gastar tokens em reexecucao do mesmo estudo",
-      "actors": ["ACT-001", "ACT-002"],
-      "behavior": "guarda respostas por chave hash de parametros e reaproveita em reexecucoes",
+      "actors": [
+        "ACT-001",
+        "ACT-002"
+      ],
+      "behavior": "guarda respostas de LLM, decisor e busca por chave hash de parametros com a semente do estudo e a impressao dos provedores, e reaproveita em reexecucoes",
       "failures": "cache ausente ou invalido e simplesmente ignorado",
-      "rules": ["BR-015"],
-      "contracts": ["CON-006"],
-      "evidence": "generate_study.py::Cache no baseline Python"
+      "rules": [
+        "BR-015"
+      ],
+      "contracts": [
+        "CON-006"
+      ],
+      "evidence": "src/application/cache.ts, src/application/generate-study.ts"
     },
     {
       "id": "CAP-012",
       "title": "CLI unificada",
       "value": "um unico binario expoe generate, diagnose e recalibrate",
-      "actors": ["ACT-001"],
+      "actors": [
+        "ACT-001"
+      ],
       "behavior": "interpreta subcomandos e flags equivalentes aos scripts originais",
       "failures": "subcomando desconhecido retorna exit 2 com ajuda",
-      "rules": ["BR-016"],
-      "contracts": ["CON-001"],
+      "rules": [
+        "BR-016"
+      ],
+      "contracts": [
+        "CON-001"
+      ],
       "evidence": "bin/goodbizz no baseline Python"
     },
     {
       "id": "CAP-013",
       "title": "API HTTP de estudos",
       "value": "expõe a geracao e a consulta de estudos para integracao",
-      "actors": ["ACT-002"],
-      "behavior": "aceita POST para criar e GET para listar e detalhar estudos e artefatos",
+      "actors": [
+        "ACT-002"
+      ],
+      "behavior": "aceita POST para criar e GET para listar e detalhar estudos e artefatos, com evidenceCount, usage.search e /api/settings/* com o tipo search",
       "failures": "payload invalido retorna 422 com detalhe de validacao",
-      "rules": ["BR-017", "BR-021"],
-      "contracts": ["CON-002"],
-      "evidence": "novo servico do port (Hono)"
+      "rules": [
+        "BR-017",
+        "BR-021"
+      ],
+      "contracts": [
+        "CON-002"
+      ],
+      "evidence": "src/infrastructure/http/api.ts"
     },
     {
       "id": "CAP-014",
       "title": "Interface web",
       "value": "permite criar e ler estudos pelo navegador sem instalar nada",
-      "actors": ["ACT-003"],
-      "behavior": "renderiza no servidor com hono/jsx e consome a propria API para disparar e acompanhar estudos",
+      "actors": [
+        "ACT-003"
+      ],
+      "behavior": "renderiza no servidor com hono/jsx e consome a propria API para disparar e acompanhar estudos, com lista de busca em /settings, contagem de evidencias, aviso de pesquisa fraca e progresso em 7 fases",
       "failures": "formulario sem token CSRF valido e recusado com 403",
-      "rules": ["BR-018", "BR-022"],
-      "contracts": ["CON-003"],
-      "evidence": "novo servico do port (hono/jsx)"
+      "rules": [
+        "BR-018",
+        "BR-022"
+      ],
+      "contracts": [
+        "CON-003"
+      ],
+      "evidence": "src/infrastructure/http/ui/pages.tsx, src/infrastructure/http/ui/routes.tsx"
     },
     {
       "id": "CAP-015",
       "title": "Persistencia de estudos",
       "value": "guarda estudos, ideias e avaliacoes para consulta posterior",
-      "actors": ["ACT-002", "ACT-003"],
-      "behavior": "grava estudo e avaliacoes em SQLite via Drizzle e le por id",
+      "actors": [
+        "ACT-002",
+        "ACT-003"
+      ],
+      "behavior": "grava estudo e avaliacoes em SQLite via Drizzle e le por id As evidencias do estudo ficam na coluna evidences_json.",
       "failures": "estudo inexistente retorna nulo e a API responde 404",
-      "rules": ["BR-019"],
-      "contracts": ["CON-002"],
-      "evidence": "novo servico do port (drizzle-orm/bun-sqlite)"
+      "rules": [
+        "BR-019"
+      ],
+      "contracts": [
+        "CON-002"
+      ],
+      "evidence": "src/infrastructure/schema.ts, src/infrastructure/repositories.ts"
     },
     {
       "id": "CAP-016",
       "title": "Configuracao por ambiente e segredos",
       "value": "mantem endpoints e chaves fora do codigo com validacao no startup",
-      "actors": ["ACT-001", "ACT-002", "ACT-003"],
-      "behavior": "valida LLM_API_URL, LLM_API_KEY, DECISION_API_URL, DECISION_API_KEY e demais chaves com Zod",
+      "actors": [
+        "ACT-001",
+        "ACT-002",
+        "ACT-003"
+      ],
+      "behavior": "valida LLM_API_URL, LLM_API_KEY, DECISION_API_URL, DECISION_API_KEY, SEARCH_API_URL, SEARCH_API_KEY e demais chaves com Zod",
       "failures": "chave obrigatoria ausente aborta o startup com mensagem clara",
-      "rules": ["BR-020"],
-      "contracts": ["CON-004", "CON-005"],
-      "evidence": "goodbizz/config.py no baseline Python, renomeado para o contrato LLM_/DECISION_"
+      "rules": [
+        "BR-020"
+      ],
+      "contracts": [
+        "CON-004",
+        "CON-005"
+      ],
+      "evidence": "src/config/env.ts, src/config/providers.ts"
     },
     {
       "id": "CAP-017",
       "title": "Empacotamento Docker e imagem",
       "value": "entrega a aplicacao como imagem executavel com pipeline de build",
-      "actors": ["ACT-001", "ACT-002", "ACT-003"],
+      "actors": [
+        "ACT-001",
+        "ACT-002",
+        "ACT-003"
+      ],
       "behavior": "build multi-stage com oven/bun publica imagem e workflow do GitHub Actions constroi e publica",
       "failures": "healthcheck e readiness reprovam quando o processo ou o banco falham",
-      "rules": ["BR-023"],
-      "contracts": ["CON-001", "CON-002", "CON-003"],
+      "rules": [
+        "BR-023"
+      ],
+      "contracts": [
+        "CON-001",
+        "CON-002",
+        "CON-003"
+      ],
       "evidence": "novo empacotamento do port"
+    },
+    {
+      "id": "CAP-018",
+      "title": "Pesquisa web automatica com evidencias",
+      "value": "o estudo coleta dado publico verificavel sozinho e ancora cada afirmacao em trecho literal com URL",
+      "actors": [
+        "ACT-001",
+        "ACT-003"
+      ],
+      "behavior": "gera de 6 a 10 buscas do nicho e 2 por ideia, extrai evidencias com trecho literal validado pelo codigo e cita [E#] em brief, ideias, decisor e plano",
+      "failures": "busca vazia, JSON invalido e trecho nao literal viram issues sem derrubar o estudo; menos de 5 evidencias mostra aviso de pesquisa fraca",
+      "rules": [
+        "BR-001",
+        "BR-011",
+        "BR-020"
+      ],
+      "contracts": [
+        "CON-002",
+        "CON-003",
+        "CON-006",
+        "CON-007"
+      ],
+      "evidence": "src/application/research.ts, src/infrastructure/search.ts"
     }
   ],
-
   "rules": [
     {
       "id": "BR-001",
-      "statement": "A geracao de estudo executa as etapas na ordem brief, ideias, avaliacao, dor, documentos, relatorios e PDF opcional.",
-      "coverage": ["CAP-001"],
-      "evidence": "generate_study.py::execute"
+      "statement": "A geracao de estudo executa as etapas na ordem pesquisa web, brief, ideias, avaliacao, dor, documentos, relatorios e PDF opcional.",
+      "coverage": [
+        "CAP-001"
+      ],
+      "evidence": "src/application/generate-study.ts"
     },
     {
       "id": "BR-002",
       "statement": "Configuracao invalida deve abortar antes de qualquer chamada externa.",
-      "coverage": ["CAP-001", "CAP-016"],
+      "coverage": [
+        "CAP-001",
+        "CAP-016"
+      ],
       "evidence": "Config.__post_init__ levanta ValueError"
     },
     {
       "id": "BR-003",
       "statement": "O indice de acao e a media aritmetica entre fit e venda, arredondada a 3 casas.",
-      "coverage": ["CAP-002"],
+      "coverage": [
+        "CAP-002"
+      ],
       "evidence": "evaluation.action_index"
     },
     {
       "id": "BR-004",
       "statement": "Tier A exige indice >= 1.84, Tier B >= 1.60 e Tier C abaixo disso.",
-      "coverage": ["CAP-002"],
+      "coverage": [
+        "CAP-002"
+      ],
       "evidence": "evaluation.tier"
     },
     {
       "id": "BR-005",
       "statement": "A natureza da dor usa escolha forcada de 3 consequencias sem a opcao tecnologia.",
-      "coverage": ["CAP-003"],
+      "coverage": [
+        "CAP-003"
+      ],
       "evidence": "pain_choice.OPTIONS"
     },
     {
       "id": "BR-006",
       "statement": "O ensemble exige no minimo 3 parafrases por sonda para produzir veredito.",
-      "coverage": ["CAP-004"],
+      "coverage": [
+        "CAP-004"
+      ],
       "evidence": "algorithm.MIN_PARAPHRASES"
     },
     {
       "id": "BR-007",
       "statement": "Desvio entre parafrases acima de 0.15 classifica INSTAVEL e escala para revisao humana.",
-      "coverage": ["CAP-004"],
+      "coverage": [
+        "CAP-004"
+      ],
       "evidence": "algorithm.UNSTABLE_THRESHOLD"
     },
     {
       "id": "BR-008",
       "statement": "Soma afirmacao+negacao acima do limiar informa sonda contraditoria no diagnostico.",
-      "coverage": ["CAP-005"],
+      "coverage": [
+        "CAP-005"
+      ],
       "evidence": "diagnose.py --threshold (1.20 por padrao)"
     },
     {
       "id": "BR-009",
       "statement": "A recalibracao prioriza zero falso FORTE, depois acerto e depois menos escalonamento.",
-      "coverage": ["CAP-006"],
+      "coverage": [
+        "CAP-006"
+      ],
       "evidence": "recalibrate.py rows.sort"
     },
     {
       "id": "BR-010",
       "statement": "As pastas de ideia sao numeradas pela ordem do ranking, com slug deterministico do nome.",
-      "coverage": ["CAP-001", "CAP-009"],
+      "coverage": [
+        "CAP-001",
+        "CAP-009"
+      ],
       "evidence": "reports.folder"
     },
     {
       "id": "BR-011",
-      "statement": "O LLM so pode usar numeros do bloco de dados medidos; qualquer outro dado vira [INFERENCE].",
-      "coverage": ["CAP-007"],
-      "evidence": "generation.DOC_SYSTEM_PROMPT"
+      "statement": "O LLM so pode usar numeros do bloco de dados medidos ou valores de evidencias citadas por [E#]; qualquer outro dado vira [INFERENCE].",
+      "coverage": [
+        "CAP-007"
+      ],
+      "evidence": "src/application/generation.ts"
     },
     {
       "id": "BR-012",
       "statement": "Os 10 titulos de secao obrigatorios devem estar presentes no documento gerado.",
-      "coverage": ["CAP-008"],
+      "coverage": [
+        "CAP-008"
+      ],
       "evidence": "verification.SECTIONS"
     },
     {
       "id": "BR-013",
       "statement": "Todo texto gerado deve ser normalizado sem acentos.",
-      "coverage": ["CAP-008"],
+      "coverage": [
+        "CAP-008"
+      ],
       "evidence": "verification.strip_accents e reports.normalize_output"
     },
     {
       "id": "BR-014",
       "statement": "Links no HTML sanitizado nao podem usar esquemas javascript, data ou vbscript.",
-      "coverage": ["CAP-010"],
+      "coverage": [
+        "CAP-010"
+      ],
       "evidence": "render._safe_link"
     },
     {
       "id": "BR-015",
       "statement": "A chave de cache e o hash dos parametros da chamada, por etapa.",
-      "coverage": ["CAP-011"],
+      "coverage": [
+        "CAP-011"
+      ],
       "evidence": "generate_study.py::Cache.key"
     },
     {
       "id": "BR-016",
       "statement": "Subcomando desconhecido na CLI retorna exit code 2 e imprime a ajuda.",
-      "coverage": ["CAP-012"],
+      "coverage": [
+        "CAP-012"
+      ],
       "evidence": "bin/goodbizz case *)"
     },
     {
       "id": "BR-017",
       "statement": "Payload de API invalido retorna 422 com o detalhe da validacao Zod.",
-      "coverage": ["CAP-013"],
+      "coverage": [
+        "CAP-013"
+      ],
       "evidence": "novo handler de erro do port"
     },
     {
       "id": "BR-018",
       "statement": "Toda rota de UI que muda estado exige mesma origem e token CSRF em tempo constante.",
-      "coverage": ["CAP-014"],
+      "coverage": [
+        "CAP-014"
+      ],
       "evidence": "infrastructure/http/security.ts do port"
     },
     {
       "id": "BR-019",
       "statement": "Nenhum acesso a dados escreve SQL cru; tudo passa por Drizzle.",
-      "coverage": ["CAP-015"],
+      "coverage": [
+        "CAP-015"
+      ],
       "evidence": "regra da stack (bun.md)"
     },
     {
       "id": "BR-020",
-      "statement": "Segredos vem apenas do ambiente; o app falha no startup se uma chave obrigatoria faltar.",
-      "coverage": ["CAP-016"],
-      "evidence": "src/config/env.ts do port"
+      "statement": "Segredos vem apenas do ambiente ou da tabela settings; o app falha no startup se uma chave obrigatoria faltar fora do modo simulado.",
+      "coverage": [
+        "CAP-016"
+      ],
+      "evidence": "src/config/env.ts, src/index.ts"
     },
     {
       "id": "BR-021",
       "statement": "Rotas de API publica nao entram no filtro CSRF e a UI nao compartilha o mesmo sub-app.",
-      "coverage": ["CAP-013", "CAP-014"],
+      "coverage": [
+        "CAP-013",
+        "CAP-014"
+      ],
       "evidence": "separacao de sub-apps do port"
     },
     {
       "id": "BR-022",
       "statement": "Cookie de sessao usa httpOnly, sameSite Lax e secure em producao.",
-      "coverage": ["CAP-014"],
+      "coverage": [
+        "CAP-014"
+      ],
       "evidence": "security.ts do port"
     },
     {
       "id": "BR-023",
       "statement": "Liveness nao depende do banco; readiness executa SELECT 1 no SQLite.",
-      "coverage": ["CAP-017"],
+      "coverage": [
+        "CAP-017"
+      ],
       "evidence": "infrastructure/http/health.ts do port"
     }
   ],
-
   "contracts": [
     {
       "id": "CON-001",
       "title": "CLI goodbizz",
-      "consumers": ["ACT-001"],
-      "inputs": "subcomando e flags equivalentes ao baseline (niche, city, ticket, ideas, output, ideas-file, pain-method, eval-only, mock, mock-llm, mock-decider, pdf, concurrency, timeout, llm-url/model/key, decider-url/model/key)",
+      "consumers": [
+        "ACT-001"
+      ],
+      "inputs": "subcomando e flags equivalentes ao baseline (niche, city, ticket, ideas, output, ideas-file, pain-method, eval-only, mock, mock-llm, mock-decider, mock-search, pdf, concurrency, timeout, llm-url/model/key, decider-url/model/key, search-url/key)",
       "outputs": "artefatos em disco e exit code 0/1/2/130",
       "errors": "exit 2 para erro de configuracao e subcomando desconhecido; 130 para interrupcao",
       "compatibility": "mesmos nomes de subcomando e flags do baseline Python, com aliases em portugues",
@@ -411,9 +611,12 @@
     {
       "id": "CON-002",
       "title": "API HTTP /api",
-      "consumers": ["ACT-002", "ACT-003"],
-      "inputs": "JSON de criacao de estudo, parametros de consulta",
-      "outputs": "JSON com id, status, resumo, avaliacoes e links de artefato",
+      "consumers": [
+        "ACT-002",
+        "ACT-003"
+      ],
+      "inputs": "JSON de criacao de estudo, parametros de consulta, perfis de provedor do tipo search em /api/settings/*",
+      "outputs": "JSON com id, status, resumo, avaliacoes, links de artefato, evidenceCount e usage.search",
       "errors": "422 payload invalido; 404 estudo inexistente; 500 erro interno sem stack",
       "compatibility": "versionado sob /api; sem CSRF (autenticacao propria)",
       "evidence": "src/infrastructure/http/app.ts"
@@ -421,9 +624,11 @@
     {
       "id": "CON-003",
       "title": "Interface web",
-      "consumers": ["ACT-003"],
+      "consumers": [
+        "ACT-003"
+      ],
       "inputs": "formularios HTML e fetch na mesma origem",
-      "outputs": "paginas renderizadas (lista, formulario, detalhe do estudo)",
+      "outputs": "paginas renderizadas (lista, formulario, detalhe do estudo com contagem de evidencias e aviso de pesquisa fraca, /settings com lista de busca, /como-ler)",
       "errors": "403 origem ou token CSRF invalido",
       "compatibility": "mesma origem que a API; consome /api por fetch",
       "evidence": "src/infrastructure/http/ui/routes.tsx"
@@ -431,7 +636,9 @@
     {
       "id": "CON-004",
       "title": "Protocolo do provedor LLM",
-      "consumers": ["ACT-004"],
+      "consumers": [
+        "ACT-004"
+      ],
       "inputs": "POST {LLM_API_URL}/chat/completions com mensagens system e user",
       "outputs": "choices[0].message.content em texto",
       "errors": "400/401/402/403/404/422 abortam sem retentativa, preservando status e mensagem do provedor; 429 e 5xx repetem com backoff; erro apos as tentativas",
@@ -441,7 +648,9 @@
     {
       "id": "CON-005",
       "title": "Protocolo do decisor System One",
-      "consumers": ["ACT-005"],
+      "consumers": [
+        "ACT-005"
+      ],
       "inputs": "POST {DECISION_API_URL} com state e questions tipadas",
       "outputs": "answers com probabilidades, escolha ou score por id",
       "errors": "400/401/403 abortam sem retentativa; demais erros com backoff",
@@ -451,15 +660,30 @@
     {
       "id": "CON-006",
       "title": "Formato de artefatos em disco",
-      "consumers": ["ACT-001", "ACT-002", "ACT-003"],
+      "consumers": [
+        "ACT-001",
+        "ACT-002",
+        "ACT-003"
+      ],
       "inputs": "dados avaliados e textos gerados",
-      "outputs": "README.md, 00-brief.md, 00-tabelao.md, 00-tabelao.csv, dados.json, pastas 01-<slug>/README.md e estudo-completo.html/.pdf",
+      "outputs": "README.md, 00-brief.md, 00-evidencias.md, 00-tabelao.md, 00-tabelao.csv, dados.json (com chave evidencias), pastas 01-<slug>/README.md com secao Fontes e estudo-completo.html/.pdf",
       "errors": "arquivo nao escrito quando nao ha conteudo aplicavel",
       "compatibility": "mesmo esquema de chaves e layout do baseline Python (dados.json consumivel pelo recalibrate)",
       "evidence": "src/application/reports.ts"
+    },
+    {
+      "id": "CON-007",
+      "title": "Protocolo do provedor de busca",
+      "consumers": [
+        "ACT-001"
+      ],
+      "inputs": "POST {SEARCH_API_URL}/search com query, max_results e search_depth",
+      "outputs": "resultados com titulo, url e conteudo extraido",
+      "errors": "401/403 viram frase de credencial, 429 frase de limite, rede/DNS frase de rede, com o detalhe cru; busca que falha apos retentativas entra em issues sem derrubar o estudo",
+      "compatibility": "protocolo Tavily; adaptador simulado deterministico sem rede",
+      "evidence": "src/infrastructure/search.ts"
     }
   ],
-
   "entities": [
     {
       "id": "ENT-001",
@@ -476,7 +700,7 @@
     {
       "id": "ENT-003",
       "name": "IdeaEvaluation",
-      "description": "indicadores, bloco de negocio, bloco de dor, indice e tier de uma ideia",
+      "description": "indicadores, bloco de negocio, bloco de dor, indice e tier de uma ideia Guarda as evidencias proprias da ideia.",
       "evidence": "evaluation.evaluate_idea"
     },
     {
@@ -484,73 +708,110 @@
       "name": "Artifact",
       "description": "arquivo deterministico produzido pelo estudo (markdown, csv, json, html, pdf)",
       "evidence": "reports.indicators_table_csv"
+    },
+    {
+      "id": "ENT-005",
+      "name": "Evidence",
+      "description": "afirmacao com trecho literal e URL extraida da pesquisa web; campos id, tipo, afirmacao, trecho, url, valor, unidade e ideia",
+      "evidence": "src/domain/types.ts, src/application/research.ts"
     }
   ],
-
   "qualities": [
     {
       "id": "SQR-001",
-      "statement": "O modo mock e deterministico: a mesma entrada produz a mesma saida, sem rede.",
-      "coverage": ["CAP-001", "CAP-002", "CAP-003", "CAP-004"],
+      "statement": "O modo mock e deterministico: a mesma entrada produz a mesma saida, sem rede; a busca simulada e deterministica e nao abre rede.",
+      "coverage": [
+        "CAP-001",
+        "CAP-002",
+        "CAP-003",
+        "CAP-004"
+      ],
       "evidence": "DeciderMock hash-based e LLMMock fixtures"
     },
     {
       "id": "SQR-002",
-      "statement": "Nenhum numero de mercado e inventado pelo LLM; o guardrail verifica os numeros medidos.",
-      "coverage": ["CAP-007", "CAP-008"],
+      "statement": "Nenhum numero de mercado e inventado pelo LLM; o guardrail verifica os numeros medidos; afirmacao factual cita [E#] de evidencia com trecho literal.",
+      "coverage": [
+        "CAP-007",
+        "CAP-008"
+      ],
       "evidence": "verification.check_document"
     },
     {
       "id": "SQR-003",
       "statement": "Todos os artefatos de texto sao normalizados sem acentos.",
-      "coverage": ["CAP-008", "CAP-009"],
+      "coverage": [
+        "CAP-008",
+        "CAP-009"
+      ],
       "evidence": "verification.normalize_markdown"
     },
     {
       "id": "SQR-004",
-      "statement": "A configuracao falha rapido e nunca expoe segredo em log ou saida.",
-      "coverage": ["CAP-016"],
+      "statement": "A configuracao falha rapido e nunca expoe segredo em log ou saida; a chave de busca nunca aparece em log, resposta, artefato ou pagina.",
+      "coverage": [
+        "CAP-016"
+      ],
       "evidence": "src/config/env.ts"
     },
     {
       "id": "SQR-005",
-      "statement": "Reexecutar o mesmo estudo reaproveita o cache e nao repete chamadas pagas.",
-      "coverage": ["CAP-011"],
+      "statement": "Reexecutar o mesmo estudo reaproveita o cache e nao repete chamadas pagas; respostas de busca entram no cache e na retomada.",
+      "coverage": [
+        "CAP-011"
+      ],
       "evidence": "generate_study.py::Cache"
     }
   ],
-
   "integrations": [
     {
       "id": "INT-001",
       "name": "LLM HTTP",
       "description": "endpoint OpenAI-compativel para brief, ideias e planos",
-      "coverage": ["CAP-001", "CAP-007"],
+      "coverage": [
+        "CAP-001",
+        "CAP-007"
+      ],
       "evidence": "src/infrastructure/llm/http.ts"
     },
     {
       "id": "INT-002",
       "name": "Decisor HTTP System One",
       "description": "endpoint de decisao probabilistica",
-      "coverage": ["CAP-002", "CAP-003", "CAP-004", "CAP-005"],
+      "coverage": [
+        "CAP-002",
+        "CAP-003",
+        "CAP-004",
+        "CAP-005"
+      ],
       "evidence": "src/infrastructure/decider/http.ts"
     },
     {
       "id": "INT-003",
       "name": "Chromium headless",
       "description": "geracao opcional de PDF a partir do HTML do estudo",
-      "coverage": ["CAP-010"],
+      "coverage": [
+        "CAP-010"
+      ],
       "evidence": "src/application/render.ts"
     },
     {
       "id": "INT-004",
       "name": "SQLite (bun:sqlite)",
       "description": "persistencia local de estudos e cache",
-      "coverage": ["CAP-011", "CAP-015"],
+      "coverage": [
+        "CAP-011",
+        "CAP-015"
+      ],
       "evidence": "src/infrastructure/db/schema.ts"
+    },
+    {
+      "id": "INT-005",
+      "name": "Busca HTTP (protocolo Tavily)",
+      "description": "provedor externo de pesquisa web com conteudo extraido; adaptador SearchHttp e SearchMock",
+      "evidence": "src/infrastructure/search.ts, src/infrastructure/search-mock.ts"
     }
   ],
-
   "restrictions": [
     {
       "decision_id": "DEC-001",
@@ -568,26 +829,110 @@
       "reference": "pedido do operador (0001-change.md)"
     }
   ],
-
   "coverage": {
     "capabilities": [
-      { "id": "CAP-001", "status": "Parcial", "evidence": "generate_study.py", "observation": "port para Bun em andamento" },
-      { "id": "CAP-002", "status": "Parcial", "evidence": "goodbizz/evaluation.py", "observation": "port para Bun em andamento" },
-      { "id": "CAP-003", "status": "Parcial", "evidence": "goodbizz/pain_choice.py", "observation": "port para Bun em andamento" },
-      { "id": "CAP-004", "status": "Parcial", "evidence": "goodbizz/algorithm.py", "observation": "port para Bun em andamento" },
-      { "id": "CAP-005", "status": "Parcial", "evidence": "diagnose.py", "observation": "port para Bun em andamento" },
-      { "id": "CAP-006", "status": "Parcial", "evidence": "recalibrate.py", "observation": "port para Bun em andamento" },
-      { "id": "CAP-007", "status": "Parcial", "evidence": "goodbizz/generation.py", "observation": "port para Bun em andamento" },
-      { "id": "CAP-008", "status": "Parcial", "evidence": "goodbizz/verification.py", "observation": "port para Bun em andamento" },
-      { "id": "CAP-009", "status": "Parcial", "evidence": "goodbizz/reports.py", "observation": "port para Bun em andamento" },
-      { "id": "CAP-010", "status": "Parcial", "evidence": "goodbizz/render.py", "observation": "port para Bun em andamento" },
-      { "id": "CAP-011", "status": "Parcial", "evidence": "generate_study.py::Cache", "observation": "port para Bun em andamento" },
-      { "id": "CAP-012", "status": "Parcial", "evidence": "bin/goodbizz", "observation": "port para Bun em andamento" },
-      { "id": "CAP-013", "status": "Parcial", "evidence": "novo", "observation": "servico novo sem equivalente no baseline" },
-      { "id": "CAP-014", "status": "Parcial", "evidence": "novo", "observation": "servico novo sem equivalente no baseline" },
-      { "id": "CAP-015", "status": "Parcial", "evidence": "novo", "observation": "servico novo sem equivalente no baseline" },
-      { "id": "CAP-016", "status": "Parcial", "evidence": "goodbizz/config.py", "observation": "renomeacao de variaveis do ambiente" },
-      { "id": "CAP-017", "status": "Parcial", "evidence": "novo", "observation": "empacotamento novo" }
+      {
+        "id": "CAP-001",
+        "status": "Parcial",
+        "evidence": "generate_study.py",
+        "observation": "port para Bun em andamento"
+      },
+      {
+        "id": "CAP-002",
+        "status": "Parcial",
+        "evidence": "goodbizz/evaluation.py",
+        "observation": "port para Bun em andamento"
+      },
+      {
+        "id": "CAP-003",
+        "status": "Parcial",
+        "evidence": "goodbizz/pain_choice.py",
+        "observation": "port para Bun em andamento"
+      },
+      {
+        "id": "CAP-004",
+        "status": "Parcial",
+        "evidence": "goodbizz/algorithm.py",
+        "observation": "port para Bun em andamento"
+      },
+      {
+        "id": "CAP-005",
+        "status": "Parcial",
+        "evidence": "diagnose.py",
+        "observation": "port para Bun em andamento"
+      },
+      {
+        "id": "CAP-006",
+        "status": "Parcial",
+        "evidence": "recalibrate.py",
+        "observation": "port para Bun em andamento"
+      },
+      {
+        "id": "CAP-007",
+        "status": "Parcial",
+        "evidence": "goodbizz/generation.py",
+        "observation": "port para Bun em andamento"
+      },
+      {
+        "id": "CAP-008",
+        "status": "Parcial",
+        "evidence": "goodbizz/verification.py",
+        "observation": "port para Bun em andamento"
+      },
+      {
+        "id": "CAP-009",
+        "status": "Parcial",
+        "evidence": "goodbizz/reports.py",
+        "observation": "port para Bun em andamento"
+      },
+      {
+        "id": "CAP-010",
+        "status": "Parcial",
+        "evidence": "goodbizz/render.py",
+        "observation": "port para Bun em andamento"
+      },
+      {
+        "id": "CAP-011",
+        "status": "Parcial",
+        "evidence": "generate_study.py::Cache",
+        "observation": "port para Bun em andamento"
+      },
+      {
+        "id": "CAP-012",
+        "status": "Parcial",
+        "evidence": "bin/goodbizz",
+        "observation": "port para Bun em andamento"
+      },
+      {
+        "id": "CAP-013",
+        "status": "Parcial",
+        "evidence": "novo",
+        "observation": "servico novo sem equivalente no baseline"
+      },
+      {
+        "id": "CAP-014",
+        "status": "Parcial",
+        "evidence": "novo",
+        "observation": "servico novo sem equivalente no baseline"
+      },
+      {
+        "id": "CAP-015",
+        "status": "Parcial",
+        "evidence": "novo",
+        "observation": "servico novo sem equivalente no baseline"
+      },
+      {
+        "id": "CAP-016",
+        "status": "Parcial",
+        "evidence": "goodbizz/config.py",
+        "observation": "renomeacao de variaveis do ambiente"
+      },
+      {
+        "id": "CAP-017",
+        "status": "Parcial",
+        "evidence": "novo",
+        "observation": "empacotamento novo"
+      }
     ],
     "gaps": [
       {
@@ -610,32 +955,376 @@
       }
     ]
   },
-
   "traceability": [
-    { "capability": "CAP-001", "actors": ["ACT-001", "ACT-002", "ACT-003"], "rules": ["BR-001", "BR-002", "BR-010"], "contracts": ["CON-001", "CON-002", "CON-006"], "entities": ["ENT-001", "ENT-002", "ENT-004"], "qualities": ["SQR-001"], "integrations": ["INT-001", "INT-002"] },
-    { "capability": "CAP-002", "actors": ["ACT-001", "ACT-005"], "rules": ["BR-003", "BR-004"], "contracts": ["CON-005", "CON-006"], "entities": ["ENT-003"], "qualities": ["SQR-001"], "integrations": ["INT-002"] },
-    { "capability": "CAP-003", "actors": ["ACT-001", "ACT-005"], "rules": ["BR-005"], "contracts": ["CON-005"], "entities": ["ENT-003"], "qualities": ["SQR-001"], "integrations": ["INT-002"] },
-    { "capability": "CAP-004", "actors": ["ACT-001", "ACT-005"], "rules": ["BR-006", "BR-007"], "contracts": ["CON-005", "CON-006"], "entities": ["ENT-003"], "qualities": ["SQR-001"], "integrations": ["INT-002"] },
-    { "capability": "CAP-005", "actors": ["ACT-001", "ACT-005"], "rules": ["BR-008"], "contracts": ["CON-001", "CON-005"], "entities": ["ENT-003"], "qualities": [], "integrations": ["INT-002"] },
-    { "capability": "CAP-006", "actors": ["ACT-001"], "rules": ["BR-009"], "contracts": ["CON-001", "CON-006"], "entities": ["ENT-003"], "qualities": [], "integrations": [] },
-    { "capability": "CAP-007", "actors": ["ACT-001", "ACT-004"], "rules": ["BR-011"], "contracts": ["CON-004"], "entities": ["ENT-003"], "qualities": ["SQR-002"], "integrations": ["INT-001"] },
-    { "capability": "CAP-008", "actors": ["ACT-001"], "rules": ["BR-012", "BR-013"], "contracts": ["CON-006"], "entities": ["ENT-004"], "qualities": ["SQR-002", "SQR-003"], "integrations": [] },
-    { "capability": "CAP-009", "actors": ["ACT-001", "ACT-002", "ACT-003"], "rules": ["BR-010"], "contracts": ["CON-006"], "entities": ["ENT-004"], "qualities": ["SQR-003"], "integrations": [] },
-    { "capability": "CAP-010", "actors": ["ACT-001", "ACT-003"], "rules": ["BR-014"], "contracts": ["CON-006"], "entities": ["ENT-004"], "qualities": [], "integrations": ["INT-003"] },
-    { "capability": "CAP-011", "actors": ["ACT-001", "ACT-002"], "rules": ["BR-015"], "contracts": ["CON-006"], "entities": ["ENT-001"], "qualities": ["SQR-005"], "integrations": ["INT-004"] },
-    { "capability": "CAP-012", "actors": ["ACT-001"], "rules": ["BR-016"], "contracts": ["CON-001"], "entities": [], "qualities": [], "integrations": [] },
-    { "capability": "CAP-013", "actors": ["ACT-002"], "rules": ["BR-017", "BR-021"], "contracts": ["CON-002"], "entities": ["ENT-001"], "qualities": [], "integrations": ["INT-004"] },
-    { "capability": "CAP-014", "actors": ["ACT-003"], "rules": ["BR-018", "BR-022"], "contracts": ["CON-003"], "entities": ["ENT-001", "ENT-004"], "qualities": [], "integrations": [] },
-    { "capability": "CAP-015", "actors": ["ACT-002", "ACT-003"], "rules": ["BR-019"], "contracts": ["CON-002"], "entities": ["ENT-001", "ENT-003"], "qualities": [], "integrations": ["INT-004"] },
-    { "capability": "CAP-016", "actors": ["ACT-001", "ACT-002", "ACT-003"], "rules": ["BR-020"], "contracts": ["CON-004", "CON-005"], "entities": [], "qualities": ["SQR-004"], "integrations": ["INT-001", "INT-002"] },
-    { "capability": "CAP-017", "actors": ["ACT-001", "ACT-002", "ACT-003"], "rules": ["BR-023"], "contracts": ["CON-001", "CON-002", "CON-003"], "entities": [], "qualities": [], "integrations": ["INT-004"] }
+    {
+      "capability": "CAP-001",
+      "actors": [
+        "ACT-001",
+        "ACT-002",
+        "ACT-003"
+      ],
+      "rules": [
+        "BR-001",
+        "BR-002",
+        "BR-010"
+      ],
+      "contracts": [
+        "CON-001",
+        "CON-002",
+        "CON-006"
+      ],
+      "entities": [
+        "ENT-001",
+        "ENT-002",
+        "ENT-004"
+      ],
+      "qualities": [
+        "SQR-001"
+      ],
+      "integrations": [
+        "INT-001",
+        "INT-002"
+      ]
+    },
+    {
+      "capability": "CAP-002",
+      "actors": [
+        "ACT-001",
+        "ACT-005"
+      ],
+      "rules": [
+        "BR-003",
+        "BR-004"
+      ],
+      "contracts": [
+        "CON-005",
+        "CON-006"
+      ],
+      "entities": [
+        "ENT-003"
+      ],
+      "qualities": [
+        "SQR-001"
+      ],
+      "integrations": [
+        "INT-002"
+      ]
+    },
+    {
+      "capability": "CAP-003",
+      "actors": [
+        "ACT-001",
+        "ACT-005"
+      ],
+      "rules": [
+        "BR-005"
+      ],
+      "contracts": [
+        "CON-005"
+      ],
+      "entities": [
+        "ENT-003"
+      ],
+      "qualities": [
+        "SQR-001"
+      ],
+      "integrations": [
+        "INT-002"
+      ]
+    },
+    {
+      "capability": "CAP-004",
+      "actors": [
+        "ACT-001",
+        "ACT-005"
+      ],
+      "rules": [
+        "BR-006",
+        "BR-007"
+      ],
+      "contracts": [
+        "CON-005",
+        "CON-006"
+      ],
+      "entities": [
+        "ENT-003"
+      ],
+      "qualities": [
+        "SQR-001"
+      ],
+      "integrations": [
+        "INT-002"
+      ]
+    },
+    {
+      "capability": "CAP-005",
+      "actors": [
+        "ACT-001",
+        "ACT-005"
+      ],
+      "rules": [
+        "BR-008"
+      ],
+      "contracts": [
+        "CON-001",
+        "CON-005"
+      ],
+      "entities": [
+        "ENT-003"
+      ],
+      "qualities": [],
+      "integrations": [
+        "INT-002"
+      ]
+    },
+    {
+      "capability": "CAP-006",
+      "actors": [
+        "ACT-001"
+      ],
+      "rules": [
+        "BR-009"
+      ],
+      "contracts": [
+        "CON-001",
+        "CON-006"
+      ],
+      "entities": [
+        "ENT-003"
+      ],
+      "qualities": [],
+      "integrations": []
+    },
+    {
+      "capability": "CAP-007",
+      "actors": [
+        "ACT-001",
+        "ACT-004"
+      ],
+      "rules": [
+        "BR-011"
+      ],
+      "contracts": [
+        "CON-004"
+      ],
+      "entities": [
+        "ENT-003"
+      ],
+      "qualities": [
+        "SQR-002"
+      ],
+      "integrations": [
+        "INT-001"
+      ]
+    },
+    {
+      "capability": "CAP-008",
+      "actors": [
+        "ACT-001"
+      ],
+      "rules": [
+        "BR-012",
+        "BR-013"
+      ],
+      "contracts": [
+        "CON-006"
+      ],
+      "entities": [
+        "ENT-004"
+      ],
+      "qualities": [
+        "SQR-002",
+        "SQR-003"
+      ],
+      "integrations": []
+    },
+    {
+      "capability": "CAP-009",
+      "actors": [
+        "ACT-001",
+        "ACT-002",
+        "ACT-003"
+      ],
+      "rules": [
+        "BR-010"
+      ],
+      "contracts": [
+        "CON-006"
+      ],
+      "entities": [
+        "ENT-004"
+      ],
+      "qualities": [
+        "SQR-003"
+      ],
+      "integrations": []
+    },
+    {
+      "capability": "CAP-010",
+      "actors": [
+        "ACT-001",
+        "ACT-003"
+      ],
+      "rules": [
+        "BR-014"
+      ],
+      "contracts": [
+        "CON-006"
+      ],
+      "entities": [
+        "ENT-004"
+      ],
+      "qualities": [],
+      "integrations": [
+        "INT-003"
+      ]
+    },
+    {
+      "capability": "CAP-011",
+      "actors": [
+        "ACT-001",
+        "ACT-002"
+      ],
+      "rules": [
+        "BR-015"
+      ],
+      "contracts": [
+        "CON-006"
+      ],
+      "entities": [
+        "ENT-001"
+      ],
+      "qualities": [
+        "SQR-005"
+      ],
+      "integrations": [
+        "INT-004"
+      ]
+    },
+    {
+      "capability": "CAP-012",
+      "actors": [
+        "ACT-001"
+      ],
+      "rules": [
+        "BR-016"
+      ],
+      "contracts": [
+        "CON-001"
+      ],
+      "entities": [],
+      "qualities": [],
+      "integrations": []
+    },
+    {
+      "capability": "CAP-013",
+      "actors": [
+        "ACT-002"
+      ],
+      "rules": [
+        "BR-017",
+        "BR-021"
+      ],
+      "contracts": [
+        "CON-002"
+      ],
+      "entities": [
+        "ENT-001"
+      ],
+      "qualities": [],
+      "integrations": [
+        "INT-004"
+      ]
+    },
+    {
+      "capability": "CAP-014",
+      "actors": [
+        "ACT-003"
+      ],
+      "rules": [
+        "BR-018",
+        "BR-022"
+      ],
+      "contracts": [
+        "CON-003"
+      ],
+      "entities": [
+        "ENT-001",
+        "ENT-004"
+      ],
+      "qualities": [],
+      "integrations": []
+    },
+    {
+      "capability": "CAP-015",
+      "actors": [
+        "ACT-002",
+        "ACT-003"
+      ],
+      "rules": [
+        "BR-019"
+      ],
+      "contracts": [
+        "CON-002"
+      ],
+      "entities": [
+        "ENT-001",
+        "ENT-003"
+      ],
+      "qualities": [],
+      "integrations": [
+        "INT-004"
+      ]
+    },
+    {
+      "capability": "CAP-016",
+      "actors": [
+        "ACT-001",
+        "ACT-002",
+        "ACT-003"
+      ],
+      "rules": [
+        "BR-020"
+      ],
+      "contracts": [
+        "CON-004",
+        "CON-005"
+      ],
+      "entities": [],
+      "qualities": [
+        "SQR-004"
+      ],
+      "integrations": [
+        "INT-001",
+        "INT-002"
+      ]
+    },
+    {
+      "capability": "CAP-017",
+      "actors": [
+        "ACT-001",
+        "ACT-002",
+        "ACT-003"
+      ],
+      "rules": [
+        "BR-023"
+      ],
+      "contracts": [
+        "CON-001",
+        "CON-002",
+        "CON-003"
+      ],
+      "entities": [],
+      "qualities": [],
+      "integrations": [
+        "INT-004"
+      ]
+    }
   ],
-
   "evolution_policy": [
     "Toda mudanca de comportamento entra como Work do pwn, com contrato V4 congelado e evidencia RED/GREEN.",
     "O esquema de artefatos em disco (CON-006) so muda com migracao explicita e compatibilidade de leitura.",
     "Segredos nunca entram no repositorio; o contrato das chaves vive no .env.example versionado."
   ],
-
   "description_file": "README.md"
 }

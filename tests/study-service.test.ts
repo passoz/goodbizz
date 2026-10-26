@@ -161,8 +161,18 @@ describe("identidade estavel por ideia", () => {
     const cfg = resolveStudyConfig({ niche: "clinicas", numIdeas: 1, mock: true });
     const decider = new DeciderMock();
 
-    const first = await evaluateIdea({ name: "Agenda Vazada", sector: "s", description: "d" }, decider, cfg, []);
-    const second = await evaluateIdea({ name: "Agenda Vazada", sector: "s", description: "d" }, decider, cfg, []);
+    const first = await evaluateIdea(
+      { name: "Agenda Vazada", sector: "s", description: "d" },
+      decider,
+      cfg,
+      [],
+    );
+    const second = await evaluateIdea(
+      { name: "Agenda Vazada", sector: "s", description: "d" },
+      decider,
+      cfg,
+      [],
+    );
 
     // Mesmo name: so o id separa as duas linhas.
     expect(first.name).toBe(second.name);

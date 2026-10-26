@@ -1721,15 +1721,11 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; token: s
           {study.evidences.length === 1
             ? "1 evidência"
             : `${study.evidences.length.toLocaleString("pt-BR")} evidências`}
-          {study.usage !== null
-            ? ` em ${study.usage.search.calls.toLocaleString("pt-BR")} buscas`
-            : ""}
-          .
+          {study.usage !== null ? ` em ${study.usage.search.calls.toLocaleString("pt-BR")} buscas` : ""}.
         </p>
         {study.evidences.length < 5 ? (
           <p class="alert" id="weak-research-warning" role="alert">
-            pesquisa fraca: este estudo tem poucas evidências. Execute de novo para pesquisar outra
-            vez.
+            pesquisa fraca: este estudo tem poucas evidências. Execute de novo para pesquisar outra vez.
           </p>
         ) : null}
         {study.evidences.length < 5 ? (
@@ -1738,7 +1734,6 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; token: s
           </div>
         ) : null}
       </section>
-
 
       <section class="panel glass">
         <h3>Ranking</h3>

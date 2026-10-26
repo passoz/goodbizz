@@ -137,9 +137,17 @@ const brief = "Brief de contexto do teste.";
 
 describe("buildArtifactFiles", () => {
   test("lista os arquivos na ordem do baseline", () => {
-    const files = buildArtifactFiles(config, brief, summary, data, folders, {
-      "Clinica Sorriso": "# Plano\n\nconteudo do plano\n",
-    }, []);
+    const files = buildArtifactFiles(
+      config,
+      brief,
+      summary,
+      data,
+      folders,
+      {
+        "Clinica Sorriso": "# Plano\n\nconteudo do plano\n",
+      },
+      [],
+    );
     expect(files.map((file) => file.path)).toEqual([
       "00-brief.md",
       "00-evidencias.md",
@@ -175,9 +183,17 @@ describe("buildArtifactFiles", () => {
   });
 
   test("ideia sem documento nao vira pasta", () => {
-    const files = buildArtifactFiles(config, brief, summary, data, folders, {
-      "Oficina Rapida": "   ",
-    }, []);
+    const files = buildArtifactFiles(
+      config,
+      brief,
+      summary,
+      data,
+      folders,
+      {
+        "Oficina Rapida": "   ",
+      },
+      [],
+    );
     expect(files.some((file) => file.path.includes("README.md") && file.path !== "README.md")).toBe(false);
   });
 
