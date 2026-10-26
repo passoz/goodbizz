@@ -714,6 +714,7 @@ describe("cache por estudo", () => {
     if (system.includes("BUSCAS") || system.includes("EVIDENCIAS")) return "PESQUISA";
     if (system.includes("IDEIAS")) return "IDEIAS";
     if (system.includes("BRIEF")) return "BRIEF";
+    if (system.includes("PREMISSAS")) return "PREMISSAS";
     return "DOC";
   }
   function countingHarness() {

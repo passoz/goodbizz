@@ -287,6 +287,15 @@ function recordingLlm() {
           })),
         );
       }
+      if (system.includes("PREMISSAS")) {
+        return JSON.stringify({
+          fatores: [
+            { nome: "ocorrências por mês", valor: 10, unidade: "ocorrências/mês", fonte: "INFERENCE" },
+            { nome: "custo por ocorrência", valor: 100, unidade: "R$", fonte: "INFERENCE" },
+          ],
+          recuperacao: 0.5,
+        });
+      }
       if (system.includes("BUSCAS") || system.includes("EVIDENCIAS")) {
         state.researchCalls += 1;
         return system.includes("BUSCAS")

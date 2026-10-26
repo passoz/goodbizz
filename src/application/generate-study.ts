@@ -14,6 +14,7 @@ import { DOC_LITERALS } from "./prompts.ts";
 import { fullHtml, mdToHtml } from "./render.ts";
 import { folderName, sourcesSection } from "./reports.ts";
 import { evidenceHash, evidencesFor, mapLimit, researchIdeas, researchStudy } from "./research.ts";
+import { requestPremises, type PremisesResult } from "./premises.ts";
 import { summarizeStudy } from "./summary.ts";
 import { checkDocument } from "./verification.ts";
 import type { Logger, LlmClient, DeciderClient, ArtifactFile, SearchClient } from "../domain/ports.ts";
@@ -33,6 +34,11 @@ export interface ArtifactBundle {
   documents: Record<string, string>;
 }
 
+export interface IdeaPremises {
+  ideaName: string;
+  premises: PremisesResult | null;
+}
+
 export interface GenerateStudyResult {
   brief: string;
   ideas: Idea[];
@@ -42,6 +48,11 @@ export interface GenerateStudyResult {
   documents: Record<string, string>;
   files: ArtifactFile[];
   issues: string[];
+  /**
+   * Premissas validadas de cada ideia (`null` quando as duas tentativas falham e a ideia
+   * segue sem bloco de valor). É daqui que o bloco VALOR do documento sai.
+   */
+  premises: IdeaPremises[];
   /**
    * Evidências do estudo (`ideia` vazia) e de cada ideia, numeradas `E1..En` em sequência. Para
    * as de uma ideia: `evidences.filter((evidence) => evidence.ideia === nome)`.
@@ -79,6 +90,46 @@ function usageDelta(before: ProviderUsage | undefined, after: ProviderUsage | un
     cachedInputTokens: Math.max(0, end.cachedInputTokens - start.cachedInputTokens),
     outputTokens: Math.max(0, end.outputTokens - start.outputTokens),
   };
+}
+
+/**
+ * Premissas de cada ideia, com cache próprio: a pesquisa nova refaz as premissas em vez de
+ * servir as antigas. Fonte órfã vira `INFERENCE` com correção em `issues`; falha dupla nas
+ * duas tentativas deixa a ideia sem bloco de valor (premissas `null`) com registro em `issues`.
+ */
+async function requestIdeaPremises(
+  cfg: StudyConfig,
+  ideas: readonly Idea[],
+  evidences: readonly Evidence[],
+  deps: GenerateStudyDeps,
+  providerScope: string,
+  issues: string[],
+  progress: (step: string) => void,
+): Promise<IdeaPremises[]> {
+  const { llm, cache } = deps;
+  const collected = await mapLimit(ideas, cfg.concurrency, async (idea) => {
+    const own = evidencesFor(evidences, idea.name);
+    const key = scopedKey(
+      cfg.cacheSeed,
+      "premissas",
+      providerScope,
+      cfg.niche,
+      cfg.city,
+      idea.name,
+      idea.description,
+      evidenceHash(own),
+    );
+    const cached = await cache.get<PremisesResult | null>(key);
+    if (cached !== null) return { ideaName: idea.name, premises: cached };
+    const { premises, corrections } = await requestPremises(llm, cfg, idea.name, idea.description, own);
+    await cache.put(key, premises);
+    for (const correction of corrections) issues.push(`${idea.name}: ${correction}`);
+    if (premises === null)
+      issues.push(`${idea.name}: premissas inválidas nas duas tentativas, segue sem bloco de valor`);
+    return { ideaName: idea.name, premises };
+  });
+  progress(`[3/7] Declarei as premissas de ${collected.length} ideias com fonte em evidência ou INFERENCE`);
+  return collected;
 }
 
 /** O que a adição conhece do estudo: o brief já pago e as ideias que já existem. */
@@ -142,6 +193,16 @@ export async function generateAddition(
     `[3/7] Pesquisei concorrente e preço de ${ideas.length} ideias novas: ` +
       `${ideaResearch.evidences.length} evidências próprias`,
   );
+  const additionPremisesIssues: string[] = [];
+  const additionPremises = await requestIdeaPremises(
+    cfg,
+    ideas,
+    evidences,
+    deps,
+    providerScope,
+    additionPremisesIssues,
+    progress,
+  );
 
   const newEvaluations = await mapLimit(ideas, cfg.concurrency, async (idea) => {
     // O `requestId` entra na chave: uma ideia que reapareça num pedido novo precisa de um id novo.
@@ -191,7 +252,8 @@ export async function generateAddition(
       folders: {},
       documents: {},
       files: [],
-      issues: researchIssues,
+      issues: [...researchIssues, ...additionPremisesIssues],
+      premises: additionPremises,
       evidences,
       cacheHits: cache.hits,
       cacheCount: await cache.count(),
@@ -262,7 +324,8 @@ export async function generateAddition(
     folders,
     documents,
     files,
-    issues,
+    issues: [...issues, ...additionPremisesIssues],
+    premises: additionPremises,
     evidences,
     cacheHits: cache.hits,
     cacheCount: await cache.count(),
@@ -331,6 +394,16 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
     `[3/7] Pesquisei concorrente e preço de ${ideas.length} ideias: ` +
       `${ideaResearch.evidences.length} evidências próprias`,
   );
+  const premisesIssues: string[] = [];
+  const premises = await requestIdeaPremises(
+    cfg,
+    ideas,
+    evidences,
+    deps,
+    providerScope,
+    premisesIssues,
+    progress,
+  );
 
   const evaluations = await mapLimit(ideas, cfg.concurrency, async (idea) => {
     const key = scopedKey(
@@ -383,7 +456,8 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
       folders: {},
       documents: {},
       files: [],
-      issues: researchIssues,
+      issues: [...researchIssues, ...premisesIssues],
+      premises,
       evidences,
       cacheHits: cache.hits,
       cacheCount: await cache.count(),
@@ -397,7 +471,7 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
   );
 
   const byName = new Map(evaluations.map((evaluation) => [evaluation.name, evaluation]));
-  const issues: string[] = [...researchIssues];
+  const issues: string[] = [...researchIssues, ...premisesIssues];
   const documents: Record<string, string> = {};
 
   const written = await mapLimit(summary.ordered, cfg.concurrency, async (ordered) => {
@@ -477,6 +551,7 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
     documents,
     files,
     issues,
+    premises,
     evidences,
     cacheHits: cache.hits,
     cacheCount: await cache.count(),

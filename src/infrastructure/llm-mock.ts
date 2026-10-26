@@ -123,7 +123,8 @@ function promptEvidences(user: string): Array<{ id: string; claim: string }> {
 function mockCitations(user: string, title: string): string {
   if (!user.includes("EVIDÊNCIAS DA PESQUISA")) return "";
   const cited = promptEvidences(user).slice(0, 3);
-  if (cited.length === 0) return `\n${title}\n\n- Sem evidência pesquisada: as premissas acima são [INFERENCE].\n`;
+  if (cited.length === 0)
+    return `\n${title}\n\n- Sem evidência pesquisada: as premissas acima são [INFERENCE].\n`;
   return `\n${title}\n\n${cited.map((item) => `- ${item.claim} [${item.id}]`).join("\n")}\n`;
 }
 
@@ -331,6 +332,28 @@ Métricas de uso, de conversão e de churn.
 }
 
 /**
+ * Premissas do mock: determinísticas por ideia (a partir do nome), com fonte INFERENCE.
+ * A task 1.13 completa o mock com fontes em evidências e seção 11; aqui o mínimo para o
+ * pipeline pedir premissas uma vez por ideia sem quebrar os testes legados.
+ */
+function mockPremises(user: string): {
+  fatores: Array<{ nome: string; valor: number; unidade: string; fonte: string }>;
+  recuperacao: number;
+} {
+  let seed = 0;
+  for (const char of user) seed = (seed * 31 + char.charCodeAt(0)) % 1000;
+  const first = 10 + (seed % 20);
+  const second = 100 + ((seed * 7) % 100);
+  return {
+    fatores: [
+      { nome: "ocorrências por mês", valor: first, unidade: "ocorrências/mês", fonte: "INFERENCE" },
+      { nome: "custo por ocorrência", valor: second, unidade: "R$", fonte: "INFERENCE" },
+    ],
+    recuperacao: 0.5,
+  };
+}
+
+/**
  * Ideias do mock respeitando o que o prompt proibe repetir.
  *
  * O pipeline de adicao lista as ideias que o estudo ja tem e pede outras. Um mock que devolvesse
@@ -374,7 +397,10 @@ export class LlmMock implements LlmClient {
       return Promise.resolve(`${MOCK_BRIEF}${mockCitations(user, "## Evidências da pesquisa")}`);
     }
     if (system.includes("PALAVRA-CHAVE: BUSCAS")) return Promise.resolve(JSON.stringify(mockQueries(user)));
-    if (system.includes("PALAVRA-CHAVE: EVIDENCIAS")) return Promise.resolve(JSON.stringify(mockEvidences(user)));
+    if (system.includes("PALAVRA-CHAVE: EVIDENCIAS"))
+      return Promise.resolve(JSON.stringify(mockEvidences(user)));
+    if (system.includes("PALAVRA-CHAVE: PREMISSAS"))
+      return Promise.resolve(JSON.stringify(mockPremises(user)));
     return Promise.resolve(documentFixture(user));
   }
 }
