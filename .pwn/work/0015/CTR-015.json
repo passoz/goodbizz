@@ -55,7 +55,7 @@
     "frozen_tests": [
       {
         "path": "tests/search-settings.test.ts",
-        "sha256": "03c2cb418b7a7444e975267c0e75298ca9c9a3898ee2d71360dc7f924b6fa65c"
+        "sha256": "d2f3d1513b809620cae8e028442c449811e155ea5af29537def6b00f258ac2f5"
       }
     ]
   },
