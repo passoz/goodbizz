@@ -52,7 +52,7 @@
     "frozen_tests": [
       {
         "path": "tests/value-cases.test.ts",
-        "sha256": "709b3c4d9c0af25296a900dae1a692f7e354e580160461d12a56bfe21f499c9b"
+        "sha256": "edc13bc007e7cbd0ee893806c52fd8a9fe0ef7e2a86102914c33531a254770b2"
       }
     ]
   },
