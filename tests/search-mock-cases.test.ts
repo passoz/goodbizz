@@ -41,7 +41,7 @@ describe("casos da busca simulada", () => {
     const rivalUrls = new Set(rival.map((result) => result.url));
     const overlap = [...priceUrls].filter((url) => rivalUrls.has(url));
     expect(overlap).toHaveLength(0);
-    for (const result of price) expect(result.content).toContain("padaria");
+    for (const result of price) expect(result.content).toContain("QR-001"); // RED: o mock sem fiação não marca a origem
   });
 
   test("QR-001: a mesma busca após outras buscas repete as URLs", async () => {

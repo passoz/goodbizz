@@ -65,6 +65,7 @@ describe("busca simulada determinística", () => {
       expect(first.length).toBeGreaterThan(0);
       expect(second).toEqual(first);
       expect(fetches).toBe(0);
+      for (const evidence of first) expect(evidence.url).toContain("mock.busca.test");
     } finally {
       globalThis.fetch = realFetch;
     }
