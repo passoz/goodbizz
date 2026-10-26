@@ -136,17 +136,17 @@ async function requestIdeaPremises(
 
 /**
  * Monta o bloco VALOR de uma ideia a partir das premissas validadas. Sem premissas (falha
- * dupla), devolve `undefined` e o documento sai sem a conta. O setup é fixo em 1500 até a
- * task 1.8 parametrizar o `setupFee` no estudo.
+ * dupla), devolve `undefined` e o documento sai sem a conta. O setup vem do estudo e entra
+ * na chave de cache do documento, então trocar o setup invalida o documento gravado.
  */
 export function valueBlockFor(
   premises: readonly IdeaPremises[],
   ideaName: string,
   monthlyTicket: number,
+  setupFee = 1500,
 ): IdeaValueBlock | undefined {
   const found = premises.find((entry) => entry.ideaName === ideaName)?.premises;
   if (found === null || found === undefined) return undefined;
-  const setupFee = 1500;
   return {
     premises: found.fatores,
     value: calculateValue({
@@ -376,6 +376,7 @@ export async function generateAddition(
       providerScope,
       cfg.niche,
       String(cfg.monthlyTicket),
+      String(cfg.setupFee),
       evaluation.name,
       String(evaluation.index),
       evidenceHash(own),
@@ -389,7 +390,7 @@ export async function generateAddition(
         cfg,
         brief,
         own,
-        valueBlockFor(additionPremises, evaluation.name, cfg.monthlyTicket),
+        valueBlockFor(additionPremises, evaluation.name, cfg.monthlyTicket, cfg.setupFee),
         evaluation.name,
       );
       text = generated.text;
@@ -598,6 +599,7 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
       providerScope,
       cfg.niche,
       String(cfg.monthlyTicket),
+      String(cfg.setupFee),
       ordered.name,
       String(ordered.index),
       evidenceHash(own),
@@ -611,7 +613,7 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
         cfg,
         brief,
         own,
-        valueBlockFor(premises, evaluation.name, cfg.monthlyTicket),
+        valueBlockFor(premises, evaluation.name, cfg.monthlyTicket, cfg.setupFee),
         evaluation.name,
       );
       text = generated.text;

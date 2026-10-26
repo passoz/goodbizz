@@ -5,6 +5,7 @@
  * `dados.json`, so the stored payload stays compatible with `recalibrate`.
  */
 import { asc, desc, eq } from "drizzle-orm";
+import type { Database } from "bun:sqlite";
 
 import type { Db } from "./db.ts";
 import { evaluations, studies } from "./schema.ts";
@@ -148,13 +149,7 @@ function usageOf(json: string | null): StudyUsage | null {
 }
 
 export class SqliteStudyRepository implements StudyRepository {
-  private readonly db: Db;
-  /** setupFee por estudo até a 1.10 criar a coluna `setup_fee` (QR-004). */
-  private readonly setupFees = new Map<string, number>();
-
-  constructor(db: Db) {
-    this.db = db;
-  }
+  constructor(private readonly db: Db) {}
 
   async save(record: StudyRecord): Promise<void> {
     const values = {
@@ -165,6 +160,7 @@ export class SqliteStudyRepository implements StudyRepository {
       description: record.description,
       city: record.city,
       monthlyTicket: record.monthlyTicket,
+      setupFee: record.setupFee,
       numIdeas: record.numIdeas,
       painMethod: record.painMethod,
       mock: record.mock,
@@ -177,7 +173,6 @@ export class SqliteStudyRepository implements StudyRepository {
       usageJson: record.usage ? JSON.stringify(record.usage) : null,
       evidencesJson: JSON.stringify(record.evidences),
     };
-    this.setupFees.set(record.id, record.setupFee);
     this.db
       .insert(studies)
       .values(values)
@@ -189,6 +184,7 @@ export class SqliteStudyRepository implements StudyRepository {
           description: values.description,
           city: values.city,
           monthlyTicket: values.monthlyTicket,
+          setupFee: values.setupFee,
           numIdeas: values.numIdeas,
           painMethod: values.painMethod,
           mock: values.mock,
@@ -213,6 +209,7 @@ export class SqliteStudyRepository implements StudyRepository {
     if (patch.description !== undefined) set.description = patch.description;
     if (patch.city !== undefined) set.city = patch.city;
     if (patch.monthlyTicket !== undefined) set.monthlyTicket = patch.monthlyTicket;
+    if (patch.setupFee !== undefined) set.setupFee = patch.setupFee;
     if (patch.numIdeas !== undefined) set.numIdeas = patch.numIdeas;
     if (patch.painMethod !== undefined) set.painMethod = patch.painMethod;
     if (patch.mock !== undefined) set.mock = patch.mock;
@@ -234,7 +231,10 @@ export class SqliteStudyRepository implements StudyRepository {
   }
 
   async get(id: string): Promise<StudyRecord | null> {
-    const row = this.db.select().from(studies).where(eq(studies.id, id)).get();
+    // Banco anterior à migração 0007 não tem a coluna `setup_fee`: o Drizzle devolve o nome
+    // da coluna no lugar do valor, então a leitura cai para o SQL tolerante (QR-004).
+    if (!this.hasSetupFeeColumn()) return this.getLegacy(id);
+    const row = this.db.select().from(studies).where(eq(studies.id, id)).get() ?? null;
     if (!row) return null;
     const evalRows = this.db
       .select()
@@ -265,7 +265,7 @@ export class SqliteStudyRepository implements StudyRepository {
       description: row.description,
       city: row.city,
       monthlyTicket: row.monthlyTicket,
-      setupFee: this.setupFees.get(id) ?? 1500,
+      setupFee: row.setupFee ?? 1500,
       numIdeas: row.numIdeas,
       painMethod: row.painMethod as PainMethod,
       mock: row.mock,
@@ -335,6 +335,47 @@ export class SqliteStudyRepository implements StudyRepository {
         .where(eq(studies.id, studyId))
         .run();
     });
+  }
+
+  /** A coluna `setup_fee` existe quando a migração 0007 já rodou. */
+  private hasSetupFeeColumn(): boolean {
+    const sqlite = (this.db as unknown as { $client: Database }).$client;
+    const columns = sqlite.query("PRAGMA table_info(studies)").all() as Array<{ name: string }>;
+    return columns.some((column) => column.name === "setup_fee");
+  }
+
+  /** Leitura de banco anterior à migração 0007 (sem `setup_fee`): devolve o padrão 1500. */
+  private getLegacy(id: string): StudyRecord | null {
+    const sqlite = (this.db as unknown as { $client: Database }).$client;
+    const row = sqlite.query("SELECT * FROM studies WHERE id = ?").get(id) as Record<string, unknown> | null;
+    if (!row || typeof row["id"] !== "string") return null;
+    return {
+      id: row["id"],
+      createdAt: String(row["created_at"] ?? ""),
+      updatedAt: String(row["updated_at"] ?? ""),
+      niche: String(row["niche"] ?? ""),
+      description: String(row["description"] ?? ""),
+      city: String(row["city"] ?? ""),
+      monthlyTicket: Number(row["monthly_ticket"] ?? 0),
+      setupFee: 1500,
+      numIdeas: Number(row["num_ideas"] ?? 0),
+      painMethod: row["pain_method"] as PainMethod,
+      mock: row["mock"] === 1 || row["mock"] === true,
+      artifactDir: String(row["artifact_dir"] ?? ""),
+      brief: String(row["brief"] ?? ""),
+      progress: {
+        state: (row["state"] as StudyState) ?? "pending",
+        step: String(row["step"] ?? ""),
+        error: (row["error"] as string | null) ?? null,
+      },
+      evaluations: [],
+      summary: row["summary_json"] ? (JSON.parse(String(row["summary_json"])) as StudySummary) : null,
+      usage: usageOf(typeof row["usage_json"] === "string" ? row["usage_json"] : null),
+      evidences:
+        typeof row["evidences_json"] === "string" && row["evidences_json"] !== ""
+          ? (JSON.parse(String(row["evidences_json"])) as Evidence[])
+          : [],
+    };
   }
 
   /** Apaga o estudo e as avaliações dele na mesma transação. */

@@ -1,0 +1,1 @@
+ALTER TABLE `studies` ADD `setup_fee` integer NOT NULL DEFAULT 1500;

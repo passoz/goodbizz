@@ -13,6 +13,8 @@ export const studies = sqliteTable("studies", {
   description: text("description").notNull().default(""),
   city: text("city").notNull().default(""),
   monthlyTicket: integer("monthly_ticket").notNull(),
+  /** Taxa de implantação em BRL (QR-004: estudo antigo abre com 1500). */
+  setupFee: integer("setup_fee").notNull().default(1500),
   numIdeas: integer("num_ideas").notNull(),
   painMethod: text("pain_method").notNull(),
   mock: integer("mock", { mode: "boolean" }).notNull().default(false),
