@@ -1,0 +1,33 @@
+{
+  "work_id": "0016",
+  "title": "Cada ideia vira uma proposta de valor com a conta do retorno aberta",
+  "capabilities": [
+    {
+      "id": "CAP-001",
+      "name": "Cada ideia vira uma proposta de valor com a conta do retorno aberta",
+      "description": "Capacidade entregue pelo Work 0016: Cada ideia vira uma proposta de valor com a conta do retorno aberta.",
+      "rules": [
+        "BR-001",
+        "BR-002"
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "BR-001",
+      "statement": "A execução deve permanecer dentro da write_allow do contrato V4.",
+      "coverage": [
+        "CAP-001"
+      ],
+      "evidence": "diff guard"
+    },
+    {
+      "id": "BR-002",
+      "statement": "Nenhuma regressão: a suíte existente deve permanecer verde.",
+      "coverage": [
+        "CAP-001"
+      ],
+      "evidence": "bun test"
+    }
+  ]
+}

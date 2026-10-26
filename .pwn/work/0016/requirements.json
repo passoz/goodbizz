@@ -1,0 +1,14 @@
+{
+  "work_id": "0016",
+  "requirements": [
+    {
+      "id": "FR-001",
+      "title": "Implementar \"Cada ideia vira uma proposta de valor com a conta do retorno aberta\"",
+      "user_story": "Como operador, quero \"Cada ideia vira uma proposta de valor com a conta do retorno aberta\" para obter o resultado descrito no objetivo",
+      "acceptance_criteria": [
+        "bun test — a suíte completa passa com exit 0",
+        "bun run check — typecheck estrito passa com exit 0"
+      ]
+    }
+  ]
+}
