@@ -62,7 +62,7 @@ describe("FR-004: bloco VALOR e seção 11", () => {
           tier: "A",
         } as never,
       ];
-      const block = dataBlock(evaluations[0], cfg, valueArgs() as never);
+      const block = dataBlock(evaluations[0]!, cfg, valueArgs() as never);
       expect(block).toContain("VALOR");
       expect(block).toContain("horas perdidas");
       expect(block).toContain("INFERENCE");
