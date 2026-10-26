@@ -1,0 +1,28 @@
+{
+  "receipt_id": "194b12f2c667f3a248c70d61e18afb8da4255d7fab343acc8ce31214ca8c5dbf",
+  "version": 1,
+  "kind": "independent-acceptance",
+  "work_id": "0016",
+  "task_id": "G-2",
+  "approval_id": "c84342a862da9974bac54e07e3bfc671bf273c57248b2f104c9ec51c2143023b",
+  "candidate_snapshot_digest": "9ff695848a34783102836404044cf72fb5c489843e3396b0fd921cb395be44e1",
+  "dependency_digest": "7143301af05f4c2ad17dec16c2fcef9261505b35f729f166fe4db086ed5a9a93",
+  "sandbox_digest": "6377a8a3d92b5dab8fc1451737e757921930deeea3a14f5ba097c3146f3d532c",
+  "outcome": "pass",
+  "checks": [
+    {
+      "id": "G-2",
+      "outcome": "pass",
+      "exit_code": 0,
+      "output_digest": "0a7cbec9e31e5ab1dc3f62bf0e9994201b491a121c31235f27316f5151281817",
+      "baseline_exit_code": null,
+      "baseline_suspect_environmental": false
+    }
+  ],
+  "verifier": {
+    "id": "note-2fc7b258",
+    "public_key_fingerprint": "454a5cb63b7e7e28c5f8b05e73cd14773771ff414b15e0e1d087cb7a66f53615"
+  },
+  "created_at": "2026-10-26T03:31:01.177Z",
+  "signature": "CK6SqOORBtifA6mrGRTQvBdfIYhiogV0sOUXO/7QPysnYIDHGC5D1hd8eXcRQ3fluZ6jiOMOw9FNm5jypFJQAA=="
+}
