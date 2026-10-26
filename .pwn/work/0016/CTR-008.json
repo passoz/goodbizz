@@ -51,7 +51,12 @@
     "required_evidence": [
       "evidence.json"
     ],
-    "frozen_tests": []
+    "frozen_tests": [
+      {
+        "path": "tests/setup-cli.test.ts",
+        "sha256": "d26c30f1b5ea217eaace4ac4dcabf8027a70c8ecb1e7d962c7e2cb09d9c99aa7"
+      }
+    ]
   },
   "scope_contract": {
     "write_allow": [
