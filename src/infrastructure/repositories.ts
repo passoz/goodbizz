@@ -13,6 +13,7 @@ import type { StudyRepository } from "../domain/ports.ts";
 import type {
   Evidence,
   IdeaEvaluation,
+  IdeaValue,
   PainMethod,
   StudyListItem,
   StudyProgress,
@@ -58,10 +59,20 @@ interface IdeaJson {
   };
   indice: number;
   tier: Tier;
+  valor?: {
+    premissas: Array<{ nome: string; valor: number; unidade: string; fonte: string }>;
+    recuperacao: number;
+    perda_mes: number;
+    ganho_mes: number;
+    saldo_mes: number;
+    payback_meses: number | null;
+    retorno_12m: number;
+    setup_fee: number;
+  };
 }
 
-/** Domain evaluation -> baseline `dados.json` idea object. */
-function evaluationToIdeaJson(e: IdeaEvaluation): IdeaJson {
+/** Domain evaluation -> baseline `dados.json` idea object (CON-006: bloco `valor` aditivo). */
+function evaluationToIdeaJson(e: IdeaEvaluation & { value?: IdeaValue }): IdeaJson {
   return {
     nome: e.name,
     setor: e.sector,
@@ -95,10 +106,24 @@ function evaluationToIdeaJson(e: IdeaEvaluation): IdeaJson {
     },
     indice: e.index,
     tier: e.tier,
+    ...(e.value === undefined
+      ? {}
+      : {
+          valor: {
+            premissas: e.value.premises.map((premise) => ({ ...premise })),
+            recuperacao: e.value.recovery,
+            perda_mes: e.value.loss,
+            ganho_mes: e.value.gain,
+            saldo_mes: e.value.balance,
+            payback_meses: e.value.paybackMonths,
+            retorno_12m: e.value.return12m,
+            setup_fee: e.value.setupFee,
+          },
+        }),
   };
 }
 
-/** Baseline `dados.json` idea object -> domain evaluation. */
+/** Baseline `dados.json` idea object -> domain evaluation (bloco `valor` ausente vira ideia sem valor). */
 function ideaJsonToEvaluation(j: IdeaJson): IdeaEvaluation {
   return {
     name: j.nome,
@@ -133,6 +158,20 @@ function ideaJsonToEvaluation(j: IdeaJson): IdeaEvaluation {
     },
     index: j.indice,
     tier: j.tier,
+    ...(j.valor === undefined
+      ? {}
+      : {
+          value: {
+            premises: j.valor.premissas.map((premise) => ({ ...premise })),
+            recovery: j.valor.recuperacao,
+            loss: j.valor.perda_mes,
+            gain: j.valor.ganho_mes,
+            balance: j.valor.saldo_mes,
+            paybackMonths: j.valor.payback_meses,
+            return12m: j.valor.retorno_12m,
+            setupFee: j.valor.setup_fee,
+          },
+        }),
   };
 }
 

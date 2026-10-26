@@ -29,7 +29,9 @@ export const DADOS_CONFIG_KEYS: Record<string, string> = {
 };
 
 /** Converte uma avaliação para o formato gravado em dados.json. */
-export function evaluationToJson(evaluation: IdeaEvaluation): Record<string, unknown> {
+export function evaluationToJson(
+  evaluation: IdeaEvaluation & { value?: IdeaValue },
+): Record<string, unknown> {
   const i = evaluation.indicators;
   const g = evaluation.business;
   const a = evaluation.algorithm;
@@ -66,14 +68,14 @@ export function evaluationToJson(evaluation: IdeaEvaluation): Record<string, unk
     },
     indice: evaluation.index,
     tier: evaluation.tier,
-    ...valueToJson("value" in evaluation ? evaluation.value : undefined),
+    ...valueToJson(evaluation.value),
   };
 }
 
 /** Serializa a chave aditiva `valor`; ideia sem valor não ganha a chave (QR-002). */
-function valueToJson(value: unknown): Record<string, unknown> {
-  if (typeof value !== "object" || value === null || !("loss" in value)) return {};
-  const typed = value as IdeaValue;
+function valueToJson(value: IdeaValue | undefined): Record<string, unknown> {
+  if (value === undefined) return {};
+  const typed = value;
   return {
     valor: {
       premissas: typed.premises.map((premise) => ({

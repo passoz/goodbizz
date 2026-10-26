@@ -1775,6 +1775,13 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; token: s
                   <th class="num">
                     <Term of="desvio">Desvio</Term> <Hint>menor é melhor</Hint>
                   </th>
+                  <th class="num">
+                    <Term of="perda mensal">Perda mensal</Term>{" "}
+                    <Hint>R$ por mês; conta aberta na seção 11</Hint>
+                  </th>
+                  <th class="num">
+                    <Term of="payback">Payback</Term> <Hint>meses para a solução se pagar</Hint>
+                  </th>
                   <th class="tip-end">
                     <Term of="dor">Dor</Term> <Hint>FORTE é o sinal que interessa</Hint>
                   </th>
@@ -1834,6 +1841,17 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; token: s
                         title="Desvio entre as paráfrases das sondas: menor é melhor. Acima de 0.15 a medição é considerada instável"
                       >
                         {idea.algorithm.deviation.toFixed(3)}
+                      </td>
+                      <td class="num" title="Perda mensal do dono em R$; conta aberta na seção 11 do plano">
+                        {idea.value === undefined ? "-" : `R$ ${idea.value.loss.toLocaleString("pt-BR")}`}
+                      </td>
+                      <td
+                        class="num"
+                        title="Meses para a solução se pagar com o setup do estudo; vazio quando não se paga"
+                      >
+                        {idea.value?.paybackMonths === undefined || idea.value?.paybackMonths === null
+                          ? "-"
+                          : `${idea.value.paybackMonths.toFixed(2)} meses`}
                       </td>
                       <td>
                         <PainBadge label={idea.algorithm.label} />
