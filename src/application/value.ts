@@ -37,7 +37,7 @@ export function calculateValue(input: ValueInput): ValueResult {
   const perdaMes = input.factors.reduce((total, factor) => total * factor, 1);
   const ganhoMes = perdaMes * input.recovery;
   const saldoMes = ganhoMes - input.monthlyTicket;
-  const paybackMeses = Math.round((input.setupFee / saldoMes) * 100) / 100;
+  const paybackMeses = saldoMes <= 0 ? null : Math.round((input.setupFee / saldoMes) * 100) / 100;
   const retorno12m = 12 * ganhoMes - input.setupFee - 12 * input.monthlyTicket;
   return { perdaMes, ganhoMes, saldoMes, paybackMeses, retorno12m };
 }
