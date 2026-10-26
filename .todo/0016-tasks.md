@@ -227,7 +227,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.10] O setupFee persiste no banco com migração aditiva
+### [x] [1.10] O setupFee persiste no banco com migração aditiva
 
 **Requirement:** QR-004
 **Depends on:** 1.8
