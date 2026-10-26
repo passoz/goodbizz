@@ -7,8 +7,8 @@ bun test v1.4.2 (744846f84)
 
  3 pass
  0 fail
- 8 expect() calls
-Ran 3 tests across 1 file. [49.00ms]
+ 28 expect() calls
+Ran 3 tests across 1 file. [61.00ms]
 
 MUTATION_EXIT: 1
 MUTATION_OUTPUT:
@@ -28,13 +28,13 @@ Expected to contain: "QR-001"
 Received: "Resultado 1 para \"preço de sistema para padaria\". Levantamento com 120 negócios mostra que preço de sistema para padaria custa R$ 99,90 por mês. Fonte verificada em https://mock.busca.test/preco-de-sistema-para-padaria/h5ms2n-1."
 
       at <anonymous> (/home/passoz/dev/goodbizz/tests/search-mock-cases.test.ts:44:56)
-(fail) casos da busca simulada > QR-001: buscas distintas devolvem URLs distintas com conteúdo da busca [0.53ms]
+(fail) casos da busca simulada > QR-001: buscas distintas devolvem URLs distintas com conteúdo da busca [0.55ms]
 
  2 pass
  1 fail
- 7 expect() calls
-Ran 3 tests across 1 file. [53.00ms]
+ 27 expect() calls
+Ran 3 tests across 1 file. [52.00ms]
 
 MUTATION_VERDICT: PASS
 VERDICT: PASS
-CHAIN_HASH: 554cbbc9430c03bf9737922f3a623461b46e373ef63decde833b0ba7ef0814f7
+CHAIN_HASH: 9b22fe79c685c51c98b48cb99202616bbeb190705cd54643be6f22af6fb902ce

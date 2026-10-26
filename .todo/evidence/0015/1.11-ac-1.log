@@ -7,8 +7,8 @@ bun test v1.4.2 (744846f84)
 
  2 pass
  0 fail
- 6 expect() calls
-Ran 2 tests across 1 file. [58.00ms]
+ 26 expect() calls
+Ran 2 tests across 1 file. [54.00ms]
 
 MUTATION_EXIT: 0
 MUTATION_OUTPUT:
@@ -16,9 +16,9 @@ bun test v1.4.2 (744846f84)
 
  2 pass
  0 fail
- 6 expect() calls
+ 26 expect() calls
 Ran 2 tests across 1 file. [63.00ms]
 
 MUTATION_VERDICT: FAIL
 VERDICT: FAIL
-CHAIN_HASH: 3def22522e96ed861251078afce02040221eefd27414be8b9af35c247e8f177f
+CHAIN_HASH: ae7cac82ec3bdfd83e38bc11f8ab2dcc3cdfc91f29a2a6633446896e5cca9e2f

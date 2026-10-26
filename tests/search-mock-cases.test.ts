@@ -79,6 +79,7 @@ describe("fiação no serviço", () => {
       });
       handle.sqlite.close();
       expect(result.evidences.length).toBeGreaterThan(0);
+      for (const evidence of result.evidences) expect(evidence.url).toContain("mock.busca.test"); // RED QR-001: origem simulada
       expect(fetches).toBe(0);
     } finally {
       globalThis.fetch = realFetch;
