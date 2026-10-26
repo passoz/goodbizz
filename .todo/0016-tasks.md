@@ -319,7 +319,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.14] O README documenta o setup, a seção 11 e a spec é reconciliada
+### [x] [1.14] O README documenta o setup, a seção 11 e a spec é reconciliada
 
 **Requirement:** SC-004
 **Depends on:** none
