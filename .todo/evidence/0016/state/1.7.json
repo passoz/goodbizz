@@ -22,7 +22,21 @@
     "src/application/generate-study.ts"
   ],
   "plan_path": ".todo/0016-tasks.md",
-  "red_tests": null,
+  "red_command": [
+    "bun",
+    "--config=tests/bunfig.focus.toml",
+    "test",
+    "tests/value-regen-cases.test.ts",
+    "-t",
+    "FR-007"
+  ],
+  "red_expect": "R$ 3.000 por ano pede segunda",
+  "red_tests": {
+    "tests/value-regen-cases.test.ts": {
+      "exists": true,
+      "sha256": "d6f933e1c1e00fcc8974388cffdf906a3f8bb8b8e6a90afffd265fe0b04a4ced"
+    }
+  },
   "state_version": 2,
   "task": "1.7",
   "task_definition_sha256": "25d32eba71f35d36d5dbdca9f8b602c45410a6c5128ac7dcc216a9c3ab42b4b0",
