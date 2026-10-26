@@ -32,7 +32,21 @@
     "src/application/generation.ts"
   ],
   "plan_path": ".todo/0016-tasks.md",
-  "red_tests": null,
+  "red_command": [
+    "bun",
+    "--config=tests/bunfig.focus.toml",
+    "test",
+    "tests/value-block-cases.test.ts",
+    "-t",
+    "FR-004"
+  ],
+  "red_expect": "toContain",
+  "red_tests": {
+    "tests/value-block-cases.test.ts": {
+      "exists": true,
+      "sha256": "4934daf2a8a827ff5c738bcced7cbcabbb5ffcf45642c1b429a713e42e370049"
+    }
+  },
   "state_version": 2,
   "task": "1.4",
   "task_definition_sha256": "ae1323c2abe8c0a005d11e1ad15de06e2c6e958bd1b762b8bd2560e66f43f206",

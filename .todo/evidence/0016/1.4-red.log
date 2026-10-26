@@ -1,0 +1,61 @@
+TASK: 1.4
+CHECK: RED
+COMMAND: bun --config=tests/bunfig.focus.toml test tests/value-block-cases.test.ts -t FR-004
+EXIT: 1
+OUTPUT:
+bun test v1.4.2 (744846f84)
+
+tests/value-block-cases.test.ts:
+61 |           index: 1.5,
+62 |           tier: "A",
+63 |         } as never,
+64 |       ];
+65 |       const block = dataBlock(evaluations[0], cfg, valueArgs() as never);
+66 |       expect(block).toContain("VALOR");
+                         ^
+error: expect(received).toContain(expected)
+
+Expected to contain: "VALOR"
+Received: "Ideia: Ideia X (setor: operacao)\nDescrição: descricao\nNicho: Depositos De Bebidas | Cidade/região: Cabo Frio\nTicket assumido: R$ 300/mês (R$ 3600/ano)\n\nÍNDICE DE AÇÃO: 1.5 | TIER: A\nfit: 1/2.00 (confiança 0.50)\nfacilidade de venda: 1/2.00 (confiança 0.50)\ndisrupção: 1/2.00 (confiança 0.50)\ntipo de dor: perda (confiança 0.50) | distribuição: perda=1.00\nsuporte solo: 1.00\n\nALGORITMO DA DOR: forte | escore de dor 1 | dor interna 1 | margem +0.00 | desvio 0\nVALIDAÇÃO: pagaria R$ 300/mês = 0.50 | 30 clientes em 24 meses = 0.50 | preço vs valor = 1/2.00 (confiança 0.50)\n\nEscalas: fit 0=exige escala corporativa, 1=exige mudar rotina, 2=resolve o caos sem mudar hábito. Venda 0=benefício invisível, 2=ataca perda de dinheiro/reputação imediata. Disrupção 0=só automatiza o que existe, 2=muda o modelo de operação. Preço 0=acima do valor percebido, 2=abaixo do valor com folga.\n\nRegras de negócio para este plano: o ticket é TETO, não piso; a meta de clientes é de 10 a 15 em 24 meses (o 30 medido é upside, não base); nenhum TAM nacional deve ser usado como argumento principal."
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/value-block-cases.test.ts:66:21)
+(fail) FR-004: bloco VALOR e seção 11 > FR-004: dataBlock lista as premissas com fonte e os números calculados [4.09ms]
+71 |       handle.sqlite.close();
+72 |     }
+73 |   });
+74 | 
+75 |   test("FR-004: o plano simulado tem as 11 seções com as 6 subseções da seção 11", async () => {
+76 |     expect(DOC_SECTIONS).toContain("11. Proposta de valor e retorno");
+                              ^
+error: expect(received).toContain(expected)
+
+Expected to contain: "11. Proposta de valor e retorno"
+Received: [ "1. Resumo executivo", "2. Indicadores coletados", "3. Como funciona", "4. Estratégia de venda",
+  "5. Estratégia de marketing", "6. Precificação e economia unitária", "7. SWOT", "8. Business Model Canvas",
+  "9. Ferramentas complementares", "10. Próximos passos"
+]
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/value-block-cases.test.ts:76:26)
+(fail) FR-004: bloco VALOR e seção 11 > FR-004: o plano simulado tem as 11 seções com as 6 subseções da seção 11 [0.23ms]
+113 |         cache: new StudyCache(new SqliteCacheStore(handle.db)),
+114 |         logger: QUIET,
+115 |       });
+116 |       const docs = Object.values(result.documents);
+117 |       expect(docs.length).toBeGreaterThan(0);
+118 |       expect(docs[0] as string).toContain("estimativa a confirmar");
+                                      ^
+error: expect(received).toContain(expected)
+
+Expected to contain: "estimativa a confirmar"
+Received: "# Triagem de WhatsApp (setor: atendimento)\n\n**Índice de Ação:** 0.92 · **Tier:** C\n**Dor verificada:** FORTE · escore de dor 1 · dor interna 0 · margem +1.00 · desvio 0\n\n> Documento gerado em modo `--mock`. O texto abaixo é sintético e existe apenas para\n> exercitar o pipeline de ponta a ponta. Não use como estudo real.\n\n## 1. Resumo executivo\n\nEsta é uma saída de exemplo. Em execução real, o LLM escreve aqui o veredito da ideia,\nas duas ou três fraquezas que o plano precisa resolver e o alerta de preço.\n\nO índice de ação medido foi 0.92, com Tier C. A dor foi classificada como FORTE · escore de dor 1 · dor interna 0 · margem +1.00 · desvio 0.\n\n## 2. Indicadores coletados\n\n### 2.1 Indicadores principais\n\n| Indicador | Valor |\n|---|---|\n| Aderência ao mercado (fit) | 1.26/2.00 (confiança 0.70) |\n| Facilidade de venda | 0.58/2.00 (confiança 0.70) |\n| Disrupção | 1.7/2.00 (confiança 0.70) |\n| Suporte solo | 0.97 |\n| Tipo de dor | reputacao (confiança 0.80) · distribuição: backoffice=0.00, dinheiro_direto=0.00, reputacao=1.00 |\n\n### 2.2 Verificação automática da dor\n\nFORTE · escore de dor 1 · dor interna 0 · margem +1.00 · desvio 0\n\n### 2.3 Mercado\n\nEm execução real, esta seção recebe as âncoras de mercado do brief. Nenhum número de\nmercado é gerado pelo modelo: ou vem de uma evidência citada, ou é marcado `[INFERENCE]`.\n\nÂncoras pesquisadas:\n\n- Sem evidência pesquisada: as premissas acima são [INFERENCE].\n\n### 2.4 Validação de preço e meta\n\npagaria R$ 300/mês = 0.47 · 30 clientes em 24 meses = 0.47 · preço vs valor = 1.42/2.00 (confiança 0.70)\n\nO ticket de R$ 300 por mês é **teto, não piso**, e a meta de clientes é de 10 a 15 em\n24 meses.\n\n## 3. Como funciona\n\nFluxo de exemplo: a mensagem entra, o decisor classifica, o código decide e o dono recebe\napenas o que precisa de ação humana. Toda classificação abaixo do limiar de confiança vai\npara revisão em vez de ser executada.\n\n```json\n{\n  \"intencao\": {\n    \"type\": \"choice\",\n    \"instructions\": \"Classifique a intenção do cliente\",\n    \"criteria\": {\"duvida\": \"...\", \"compra\": \"...\", \"problema\": \"...\"}\n  },\n  \"urgencia\": {\"type\": \"bool\", \"instructions\": \"O cliente demonstra pressa?\"}\n}\n```\n\n## 4. Estratégia de venda\n\n1. Demonstrar com o dado do próprio dono, sem cobrar.\n2. Diagnóstico pago como filtro.\n3. Piloto com escopo fechado e métrica combinada.\n4. Assinatura mensal.\n\n| Objeção | Resposta |\n|---|---|\n| \"Já testei e não funcionou\" | Provar com o dado dele, não com promessa. |\n| \"É caro para o meu tamanho\" | Comparar com a perda mensal medida. |\n\n## 5. Estratégia de marketing\n\nPosicionamento em uma frase, mensagem principal, canais e calendário sazonal quando fizer\nsentido. Nada de jargão de IA.\n\n## 6. Precificação e economia unitária\n\nEntrada mais baixa que o teto, com migração para o preço cheio depois de valor provado.\nCusto marginal de modelo de decisão é de centavos por milhar de chamadas.\n\n## 7. SWOT\n\n- Forças: dor medida e mecanismo claro.\n- Fraquezas: suporte e integração são o gargalo, não o modelo.\n- Oportunidades: vender via associação local.\n- Ameaças: concorrente nacional e substituto gratuito.\n\n## 8. Business Model Canvas\n\n| Bloco | Conteúdo |\n|---|---|\n| Segmentos de cliente | dono-operador do nicho |\n| Proposta de valor | resolver a dor medida |\n| Canais | WhatsApp, indicação, associação |\n| Relacionamento | próximo na entrada, remoto no recorrente |\n| Fontes de receita | setup + mensalidade |\n| Recursos principais | o classificador e a integração |\n| Atividades principais | configurar, medir, vender |\n| Parcerias principais | associação local e provedor do canal |\n| Estrutura de custos | API, infraestrutura, suporte |\n\n## 9. Ferramentas complementares\n\n### 9.1 Cinco Forças de Porter\n\n| Força | Intensidade |\n|---|---|\n| Rivalidade | média |\n| Poder dos clientes | alto |\n| Poder dos fornecedores | alto |\n| Novos entrantes | alta |\n| Substitutos | média |\n\n### 9.2 Matriz de risco\n\n| Risco | Probabilidade | Impacto | Mitigação |\n|---|---|---|---|\n| benefícios invisíveis | média | alto | provar com o dado do cliente |\n\n### 9.3 4 Ps\n\nProduto, preço, praça e promoção definidos a partir dos indicadores medidos.\n\n### 9.4 Roadmap de 90 dias\n\n| Semana | Foco |\n|---|---|\n| 1-2 | oferta e discurso |\n| 3-4 | primeiras conversas |\n| 5-8 | pilotos |\n\n### 9.5 KPIs\n\nMétricas de uso, de conversão e de churn.\n\n## 10. Próximos passos\n\n1. Fechar a oferta.\n2. Conseguir um cliente conhecido para a demonstração.\n3. Medir a linha de base.\n4. Definir o limiar de confiança.\n5. Levar o caso pronto à associação local.\n"
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/value-block-cases.test.ts:118:33)
+(fail) FR-004: bloco VALOR e seção 11 > FR-004: sem evidência, a conta é estimativa a confirmar [17.32ms]
+
+ 0 pass
+ 3 fail
+ 4 expect() calls
+Ran 3 tests across 1 file. [56.00ms]
+
+VERDICT: PASS
+CHAIN_HASH: 5a1689867327ff5a142083f65bb076f225377a6e541793787215967136cfbef1

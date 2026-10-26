@@ -4,6 +4,7 @@
  *
  * Sem a impl, `dataBlock` não menciona "VALOR" e o documento simulado não tem
  * "## 11. Proposta de valor e retorno" — as asserções falham por comportamento.
+ * RED 1.4: sem bloco VALOR a primeira asserção falha.
  */
 import { describe, expect, test } from "bun:test";
 import { mkdtempSync } from "node:fs";
