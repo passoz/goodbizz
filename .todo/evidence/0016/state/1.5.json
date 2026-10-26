@@ -22,7 +22,21 @@
     "src/application/prompts.ts"
   ],
   "plan_path": ".todo/0016-tasks.md",
-  "red_tests": null,
+  "red_command": [
+    "bun",
+    "--config=tests/bunfig.focus.toml",
+    "test",
+    "tests/solo-framing-cases.test.ts",
+    "-t",
+    "FR-005"
+  ],
+  "red_expect": "consultor solo",
+  "red_tests": {
+    "tests/solo-framing-cases.test.ts": {
+      "exists": true,
+      "sha256": "15aeaeee6759bccd5c040e951bb8095ccbbd7bf05ef7a6709b216f5e2ac66cc8"
+    }
+  },
   "state_version": 2,
   "task": "1.5",
   "task_definition_sha256": "a6c10630fcb2ccae136a4abb7865c6bac28c9dbb62fd6d1bd5e192b31cc322c2",
