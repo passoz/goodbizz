@@ -78,7 +78,6 @@ describe("progresso em casos de borda", () => {
     const body = await (await app.request(`/studies/${study.id}`)).text();
     expect(body).toContain("Iniciando o estudo");
   });
-
   test("FR-001: passo antigo [3/6] segue legivel", async () => {
     const study = await service.create(resolveStudyConfig({ niche: "oficinas", mock: true }));
     await repo.update(study.id, {
@@ -87,5 +86,14 @@ describe("progresso em casos de borda", () => {
     const body = await (await app.request(`/studies/${study.id}`)).text();
     expect(body).toContain("avaliando as ideias");
     expect(body).toContain('id="progress-label"');
+  });
+
+  test("FR-001: passo [1/7] mostra a fase de pesquisa na web", async () => {
+    const study = await service.create(resolveStudyConfig({ niche: "oficinas", mock: true }));
+    await repo.update(study.id, {
+      progress: { state: "running", step: "[1/7] Pesquisando a web: 6 buscas", error: null },
+    });
+    const body = await (await app.request(`/studies/${study.id}`)).text();
+    expect(body).toContain("Fase 1 de 7 — Pesquisa na web");
   });
 });
