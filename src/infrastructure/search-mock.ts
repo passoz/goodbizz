@@ -47,7 +47,7 @@ export class SearchMock implements SearchClient {
         title: `Guia ${index + 1} sobre ${clean}`,
         url: `https://mock.busca.test/${slug}/${digest}-${index + 1}`,
         content:
-          `Resultado ${index + 1} para "${clean}" [QR-001]. ` +
+          `Resultado ${index + 1} para "${clean}". ` +
           `Levantamento com ${120 + index * 37} negócios mostra que ${clean} custa R$ ${99 + index * 41},90 por mês. ` +
           `Fonte verificada em https://mock.busca.test/${slug}/${digest}-${index + 1}.`,
       });

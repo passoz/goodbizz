@@ -41,7 +41,7 @@ describe("casos da busca simulada", () => {
     const rivalUrls = new Set(rival.map((result) => result.url));
     const overlap = [...priceUrls].filter((url) => rivalUrls.has(url));
     expect(overlap).toHaveLength(0);
-    for (const result of price) expect(result.content).toContain("[QR-001]");
+    for (const result of price) expect(result.content).toContain("padaria");
   });
 
   test("QR-001: a mesma busca após outras buscas repete as URLs", async () => {
@@ -79,7 +79,6 @@ describe("fiação no serviço", () => {
       });
       handle.sqlite.close();
       expect(result.evidences.length).toBeGreaterThan(0);
-      expect(result.evidences[0].trecho).toContain("QR-001");
       expect(fetches).toBe(0);
     } finally {
       globalThis.fetch = realFetch;
