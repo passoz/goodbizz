@@ -712,7 +712,7 @@ export const StudiesList: FC<{ studies: StudyListItem[]; token: string }> = (pro
 /** Formulario de criacao, em pagina propria. Os helpers explicam o efeito de cada campo. */
 export const StudyForm: FC<{
   token: string;
-  defaults: { monthlyTicket: number; numIdeas: number };
+  defaults: { monthlyTicket: number; setupFee: number; numIdeas: number };
   providers?: { llm: string; decider: string };
 }> = (props) => (
   <section>
@@ -785,6 +785,19 @@ export const StudyForm: FC<{
           <span class="hint">quanto o dono pagaria por mês; vira o teto, não o piso</span>
         </div>
         <div class="field">
+          <label for="setupFee">Taxa de implantação (R$)</label>
+          <input
+            id="setupFee"
+            name="setupFee"
+            type="number"
+            min="0"
+            max="100000"
+            step="1"
+            value={String(props.defaults.setupFee)}
+          />
+          <span class="hint">quanto o consultor cobra para implantar; entra na conta do payback</span>
+        </div>
+        <div class="field">
           <label for="numIdeas">Número de ideias</label>
           <input
             id="numIdeas"
@@ -829,6 +842,7 @@ export const StudyForm: FC<{
               description: form.elements["description"].value,
               city: form.elements["city"].value,
               monthlyTicket: Number(form.elements["monthlyTicket"].value) || undefined,
+              setupFee: Number(form.elements["setupFee"].value) || undefined,
               numIdeas: Number(form.elements["numIdeas"].value) || undefined,
               mock: form.elements["mock"].checked,
             }),

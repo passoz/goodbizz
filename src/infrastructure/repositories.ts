@@ -149,6 +149,8 @@ function usageOf(json: string | null): StudyUsage | null {
 
 export class SqliteStudyRepository implements StudyRepository {
   private readonly db: Db;
+  /** setupFee por estudo até a 1.10 criar a coluna `setup_fee` (QR-004). */
+  private readonly setupFees = new Map<string, number>();
 
   constructor(db: Db) {
     this.db = db;
@@ -175,6 +177,7 @@ export class SqliteStudyRepository implements StudyRepository {
       usageJson: record.usage ? JSON.stringify(record.usage) : null,
       evidencesJson: JSON.stringify(record.evidences),
     };
+    this.setupFees.set(record.id, record.setupFee);
     this.db
       .insert(studies)
       .values(values)
@@ -182,7 +185,6 @@ export class SqliteStudyRepository implements StudyRepository {
         target: studies.id,
         set: {
           createdAt: values.createdAt,
-          updatedAt: values.updatedAt,
           niche: values.niche,
           description: values.description,
           city: values.city,
@@ -263,6 +265,7 @@ export class SqliteStudyRepository implements StudyRepository {
       description: row.description,
       city: row.city,
       monthlyTicket: row.monthlyTicket,
+      setupFee: this.setupFees.get(id) ?? 1500,
       numIdeas: row.numIdeas,
       painMethod: row.painMethod as PainMethod,
       mock: row.mock,

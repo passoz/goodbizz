@@ -79,7 +79,7 @@ export function buildUiApp(deps: UiDeps): Hono {
     c.render(
       <StudyForm
         token={c.get("csrfToken")}
-        defaults={{ monthlyTicket: 300, numIdeas: 8 }}
+        defaults={{ monthlyTicket: 300, setupFee: 1500, numIdeas: 8 }}
         providers={deps.providers?.()}
       />,
       { title: "GoodBizz — novo estudo" },
@@ -116,7 +116,8 @@ export function buildUiApp(deps: UiDeps): Hono {
   ui.post("/ui/settings/active", requireCsrf, async (c) => {
     const body = await c.req.parseBody();
     const rawKind = body["kind"];
-    const kind = rawKind === "decider" ? "decider" : rawKind === "llm" ? "llm" : rawKind === "search" ? "search" : null;
+    const kind =
+      rawKind === "decider" ? "decider" : rawKind === "llm" ? "llm" : rawKind === "search" ? "search" : null;
     if (kind === null) {
       return c.json({ error: "VALIDATION_FAILED", message: "tipo de provedor inválido" }, 422);
     }
@@ -287,6 +288,7 @@ export function buildUiApp(deps: UiDeps): Hono {
     const description = typeof body["description"] === "string" ? body["description"].trim() : "";
     const city = typeof body["city"] === "string" ? body["city"].trim() : "";
     const ticket = Number(body["monthlyTicket"]);
+    const setup = Number(body["setupFee"]);
     const ideas = Number(body["numIdeas"]);
     const cfg = resolveStudyConfig({
       niche,
@@ -294,6 +296,7 @@ export function buildUiApp(deps: UiDeps): Hono {
       city,
       mock: body["mock"] !== undefined,
       monthlyTicket: Number.isFinite(ticket) && ticket > 0 ? Math.floor(ticket) : undefined,
+      setupFee: Number.isFinite(setup) ? Math.floor(setup) : undefined,
       numIdeas: Number.isFinite(ideas) && ideas > 0 ? Math.floor(ideas) : undefined,
     });
     const record = await deps.service.create(cfg);

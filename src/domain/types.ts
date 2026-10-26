@@ -262,6 +262,8 @@ export interface StudyRecord {
   description: string;
   city: string;
   monthlyTicket: number;
+  /** Taxa de implantação em BRL (QR-004: estudo antigo abre com 1500). */
+  setupFee: number;
   numIdeas: number;
   painMethod: PainMethod;
   mock: boolean;

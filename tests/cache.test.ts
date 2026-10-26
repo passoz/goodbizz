@@ -51,6 +51,7 @@ function makeRecord(): StudyRecord {
     description: "escritorio de bairro",
     city: "curitiba",
     monthlyTicket: 300,
+    setupFee: 1500,
     numIdeas: 2,
     painMethod: "choice",
     mock: true,
