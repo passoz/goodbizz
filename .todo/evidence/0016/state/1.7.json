@@ -1,0 +1,32 @@
+{
+  "baseline_commit": "7a9b61168b172506d8e62e6d48fa36d85f928636",
+  "baseline_implementation": {
+    "src/application/generate-study.ts": {
+      "exists": true,
+      "sha256": "15ddc73d577ff02f8464ca5fc19d607d48153cbe8a7e79fd375ee2d368b7efe9"
+    }
+  },
+  "baseline_tests": {
+    "tests/value-regen-cases.test.ts": {
+      "exists": false,
+      "sha256": null
+    }
+  },
+  "contract": {
+    "id": "CTR-007",
+    "sha256": "962a0be4145f49986ec7b1aea9136e707ec93f143c689e3b87b1b9f016d260f2"
+  },
+  "created_at": "2026-10-26T02:16:14.175Z",
+  "frozen_tests": [],
+  "implementation_files": [
+    "src/application/generate-study.ts"
+  ],
+  "plan_path": ".todo/0016-tasks.md",
+  "red_tests": null,
+  "state_version": 2,
+  "task": "1.7",
+  "task_definition_sha256": "25d32eba71f35d36d5dbdca9f8b602c45410a6c5128ac7dcc216a9c3ab42b4b0",
+  "test_files": [
+    "tests/value-regen-cases.test.ts"
+  ]
+}
