@@ -204,7 +204,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.9] O setupFee existe na API e no formulário de novo estudo
+### [x] [1.9] O setupFee existe na API e no formulário de novo estudo
 
 **Requirement:** EC-004
 **Depends on:** 1.8
