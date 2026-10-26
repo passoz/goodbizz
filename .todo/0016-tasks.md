@@ -135,7 +135,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.6] O guardrail extrai cada número sem fonte do documento
+### [x] [1.6] O guardrail extrai cada número sem fonte do documento
 
 **Requirement:** FR-006
 **Depends on:** none
