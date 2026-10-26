@@ -15,17 +15,15 @@ import { loadEnv } from "../src/config/env.ts";
 
 function harness() {
   const handle = openMigratedDatabase(":memory:");
-  const service = new StudyService(
-    new SqliteStudyRepository(handle.db),
-    {
-      llm: new LlmMock(),
-      decider: new DeciderMock(),
-      search: new SearchMock(),
-      cache: new StudyCache(new SqliteCacheStore(handle.db)),
-      logger: silentLogger(),
-    },
-    { outputDir: "", artifacts: false },
-  );
+  const service = new StudyService({
+    repo: new SqliteStudyRepository(handle.db),
+    cache: new StudyCache(new SqliteCacheStore(handle.db)),
+    llm: new LlmMock(),
+    decider: new DeciderMock(),
+    search: new SearchMock(),
+    logger: silentLogger(),
+    artifactsRoot: "",
+  });
   const api = new Hono();
   api.route(
     "/api",
