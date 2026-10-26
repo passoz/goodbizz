@@ -11,6 +11,29 @@ export interface Idea {
   description: string;
 }
 
+/** Premissa da conta do retorno: fator com fonte (`E#` de evidência ou `INFERENCE`). */
+export interface ValuePremise {
+  nome: string;
+  valor: number;
+  unidade: string;
+  fonte: string;
+}
+
+/**
+ * Conta do retorno de uma ideia, calculada pelo código a partir das premissas (FR-009).
+ * Chaves em português sem acento, no mesmo esquema do `dados.json`.
+ */
+export interface IdeaValue {
+  premises: ValuePremise[];
+  recovery: number;
+  loss: number;
+  gain: number;
+  balance: number;
+  paybackMonths: number | null;
+  return12m: number;
+  setupFee: number;
+}
+
 /** Resultado bruto do provedor de busca: o `content` é o texto que valida o trecho citado. */
 export interface SearchResult {
   title: string;
@@ -127,6 +150,12 @@ export interface StudyIdea extends IdeaEvaluation {
    * coluna `generated_at` não têm data; a UI omite o rótulo quando falta.
    */
   generatedAt?: string;
+  /**
+   * Conta do retorno calculada pelo código a partir das premissas (FR-009). Opcional porque
+   * ideias anteriores ao bloco de valor e ideias com premissas inválidas não têm conta; os
+   * artefatos mostram as colunas vazias nesses casos. Não entra no `payload_json` (CON-006).
+   */
+  value?: IdeaValue;
 }
 
 export interface PainGroups {

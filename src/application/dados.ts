@@ -5,7 +5,15 @@
 import { readFileSync } from "node:fs";
 
 import { ValidationError } from "../domain/errors.ts";
-import type { Evidence, Idea, IdeaEvaluation, StudyConfig, StudySummary, Tier } from "../domain/types.ts";
+import type {
+  Evidence,
+  Idea,
+  IdeaEvaluation,
+  IdeaValue,
+  StudyConfig,
+  StudySummary,
+  Tier,
+} from "../domain/types.ts";
 
 /**
  * Mapa campo do `StudyConfig` -> chave gravada em `config` dentro de dados.json.
@@ -58,6 +66,30 @@ export function evaluationToJson(evaluation: IdeaEvaluation): Record<string, unk
     },
     indice: evaluation.index,
     tier: evaluation.tier,
+    ...valueToJson("value" in evaluation ? evaluation.value : undefined),
+  };
+}
+
+/** Serializa a chave aditiva `valor`; ideia sem valor não ganha a chave (QR-002). */
+function valueToJson(value: unknown): Record<string, unknown> {
+  if (typeof value !== "object" || value === null || !("loss" in value)) return {};
+  const typed = value as IdeaValue;
+  return {
+    valor: {
+      premissas: typed.premises.map((premise) => ({
+        nome: premise.nome,
+        valor: premise.valor,
+        unidade: premise.unidade,
+        fonte: premise.fonte,
+      })),
+      recuperacao: typed.recovery,
+      perda_mes: typed.loss,
+      ganho_mes: typed.gain,
+      saldo_mes: typed.balance,
+      payback_meses: typed.paybackMonths,
+      retorno_12m: typed.return12m,
+      setup_fee: typed.setupFee,
+    },
   };
 }
 
@@ -102,6 +134,57 @@ export function evaluationFromJson(raw: unknown): IdeaEvaluation {
     },
     index: asNumber(root["indice"]),
     tier,
+    ...valueFromJson(root["valor"]),
+  };
+}
+
+/** Le a chave aditiva `valor`; ausente ou parcial vira ideia sem valor (QR-002). */
+function valueFromJson(raw: unknown): { value?: IdeaValue } {
+  const block = asRecord(raw);
+  if (Object.keys(block).length === 0) return {};
+  const loss = block["perda_mes"];
+  const gain = block["ganho_mes"];
+  const balance = block["saldo_mes"];
+  const payback = block["payback_meses"];
+  const return12m = block["retorno_12m"];
+  if (
+    typeof loss !== "number" ||
+    typeof gain !== "number" ||
+    typeof balance !== "number" ||
+    typeof return12m !== "number" ||
+    (payback !== null && typeof payback !== "number")
+  ) {
+    return {};
+  }
+  const rawPremises = block["premissas"];
+  const premises = Array.isArray(rawPremises)
+    ? rawPremises.flatMap((entry) => {
+        const item = asRecord(entry);
+        return typeof item["nome"] === "string" && typeof item["valor"] === "number"
+          ? [
+              {
+                nome: item["nome"] as string,
+                valor: item["valor"] as number,
+                unidade: typeof item["unidade"] === "string" ? (item["unidade"] as string) : "",
+                fonte: typeof item["fonte"] === "string" ? (item["fonte"] as string) : "INFERENCE",
+              },
+            ]
+          : [];
+      })
+    : [];
+  const recovery = block["recuperacao"];
+  const setupFee = block["setup_fee"];
+  return {
+    value: {
+      premises,
+      recovery: typeof recovery === "number" ? recovery : 0,
+      loss,
+      gain,
+      balance,
+      paybackMonths: payback,
+      return12m,
+      setupFee: typeof setupFee === "number" ? setupFee : 1500,
+    },
   };
 }
 

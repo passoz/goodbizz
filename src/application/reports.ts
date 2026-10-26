@@ -123,8 +123,8 @@ export function indicatorsTableMarkdown(cfg: StudyConfig, data: IdeaEvaluation[]
     scopeNotice(cfg),
     "",
     "| # | Ideia | Setor | Fit | c | Venda | c | Disrupcao | c | Dor | Solo | Índice | " +
-      "Tier | Algo | Algo dor | Interna | Margem | Desvio | WTP | 30/24m | Preço |",
-    "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+      "Tier | Algo | Algo dor | Interna | Margem | Desvio | WTP | 30/24m | Preço | Perda mensal (R$) | Payback (meses) |",
+    "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
   ];
   [...data]
     .sort((a, b) => b.index - a.index)
@@ -132,6 +132,7 @@ export function indicatorsTableMarkdown(cfg: StudyConfig, data: IdeaEvaluation[]
       const i = idea.indicators;
       const g = idea.business;
       const a = idea.algorithm;
+      const value = (idea as { value?: { loss?: number; paybackMonths?: number | null } }).value;
       lines.push(
         `| ${String(position + 1).padStart(2, "0")} | ${idea.name} | ${idea.sector || "-"} | ` +
           `${fixed(i.fit, 2)} | ${fixed(i.fitConf, 2)} | ${fixed(i.sale, 2)} | ` +
@@ -139,7 +140,8 @@ export function indicatorsTableMarkdown(cfg: StudyConfig, data: IdeaEvaluation[]
           `${i.pain} | ${fixed(i.solo, 2)} | **${pythonFloat(idea.index)}** | ${idea.tier} | ` +
           `${a.label} | ${fixed(a.painScore, 2)} | ${fixed(a.internalScore, 2)} | ` +
           `${signed(a.margin, 2)} | ${fixed(a.deviation, 3)} | ${fixed(g.wtp, 2)} | ` +
-          `${fixed(g.meta30, 2)} | ${fixed(g.price, 2)} |`,
+          `${fixed(g.meta30, 2)} | ${fixed(g.price, 2)} | ` +
+          `${value?.loss ?? ""} | ${value?.paybackMonths ?? ""} |`,
       );
     });
   lines.push(
@@ -174,6 +176,8 @@ const CSV_HEADERS = [
   "meta30",
   "preco",
   "preco_conf",
+  "perda_mes",
+  "payback_meses",
 ];
 
 /** Mesma tabela em CSV, com cabeçalho fixo lido pelo recalibrate. */
@@ -183,6 +187,7 @@ export function indicatorsTableCsv(data: IdeaEvaluation[]): string {
     const i = idea.indicators;
     const g = idea.business;
     const a = idea.algorithm;
+    const value = (idea as { value?: { loss?: number; paybackMonths?: number | null } }).value;
     rows.push(
       [
         `"${idea.name}"`,
@@ -207,6 +212,8 @@ export function indicatorsTableCsv(data: IdeaEvaluation[]): string {
         fixed(g.meta30, 2),
         fixed(g.price, 2),
         fixed(g.priceConf, 2),
+        value?.loss === undefined ? "" : String(value.loss),
+        value?.paybackMonths === undefined || value.paybackMonths === null ? "" : String(value.paybackMonths),
       ].join(","),
     );
   }
@@ -288,7 +295,9 @@ export function sourcesSection(
   const items = cited
     .map((id) => byId.get(id))
     .filter((evidence): evidence is Evidence => evidence !== undefined)
-    .map((evidence) => `- **[${evidence.id}]** ${evidence.afirmacao} — “${evidence.trecho}” — <${evidence.url}>`);
+    .map(
+      (evidence) => `- **[${evidence.id}]** ${evidence.afirmacao} — “${evidence.trecho}” — <${evidence.url}>`,
+    );
   const body =
     items.length > 0
       ? items.join("\n")

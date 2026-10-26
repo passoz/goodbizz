@@ -224,7 +224,7 @@ describe("indicatorsTableMarkdown", () => {
     expect(text).toContain(
       "| 01 | Clinica Sorriso | Odontologia | 1.00 | 1.00 | 1.00 | 0.75 | 0.50 | 0.12 | " +
         "dinheiro_direto | 1.00 | **1.0** | C | FORTE | 0.75 | 0.50 | +0.25 | 0.005 | " +
-        "0.85 | 0.25 | 1.50 |",
+        "0.85 | 0.25 | 1.50 |  |  |",
     );
     expect(text).toContain("| 03 | Oficina Rapida | Automotivo |");
     expect(text).toContain("| -0.15 | 0.125 |");
@@ -238,7 +238,7 @@ describe("indicatorsTableCsv", () => {
     expect(header).toBe(
       "ideia,setor,indice,tier,fit,fit_conf,venda,venda_conf,disrupcao,disrupcao_conf," +
         "dor,dor_conf,solo,algo,algo_dor,algo_interna,algo_margem,algo_desvio,wtp,meta30," +
-        "preco,preco_conf",
+        "preco,preco_conf,perda_mes,payback_meses",
     );
   });
 
@@ -246,11 +246,11 @@ describe("indicatorsTableCsv", () => {
     const rows = indicatorsTableCsv(sampleData()).split("\n");
     expect(rows[1]).toBe(
       '"Clinica Sorriso","Odontologia",1.000,C,1.00,1.00,1.00,0.75,0.50,0.12,' +
-        '"dinheiro_direto",0.90,1.00,FORTE,0.750,0.500,+0.250,0.005,0.85,0.25,1.50,0.70',
+        '"dinheiro_direto",0.90,1.00,FORTE,0.750,0.500,+0.250,0.005,0.85,0.25,1.50,0.70,,',
     );
     expect(rows[3]).toBe(
       '"Oficina Rapida","Automotivo",0.600,C,0.50,0.50,0.70,0.50,0.30,0.50,' +
-        '"backoffice",0.60,0.50,FRACA,0.250,0.100,-0.150,0.125,0.40,0.10,1.25,0.12',
+        '"backoffice",0.60,0.50,FRACA,0.250,0.100,-0.150,0.125,0.40,0.10,1.25,0.12,,',
     );
     expect(rows).toHaveLength(5); // cabecalho + 3 ideias + linha vazia final
   });

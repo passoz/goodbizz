@@ -159,6 +159,34 @@ export function valueBlockFor(
   };
 }
 /**
+ * Anexa a conta do retorno a cada avaliação a partir das premissas validadas (FR-009).
+ * Sem premissas (falha dupla), a ideia segue sem valor e os artefatos mostram as colunas
+ * vazias. O `payload_json` gravado não muda (CON-006): o valor vive só no objeto em memória
+ * e na chave aditiva `valor` do `dados.json`.
+ */
+function attachValue(
+  evaluations: StudyIdea[],
+  premises: readonly IdeaPremises[],
+  monthlyTicket: number,
+  setupFee: number,
+): void {
+  for (const evaluation of evaluations) {
+    const block = valueBlockFor(premises, evaluation.name, monthlyTicket, setupFee);
+    if (block === undefined) continue;
+    evaluation.value = {
+      premises: block.premises.map((premise) => ({ ...premise })),
+      recovery: premises.find((entry) => entry.ideaName === evaluation.name)?.premises?.recuperacao ?? 0,
+      loss: block.value.perdaMes,
+      gain: block.value.ganhoMes,
+      balance: block.value.saldoMes,
+      paybackMonths: block.value.paybackMeses,
+      return12m: block.value.retorno12m,
+      setupFee: block.setupFee,
+    };
+  }
+}
+
+/**
  * Conjunto permitido do guardrail (QR-001): medidos, calculados, evidências, premissas,
  * ticket, setup, equivalentes anuais e as constantes do framework do plano (prazo de
  * implantação, meta de clientes e horizonte do retorno). Números do próprio enquadramento
@@ -331,6 +359,7 @@ export async function generateAddition(
     return evaluated;
   });
   progress(`[4/7] Avaliei as ${newEvaluations.length} ideias novas com o decisor`);
+  attachValue(newEvaluations, additionPremises, cfg.monthlyTicket, cfg.setupFee);
 
   const evaluations = [...existing, ...newEvaluations];
   const summary = summarizeStudy(evaluations);
@@ -548,6 +577,8 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
         `(escore ${evaluation.algorithm.painScore.toFixed(2)}; forte a partir de 0.65)`,
     );
   }
+
+  attachValue(evaluations, premises, cfg.monthlyTicket, cfg.setupFee);
 
   const summary = summarizeStudy(evaluations);
   const folders: Record<string, string> = {};
