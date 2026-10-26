@@ -89,7 +89,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.4] O dataBlock traz o bloco VALOR e o plano ganha a seção 11
+### [x] [1.4] O dataBlock traz o bloco VALOR e o plano ganha a seção 11
 
 **Requirement:** FR-004
 **Depends on:** none
