@@ -43,9 +43,8 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.2] O payback fica nulo quando a solução não se paga
 
-**Requirement:** FR-003
+### [x] [1.2] O payback fica nulo quando a solução não se paga
 **Depends on:** none
 **Behavior:** o payback é o setup dividido pelo saldo mensal com 2 casas, fica nulo quando o saldo é menor ou igual a zero e o setup zero com saldo positivo dá payback zero
 **Components:** value-engine
