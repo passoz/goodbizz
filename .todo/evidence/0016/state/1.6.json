@@ -1,5 +1,5 @@
 {
-  "baseline_commit": "d16c69c061bdaec71ae51f9da9327a03727c96be",
+  "baseline_commit": "9c1176a822bf44bf989e2f9a2ff908b8c2d15026",
   "baseline_implementation": {
     "src/application/verification.ts": {
       "exists": true,
@@ -8,15 +8,15 @@
   },
   "baseline_tests": {
     "tests/value-guardrail-cases.test.ts": {
-      "exists": false,
-      "sha256": null
+      "exists": true,
+      "sha256": "c2f085c2a3f48eb5a51feedfc186c5f52d6e67bdda3277b90bf39c17146847a9"
     }
   },
   "contract": {
     "id": "CTR-006",
     "sha256": "38281e714c3b7afdca065b99ab5e434b8057f8b95333f2611fceed627846602d"
   },
-  "created_at": "2026-10-26T02:13:20.296Z",
+  "created_at": "2026-10-26T02:13:50.904Z",
   "frozen_tests": [],
   "implementation_files": [
     "src/application/verification.ts"
