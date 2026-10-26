@@ -53,8 +53,8 @@
     ],
     "frozen_tests": [
       {
-        "path": "tests/premises-cases.test.ts",
-        "sha256": "704ff0749af05a537e49a6b67f3bc72b5f2de17276ba4e4fe65d8903b885562a"
+        "path": "tests/premises.test.ts",
+        "sha256": "3543472dcbe6c8caa236ee97e92875bf859a976d74a5868b90d9c835c0705ab6"
       }
     ]
   },

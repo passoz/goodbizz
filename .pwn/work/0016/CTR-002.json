@@ -51,8 +51,8 @@
     ],
     "frozen_tests": [
       {
-        "path": "tests/value-payback-cases.test.ts",
-        "sha256": "f197e915961964a9f255d289b35ba0fab664ca934db00524fa098c713002fd04"
+        "path": "tests/value-payback.test.ts",
+        "sha256": "3d576be9a140436d84805abd442d400c98af0abfadf7c5c5070a390443127cd6"
       }
     ]
   },
