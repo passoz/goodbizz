@@ -17,11 +17,12 @@ import { evidenceHash, evidencesFor, mapLimit, researchIdeas, researchStudy } fr
 import { requestPremises, type PremisesResult } from "./premises.ts";
 import { calculateValue } from "./value.ts";
 import { summarizeStudy } from "./summary.ts";
-import { checkDocument } from "./verification.ts";
+import { checkDocument, extractUnsourcedNumbers } from "./verification.ts";
 import type { Logger, LlmClient, DeciderClient, ArtifactFile, SearchClient } from "../domain/ports.ts";
 import type {
   Evidence,
   Idea,
+  IdeaEvaluation,
   StudyIdea,
   ProviderUsage,
   StudyConfig,
@@ -155,6 +156,82 @@ export function valueBlockFor(
       monthlyTicket,
     }),
     setupFee,
+  };
+}
+/**
+ * Conjunto permitido do guardrail (QR-001): medidos, calculados, evidências, premissas,
+ * ticket, setup, equivalentes anuais e as constantes do framework do plano (prazo de
+ * implantação, meta de clientes e horizonte do retorno). Números do próprio enquadramento
+ * não são "número inventado de mercado".
+ */
+function allowedNumbersFor(
+  evaluation: IdeaEvaluation,
+  monthlyTicket: number,
+  setupFee: number,
+  own: readonly Evidence[],
+  value?: IdeaValueBlock,
+): string[] {
+  const allowed: string[] = [
+    String(evaluation.index),
+    String(evaluation.indicators.fit),
+    String(evaluation.indicators.sale),
+    String(evaluation.indicators.disruption),
+    String(evaluation.indicators.solo),
+    String(evaluation.algorithm.painScore),
+    String(evaluation.business.wtp),
+    String(monthlyTicket),
+    String(setupFee),
+    // Constantes do framework: implantação em 2 semanas, meta de 10 a 15 clientes em
+    // 24 meses, retorno anual em 12 meses.
+    "2",
+    "10",
+    "15",
+    "24",
+    "12",
+  ];
+  for (const evidence of own) {
+    if (evidence.valor !== null) allowed.push(String(evidence.valor));
+  }
+  if (value !== undefined) {
+    for (const premise of value.premises) allowed.push(String(premise.valor));
+    allowed.push(
+      String(value.value.perdaMes),
+      String(value.value.ganhoMes),
+      String(value.value.saldoMes),
+      ...(value.value.paybackMeses === null ? [] : [String(value.value.paybackMeses)]),
+      String(value.value.retorno12m),
+      String(value.setupFee),
+    );
+  }
+  allowed.push(String(monthlyTicket * 12), "90");
+  return allowed;
+}
+
+/**
+ * Gera o documento com regeração única por violação de guardrail (FR-007). A segunda chamada
+ * só acontece quando `extractUnsourcedNumbers` acusa número sem fonte no documento que seria
+ * gravado; exceção de provedor propaga sem retry. A segunda versão é gravada mesmo que ainda
+ * viole, e cada número sem fonte restante entra em `issues` com o nome da ideia.
+ */
+async function generateDocumentWithRegen(
+  llm: LlmClient,
+  evaluation: IdeaEvaluation,
+  cfg: StudyConfig,
+  brief: string,
+  own: readonly Evidence[],
+  value: IdeaValueBlock | undefined,
+  ideaName: string,
+): Promise<{ text: string; violations: string[] }> {
+  const setupFee = value?.setupFee ?? 1500;
+  const allowed = allowedNumbersFor(evaluation, cfg.monthlyTicket, setupFee, own, value);
+  const first = await generateDocument(llm, evaluation, cfg, brief, own, value);
+  const violations = extractUnsourcedNumbers(first, allowed);
+  if (violations.length === 0) return { text: first.trim(), violations: [] };
+  const second = await generateDocument(llm, evaluation, cfg, brief, own, value);
+  const remaining = extractUnsourcedNumbers(second, allowed);
+  return {
+    text: second.trim(),
+    violations: remaining.map((violation) => `${ideaName}: número sem fonte: ${violation}`),
   };
 }
 
@@ -304,15 +381,19 @@ export async function generateAddition(
       evidenceHash(own),
     );
     let text = await cache.get<string>(key);
+    let regenViolations: string[] = [];
     if (text === null) {
-      text = await generateDocument(
+      const generated = await generateDocumentWithRegen(
         llm,
         evaluation,
         cfg,
         brief,
         own,
         valueBlockFor(additionPremises, evaluation.name, cfg.monthlyTicket),
+        evaluation.name,
       );
+      text = generated.text;
+      regenViolations = generated.violations;
       await cache.put(key, text);
     }
     text = `${text.replace(/\r\n/g, "\n").trim()}\n`;
@@ -335,10 +416,11 @@ export async function generateAddition(
     if (orphans.length > 0) issues.push(`${folder}: citação de evidência inexistente: ${orphans.join(", ")}`);
     progress(`[6/7] Escrevendo o plano de "${folder}" (${Math.floor(text.length / 1024)} KB)`);
     if (findings.length > 0) issues.push(`${folder}: ${findings.join("; ")}`);
-    return { name: evaluation.name, folder, text };
+    return { name: evaluation.name, folder, text, regenViolations };
   });
   void byId;
   for (const item of written) documents[item.name] = item.text;
+  for (const item of written) issues.push(...item.regenViolations);
 
   // Os agregados descrevem o ranking inteiro; os `NN-slug/README.md` sao só das ideias novas, e as
   // pastas antigas continuam no disco com o documento que ja tinham. O filtro casa pela pasta e nao
@@ -521,15 +603,19 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
       evidenceHash(own),
     );
     let text = await cache.get<string>(key);
+    let regenViolations: string[] = [];
     if (text === null) {
-      text = await generateDocument(
+      const generated = await generateDocumentWithRegen(
         llm,
         evaluation,
         cfg,
         brief,
         own,
         valueBlockFor(premises, evaluation.name, cfg.monthlyTicket),
+        evaluation.name,
       );
+      text = generated.text;
+      regenViolations = generated.violations;
       await cache.put(key, text);
     }
     text = `${text.replace(/\r\n/g, "\n").trim()}\n`;
@@ -551,10 +637,11 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
     const status = findings.length === 0 ? "ok" : `ATENCAO: ${findings.join("; ")}`;
     progress(`[6/7] Escrevendo o plano de "${folder}" (${Math.floor(text.length / 1024)} KB) — ${status}`);
     if (findings.length > 0) issues.push(`${folder}: ${findings.join("; ")}`);
-    return { name: ordered.name, folder, text };
+    return { name: ordered.name, folder, text, regenViolations };
   });
 
   for (const item of written) documents[item.name] = item.text;
+  for (const item of written) issues.push(...item.regenViolations);
 
   const produced = buildArtifactFiles(cfg, brief, summary, evaluations, folders, documents, evidences);
   // O markdown vai como o LLM escreveu, em português acentuado: a normalização que removia
