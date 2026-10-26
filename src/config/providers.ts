@@ -124,7 +124,11 @@ export interface ProviderDefaultView {
   hasKey: boolean;
 }
 
-export function envProviderDefaults(env: Env): { llm: ProviderDefaultView; decider: ProviderDefaultView } {
+export function envProviderDefaults(env: Env): {
+  llm: ProviderDefaultView;
+  decider: ProviderDefaultView;
+  search: ProviderDefaultView;
+} {
   return {
     llm: {
       url: env.LLM_API_URL,
@@ -135,6 +139,12 @@ export function envProviderDefaults(env: Env): { llm: ProviderDefaultView; decid
       url: env.DECISION_API_URL,
       model: env.DECISION_API_MODEL,
       hasKey: env.DECISION_API_KEY.trim().length > 0,
+    },
+    // A busca nao tem modelo: a lista mostra a base do ambiente e a presenca da chave.
+    search: {
+      url: env.SEARCH_API_URL,
+      model: "",
+      hasKey: env.SEARCH_API_KEY.trim().length > 0,
     },
   };
 }

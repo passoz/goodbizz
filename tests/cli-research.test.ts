@@ -46,9 +46,24 @@ describe("CLI com pesquisa web", () => {
     }
     expect(code).toBe(0);
 
+    const help: string[] = [];
+    const originalLog = console.log;
+    console.log = (...args: unknown[]) => {
+      help.push(args.map((value) => String(value)).join(" "));
+    };
+    try {
+      expect(await main(["generate", "--help"])).toBe(0);
+    } finally {
+      console.log = originalLog;
+    }
+    const helpText = help.join("\n");
+    expect(helpText).toContain("--mock-search");
+    expect(helpText).toContain("--search-url");
+    expect(helpText).toContain("--search-key");
+
     const evidencias = join(dir, "00-evidencias.md");
     expect(existsSync(evidencias)).toBe(true);
-    expect(readFileSync(evidencias, "utf8")).toContain("evidência");
+    expect(readFileSync(evidencias, "utf8")).toContain("mock.busca.test");
 
     const folders = readdirSync(dir, { withFileTypes: true }).filter((entry) => entry.isDirectory());
     expect(folders.length).toBeGreaterThan(0);

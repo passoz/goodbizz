@@ -1263,14 +1263,15 @@ const SETTINGS_SCRIPT = `
 /** Catálogo de provedores como a página consome: nome, tipo, e o ativo por função. */
 export interface SettingsView {
   profiles: ProviderProfileView[];
-  active: { llm: string | null; decider: string | null };
-  defaults: { llm: ProviderDefaultView; decider: ProviderDefaultView };
+  active: { llm: string | null; decider: string | null; search: string | null };
+  defaults: { llm: ProviderDefaultView; decider: ProviderDefaultView; search: ProviderDefaultView };
 }
 
 /**
- * Configuração dos provedores: uma lista por função (texto e decisão). Cada lista traz o padrão do
- * ambiente, os provedores nomeados pelo operador e "adicionar provedor"; ao lado ficam Editar e
- * Excluir. O modal reúne os campos do provedor e o botão Testar, que fala com o provedor de verdade.
+ * Configuração dos provedores: uma lista por função (texto, decisão e busca). Cada lista traz o
+ * padrão do ambiente, os provedores nomeados pelo operador e "adicionar provedor"; ao lado ficam
+ * Editar e Excluir. O modal reúne os campos do provedor e o botão Testar, que fala com o provedor
+ * de verdade. A busca não tem modelo: a lista mostra a base e a chave mascarada.
  */
 export const SettingsPage: FC<{ view: SettingsView; token: string }> = (props) => (
   <section>
@@ -1287,7 +1288,7 @@ export const SettingsPage: FC<{ view: SettingsView; token: string }> = (props) =
       </a>
     </div>
 
-    {(["llm", "decider"] as const).map((kind) => {
+    {(["llm", "decider", "search"] as const).map((kind) => {
       const profiles = props.view.profiles.filter((profile) => profile.kind === kind);
       const active = props.view.active[kind];
       const fallback = props.view.defaults[kind];

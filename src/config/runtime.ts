@@ -120,6 +120,9 @@ export function resolveStudyConfig(overrides: StudyConfigOverrides): StudyConfig
   if (!cfg.deciderUrl && !cfg.mockDecider) {
     throw new ConfigError("define the decider URL (DECISION_API_URL or --decider-url) or use --mock");
   }
+  if (!cfg.mockSearch && cfg.searchApiKey.trim() === "") {
+    throw new ConfigError("define the search API key (SEARCH_API_KEY or --search-key) or use --mock-search");
+  }
   return cfg;
 }
 

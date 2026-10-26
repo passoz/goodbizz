@@ -180,6 +180,7 @@ const GENERATE_SPEC: CommandSpec = {
   mock: { aliases: ["--mock"], boolean: true },
   "mock-llm": { aliases: ["--mock-llm"], boolean: true },
   "mock-decider": { aliases: ["--mock-decider", "--mock-decisor"], boolean: true },
+  "mock-search": { aliases: ["--mock-search"], boolean: true },
   pdf: { aliases: ["--pdf"], boolean: true },
   concurrency: { aliases: ["--concurrency", "--paralelo"] },
   timeout: { aliases: ["--timeout"] },
@@ -189,6 +190,8 @@ const GENERATE_SPEC: CommandSpec = {
   "decider-url": { aliases: ["--decider-url", "--decisor-url"] },
   "decider-model": { aliases: ["--decider-model", "--decisor-model"] },
   "decider-key": { aliases: ["--decider-key", "--decisor-key"] },
+  "search-url": { aliases: ["--search-url"] },
+  "search-key": { aliases: ["--search-key"] },
 };
 
 const DIAGNOSE_SPEC: CommandSpec = {
@@ -228,6 +231,9 @@ Opcoes:
   --mock                             roda offline com LLM e decisor simulados
   --mock-llm                         simula apenas o LLM (usa o decisor real)
   --mock-decider, --mock-decisor     simula apenas o decisor (usa o LLM real)
+  --mock-search                      simula apenas a busca (usa LLM e decisor reais)
+  --search-url <url>                 URL base do provedor de busca (protocolo Tavily)
+  --search-key <chave>               chave da API de busca
   --pdf                              compila um PDF único do estudo
   --concurrency, --paralelo <inteiro>  chamadas concorrentes (padrão: 8)
   --timeout <segundos>               timeout por chamada (padrão: GOODBIZZ_LLM_TIMEOUT, 300)
@@ -346,6 +352,9 @@ async function runGenerate(argv: string[]): Promise<number> {
   if (positionals.length > 1) {
     throw new ConfigError(`argumentos extras: ${positionals.slice(1).join(", ")}`);
   }
+  if (flags.has("mock-search") && values["search-key"] !== undefined) {
+    throw new ConfigError("--mock-search não aceita --search-key: a busca simulada não usa chave");
+  }
   const niche = (values["niche"] ?? positionals[0] ?? "").trim();
   const settings = await loadProviderSettings(loadEnv().DATABASE_URL);
 
@@ -362,6 +371,7 @@ async function runGenerate(argv: string[]): Promise<number> {
     mock: flags.has("mock"),
     mockLlm: flags.has("mock-llm"),
     mockDecider: flags.has("mock-decider"),
+    mockSearch: flags.has("mock-search"),
     // A impressao dos provedores efetivos entra nas chaves de cache do --saida: trocar de
     // provedor nao serve a resposta gravada pelo anterior.
     providerFingerprint: cacheFingerprint(settings),
@@ -374,6 +384,8 @@ async function runGenerate(argv: string[]): Promise<number> {
     deciderUrl: values["decider-url"] ?? settings.deciderUrl,
     deciderModel: values["decider-model"] ?? settings.deciderModel,
     deciderKey: values["decider-key"] ?? settings.deciderApiKey,
+    searchBaseUrl: values["search-url"] ?? settings.searchBaseUrl,
+    searchApiKey: values["search-key"] ?? settings.searchApiKey,
   });
 
   mkdirSync(cfg.outputDir, { recursive: true });
@@ -439,6 +451,7 @@ async function runDiagnose(argv: string[]): Promise<number> {
     city: values["city"],
     mockLlm: true,
     mockDecider: flags.has("mock"),
+    mockSearch: true,
     deciderUrl: values["decider-url"] ?? settings.deciderUrl,
     deciderModel: values["decider-model"] ?? settings.deciderModel,
     deciderKey: values["decider-key"] ?? settings.deciderApiKey,

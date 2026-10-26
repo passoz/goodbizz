@@ -56,7 +56,7 @@
     "frozen_tests": [
       {
         "path": "tests/cli-research.test.ts",
-        "sha256": "38397b5c0a30c10cb18964b9e916ed859d811ab36599822f7d9923ae7b1d359d"
+        "sha256": "208e807523061dc1e6db1bf856f6b28d434276c89a845a2bd229b09ac3495f8f"
       }
     ]
   },

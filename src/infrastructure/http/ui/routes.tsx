@@ -95,7 +95,11 @@ export function buildUiApp(deps: UiDeps): Hono {
       <SettingsPage
         view={{
           profiles: profileViews(settings),
-          active: { llm: settings.activeLlm ?? null, decider: settings.activeDecider ?? null },
+          active: {
+            llm: settings.activeLlm ?? null,
+            decider: settings.activeDecider ?? null,
+            search: settings.activeSearch ?? null,
+          },
           defaults: envProviderDefaults(loadEnv()),
         }}
         token={c.get("csrfToken")}
@@ -111,7 +115,8 @@ export function buildUiApp(deps: UiDeps): Hono {
    */
   ui.post("/ui/settings/active", requireCsrf, async (c) => {
     const body = await c.req.parseBody();
-    const kind = body["kind"] === "decider" ? "decider" : body["kind"] === "llm" ? "llm" : null;
+    const rawKind = body["kind"];
+    const kind = rawKind === "decider" ? "decider" : rawKind === "llm" ? "llm" : rawKind === "search" ? "search" : null;
     if (kind === null) {
       return c.json({ error: "VALIDATION_FAILED", message: "tipo de provedor inválido" }, 422);
     }
@@ -119,7 +124,6 @@ export function buildUiApp(deps: UiDeps): Hono {
     await deps.service.setActiveProvider(kind, raw.length === 0 ? null : raw);
     return c.redirect("/settings", 303);
   });
-
   /**
    * Plano de uma ideia em HTML (fragmento), para o modal da pagina do estudo.
    * Renderizado no servidor com o mesmo `mdToHtml` do HTML/PDF exportado: o navegador nao carrega

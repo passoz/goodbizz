@@ -42,17 +42,23 @@ const StudyInput = z.object({
 });
 
 /** Catálogo nomeado de provedores: criar, editar, excluir, escolher o ativo e testar. */
-const ProviderKindInput = z.enum(["llm", "decider"]);
+const ProviderKindInput = z.enum(["llm", "decider", "search"]);
 
 const ProviderProfileInput = z
   .object({
     name: z.string().trim().min(1, "o nome do provedor é obrigatório").max(60),
     kind: ProviderKindInput,
     url: z.string().trim().min(1, "a URL do provedor é obrigatória").max(500),
-    model: z.string().trim().min(1, "o modelo é obrigatório").max(200),
+    // A busca nao tem modelo (protocolo Tavily): o campo e opcional e o search cadastra sem ele.
+    model: z.string().trim().max(200).optional(),
     apiKey: z.string().trim().max(500).optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((input, ctx) => {
+    if (input.kind !== "search" && (input.model ?? "").length === 0) {
+      ctx.addIssue({ code: "custom", path: ["model"], message: "o modelo é obrigatório" });
+    }
+  });
 
 const ProviderProfilePatchInput = z
   .object({
@@ -80,8 +86,16 @@ const ProviderTestInput = z
   .strict();
 
 /** Ativos do catálogo no formato que a UI consome. */
-function activeOf(settings: ProviderSettings): { llm: string | null; decider: string | null } {
-  return { llm: settings.activeLlm ?? null, decider: settings.activeDecider ?? null };
+function activeOf(settings: ProviderSettings): {
+  llm: string | null;
+  decider: string | null;
+  search: string | null;
+} {
+  return {
+    llm: settings.activeLlm ?? null,
+    decider: settings.activeDecider ?? null,
+    search: settings.activeSearch ?? null,
+  };
 }
 
 /** Renomear: só o título exibido (o nicho). */
@@ -195,7 +209,7 @@ export function buildApiApp(deps: ApiDeps): Hono {
   /** Cria um provedor nomeado; ele passa a ser o ativo do tipo dele. */
   api.post("/settings/providers", async (c) => {
     const input = parseOrThrow(ProviderProfileInput, await c.req.json());
-    const settings = await deps.service.createProvider(input);
+    const settings = await deps.service.createProvider({ ...input, model: input.model ?? "" });
     return c.json({ profiles: profileViews(settings), active: activeOf(settings) }, 201);
   });
 
