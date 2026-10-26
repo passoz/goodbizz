@@ -7,18 +7,34 @@ bun test v1.4.2 (744846f84)
 
  2 pass
  0 fail
- 26 expect() calls
-Ran 2 tests across 1 file. [54.00ms]
+ 46 expect() calls
+Ran 2 tests across 1 file. [66.00ms]
 
-MUTATION_EXIT: 0
+MUTATION_EXIT: 1
 MUTATION_OUTPUT:
 bun test v1.4.2 (744846f84)
 
- 2 pass
- 0 fail
- 26 expect() calls
-Ran 2 tests across 1 file. [63.00ms]
+tests/search-mock.test.ts:
+64 |       const second = await run();
+65 |       expect(first.length).toBeGreaterThan(0);
+66 |       expect(second).toEqual(first);
+67 |       expect(fetches).toBe(0);
+68 |       for (const evidence of first) expect(evidence.url).toContain("mock.busca.test");
+69 |       for (const evidence of first) expect(evidence.trecho).toContain("[QR-001]");
+                                                                 ^
+error: expect(received).toContain(expected)
 
-MUTATION_VERDICT: FAIL
-VERDICT: FAIL
-CHAIN_HASH: ae7cac82ec3bdfd83e38bc11f8ab2dcc3cdfc91f29a2a6633446896e5cca9e2f
+Expected to contain: "[QR-001]"
+Received: "Resultado 1 para \"preço de sistema para deposito de bebidas\"."
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/search-mock.test.ts:69:61)
+(fail) busca simulada determinística > QR-001: dois serviços simulados geram as mesmas evidências sem fetch de rede [21.69ms]
+
+ 1 pass
+ 1 fail
+ 27 expect() calls
+Ran 2 tests across 1 file. [61.00ms]
+
+MUTATION_VERDICT: PASS
+VERDICT: PASS
+CHAIN_HASH: 94b09df7c603c82f232d739c08e3683babb50b2d2e66232a1f163ab94220ba92

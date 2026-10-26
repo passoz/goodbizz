@@ -8,33 +8,33 @@ bun test v1.4.2 (744846f84)
  3 pass
  0 fail
  28 expect() calls
-Ran 3 tests across 1 file. [61.00ms]
+Ran 3 tests across 1 file. [50.00ms]
 
 MUTATION_EXIT: 1
 MUTATION_OUTPUT:
 bun test v1.4.2 (744846f84)
 
 tests/search-mock-cases.test.ts:
-39 |     expect(rival.length).toBeGreaterThan(0);
-40 |     const priceUrls = new Set(price.map((result) => result.url));
-41 |     const rivalUrls = new Set(rival.map((result) => result.url));
-42 |     const overlap = [...priceUrls].filter((url) => rivalUrls.has(url));
-43 |     expect(overlap).toHaveLength(0);
-44 |     for (const result of price) expect(result.content).toContain("QR-001"); // RED: o mock sem fiação não marca a origem
+40 |     expect(rival.length).toBeGreaterThan(0);
+41 |     const priceUrls = new Set(price.map((result) => result.url));
+42 |     const rivalUrls = new Set(rival.map((result) => result.url));
+43 |     const overlap = [...priceUrls].filter((url) => rivalUrls.has(url));
+44 |     expect(overlap).toHaveLength(0);
+45 |     for (const result of price) expect(result.content).toContain("[QR-001]");
                                                             ^
 error: expect(received).toContain(expected)
 
-Expected to contain: "QR-001"
+Expected to contain: "[QR-001]"
 Received: "Resultado 1 para \"preço de sistema para padaria\". Levantamento com 120 negócios mostra que preço de sistema para padaria custa R$ 99,90 por mês. Fonte verificada em https://mock.busca.test/preco-de-sistema-para-padaria/h5ms2n-1."
 
-      at <anonymous> (/home/passoz/dev/goodbizz/tests/search-mock-cases.test.ts:44:56)
-(fail) casos da busca simulada > QR-001: buscas distintas devolvem URLs distintas com conteúdo da busca [0.55ms]
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/search-mock-cases.test.ts:45:56)
+(fail) casos da busca simulada > QR-001: buscas distintas devolvem URLs distintas com conteúdo da busca [0.47ms]
 
  2 pass
  1 fail
  27 expect() calls
-Ran 3 tests across 1 file. [52.00ms]
+Ran 3 tests across 1 file. [51.00ms]
 
 MUTATION_VERDICT: PASS
 VERDICT: PASS
-CHAIN_HASH: 9b22fe79c685c51c98b48cb99202616bbeb190705cd54643be6f22af6fb902ce
+CHAIN_HASH: 91f08c78470e69ad7dda47cb818f0d95023e2a4d28fff39bdd19e6230fd484d3

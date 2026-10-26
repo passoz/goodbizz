@@ -12,6 +12,7 @@ import { DeciderMock } from "../src/infrastructure/decider-mock.ts";
 import { LlmMock } from "../src/infrastructure/llm-mock.ts";
 import { SqliteCacheStore } from "../src/infrastructure/cache-repository.ts";
 import { RoutingSearchClient } from "../src/infrastructure/routing.ts";
+import { SearchMock } from "../src/infrastructure/search-mock.ts";
 import { silentLogger } from "./helpers.ts";
 
 function mockSearch() {
@@ -32,7 +33,7 @@ function mockSearch() {
 
 describe("casos da busca simulada", () => {
   test("QR-001: buscas distintas devolvem URLs distintas com conteúdo da busca", async () => {
-    const mock = mockSearch();
+    const mock = new SearchMock();
     const price = await mock.search("preço de sistema para padaria");
     const rival = await mock.search("concorrentes de automação para padaria");
     expect(price.length).toBeGreaterThan(0);
@@ -41,7 +42,7 @@ describe("casos da busca simulada", () => {
     const rivalUrls = new Set(rival.map((result) => result.url));
     const overlap = [...priceUrls].filter((url) => rivalUrls.has(url));
     expect(overlap).toHaveLength(0);
-    for (const result of price) expect(result.content).toContain("QR-001"); // RED: o mock sem fiação não marca a origem
+    for (const result of price) expect(result.content).toContain("[QR-001]");
   });
 
   test("QR-001: a mesma busca após outras buscas repete as URLs", async () => {
