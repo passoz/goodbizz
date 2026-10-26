@@ -18,7 +18,7 @@
 - [ ] `bun run check` — typecheck estrito passa com exit 0.
 - [ ] `bunx eslint . && bunx prettier --check .` — lint e formatação passam.
 
-### [ ] [1.1] A fase de pesquisa roda antes do brief com 6 a 10 buscas geradas pelo LLM
+### [x] [1.1] A fase de pesquisa roda antes do brief com 6 a 10 buscas geradas pelo LLM
 
 **Requirement:** FR-002
 **Depends on:** none
@@ -41,7 +41,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.2] Só entra a evidência com trecho literal e ela vai para 00-evidencias.md e dados.json
+### [x] [1.2] Só entra a evidência com trecho literal e ela vai para 00-evidencias.md e dados.json
 
 **Requirement:** FR-003
 **Depends on:** none
@@ -64,7 +64,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.3] Cada ideia tem a própria pesquisa de concorrente e de preço
+### [x] [1.3] Cada ideia tem a própria pesquisa de concorrente e de preço
 
 **Requirement:** FR-005
 **Depends on:** none
@@ -87,7 +87,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.4] O decisor vê as evidências da ideia e do estudo
+### [x] [1.4] O decisor vê as evidências da ideia e do estudo
 
 **Requirement:** FR-006
 **Depends on:** none
@@ -110,7 +110,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.5] Brief, ideias e plano recebem as evidências e citam [E#]
+### [x] [1.5] Brief, ideias e plano recebem as evidências e citam [E#]
 
 **Requirement:** FR-004
 **Depends on:** none
@@ -133,7 +133,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.6] O README de cada ideia termina com a seção Fontes
+### [x] [1.6] O README de cada ideia termina com a seção Fontes
 
 **Requirement:** FR-007
 **Depends on:** none
@@ -156,7 +156,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.7] O consumo do estudo conta as buscas e o custo soma o preço por mil
+### [x] [1.7] O consumo do estudo conta as buscas e o custo soma o preço por mil
 
 **Requirement:** FR-010
 **Depends on:** none
@@ -179,7 +179,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.8] O estudo guarda as evidências e o estudo antigo abre com zero
+### [x] [1.8] O estudo guarda as evidências e o estudo antigo abre com zero
 
 **Requirement:** EC-005
 **Depends on:** none
@@ -202,7 +202,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.9] Adaptador Tavily com erros humanos e Testar sem vazar a chave
+### [x] [1.9] Adaptador Tavily com erros humanos e Testar sem vazar a chave
 
 **Requirement:** QR-002
 **Depends on:** none
@@ -225,7 +225,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.10] O serviço não sobe sem chave de busca fora do modo simulado
+### [x] [1.10] O serviço não sobe sem chave de busca fora do modo simulado
 
 **Requirement:** FR-008
 **Depends on:** none
@@ -248,7 +248,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.11] Busca simulada determinística e sem rede no serviço
+### [x] [1.11] Busca simulada determinística e sem rede no serviço
 
 **Requirement:** QR-001
 **Depends on:** none
@@ -271,7 +271,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.12] A adição de ideias reaproveita as evidências e pesquisa só as novas
+### [x] [1.12] A adição de ideias reaproveita as evidências e pesquisa só as novas
 
 **Requirement:** FR-012
 **Depends on:** none
@@ -294,7 +294,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.13] CLI com flags de busca e estudo simulado com evidências e Fontes
+### [x] [1.13] CLI com flags de busca e estudo simulado com evidências e Fontes
 
 **Requirement:** SC-002
 **Depends on:** none
@@ -317,7 +317,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.14] Perfil de busca sobrepõe o ambiente e troca invalida o cache
+### [x] [1.14] Perfil de busca sobrepõe o ambiente e troca invalida o cache
 
 **Requirement:** QR-003
 **Depends on:** none
@@ -340,7 +340,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.15] O tipo search existe na API de settings, no Testar e na página /settings
+### [x] [1.15] O tipo search existe na API de settings, no Testar e na página /settings
 
 **Requirement:** FR-009
 **Depends on:** none
@@ -363,7 +363,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.16] A página do estudo mostra a contagem de evidências e avisa pesquisa fraca
+### [x] [1.16] A página do estudo mostra a contagem de evidências e avisa pesquisa fraca
 
 **Requirement:** FR-011
 **Depends on:** none
@@ -386,7 +386,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.17] O progresso mostra a fase de pesquisa com rótulo próprio
+### [x] [1.17] O progresso mostra a fase de pesquisa com rótulo próprio
 
 **Requirement:** FR-001
 **Depends on:** none
