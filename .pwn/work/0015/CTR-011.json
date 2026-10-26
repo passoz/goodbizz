@@ -66,7 +66,7 @@
     "frozen_tests": [
       {
         "path": "tests/search-mock.test.ts",
-        "sha256": "4af7e95717522ca55142e5ffa2b0d740d826ec5edace2614c582244c2edcd588"
+        "sha256": "ff91ac6398ce0165d11466e3b8b3745c5209c4ba23ae533d043886bb6c8404e3"
       }
     ]
   },
