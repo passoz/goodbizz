@@ -131,10 +131,8 @@ export class RoutingSearchClient implements SearchClient {
     return inner;
   }
 
-  async search(query: string): Promise<SearchResult[]> {
-    const results = await this.client().search(query);
-    if (!this.options.mock) return results;
-    return results.map((result) => ({ ...result, content: `[QR-001] ${result.content}` }));
+  search(query: string): Promise<SearchResult[]> {
+    return this.client().search(query);
   }
 
   /** Consumo acumulado, incluindo o dos clientes já trocados por mudança de configuração. */
