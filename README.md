@@ -129,7 +129,7 @@ Flags de `generate` (com aliases do baseline): `--niche/--nicho` (o titulo do es
 digitados, cada palavra capitalizada), `--description/--descricao` (contexto concatenado ao titulo nos
 prompts), `--city/--cidade`, `--ticket`,
 `--ideas/--ideias`, `--output/--saida`, `--ideas-file/--ideias-arquivo`,
-`--pain-method/--método-dor`, `--eval-only/--so-avaliar`, `--mock`, `--mock-llm`,
+`--pain-method/--método-dor`, `--eval-only/--so-avaliar`, `--setup/--implantacao` (taxa de implantação em R$, inteiro de 0 a 100000, padrão 1500; entra na conta do payback e na chave de cache do documento), `--mock`, `--mock-llm`,
 `--mock-decider/--mock-decisor`, `--mock-search`, `--pdf`, `--concurrency/--paralelo`, `--timeout` (padrão: `GOODBIZZ_LLM_TIMEOUT`, 300 s), `--llm-url`,
 `--llm-model`, `--llm-key`, `--decider-url/--decisor-url`, `--decider-model/--decisor-model`,
 `--decider-key/--decisor-key`, `--search-url`, `--search-key`.
@@ -144,9 +144,9 @@ estudo/
 ├── README.md              # indice executivo: ranking, medias e grupos de dor
 ├── 00-brief.md            # leitura de mercado que orientou as ideias
 ├── 00-evidencias.md       # evidências da pesquisa web: afirmação, trecho literal e URL
-├── 00-tabelao.md          # tabela comparativa de todos os indicadores
-├── 00-tabelao.csv         # a mesma tabela para planilha
-├── dados.json             # dump completo (chaves do baseline, mais `evidencias`; consumivel pelo recalibrate)
+├── 00-tabelao.md          # tabela comparativa de todos os indicadores, com Perda mensal (R$) e Payback (meses)
+├── 00-tabelao.csv         # a mesma tabela para planilha (`perda_mes`, `payback_meses`)
+├── dados.json             # dump completo (chaves do baseline, mais `evidencias` e `valor` por ideia; consumivel pelo recalibrate)
 ├── .cache.db              # cache de respostas por chave hash, escopada pelo id do estudo (SQLite)
 ├── 01-<ideia-campea>/README.md   # plano completo da ideia #1 do ranking
 ├── 02-<segunda-ideia>/README.md
@@ -387,8 +387,16 @@ A dor tem dois metodos: `choice` (padrão, escolha forcada entre três consequen
 `STRONG_THRESHOLD=0.65`, `WEAK_THRESHOLD=0.50`, `UNSTABLE_THRESHOLD=0.15`, minimo de 3 paráfrases.
 
 **Guardrail numerico:** o código calcula todos os números; o LLM so escreve prosa em volta do bloco
-`DADOS MEDIDOS` e e proibido de inventar valor de mercado. Um verificador confere secoes obrigatorias,
-acentos, alinhamento de tabela e a presenca literal dos números medidos.
+`DADOS MEDIDOS` e e proibido de inventar valor de mercado. Todo valor em R$, percentual e quantidade de
+tempo precisa estar no conjunto permitido (medidos, calculados, evidências, premissas, ticket, setup,
+equivalentes anuais e o 90 do roadmap) ou na mesma linha de `[INFERENCE]`; o documento que viola é
+regenerado uma vez com a lista do que violou, e o que restar entra em `issues` com o nome da ideia.
+
+**Proposta de valor (seção 11):** cada plano termina com "11. Proposta de valor e retorno" (subseções
+11.1 proposta em uma frase, 11.2 premissas com fonte, 11.3 escopo de entrega, 11.4 conta do retorno,
+11.5 primeira mensagem, 11.6 critério de descarte). O resumo executivo abre com a perda mensal e o
+payback. O ranking, o detalhe da API (`value` por avaliação) e a coluna `setup_fee` usam o setup do
+estudo (padrão 1500, configurável na CLI, na API e no formulário `/new`).
 
 ---
 

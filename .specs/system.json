@@ -2,7 +2,7 @@
   "$schema": "../schemas/system.schema.json",
   "meta": {
     "title": "goodbizz — Estudo de nicho com decisor System One (port Bun)",
-    "version": 2,
+    "version": 3,
     "last_reconciled": "2026-10-26",
     "scope": "a aplicacao goodbizz reescrita em Bun/TypeScript: geracao de estudio de nicho (brief, ideias, avaliacao probabilistica em decisor System One, medicao da dor, redacao de planos por LLM com guardrail numerico, relatorios deterministas, HTML/PDF), CLI, API HTTP com persistencia SQLite e interface web. Provedores LLM, Decisor e Busca sao externos (HTTP). Backend de decisao e o protocolo System One."
   },
@@ -187,7 +187,7 @@
         "ACT-001",
         "ACT-004"
       ],
-      "behavior": "monta o bloco DADOS MEDIDOS e o bloco EVIDENCIAS DA PESQUISA e instrui o LLM a citar [E#] e a nao inventar numeros de mercado",
+      "behavior": "pede premissas com fonte por ideia (E# de evidência ou INFERENCE), monta o bloco VALOR com premissas e números calculados pelo código, e instrui o consultor solo (automação com n8n, WhatsApp e IA em até 2 semanas, setup mais mensalidade) sem plano de software próprio, equipe de vendas, expansão regional ou LTV/CAC",
       "failures": "estimativa fora do bloco deve ser marcada [INFERENCE] ou omitida",
       "rules": [
         "BR-011"
@@ -204,7 +204,7 @@
       "actors": [
         "ACT-001"
       ],
-      "behavior": "retorna lista de achados; vazia significa aprovado",
+      "behavior": "verifica números sem fonte (R$, percentual, tempo) com uma regeneração, retorna lista de achados; vazia significa aprovado; restante vira issues com o nome da ideia",
       "failures": "documento abaixo do minimo de linhas e sinalizado",
       "rules": [
         "BR-012",
@@ -224,7 +224,7 @@
         "ACT-002",
         "ACT-003"
       ],
-      "behavior": "ordena por indice de acao, agrupa por natureza da dor e grava 00-evidencias.md e a chave evidencias no dados.json",
+      "behavior": "ordena por índice de ação, agrupa por natureza da dor e grava tabelão/CSV com perda_mes e payback_meses, 00-evidencias.md, chave evidencias e chave aditiva valor por ideia no dados.json",
       "failures": "colisao de nome de pasta e resolvida por slug deterministico",
       "rules": [
         "BR-010"
@@ -277,7 +277,7 @@
       "actors": [
         "ACT-001"
       ],
-      "behavior": "interpreta subcomandos e flags equivalentes aos scripts originais",
+      "behavior": "interpreta subcomandos e flags equivalentes aos scripts originais, incluindo --setup/--implantacao (inteiro 0-100000, padrão 1500)",
       "failures": "subcomando desconhecido retorna exit 2 com ajuda",
       "rules": [
         "BR-016"
@@ -294,7 +294,7 @@
       "actors": [
         "ACT-002"
       ],
-      "behavior": "aceita POST para criar e GET para listar e detalhar estudos e artefatos, com evidenceCount, usage.search e /api/settings/* com o tipo search",
+      "behavior": "aceita POST para criar (setupFee com 422 e detalhe Zod) e GET para listar e detalhar estudos e artefatos, com value por avaliação, evidenceCount, usage.search e /api/settings/* com o tipo search",
       "failures": "payload invalido retorna 422 com detalhe de validacao",
       "rules": [
         "BR-017",
@@ -312,7 +312,7 @@
       "actors": [
         "ACT-003"
       ],
-      "behavior": "renderiza no servidor com hono/jsx e consome a propria API para disparar e acompanhar estudos, com lista de busca em /settings, contagem de evidencias, aviso de pesquisa fraca e progresso em 7 fases",
+      "behavior": "renderiza no servidor com hono/jsx e consome a própria API, com campo de setup em /new (padrão 1500), colunas de perda mensal e payback no ranking, contagem de evidências, aviso de pesquisa fraca e progresso em 7 fases",
       "failures": "formulario sem token CSRF valido e recusado com 403",
       "rules": [
         "BR-018",
@@ -331,7 +331,7 @@
         "ACT-002",
         "ACT-003"
       ],
-      "behavior": "grava estudo e avaliacoes em SQLite via Drizzle e le por id As evidencias do estudo ficam na coluna evidences_json.",
+      "behavior": "grava estudo e avaliações em SQLite via Drizzle (coluna aditiva setup_fee; valor por avaliação no payload_json) e lê por id; estudo antigo abre com 1500 e colunas vazias. As evidências do estudo ficam na coluna evidences_json.",
       "failures": "estudo inexistente retorna nulo e a API responde 404",
       "rules": [
         "BR-019"
@@ -491,15 +491,16 @@
     },
     {
       "id": "BR-011",
-      "statement": "O LLM so pode usar numeros do bloco de dados medidos ou valores de evidencias citadas por [E#]; qualquer outro dado vira [INFERENCE].",
+      "statement": "Todo valor em R$, todo percentual e toda quantidade de minutos, horas, dias, semanas ou meses do documento precisa estar no bloco DADOS MEDIDOS (medido, calculado ou de evidência) ou na mesma linha de [INFERENCE]; o documento que viola é regenerado uma vez com a lista do que violou.",
       "coverage": [
-        "CAP-007"
+        "CAP-007",
+        "CAP-008"
       ],
-      "evidence": "src/application/generation.ts"
+      "evidence": "src/application/verification.ts"
     },
     {
       "id": "BR-012",
-      "statement": "Os 10 titulos de secao obrigatorios devem estar presentes no documento gerado.",
+      "statement": "Os 11 títulos de seção obrigatórios devem estar presentes no documento gerado, incluindo 11. Proposta de valor e retorno com as subseções 11.1 a 11.6.",
       "coverage": [
         "CAP-008"
       ],
@@ -602,7 +603,7 @@
       "consumers": [
         "ACT-001"
       ],
-      "inputs": "subcomando e flags equivalentes ao baseline (niche, city, ticket, ideas, output, ideas-file, pain-method, eval-only, mock, mock-llm, mock-decider, mock-search, pdf, concurrency, timeout, llm-url/model/key, decider-url/model/key, search-url/key)",
+      "inputs": "subcomando e flags equivalentes ao baseline (niche, city, ticket, setup/setup_fee via --setup/--implantacao, ideas, output, ideas-file, pain-method, eval-only, mock, mock-llm, mock-decider, mock-search, pdf, concurrency, timeout, llm-url/model/key, decider-url/model/key, search-url/key)",
       "outputs": "artefatos em disco e exit code 0/1/2/130",
       "errors": "exit 2 para erro de configuracao e subcomando desconhecido; 130 para interrupcao",
       "compatibility": "mesmos nomes de subcomando e flags do baseline Python, com aliases em portugues",
@@ -615,8 +616,8 @@
         "ACT-002",
         "ACT-003"
       ],
-      "inputs": "JSON de criacao de estudo, parametros de consulta, perfis de provedor do tipo search em /api/settings/*",
-      "outputs": "JSON com id, status, resumo, avaliacoes, links de artefato, evidenceCount e usage.search",
+      "inputs": "JSON de criação de estudo (inclui setupFee, inteiro 0-100000, padrão 1500), parâmetros de consulta, perfis de provedor do tipo search em /api/settings/*",
+      "outputs": "JSON com id, status, resumo, avaliações com value por avaliação, links de artefato, evidenceCount e usage.search",
       "errors": "422 payload invalido; 404 estudo inexistente; 500 erro interno sem stack",
       "compatibility": "versionado sob /api; sem CSRF (autenticacao propria)",
       "evidence": "src/infrastructure/http/app.ts"
@@ -627,8 +628,8 @@
       "consumers": [
         "ACT-003"
       ],
-      "inputs": "formularios HTML e fetch na mesma origem",
-      "outputs": "paginas renderizadas (lista, formulario, detalhe do estudo com contagem de evidencias e aviso de pesquisa fraca, /settings com lista de busca, /como-ler)",
+      "inputs": "formulários HTML (campo de setup em /new, padrão 1500) e fetch na mesma origem",
+      "outputs": "páginas renderizadas (lista, formulário, detalhe do estudo com ranking com perda mensal e payback, contagem de evidências e aviso de pesquisa fraca, /settings com lista de busca, /como-ler)",
       "errors": "403 origem ou token CSRF invalido",
       "compatibility": "mesma origem que a API; consome /api por fetch",
       "evidence": "src/infrastructure/http/ui/routes.tsx"
@@ -666,7 +667,7 @@
         "ACT-003"
       ],
       "inputs": "dados avaliados e textos gerados",
-      "outputs": "README.md, 00-brief.md, 00-evidencias.md, 00-tabelao.md, 00-tabelao.csv, dados.json (com chave evidencias), pastas 01-<slug>/README.md com secao Fontes e estudo-completo.html/.pdf",
+      "outputs": "README.md, 00-brief.md, 00-evidencias.md, 00-tabelao.md (com Perda mensal e Payback), 00-tabelao.csv (com perda_mes e payback_meses), dados.json (com chave evidencias e chave aditiva valor por ideia), pastas 01-<slug>/README.md com seção 11 e seção Fontes, estudo-completo.html/.pdf",
       "errors": "arquivo nao escrito quando nao ha conteudo aplicavel",
       "compatibility": "mesmo esquema de chaves e layout do baseline Python (dados.json consumivel pelo recalibrate)",
       "evidence": "src/application/reports.ts"
@@ -688,7 +689,7 @@
     {
       "id": "ENT-001",
       "name": "Study",
-      "description": "um estudo de nicho: parametros de entrada, brief, ideias, resumo e estado de execucao",
+      "description": "um estudo de nicho: parâmetros de entrada (inclui setupFee), brief, ideias, resumo e estado de execução",
       "evidence": "generate_study.py::execute"
     },
     {
@@ -700,7 +701,7 @@
     {
       "id": "ENT-003",
       "name": "IdeaEvaluation",
-      "description": "indicadores, bloco de negocio, bloco de dor, indice e tier de uma ideia Guarda as evidencias proprias da ideia.",
+      "description": "indicadores, bloco de negócio, bloco de dor, índice, tier e bloco de valor (premissas e números calculados) de uma ideia. Guarda as evidências próprias da ideia.",
       "evidence": "evaluation.evaluate_idea"
     },
     {
@@ -730,7 +731,7 @@
     },
     {
       "id": "SQR-002",
-      "statement": "Nenhum numero de mercado e inventado pelo LLM; o guardrail verifica os numeros medidos; afirmacao factual cita [E#] de evidencia com trecho literal.",
+      "statement": "Nenhum número de mercado é inventado pelo LLM; o guardrail verifica também a ausência de número inventado (R$, percentual, tempo) com uma regeneração; afirmação factual cita [E#] de evidência com trecho literal.",
       "coverage": [
         "CAP-007",
         "CAP-008"
@@ -772,7 +773,8 @@
         "CAP-001",
         "CAP-007"
       ],
-      "evidence": "src/infrastructure/llm/http.ts"
+      "evidence": "src/infrastructure/llm/http.ts",
+      "behavior": null
     },
     {
       "id": "INT-002",
