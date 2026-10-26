@@ -50,7 +50,12 @@
     "required_evidence": [
       "evidence.json"
     ],
-    "frozen_tests": []
+    "frozen_tests": [
+      {
+        "path": "tests/readme-value.test.ts",
+        "sha256": "1c1b0fde95bfb8aed47343155d1ee73330054361e1bca1038697c0d39f2b1380"
+      }
+    ]
   },
   "scope_contract": {
     "write_allow": [
