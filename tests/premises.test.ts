@@ -84,8 +84,6 @@ describe("chamada de premissas", () => {
       system.includes("PALAVRA-CHAVE: PREMISSAS") ? premisesAnswer("E42") : null,
     );
     const result = await runStudy(llm, search, "goodbizz-premises-orphan-", 1);
-    expect(
-      result.issues.some((issue) => issue.includes("E42") && issue.includes("INFERENCE")),
-    ).toBe(true);
+    expect(result.issues.some((issue) => issue.includes("E42") && issue.includes("INFERENCE"))).toBe(true);
   });
 });
