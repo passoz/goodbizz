@@ -107,7 +107,7 @@ describe("end-to-end smoke (mock mode)", () => {
       tiers: Record<string, string[]>;
       ideias: Array<Record<string, unknown>>;
     };
-    expect(Object.keys(parsed)).toEqual(["config", "medias", "grupos_dor", "tiers", "ideias"]);
+    expect(Object.keys(parsed)).toEqual(["config", "medias", "grupos_dor", "tiers", "ideias", "evidencias"]);
     expect(parsed.config).toHaveProperty("nicho");
     expect(parsed.config).toHaveProperty("ticket_mes");
     expect(parsed.medias).toHaveProperty("fit");

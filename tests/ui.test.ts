@@ -492,10 +492,10 @@ describe("marca, renomear, progresso humano, falha e consumo", () => {
     const body = await (await harness.app.request(`/studies/${study.id}`)).text();
 
     expect(body).toContain('id="progress-label"');
-    expect(body).toContain("Fase 3 de 6 — Avaliando cada ideia com o decisor System One");
+    expect(body).toContain("Fase 3 de 7 — Gerando as ideias de produto");
     expect(body).toContain('id="progress-step"');
     expect(body).toContain("avaliando as ideias");
-    // O contador de tempo e a barra de 6 fases seguem no lugar.
+    // O contador de tempo e a barra de 7 fases seguem no lugar.
     expect(body).toContain('id="progress-elapsed"');
     expect(body).toContain('id="progress-steps"');
   });
@@ -621,11 +621,12 @@ describe("configuracao dos provedores", () => {
     expect(body).toContain("Configuração dos provedores");
     expect(body).toContain("<legend>Provedor de texto (LLM)</legend>");
     expect(body).toContain("<legend>Provedor de decisão (System One)</legend>");
+    expect(body).toContain("<legend>Provedor de busca (Tavily)</legend>");
     expect(body).toContain('action="/ui/settings/active"');
 
-    // Duas listas; cada uma abre com o padrao do ambiente e fecha com "adicionar provedor".
+    // Três listas; cada uma abre com o padrao do ambiente e fecha com "adicionar provedor".
     const selects = body.match(/<select[^>]*name="id"[^>]*>[\s\S]*?<\/select>/g) ?? [];
-    expect(selects).toHaveLength(2);
+    expect(selects).toHaveLength(3);
     for (const select of selects) {
       expect(select).toContain("padrão do ambiente");
       expect(select).toContain("+ adicionar provedor");

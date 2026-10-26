@@ -186,7 +186,12 @@ describe("generation calls", () => {
     expect(brief).toBe("brief texto");
     expect(llm.calls[0]?.system).toBe(BRIEF_SYSTEM_PROMPT);
     expect(llm.calls[0]?.user).toBe(
-      "Nicho: clinicas\n" + "Cidade ou região alvo: não informada\n" + "Ticket mensal considerado: R$ 300\n",
+      "Nicho: clinicas\n" +
+        "Cidade ou região alvo: não informada\n" +
+        "Ticket mensal considerado: R$ 300\n\n" +
+        "EVIDÊNCIAS DA PESQUISA\n" +
+        "Nenhuma evidência foi encontrada pela pesquisa: toda afirmação de mercado é estimativa [INFERENCE].\n" +
+        "FIM DAS EVIDÊNCIAS\n",
     );
   });
 
@@ -209,6 +214,9 @@ describe("generation calls", () => {
         "Cidade ou região alvo: não informada\n" +
         "Ticket mensal considerado: R$ 300\n\n" +
         "Brief de mercado:\nbrief de teste\n\n" +
+        "EVIDÊNCIAS DA PESQUISA\n" +
+        "Nenhuma evidência foi encontrada pela pesquisa: toda afirmação de mercado é estimativa [INFERENCE].\n" +
+        "FIM DAS EVIDÊNCIAS\n\n" +
         "Gere exatamente 6 ideias em JSON. Retorne apenas o array.",
     );
   });
@@ -225,7 +233,8 @@ describe("generation calls", () => {
     expect(llm.calls[0]?.system).toBe(DOC_SYSTEM_PROMPT);
     const user = llm.calls[0]?.user ?? "";
     expect(user.startsWith("DADOS MEDIDOS\n")).toBe(true);
-    expect(user).toContain("\nFIM DOS DADOS\n\nBrief de contexto do nicho:\nbrief ctx\n\n");
+    expect(user).toContain("\nFIM DOS DADOS\n\nEVIDÊNCIAS DA PESQUISA\n");
+    expect(user).toContain("\nFIM DAS EVIDÊNCIAS\n\nBrief de contexto do nicho:\nbrief ctx\n\n");
     expect(user.endsWith("Escreva o documento desta ideia seguindo a estrutura obrigatoria.")).toBe(true);
   });
 });
@@ -264,8 +273,8 @@ class MemoryCacheStore implements CacheStore {
 /** LLM que registra todo prompt e devolve respostas roteirizadas. */
 function recordingLlm() {
   const prompts: string[] = [];
-  /** Chamadas de documento: tudo que nao for o pedido de ideias. */
-  const state = { docCalls: 0 };
+  /** Chamadas por categoria: pesquisa e documento andam juntos, e o teste conta cada uma. */
+  const state = { docCalls: 0, researchCalls: 0 };
   const llm = {
     async generateText(system: string, user: string): Promise<string> {
       prompts.push(`${system}\n${user}`);
@@ -277,6 +286,12 @@ function recordingLlm() {
             description: "resolve o que ja existe",
           })),
         );
+      }
+      if (system.includes("BUSCAS") || system.includes("EVIDENCIAS")) {
+        state.researchCalls += 1;
+        return system.includes("BUSCAS")
+          ? JSON.stringify([{ query: "concorrente teste", purpose: "teste" }])
+          : JSON.stringify([]);
       }
       state.docCalls += 1;
       return "documento novo";

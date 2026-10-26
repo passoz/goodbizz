@@ -853,17 +853,18 @@ export const StudyForm: FC<{
   </section>
 );
 
-/** Fase atual do pipeline a partir do passo gravado (`[3/6] ...`). */
-const PHASE_COUNT = 6;
+/** Fase atual do pipeline a partir do passo gravado (`[3/7] ...`). */
+const PHASE_COUNT = 7;
 
-/** Rotulo humano de cada fase do pipeline; a chave e o numero que vem no passo `[n/6]`. */
+/** Rotulo humano de cada fase do pipeline; a chave e o numero que vem no passo `[n/7]`. */
 const PHASE_LABEL: Record<number, string> = {
-  1: "Lendo o nicho e escrevendo o brief de mercado",
-  2: "Gerando as ideias de produto",
-  3: "Avaliando cada ideia com o decisor System One",
-  4: "Medindo a natureza da dor de cada ideia",
-  5: "Escrevendo o plano de cada ideia",
-  6: "Montando os artefatos (índice, tabelão, CSV, JSON)",
+  1: "Pesquisa na web",
+  2: "Lendo o nicho e escrevendo o brief de mercado",
+  3: "Gerando as ideias de produto",
+  4: "Avaliando cada ideia com o decisor System One",
+  5: "Medindo a natureza da dor de cada ideia",
+  6: "Escrevendo o plano de cada ideia",
+  7: "Montando os artefatos (índice, tabelão, CSV, JSON)",
 };
 
 /** Casas decimais e separador de milhar em pt-BR: `US$ 0,0142` em vez de `US$ 0.0142`. */
@@ -881,7 +882,7 @@ function totalTokens(usage: StudyUsage): { input: number; cached: number; output
 }
 
 function parsePhase(step: string): { phase: number; text: string } {
-  const match = /\[(\d)\/(\d)\]\s*([\s\S]*)/.exec(step);
+  const match = /\[(\d+)\/(\d+)\]\s*([\s\S]*)/.exec(step);
   if (match === null) return { phase: 0, text: step.trim() };
   const phase = Number(match[1] ?? "0");
   return { phase: Number.isFinite(phase) ? phase : 0, text: (match[3] ?? "").trim() };
@@ -917,12 +918,12 @@ function progressScript(id: string): string {
       lastChange = Date.now();
     }
     tick();
-    var match = /\\[(\\d)\\/6\\]\\s*([\\s\\S]*)/.exec(text);
+    var match = /\[(\d+)\/\d+\]\s*([\s\S]*)/.exec(text);
     var current = match ? Number(match[1]) : 0;
-    if (phase) phase.textContent = current ? current + "/6" : "iniciando";
+    if (phase) phase.textContent = current ? current + "/7" : "iniciando";
     if (label)
       label.textContent = current
-        ? "Fase " + current + " de 6 — " + (LABELS[current] || "")
+        ? "Fase " + current + " de 7 — " + (LABELS[current] || "")
         : "Iniciando o estudo";
     if (line) line.textContent = match ? match[2].trim() : text;
     steps.forEach(function (item, index) {

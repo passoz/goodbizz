@@ -1,0 +1,68 @@
+TASK: 1.15
+CHECK: GREEN
+COMMAND: bun --config=tests/bunfig.focus.toml test tests/search-settings-cases.test.ts -t FR-009
+EXIT: 0
+OUTPUT:
+bun test v1.4.2 (744846f84)
+
+ 3 pass
+ 0 fail
+ 9 expect() calls
+Ran 3 tests across 1 file. [55.00ms]
+
+MUTATION_EXIT: 1
+MUTATION_OUTPUT:
+bun test v1.4.2 (744846f84)
+
+tests/search-settings-cases.test.ts:
+43 |     const search = await jsonRequest(api, "/settings/providers", "POST", {
+44 |       name: "Busca",
+45 |       kind: "search",
+46 |       url: "https://api.tavily.test",
+47 |     });
+48 |     expect(search.status).toBe(201);
+                               ^
+error: expect(received).toBe(expected)
+
+Expected: 201
+Received: 422
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/search-settings-cases.test.ts:48:27)
+(fail) tipo search na API em casos de borda > FR-009: search sem modelo cadastra e llm sem modelo e recusado [7.82ms]
+71 |       url: "https://llm.test/v1",
+72 |       model: "m",
+73 |     });
+74 |     const id = ((await created.json()) as { profiles: Array<{ id: string }> }).profiles[0]?.id ?? "";
+75 |     const wrongKind = await jsonRequest(api, "/settings/active", "PUT", { kind: "search", id });
+76 |     expect(wrongKind.status).toBe(404);
+                                  ^
+error: expect(received).toBe(expected)
+
+Expected: 404
+Received: 422
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/search-settings-cases.test.ts:76:30)
+(fail) tipo search na API em casos de borda > FR-009: tipo desconhecido e recusado e ativo de outro tipo nao serve [3.17ms]
+86 |       url: "https://api.tavily.test",
+87 |       apiKey: [REDACTED]
+88 |     });
+89 |     const createdBody = (await created.json()) as SettingsBody;
+90 |     const listed = (await (await api.request("/settings")).json()) as SettingsBody;
+91 |     expect(listed.profiles).toHaveLength(1);
+                                 ^
+error: expect(received).toHaveLength(expected)
+
+Expected length: 1
+Received length: 0
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/search-settings-cases.test.ts:91:29)
+(fail) tipo search na API em casos de borda > FR-009: listagem traz a chave mascarada e o ativo de busca [2.65ms]
+
+ 0 pass
+ 3 fail
+ 4 expect() calls
+Ran 3 tests across 1 file. [66.00ms]
+
+MUTATION_VERDICT: PASS
+VERDICT: PASS
+CHAIN_HASH: 1951a4c8b885a4b9c8f8d5e02fd7dfae7329f41526a2b1e323755c58bd08baf7

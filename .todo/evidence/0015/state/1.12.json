@@ -1,0 +1,96 @@
+{
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bun",
+        "--config=tests/bunfig.focus.toml",
+        "test",
+        "tests/research-addition.test.ts",
+        "-t",
+        "FR-012"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0015/1.12-ac-1.log",
+      "log_sha256": "02fc3c26a297cbe3c70912642328c22d445a9320b7cd16739aa3ad6c8b052990",
+      "recorded_at": "2026-10-26T00:55:18.044Z",
+      "green_sha256": "b3723b74118f6993c8fc7cf5e4c371513f3e9721429c7723ef7926c5c220799e",
+      "vacuity": {
+        "exit_code": 1,
+        "verdict": "PASS"
+      }
+    }
+  },
+  "baseline_commit": "4af2769358f72971be2e91b67ca87adc7833635a",
+  "baseline_implementation": {
+    "src/application/generate-study.ts": {
+      "exists": true,
+      "sha256": "5e75030fad681f5c59a7d8d0456d498c10965784d246e38ec3801691e4704aee"
+    },
+    "src/application/study-service.ts": {
+      "exists": true,
+      "sha256": "64da1a4b70d6fe2eefa0d5db4ed8aa31a1c81c716352d92eb5957a32a6ca9125"
+    }
+  },
+  "baseline_tests": {
+    "tests/research-addition-cases.test.ts": {
+      "exists": false,
+      "sha256": null
+    }
+  },
+  "contract": {
+    "id": "CTR-012",
+    "sha256": "e47aaaebb3a569d346804b1d0e5407017b228df616d5622c258e6cbe57d367a2"
+  },
+  "created_at": "2026-10-26T00:46:46.319Z",
+  "frozen_tests": [
+    {
+      "path": "tests/research-addition.test.ts",
+      "sha256": "29472d6210ea92076dba4dd42245f30c08b8748571ccd95f7e08025da29b94a0"
+    }
+  ],
+  "green_expect": null,
+  "green_implementation": {
+    "src/application/generate-study.ts": {
+      "exists": true,
+      "sha256": "f0a5a1f3c09284c1e11bbf03f6a718144067ee84677fb52b1afaf442d70a9508"
+    },
+    "src/application/study-service.ts": {
+      "exists": true,
+      "sha256": "ce6de72f2cf70ce4dc16c7a6fe2c7237de0b440e8a6635d60287ce1efef46449"
+    }
+  },
+  "green_tests": {
+    "tests/research-addition-cases.test.ts": {
+      "exists": true,
+      "sha256": "5b4c2adb34657cc302edabbc1dbd6b68cd219dece86816e16a0073edd279efa1"
+    }
+  },
+  "implementation_files": [
+    "src/application/generate-study.ts",
+    "src/application/study-service.ts"
+  ],
+  "plan_path": ".todo/0015-tasks.md",
+  "red_command": [
+    "bun",
+    "--config=tests/bunfig.focus.toml",
+    "test",
+    "tests/research-addition-cases.test.ts",
+    "-t",
+    "FR-012"
+  ],
+  "red_expect": "FR-012",
+  "red_tests": {
+    "tests/research-addition-cases.test.ts": {
+      "exists": true,
+      "sha256": "5b4c2adb34657cc302edabbc1dbd6b68cd219dece86816e16a0073edd279efa1"
+    }
+  },
+  "state_version": 2,
+  "task": "1.12",
+  "task_definition_sha256": "72c8f5048d09030f50f1558243a827e1173d53553946284814f0bab6b93e7a1a",
+  "test_files": [
+    "tests/research-addition-cases.test.ts"
+  ]
+}

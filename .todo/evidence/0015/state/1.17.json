@@ -1,0 +1,60 @@
+{
+  "baseline_commit": "4a44c63d07d4893cfc65d5f93f08e5fd06cfa141",
+  "baseline_implementation": {
+    "src/infrastructure/http/ui/pages.tsx": {
+      "exists": true,
+      "sha256": "b50c1fa276b868057596d84050ef0f8addae0c39e61b97d197cdd5ec51b73b1a"
+    }
+  },
+  "baseline_tests": {
+    "tests/study-progress-cases.test.ts": {
+      "exists": true,
+      "sha256": "787efbb9c65f5a92f3d9967486d4aae5ea74f1a2aa3ca539302c5e86c71d0e6b"
+    },
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "be6fc6fd92f5153956d7c04da72baf7593287453cb9f19f4ad4f86492a32f54d"
+    }
+  },
+  "contract": {
+    "id": "CTR-017",
+    "sha256": "15a5d59a29eef344668b820568cf3f5247df6b9118c9c049090b5ebf052c7321"
+  },
+  "created_at": "2026-10-26T00:41:11.715Z",
+  "frozen_tests": [
+    {
+      "path": "tests/study-progress.test.ts",
+      "sha256": "d1eb46c7f26b2c8deed488e10fda872e56c10958def1e9b0a4b375d29565f92e"
+    }
+  ],
+  "implementation_files": [
+    "src/infrastructure/http/ui/pages.tsx"
+  ],
+  "plan_path": ".todo/0015-tasks.md",
+  "red_command": [
+    "bun",
+    "--config=tests/bunfig.focus.toml",
+    "test",
+    "tests/study-progress-cases.test.ts",
+    "-t",
+    "FR-001"
+  ],
+  "red_expect": "FR-001",
+  "red_tests": {
+    "tests/study-progress-cases.test.ts": {
+      "exists": true,
+      "sha256": "329e9233297f573c43064ff90ba57b3752071141d9ed3da0c4667f7ef62c310f"
+    },
+    "tests/ui.test.ts": {
+      "exists": true,
+      "sha256": "be6fc6fd92f5153956d7c04da72baf7593287453cb9f19f4ad4f86492a32f54d"
+    }
+  },
+  "state_version": 2,
+  "task": "1.17",
+  "task_definition_sha256": "8f0880eab3f6e0ca9d8e9a8c75c627f5717a5b0e096bd9bc5129c2b779fc185b",
+  "test_files": [
+    "tests/study-progress-cases.test.ts",
+    "tests/ui.test.ts"
+  ]
+}

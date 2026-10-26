@@ -49,8 +49,8 @@ afterEach(() => {
 function withCredentials(): void {
   for (const [key, value] of [
     ["LLM_API_KEY", "test-llm-key"],
-    ["DECISION_API_KEY", "test-decider-key"],
     ["DECISION_API_URL", "https://decider.invalid/v1"],
+    ["SEARCH_API_KEY", "test-search-key"],
   ] as const) {
     if (!saved.has(key)) saved.set(key, Bun.env[key]);
     Bun.env[key] = value;
@@ -699,7 +699,13 @@ describe("regeracao do HTML completo (DEC-006)", () => {
  * estudo retoma o cache — os dois comportamentos são o que separa "estudo novo" de "retomada".
  */
 describe("cache por estudo", () => {
-  /** Serviço com um LLM que conta as chamadas, para distinguir cache hit de geração nova. */
+  /** Classifica a chamada pelo PALAVRA-CHAVE do prompt; documento não tem palavra-chave e é o fallback. */
+  function classifyCall(system: string): string {
+    if (system.includes("BUSCAS") || system.includes("EVIDENCIAS")) return "PESQUISA";
+    if (system.includes("IDEIAS")) return "IDEIAS";
+    if (system.includes("BRIEF")) return "BRIEF";
+    return "DOC";
+  }
   function countingHarness() {
     withCredentials();
     const db = openMigratedDatabase(":memory:");
@@ -708,7 +714,7 @@ describe("cache por estudo", () => {
     const calls: string[] = [];
     const llm: LlmClient = {
       async generateText(system: string, user: string) {
-        calls.push(system.includes("IDEIAS") ? "IDEIAS" : system.includes("BRIEF") ? "BRIEF" : "DOC");
+        calls.push(classifyCall(system));
         return new LlmMock().generateText(system, user);
       },
     };
@@ -759,7 +765,7 @@ describe("cache por estudo", () => {
     let failNextDocument = true;
     const llm: LlmClient = {
       async generateText(system: string, user: string) {
-        const kind = system.includes("IDEIAS") ? "IDEIAS" : system.includes("BRIEF") ? "BRIEF" : "DOC";
+        const kind = classifyCall(system);
         calls.push(kind);
         if (kind === "DOC" && failNextDocument) {
           failNextDocument = false;
@@ -786,7 +792,8 @@ describe("cache por estudo", () => {
       calls.length = 0;
       const done = await service.run(record.id);
 
-      // Nenhuma fase concluída é refeita: brief, ideias e avaliação vêm do cache do estudo.
+      // Nenhuma fase concluída é refeita: pesquisa, brief, ideias e avaliação vêm do cache do estudo.
+      expect(calls).not.toContain("PESQUISA");
       expect(calls).not.toContain("BRIEF");
       expect(calls).not.toContain("IDEIAS");
       expect(calls.length).toBeLessThanOrEqual(1);

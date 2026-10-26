@@ -1,0 +1,49 @@
+TASK: 1.12
+CHECK: RED
+COMMAND: bun --config=tests/bunfig.focus.toml test tests/research-addition-cases.test.ts -t FR-012
+EXIT: 1
+OUTPUT:
+bun test v1.4.2 (744846f84)
+
+tests/research-addition-cases.test.ts:
+142 |       { llm, decider, search, cache: new StudyCache(new SqliteCacheStore(handle.db)), logger: QUIET },
+143 |     );
+144 |     handle.sqlite.close();
+145 | 
+146 |     // Duas buscas por ideia nova, nenhuma pela antiga; ids continuam de E3 em diante.
+147 |     expect(queries.filter((query) => query.includes("Ideia Bossa"))).toHaveLength(2);
+                                                                           ^
+error: expect(received).toHaveLength(expected)
+
+Expected length: 2
+Received length: 0
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/research-addition-cases.test.ts:147:70)
+(fail) adição com pesquisa em casos de borda > FR-012: as novas evidências continuam a numeração das do estudo e o decisor vê a lista somada [15.92ms]
+201 |       { llm, decider: new DeciderMock(), search, cache: new StudyCache(new SqliteCacheStore(handle.db)), logger: QUIET },
+202 |     );
+203 |     handle.sqlite.close();
+204 | 
+205 |     expect(result.evaluations.map((evaluation) => evaluation.name)).toContain("Ideia Firme");
+206 |     expect(result.evidences.map((evidence) => evidence.id)).toEqual(["E1"]);
+                                                                  ^
+error: expect(received).toEqual(expected)
+
+- [
+-   "E1",
+- ]
++ []
+
+- Expected  - 3
++ Received  + 1
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/research-addition-cases.test.ts:206:61)
+(fail) adição com pesquisa em casos de borda > FR-012: a busca que falha numa ideia nova vira aviso com o nome dela [2.48ms]
+
+ 0 pass
+ 2 fail
+ 3 expect() calls
+Ran 2 tests across 1 file. [56.00ms]
+
+VERDICT: PASS
+CHAIN_HASH: f925a93af90e4601ea9479a332d1a0e3d4e61818dc4f60c61b1cf64eed1cbb2d

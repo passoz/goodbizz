@@ -142,6 +142,7 @@ describe("buildArtifactFiles", () => {
     }, []);
     expect(files.map((file) => file.path)).toEqual([
       "00-brief.md",
+      "00-evidencias.md",
       "00-tabelao.md",
       "00-tabelao.csv",
       "README.md",
@@ -166,6 +167,7 @@ describe("buildArtifactFiles", () => {
     const withoutFolders = buildArtifactFiles(config, brief, summary, data, {}, {}, []);
     expect(withoutFolders.map((file) => file.path)).toEqual([
       "00-brief.md",
+      "00-evidencias.md",
       "00-tabelao.md",
       "00-tabelao.csv",
       "dados.json",
@@ -187,8 +189,9 @@ describe("buildArtifactFiles", () => {
     const withDate = buildArtifactFiles(config, brief, summary, dated, folders, documents, []);
     const plan = withDate.find((file) => file.path === "01-clinica-sorriso/README.md");
     // A data sai no rodape, nao no corpo do prompt (o guardrail de numeros confere o texto do LLM).
-    expect(plan?.content).toMatch(/\n\n---\n\n_Gerada em \d{2}\/\d{2}\/\d{4}, \d{2}:\d{2}_\n$/);
+    // A seção Fontes fecha o arquivo depois do rodape.
     expect(plan?.content).toContain("conteudo do plano");
+    expect(plan?.content).toMatch(/_Gerada em \d{2}\/\d{2}\/\d{4}, \d{2}:\d{2}_/);
 
     const withoutDate = buildArtifactFiles(config, brief, summary, data, folders, documents, []);
     const plain = withoutDate.find((file) => file.path === "01-clinica-sorriso/README.md");
@@ -199,7 +202,7 @@ describe("buildArtifactFiles", () => {
     const files = buildArtifactFiles(config, brief, summary, data, folders, {}, []);
     const raw = files.find((file) => file.path === "dados.json")?.content;
     const parsed = JSON.parse(String(raw)) as Record<string, any>;
-    expect(Object.keys(parsed)).toEqual(["config", "medias", "grupos_dor", "tiers", "ideias"]);
+    expect(Object.keys(parsed)).toEqual(["config", "medias", "grupos_dor", "tiers", "ideias", "evidencias"]);
     expect(Object.keys(parsed["config"])).toEqual(Object.values(DADOS_CONFIG_KEYS));
     expect(parsed["config"]).toEqual({
       nicho: "Clinica Odontologica",

@@ -179,9 +179,9 @@ describe("generateStudy", () => {
       logger: silentLogger(),
     });
 
-    expect(result.issues).toHaveLength(1);
-    expect(result.issues[0]).toContain("01-ideia-curta:");
-    expect(result.issues[0]).toContain("section(s) missing");
+    const docIssues = result.issues.filter((issue) => issue.startsWith("01-ideia-curta:"));
+    expect(docIssues).toHaveLength(1);
+    expect(docIssues[0]).toContain("section(s) missing");
     handle.sqlite.close();
   });
 

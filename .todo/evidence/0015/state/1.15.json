@@ -1,0 +1,105 @@
+{
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bun",
+        "--config=tests/bunfig.focus.toml",
+        "test",
+        "tests/search-settings.test.ts",
+        "-t",
+        "FR-009"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0015/1.15-ac-1.log",
+      "log_sha256": "8e75df5abdd59c130155d65aaf6016b3327225f1dfc07b4dce93f8e3710838b3",
+      "recorded_at": "2026-10-26T00:50:52.370Z",
+      "green_sha256": "f66d37bd7d072940687bf110bb6aef161b11ed814deb552bff5b5852b2dcbc31",
+      "vacuity": {
+        "exit_code": 1,
+        "verdict": "PASS"
+      }
+    }
+  },
+  "baseline_commit": "b785a064a31a642734e87f2291b01b8c78b4d2a7",
+  "baseline_implementation": {
+    "src/infrastructure/http/api.ts": {
+      "exists": true,
+      "sha256": "4ed40f864d8c3f55407790c46988b9e948e6a20c5a3d6fa59b8ba0c541337a27"
+    },
+    "src/infrastructure/http/ui/pages.tsx": {
+      "exists": true,
+      "sha256": "b50c1fa276b868057596d84050ef0f8addae0c39e61b97d197cdd5ec51b73b1a"
+    },
+    "src/infrastructure/http/ui/routes.tsx": {
+      "exists": true,
+      "sha256": "5454767221397ec8976329f72fc7d31e286707650e0ddf0ec3757885b89d25a6"
+    }
+  },
+  "baseline_tests": {
+    "tests/search-settings-cases.test.ts": {
+      "exists": true,
+      "sha256": "cce4d9d15814686b6624223e2b75ab0b5b38afacaed826decfb3574145b99b9a"
+    }
+  },
+  "contract": {
+    "id": "CTR-015",
+    "sha256": "d5857cc1b05acceecd0babb29af5b865a2134e0cfbfae67735a601c3cdc40cde"
+  },
+  "created_at": "2026-10-26T00:50:14.515Z",
+  "frozen_tests": [
+    {
+      "path": "tests/search-settings.test.ts",
+      "sha256": "9f49f0bafec139d890af58bdc1b8fe4ce13262dfc1d79a3f8a74c9c88f57143b"
+    }
+  ],
+  "green_expect": null,
+  "green_implementation": {
+    "src/infrastructure/http/api.ts": {
+      "exists": true,
+      "sha256": "4182cfc4455794a37284a8308de504a365164badd834a7bcb94f2f0611320dc5"
+    },
+    "src/infrastructure/http/ui/pages.tsx": {
+      "exists": true,
+      "sha256": "8b8ec265a4327deb9417700e6675b54a13d55bdd0bbb4be19a6a23b3bf071e47"
+    },
+    "src/infrastructure/http/ui/routes.tsx": {
+      "exists": true,
+      "sha256": "ba9bd07c8e4a00de846017254f8fa66443f016773d3f74830ce3fbc141dc3704"
+    }
+  },
+  "green_tests": {
+    "tests/search-settings-cases.test.ts": {
+      "exists": true,
+      "sha256": "d02b2c1a199b617939b2a651f9e8875943328ee5758890ab7c26ed639d634fdf"
+    }
+  },
+  "implementation_files": [
+    "src/infrastructure/http/api.ts",
+    "src/infrastructure/http/ui/pages.tsx",
+    "src/infrastructure/http/ui/routes.tsx"
+  ],
+  "plan_path": ".todo/0015-tasks.md",
+  "red_command": [
+    "bun",
+    "--config=tests/bunfig.focus.toml",
+    "test",
+    "tests/search-settings-cases.test.ts",
+    "-t",
+    "FR-009"
+  ],
+  "red_expect": "FR-009",
+  "red_tests": {
+    "tests/search-settings-cases.test.ts": {
+      "exists": true,
+      "sha256": "d02b2c1a199b617939b2a651f9e8875943328ee5758890ab7c26ed639d634fdf"
+    }
+  },
+  "state_version": 2,
+  "task": "1.15",
+  "task_definition_sha256": "398c088ccd1ce893118f485a01accf998d9ddaeebfb98db2c44ce97a9e7682d8",
+  "test_files": [
+    "tests/search-settings-cases.test.ts"
+  ]
+}

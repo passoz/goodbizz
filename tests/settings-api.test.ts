@@ -97,11 +97,11 @@ describe("API do catálogo de provedores", () => {
     expect(response.status).toBe(200);
     const body = (await response.json()) as {
       profiles: unknown[];
-      active: { llm: string | null; decider: string | null };
+      active: { llm: string | null; decider: string | null; search: string | null };
       defaults: { llm: { model: string; hasKey: boolean } };
     };
     expect(body.profiles).toEqual([]);
-    expect(body.active).toEqual({ llm: null, decider: null });
+    expect(body.active).toEqual({ llm: null, decider: null, search: null });
     expect(body.defaults.llm.model).toBeString();
   });
 

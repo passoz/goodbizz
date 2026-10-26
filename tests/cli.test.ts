@@ -84,7 +84,7 @@ describe("goodbizz CLI", () => {
     expect(captured.error.join("\n")).toContain("generate");
   });
 
-  test("generate --mock prints the six steps and writes the artifact tree", async () => {
+  test("generate --mock prints the seven steps and writes the artifact tree", async () => {
     const dir = tempDir();
     const captured = capture();
     let code = 0;
@@ -96,7 +96,7 @@ describe("goodbizz CLI", () => {
 
     expect(code).toBe(0);
     const output = captured.log.join("\n");
-    for (const step of ["[1/6]", "[2/6]", "[3/6]", "[4/6]", "[5/6]", "[6/6]"]) {
+    for (const step of ["[1/7]", "[2/7]", "[3/7]", "[4/7]", "[5/7]", "[6/7]", "[7/7]"]) {
       expect(output).toContain(step);
     }
     for (const name of ["README.md", "00-brief.md", "00-tabelao.md", "00-tabelao.csv", "dados.json"]) {
