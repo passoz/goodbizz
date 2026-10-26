@@ -1,0 +1,32 @@
+{
+  "baseline_commit": "2ba6943e124786992959f9899824d85712ac33d9",
+  "baseline_implementation": {
+    "src/application/prompts.ts": {
+      "exists": true,
+      "sha256": "186438484967f123e03c30cf03780b7ac5f3e799a30c3c74ccea180814182c8c"
+    }
+  },
+  "baseline_tests": {
+    "tests/solo-framing-cases.test.ts": {
+      "exists": false,
+      "sha256": null
+    }
+  },
+  "contract": {
+    "id": "CTR-005",
+    "sha256": "01144e9ea58e9ef2579981a45217e863b86179a1395c48bf85fb51a26c5e5eb1"
+  },
+  "created_at": "2026-10-26T02:11:32.388Z",
+  "frozen_tests": [],
+  "implementation_files": [
+    "src/application/prompts.ts"
+  ],
+  "plan_path": ".todo/0016-tasks.md",
+  "red_tests": null,
+  "state_version": 2,
+  "task": "1.5",
+  "task_definition_sha256": "a6c10630fcb2ccae136a4abb7865c6bac28c9dbb62fd6d1bd5e192b31cc322c2",
+  "test_files": [
+    "tests/solo-framing-cases.test.ts"
+  ]
+}
