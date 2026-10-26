@@ -25,6 +25,7 @@ import { openMigratedDatabase } from "./infrastructure/db.ts";
 import { SqliteSettingsRepository } from "./infrastructure/settings-repository.ts";
 import { SqliteCacheStore } from "./infrastructure/cache-repository.ts";
 import { createLlmClient } from "./infrastructure/llm.ts";
+import { createSearchClient } from "./infrastructure/search.ts";
 import { startService } from "./index.ts";
 import type { ArtifactFile } from "./domain/ports.ts";
 import type { StudyConfig } from "./domain/types.ts";
@@ -389,6 +390,7 @@ async function runGenerate(argv: string[]): Promise<number> {
     const result = await generateStudy(cfg, {
       llm: createLlmClient(cfg),
       decider: createDeciderClient(cfg),
+      search: createSearchClient(cfg),
       cache,
       logger: createLogger("warn"),
       onProgress: (step) => console.log(`  ${step}`),

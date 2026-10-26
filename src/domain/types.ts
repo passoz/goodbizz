@@ -178,9 +178,11 @@ export interface StudyConfig {
   deciderUrl: string;
   deciderModel: string;
   deciderKey: string;
+  mockSearch: boolean;
+  searchBaseUrl: string;
+  searchApiKey: string;
   /**
    * Semente do cache de respostas: o id do estudo. Vazio na CLI de tiro único.
-   *
    * É ela que separa dois estudos de mesmo título — criar, excluir e recriar devolve conteúdo
    * novo — e que preserva a retomada, porque o id sobrevive à reexecução e só morre na exclusão.
    */

@@ -44,6 +44,9 @@ export interface StudyConfigOverrides {
   deciderUrl?: string;
   deciderModel?: string;
   deciderKey?: string;
+  mockSearch?: boolean;
+  searchBaseUrl?: string;
+  searchApiKey?: string;
   /** Semente do cache: o id do estudo no serviço; vazio na CLI de tiro único. */
   cacheSeed?: string;
   /**
@@ -77,8 +80,9 @@ export function resolveStudyConfig(overrides: StudyConfigOverrides): StudyConfig
   const niche = titleCase(typedNiche);
 
   const mock = overrides.mock ?? false;
-  const mockDecider = mock || (overrides.mockDecider ?? false);
   const mockLlm = mock || (overrides.mockLlm ?? false);
+  const mockDecider = mock || (overrides.mockDecider ?? false);
+  const mockSearch = mock || (overrides.mockSearch ?? env.GOODBIZZ_MOCK_SEARCH);
 
   const cfg: StudyConfig = {
     niche,
@@ -95,6 +99,7 @@ export function resolveStudyConfig(overrides: StudyConfigOverrides): StudyConfig
     mock,
     mockLlm,
     mockDecider,
+    mockSearch,
     pdf: overrides.pdf ?? false,
     paraphrases: overrides.paraphrases ?? 3,
     concurrency: overrides.concurrency ?? 8,
@@ -105,6 +110,8 @@ export function resolveStudyConfig(overrides: StudyConfigOverrides): StudyConfig
     deciderUrl: overrides.deciderUrl ?? env.DECISION_API_URL,
     deciderModel: overrides.deciderModel ?? env.DECISION_API_MODEL,
     deciderKey: overrides.deciderKey ?? env.DECISION_API_KEY,
+    searchBaseUrl: overrides.searchBaseUrl ?? env.SEARCH_API_URL,
+    searchApiKey: overrides.searchApiKey ?? env.SEARCH_API_KEY,
   };
 
   if (!cfg.mockLlm && !cfg.llmKey) {

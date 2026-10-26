@@ -10,7 +10,8 @@
 import { scrub } from "../config/redact.ts";
 import { SearchError } from "../domain/errors.ts";
 import type { SearchClient } from "../domain/ports.ts";
-import type { ProviderUsage, SearchResult } from "../domain/types.ts";
+import type { ProviderUsage, SearchResult, StudyConfig } from "../domain/types.ts";
+import { SearchMock } from "./search-mock.ts";
 
 /** Resultados por busca (A-002): cinco páginas bastam e cada busca `basic` custa 1 crédito. */
 export const SEARCH_MAX_RESULTS = 5;
@@ -165,4 +166,10 @@ export class SearchHttp implements SearchClient {
   usage(): ProviderUsage {
     return { ...this.consumed };
   }
+}
+
+/** Monta o cliente de busca da CLI a partir da configuração resolvida (simulado ou Tavily). */
+export function createSearchClient(cfg: StudyConfig): SearchClient {
+  if (cfg.mock || cfg.mockSearch) return new SearchMock();
+  return new SearchHttp(cfg.searchBaseUrl, cfg.searchApiKey, cfg.timeout);
 }
