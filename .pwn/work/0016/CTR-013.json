@@ -52,7 +52,7 @@
     "frozen_tests": [
       {
         "path": "tests/mock-value.test.ts",
-        "sha256": "2486ac2fe4fb054f75af24c43fe22016a80f24ecbc6c3baab2036aab56f4a125"
+        "sha256": "b93ade190711879ae0f1782185385b915f991506a5b92aedbeb9e88979c1f1dc"
       }
     ]
   },
