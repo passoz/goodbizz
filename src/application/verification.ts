@@ -88,10 +88,76 @@ export function numberVariants(value: unknown): Set<string> {
 }
 
 /**
- * Extrai do documento os números sem fonte (stub do RED da 1.6: sempre vazio).
+ * Extrai do documento os valores em R$, os percentuais e as quantidades de
+ * minutos, horas, dias, semanas ou meses que não estão no conjunto permitido
+ * nem na mesma linha de `[INFERENCE]`.
+ *
+ * Normaliza formatos ("R$ 350,00" e "350 reais" contam como o permitido 350)
+ * e ignora numeração estrutural (seção "11.4", item de lista "1." e célula de
+ * tabela como "Mês 2").
  */
-export function extractUnsourcedNumbers(_text: string, _allowed: readonly string[] = []): string[] {
-  return [];
+export function extractUnsourcedNumbers(text: string, allowed: readonly string[] = []): string[] {
+  const permitted = new Set<string>();
+  for (const entry of allowed) {
+    for (const variant of normalizeNumber(String(entry))) permitted.add(variant);
+  }
+  const found: string[] = [];
+  const timeUnits = "(minutos?|horas?|dias?|semanas?|meses?|min|h)";
+  const pattern = new RegExp(
+    `R\\$\\s*\\d[\\d.,]*|\\d[\\d.,]*\\s*reais|\\d[\\d.,]*\\s*%|\\d[\\d.,]*\\s*${timeUnits}\\b`,
+    "gi",
+  );
+  const lines = splitLines(text);
+  for (const line of lines) {
+    if (line.includes("[INFERENCE]")) continue;
+    pattern.lastIndex = 0;
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(line)) !== null) {
+      const raw = match[0];
+      if (isStructuralNumber(line, match.index, raw)) continue;
+      const normalized = normalizeNumber(raw);
+      if (normalized.some((variant) => permitted.has(variant))) continue;
+      found.push(raw.trim());
+    }
+  }
+  return found;
+}
+
+/** Normaliza um número para comparação: remove "R$", "reais", "%", unidade de tempo e separadores. */
+function normalizeNumber(raw: string): string[] {
+  let cleaned = raw
+    .toLowerCase()
+    .replace(/r\$/g, "")
+    .replace(/\breais\b/g, "")
+    .replace(/%/g, "")
+    .replace(/\b(minutos?|horas?|dias?|semanas?|meses?|min|h)\b/g, "")
+    .trim();
+  cleaned = cleaned.replace(/,(\d{2})\b/g, ".$1");
+  const variants = new Set<string>();
+  variants.add(cleaned.replace(/[.\s]/g, "").replace(/,+/g, ""));
+  const dotted = cleaned.replace(/\s+/g, "");
+  const asNumber = Number(dotted.replace(/,(?=\d+$)/, ".").replace(/[.](?=.*[.])/g, ""));
+  if (!Number.isNaN(asNumber) && dotted !== "") {
+    variants.add(String(asNumber));
+    variants.add(formatGeneral(asNumber));
+    if (Number.isInteger(asNumber)) variants.add(String(Math.trunc(asNumber)));
+  }
+  return [...variants].filter((variant) => variant.length > 0);
+}
+
+/**
+ * Diz se o número é numeração estrutural: título de seção ("## 11."),
+ * item de lista ("1.") ou célula de tabela ("Mês 2").
+ */
+function isStructuralNumber(line: string, index: number, raw: string): boolean {
+  const trimmed = line.trimStart();
+  if (/^#{1,6}\s*\d/.test(trimmed) && index <= trimmed.indexOf(raw.trim()) + 4) {
+    if (/^#{1,6}\s*\d+[.\d]*\b/.test(trimmed)) return true;
+  }
+  if (/^\d+\.\s/.test(trimmed)) return true;
+  if (line.includes("|") && /^(mês|mes)\s+\d+$/i.test(raw.trim())) return true;
+  if (/^(mês|mes)\s+\d+$/i.test(raw.trim())) return true;
+  return false;
 }
 
 /** Retorna os problemas encontrados no documento (lista vazia = aprovado). */
