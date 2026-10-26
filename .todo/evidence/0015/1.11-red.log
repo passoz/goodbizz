@@ -1,0 +1,44 @@
+TASK: 1.11
+CHECK: RED
+COMMAND: bun --config=tests/bunfig.focus.toml test tests/search-mock-cases.test.ts -t QR-001
+EXIT: 1
+OUTPUT:
+bun test v1.4.2 (744846f84)
+
+tests/search-mock-cases.test.ts:
+39 |     expect(rival.length).toBeGreaterThan(0);
+40 |     const priceUrls = new Set(price.map((result) => result.url));
+41 |     const rivalUrls = new Set(rival.map((result) => result.url));
+42 |     const overlap = [...priceUrls].filter((url) => rivalUrls.has(url));
+43 |     expect(overlap).toHaveLength(0);
+44 |     for (const result of price) expect(result.content).toContain("[QR-001]");
+                                                            ^
+error: expect(received).toContain(expected)
+
+Expected to contain: "[QR-001]"
+Received: "Resultado 1 para \"preço de sistema para padaria\". Levantamento com 120 negócios mostra que preço de sistema para padaria custa R$ 99,90 por mês. Fonte verificada em https://mock.busca.test/preco-de-sistema-para-padaria/h5ms2n-1."
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/search-mock-cases.test.ts:44:56)
+(fail) casos da busca simulada > QR-001: buscas distintas devolvem URLs distintas com conteúdo da busca [0.54ms]
+77 |         cache,
+78 |         logger: silentLogger(),
+79 |       });
+80 |       handle.sqlite.close();
+81 |       expect(result.evidences.length).toBeGreaterThan(0);
+82 |       expect(result.evidences[0].trecho).toContain("QR-001");
+                                              ^
+error: expect(received).toContain(expected)
+
+Expected to contain: "QR-001"
+Received: "Resultado 1 para \"preço de sistema para deposito de bebidas\"."
+
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/search-mock-cases.test.ts:82:42)
+(fail) fiação no serviço > QR-001: o serviço simulado grava evidências sem rede [15.39ms]
+
+ 1 pass
+ 2 fail
+ 7 expect() calls
+Ran 3 tests across 1 file. [62.00ms]
+
+VERDICT: PASS
+CHAIN_HASH: a8c0531e51bf6eb82a6d73ab6fbf0a77a9455a25bbb26890c6d374f69ad2b658

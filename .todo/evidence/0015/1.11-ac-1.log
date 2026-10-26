@@ -1,0 +1,24 @@
+TASK: 1.11
+CHECK: AC-1
+COMMAND: bun --config=tests/bunfig.focus.toml test tests/search-mock.test.ts -t QR-001
+EXIT: 0
+OUTPUT:
+bun test v1.4.2 (744846f84)
+
+ 2 pass
+ 0 fail
+ 6 expect() calls
+Ran 2 tests across 1 file. [57.00ms]
+
+MUTATION_EXIT: 0
+MUTATION_OUTPUT:
+bun test v1.4.2 (744846f84)
+
+ 2 pass
+ 0 fail
+ 6 expect() calls
+Ran 2 tests across 1 file. [60.00ms]
+
+MUTATION_VERDICT: FAIL
+VERDICT: FAIL
+CHAIN_HASH: eef151a07489144980fed5df59ec452b73ae471fa0e270b2cb8017d4a1124710
