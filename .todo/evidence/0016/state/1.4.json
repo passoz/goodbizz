@@ -1,5 +1,5 @@
 {
-  "baseline_commit": "ec163be0b7d388888c68127d7aaf40a1414fa3f2",
+  "baseline_commit": "2182f7673f1c5e25f8fb26d54d094eb1cfc3e644",
   "baseline_implementation": {
     "src/application/prompts.ts": {
       "exists": true,
@@ -20,7 +20,7 @@
     "id": "CTR-004",
     "sha256": "addbcc9a61c18829f256bc29040c7fab56432664147ff63d821097c4d54c41cb"
   },
-  "created_at": "2026-10-26T01:47:14.206Z",
+  "created_at": "2026-10-26T01:57:26.068Z",
   "frozen_tests": [
     {
       "path": "tests/value-block-cases.test.ts",
