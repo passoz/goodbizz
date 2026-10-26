@@ -1,89 +1,91 @@
 /**
- * Chamada de premissas (FR-001): 2 a 4 fatores positivos, recuperação entre 0 e 1,
- * fonte válida passa, fonte órfã vira INFERENCE com issue e falha dupla segue sem valor.
+ * Chamada de premissas (FR-001): o pipeline pede premissas ao LLM uma vez por ideia,
+ * com cache próprio, e registra a correção em issues quando a fonte não existe.
  */
 import { describe, expect, test } from "bun:test";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
-import { validatePremises } from "../src/application/premises.ts";
-import type { Evidence } from "../src/domain/types.ts";
+import { StudyCache } from "../src/application/cache.ts";
+import { generateStudy } from "../src/application/generate-study.ts";
+import { resolveStudyConfig } from "../src/config/runtime.ts";
+import { SqliteCacheStore } from "../src/infrastructure/cache-repository.ts";
+import { openMigratedDatabase } from "../src/infrastructure/db.ts";
+import { DeciderMock } from "../src/infrastructure/decider-mock.ts";
+import { LlmMock } from "../src/infrastructure/llm-mock.ts";
+import type { LlmClient, SearchClient } from "../src/domain/ports.ts";
 
-function evidence(id: string): Evidence {
-  return {
-    id,
-    tipo: "custo",
-    afirmacao: `afirmação de ${id}`,
-    trecho: "trecho literal",
-    url: `https://exemplo.com/${id}`,
-    valor: null,
-    unidade: "",
-    ideia: "",
+const QUIET = { debug: () => {}, info: () => {}, warn: () => {}, error: () => {} };
+
+function harness(answer: (system: string) => string | null): {
+  llm: LlmClient;
+  search: SearchClient;
+  calls: { premises: number };
+} {
+  const mock = new LlmMock();
+  const calls = { premises: 0 };
+  const llm: LlmClient = {
+    generateText: (system, user) => {
+      const premade = answer(system);
+      if (premade !== null) {
+        calls.premises += 1;
+        return Promise.resolve(premade);
+      }
+      return mock.generateText(system, user);
+    },
+    usage: () => ({ calls: 0, inputTokens: 0, cachedInputTokens: 0, outputTokens: 0 }),
   };
+  const search: SearchClient = {
+    search: () => Promise.resolve([]),
+    usage: () => ({ calls: 0, inputTokens: 0, cachedInputTokens: 0, outputTokens: 0 }),
+  };
+  return { llm, search, calls };
 }
 
-describe("validação de premissas", () => {
-  test("FR-001: fonte válida passa e recuperação no limite é aceita", () => {
-    const corrections: string[] = [];
-    const result = validatePremises(
-      {
-        fatores: [
-          { nome: "horas perdidas", valor: 20, unidade: "horas/mês", fonte: "E1" },
-          { nome: "custo da hora", valor: 140, unidade: "R$", fonte: "INFERENCE" },
-        ],
-        recuperacao: 1,
-      },
-      [evidence("E1")],
-      corrections,
+async function runStudy(llm: LlmClient, search: SearchClient, dirPrefix: string, numIdeas = 2) {
+  const handle = openMigratedDatabase(":memory:");
+  const cfg = {
+    ...resolveStudyConfig({ niche: "depositos de bebidas", city: "Cabo Frio", numIdeas, mock: true }),
+    outputDir: mkdtempSync(join(tmpdir(), dirPrefix)),
+  };
+  const result = await generateStudy(cfg, {
+    llm,
+    decider: new DeciderMock(),
+    search,
+    cache: new StudyCache(new SqliteCacheStore(handle.db)),
+    logger: QUIET,
+  });
+  handle.sqlite.close();
+  return result;
+}
+
+function premisesAnswer(source: string): string {
+  return JSON.stringify({
+    fatores: [
+      { nome: "horas perdidas", valor: 20, unidade: "horas/mês", fonte: source },
+      { nome: "custo da hora", valor: 140, unidade: "R$", fonte: "INFERENCE" },
+    ],
+    recuperacao: 0.5,
+  });
+}
+
+describe("chamada de premissas", () => {
+  test("FR-001: o pipeline pede premissas ao LLM uma vez por ideia", async () => {
+    const { llm, search, calls } = harness((system) =>
+      system.includes("PALAVRA-CHAVE: PREMISSAS") ? premisesAnswer("INFERENCE") : null,
     );
-    expect(result !== null).toBe(true);
-    expect(corrections).toEqual([]);
+    await runStudy(llm, search, "goodbizz-premises-acc-");
+    expect(calls.premises).toBe(2);
   });
 
-  test("FR-001: E42 inexistente vira INFERENCE com correção registrada", () => {
-    const corrections: string[] = [];
-    const result = validatePremises(
-      {
-        fatores: [
-          { nome: "horas perdidas", valor: 20, unidade: "horas/mês", fonte: "E42" },
-          { nome: "custo da hora", valor: 140, unidade: "R$", fonte: "E1" },
-        ],
-        recuperacao: 0.5,
-      },
-      [evidence("E1")],
-      corrections,
+  test("FR-001: fonte E42 inexistente vira INFERENCE com correção em issues", async () => {
+    const { llm, search } = harness((system) =>
+      system.includes("PALAVRA-CHAVE: PREMISSAS") ? premisesAnswer("E42") : null,
     );
-    expect(result?.fatores[0]?.fonte).toBe("INFERENCE");
-    expect(corrections.length).toBe(1);
-  });
-  test("FR-001: um fator só, valor não positivo e recuperação fora de 0 a 1 rejeitam", () => {
-    const one = validatePremises(
-      { fatores: [{ nome: "x", valor: 1, unidade: "u", fonte: "INFERENCE" }], recuperacao: 0.5 },
-      [],
-      [],
-    );
-    const zero = validatePremises(
-      {
-        fatores: [
-          { nome: "a", valor: 0, unidade: "u", fonte: "INFERENCE" },
-          { nome: "b", valor: 2, unidade: "u", fonte: "INFERENCE" },
-        ],
-        recuperacao: 0.5,
-      },
-      [],
-      [],
-    );
-    const over = validatePremises(
-      {
-        fatores: [
-          { nome: "a", valor: 1, unidade: "u", fonte: "INFERENCE" },
-          { nome: "b", valor: 2, unidade: "u", fonte: "INFERENCE" },
-        ],
-        recuperacao: 1.5,
-      },
-      [],
-      [],
-    );
-    expect(one).toBeNull();
-    expect(zero).toBeNull();
-    expect(over).toBeNull();
+    const result = await runStudy(llm, search, "goodbizz-premises-orphan-", 1);
+    expect(
+      result.issues.some((issue) => issue.includes("E42") && issue.includes("INFERENCE")),
+    ).toBe(true);
   });
 });
