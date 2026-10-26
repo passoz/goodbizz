@@ -181,7 +181,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.8] O setupFee existe no domínio, no config e na CLI
+### [x] [1.8] O setupFee existe no domínio, no config e na CLI
 
 **Requirement:** FR-008
 **Depends on:** none
