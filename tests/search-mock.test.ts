@@ -32,7 +32,7 @@ describe("busca simulada determinística", () => {
     globalThis.fetch = (async () => {
       fetches += 1;
       throw new Error("rede proibida no modo simulado");
-    }) as typeof fetch;
+    }) as unknown as typeof fetch;
     try {
       const run = async () => {
         const handle = openMigratedDatabase(":memory:");
