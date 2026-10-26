@@ -20,7 +20,7 @@
 - [ ] `bun run check` — typecheck estrito passa com exit 0.
 - [ ] `bunx eslint . && bunx prettier --check .` — lint e formatação passam nos arquivos do work.
 
-### [ ] [1.1] O módulo de valor calcula perda, ganho, saldo e retorno
+### [x] [1.1] O módulo de valor calcula perda, ganho, saldo e retorno
 
 **Requirement:** FR-002
 **Depends on:** none
