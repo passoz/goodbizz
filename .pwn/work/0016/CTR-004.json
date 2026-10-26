@@ -50,7 +50,12 @@
     "required_evidence": [
       "evidence.json"
     ],
-    "frozen_tests": []
+    "frozen_tests": [
+      {
+        "path": "tests/value-block-cases.test.ts",
+        "sha256": "e06052a554be47db21430bf26236e67ead27bccd3076994b34d7031f317a6b66"
+      }
+    ]
   },
   "scope_contract": {
     "write_allow": [
