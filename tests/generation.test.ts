@@ -334,7 +334,7 @@ describe("pipeline incremental", () => {
 
     const result = await generateAddition(
       makeConfig({ numIdeas: 5 }),
-      { brief: "BRIEF JA GRAVADO", existing },
+      { brief: "BRIEF JA GRAVADO", existing, evidences: [] },
       5,
       "lote-1",
       { llm, decider, search: new SearchMock(), cache, logger: silentLogger() },
@@ -368,7 +368,7 @@ describe("pipeline incremental", () => {
       existingEvaluation("Cobranca Manual", "id-3", 0.8),
     ];
 
-    await generateAddition(makeConfig({ numIdeas: 5 }), { brief: "brief", existing }, 5, "lote-1", {
+    await generateAddition(makeConfig({ numIdeas: 5 }), { brief: "brief", existing, evidences: [] }, 5, "lote-1", {
       llm,
       decider: new DeciderMock(),
       search: new SearchMock(),
@@ -392,9 +392,9 @@ describe("pipeline incremental", () => {
     const existing = [existingEvaluation("Agenda Vazada", "id-1", 1.2)];
     const cfg = makeConfig({ numIdeas: 5 });
 
-    await generateAddition(cfg, { brief: "brief", existing }, 5, "lote-1", deps);
+    await generateAddition(cfg, { brief: "brief", existing, evidences: [] }, 5, "lote-1", deps);
     const afterFirst = new Set(store.entries.keys());
-    await generateAddition(cfg, { brief: "brief", existing }, 5, "lote-2", deps);
+    await generateAddition(cfg, { brief: "brief", existing, evidences: [] }, 5, "lote-2", deps);
     const afterSecond = new Set(store.entries.keys());
     const added = [...afterSecond].filter((key) => !afterFirst.has(key));
     // Um segundo pedido tem de gravar chaves novas, senão devolveria as ideias do primeiro.
@@ -412,9 +412,9 @@ describe("pipeline incremental", () => {
     const existing = [existingEvaluation("Agenda Vazada", "id-1", 1.2)];
     const cfg = makeConfig({ numIdeas: 5 });
 
-    await generateAddition(cfg, { brief: "brief", existing }, 5, "lote-1", deps);
+    await generateAddition(cfg, { brief: "brief", existing, evidences: [] }, 5, "lote-1", deps);
     const before = prompts.length;
-    await generateAddition(cfg, { brief: "brief", existing }, 5, "lote-1", deps);
+    await generateAddition(cfg, { brief: "brief", existing, evidences: [] }, 5, "lote-1", deps);
 
     expect(prompts.length).toBe(before);
   });

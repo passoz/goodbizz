@@ -584,7 +584,7 @@ export class StudyService {
       };
       const result = await generateAddition(
         cfg,
-        { brief: record.brief ?? "", existing: record.evaluations },
+        { brief: record.brief ?? "", existing: record.evaluations, evidences: record.evidences },
         count,
         // Uma chave de cache por pedido: dois pedidos iguais no mesmo estudo sao operacoes distintas.
         Bun.randomUUIDv7(),
@@ -600,6 +600,7 @@ export class StudyService {
         },
       );
 
+      await this.options.repo.update(id, { evidences: result.evidences });
       await this.options.repo.saveEvaluations(id, result.evaluations, result.summary);
       // As pastas que sobraram de antes sao renomeadas para o indice novo e as novas vao pro disco.
       const freshNames = new Set(

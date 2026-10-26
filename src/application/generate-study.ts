@@ -86,6 +86,8 @@ export interface GenerateAdditionInput {
   /** Brief já gravado. Reutilizado sem chamar o LLM: o estudo já o pagou. */
   brief: string;
   existing: readonly StudyIdea[];
+  /** Evidências do estudo (ideias antigas inclusas): base da numeração e do prompt das novas. */
+  evidences: readonly Evidence[];
 }
 
 /**
@@ -125,10 +127,21 @@ export async function generateAddition(
   );
   let ideas = await cache.get<Idea[]>(ideasKey);
   if (ideas === null) {
-    ideas = await generateIdeas(llm, cfg, brief, count, existingNames, []);
+    ideas = await generateIdeas(llm, cfg, brief, count, existingNames, input.evidences);
     await cache.put(ideasKey, ideas);
   }
   progress(`[3/7] ${ideas.length} ideias novas geradas sem repetir as ${existing.length} existentes`);
+
+  // A adição pesquisa só as novas: as antigas já têm as delas em `input.evidences`, e o `known`
+  // numera as novas em sequência (`E#` nunca se repete dentro do estudo).
+  const researchDeps = { llm, search: deps.search, cache };
+  const ideaResearch = await researchIdeas(cfg, ideas, input.evidences, researchDeps, providerScope);
+  const evidences = [...input.evidences, ...ideaResearch.evidences];
+  const researchIssues = [...ideaResearch.issues];
+  progress(
+    `[3/7] Pesquisei concorrente e preço de ${ideas.length} ideias novas: ` +
+      `${ideaResearch.evidences.length} evidências próprias`,
+  );
 
   const newEvaluations = await mapLimit(ideas, cfg.concurrency, async (idea) => {
     // O `requestId` entra na chave: uma ideia que reapareça num pedido novo precisa de um id novo.
@@ -144,10 +157,12 @@ export async function generateAddition(
       requestId,
       idea.name,
       idea.description,
+      // O decisor vê as evidências da ideia: pesquisa nova refaz a avaliação em vez de servir a antiga.
+      evidenceHash(evidencesFor(evidences, idea.name)),
     );
     const cached = await cache.get<StudyIdea>(key);
     if (cached !== null) return cached;
-    const evaluated = await evaluateIdea(idea, decider, cfg, []);
+    const evaluated = await evaluateIdea(idea, decider, cfg, evidencesFor(evidences, idea.name));
     await cache.put(key, evaluated);
     return evaluated;
   });
@@ -176,19 +191,20 @@ export async function generateAddition(
       folders: {},
       documents: {},
       files: [],
-      issues: [],
-      evidences: [],
+      issues: researchIssues,
+      evidences,
       cacheHits: cache.hits,
       cacheCount: await cache.count(),
     };
   }
 
   const byId = new Map(newEvaluations.map((evaluation) => [evaluation.id, evaluation]));
-  const issues: string[] = [];
+  const issues: string[] = [...researchIssues];
   const documents: Record<string, string> = {};
 
   // Só as novas ideias ganham documento: reescrever as antigas custaria o mesmo token de novo.
   const written = await mapLimit(newEvaluations, cfg.concurrency, async (evaluation) => {
+    const own = evidencesFor(evidences, evaluation.name);
     const key = scopedKey(
       cfg.cacheSeed,
       "doc",
@@ -197,10 +213,11 @@ export async function generateAddition(
       String(cfg.monthlyTicket),
       evaluation.name,
       String(evaluation.index),
+      evidenceHash(own),
     );
     let text = await cache.get<string>(key);
     if (text === null) {
-      text = await generateDocument(llm, evaluation, cfg, brief, []);
+      text = await generateDocument(llm, evaluation, cfg, brief, own);
       await cache.put(key, text);
     }
     text = `${text.replace(/\r\n/g, "\n").trim()}\n`;
@@ -219,6 +236,8 @@ export async function generateAddition(
       DOC_LITERALS,
     );
     const folder = folders[evaluation.name] as string;
+    const orphans = sourcesSection(text, evidences).orphans;
+    if (orphans.length > 0) issues.push(`${folder}: citação de evidência inexistente: ${orphans.join(", ")}`);
     progress(`[6/7] Escrevendo o plano de "${folder}" (${Math.floor(text.length / 1024)} KB)`);
     if (findings.length > 0) issues.push(`${folder}: ${findings.join("; ")}`);
     return { name: evaluation.name, folder, text };
@@ -230,7 +249,7 @@ export async function generateAddition(
   // pastas antigas continuam no disco com o documento que ja tinham. O filtro casa pela pasta e nao
   // pelo slug: `documents` e indexado por nome, e o caminho da pasta e `NN-slug`.
   const newFolders = new Set(newEvaluations.map((idea) => folders[idea.name]));
-  const files = buildArtifactFiles(cfg, brief, summary, evaluations, folders, documents, []).filter(
+  const files = buildArtifactFiles(cfg, brief, summary, evaluations, folders, documents, evidences).filter(
     (file) => !file.path.includes("/") || newFolders.has(file.path.split("/")[0] as string),
   );
   progress(`[7/7] Montando os artefatos do estudo (${files.length} arquivos)`);
@@ -244,7 +263,7 @@ export async function generateAddition(
     documents,
     files,
     issues,
-    evidences: [],
+    evidences,
     cacheHits: cache.hits,
     cacheCount: await cache.count(),
     usage: usageNow(),
