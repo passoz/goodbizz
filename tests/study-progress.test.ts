@@ -87,7 +87,8 @@ describe("progresso da pesquisa", () => {
     });
     const body = await (await app.request(`/studies/${study.id}`)).text();
     expect(body).toContain("Fase 2 de 7");
-    const steps = body.match(/data-live="[01]"/g) ?? [];
+    const list = body.match(/<ol class="progress-steps" id="progress-steps">[\s\S]*?<\/ol>/)?.[0] ?? "";
+    const steps = list.match(/<li /g) ?? [];
     expect(steps).toHaveLength(7);
   });
 
