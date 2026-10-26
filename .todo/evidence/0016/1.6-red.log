@@ -6,17 +6,39 @@ OUTPUT:
 bun test v1.4.2 (744846f84)
 
 tests/value-guardrail-cases.test.ts:
+16 |       "A perda mensal é 2800.",
+17 |       "",
+18 |       "O plano rende R$ 3.000 por ano sem esforço.",
+19 |     ].join("\n");
+20 |     const found = extractUnsourcedNumbers(doc, ALLOWED);
+21 |     expect(found.some((item) => item.includes("3.000") || item.includes("3000"))).toBe(true);
+                                                                                       ^
+error: expect(received).toBe(expected)
 
-# Unhandled error between tests
--------------------------------
-SyntaxError: Export named 'extractUnsourcedNumbers' not found in module '/home/passoz/dev/goodbizz/src/application/verification.ts'.
--------------------------------
+Expected: true
+Received: false
 
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/value-guardrail-cases.test.ts:21:83)
+(fail) FR-006: extração de números sem fonte > R$ fora do bloco permitido é marcado como sem fonte [0.20ms]
+38 |   });
+39 | 
+40 |   test("percentual e tempo sem fonte são marcados", () => {
+41 |     const doc = "A margem sobe 15% e a tarefa cai de 30 para 5 minutos.";
+42 |     const found = extractUnsourcedNumbers(doc, ALLOWED);
+43 |     expect(found.length).toBeGreaterThan(0);
+                              ^
+error: expect(received).toBeGreaterThan(expected)
 
- 0 pass
- 1 fail
- 1 error
-Ran 1 test across 1 file. [5.00ms]
+Expected: > 0
+Received: 0
 
-VERDICT: FAIL
-CHAIN_HASH: fc7c635c9e27df3442ffc5b5b1b2561a9647cdce847b97542984eed1276c7903
+      at <anonymous> (/home/passoz/dev/goodbizz/tests/value-guardrail-cases.test.ts:43:26)
+(fail) FR-006: extração de números sem fonte > percentual e tempo sem fonte são marcados [0.03ms]
+
+ 3 pass
+ 2 fail
+ 6 expect() calls
+Ran 5 tests across 1 file. [5.00ms]
+
+VERDICT: PASS
+CHAIN_HASH: ad92412db0b54d1e5b23e3d553ab8c417f743b88aea1d173fa1be2f8e8a39b7c

@@ -22,7 +22,21 @@
     "src/application/verification.ts"
   ],
   "plan_path": ".todo/0016-tasks.md",
-  "red_tests": null,
+  "red_command": [
+    "bun",
+    "--config=tests/bunfig.focus.toml",
+    "test",
+    "tests/value-guardrail-cases.test.ts",
+    "-t",
+    "FR-006"
+  ],
+  "red_expect": "R$ 3.000 por ano",
+  "red_tests": {
+    "tests/value-guardrail-cases.test.ts": {
+      "exists": true,
+      "sha256": "5fb796e6a699edced09717042219c973ed3a566433c958596bbea9df7661c96a"
+    }
+  },
   "state_version": 2,
   "task": "1.6",
   "task_definition_sha256": "96995288c7661c987d06f65dcd8c9f666cfeb930c92e594f2515084351397d9d",

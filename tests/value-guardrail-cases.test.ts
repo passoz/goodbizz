@@ -3,7 +3,7 @@ import { extractUnsourcedNumbers } from "../src/application/verification.ts";
 
 /**
  * Casos da task 1.6 (FR-006): guardrail extrai cada número sem fonte.
- * RED: sem a extração, "R$ 3.000 por ano" fora do bloco passa e nada é marcado.
+ * RED da 1.6: com o stub vazio, o "R$ 3.000 por ano" não é marcado.
  */
 
 const ALLOWED = ["2800", "1400", "1050", "1.43", "11100", "350", "1500"];
