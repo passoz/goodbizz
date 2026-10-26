@@ -1,0 +1,37 @@
+{
+  "baseline_commit": "0f63e28d9de926abbeb95cb116398fe6ad1995c4",
+  "baseline_implementation": {
+    "src/application/value.ts": {
+      "exists": true,
+      "sha256": "da7386f3737dc6b6864000fdd79986abe434639cfddee13e480559a9d0de89b5"
+    }
+  },
+  "baseline_tests": {
+    "tests/value-payback-cases.test.ts": {
+      "exists": true,
+      "sha256": "f197e915961964a9f255d289b35ba0fab664ca934db00524fa098c713002fd04"
+    }
+  },
+  "contract": {
+    "id": "CTR-002",
+    "sha256": "f6ca753dd43fb3603b41accfad896c66b94d1e88528cdbe2168ddc107042af1d"
+  },
+  "created_at": "2026-10-26T01:32:33.386Z",
+  "frozen_tests": [
+    {
+      "path": "tests/value-payback-cases.test.ts",
+      "sha256": "f197e915961964a9f255d289b35ba0fab664ca934db00524fa098c713002fd04"
+    }
+  ],
+  "implementation_files": [
+    "src/application/value.ts"
+  ],
+  "plan_path": ".todo/0016-tasks.md",
+  "red_tests": null,
+  "state_version": 2,
+  "task": "1.2",
+  "task_definition_sha256": "0acd5788120849f0bc846e50de70cc9d19af02e07a5138389b15ec1e4378c358",
+  "test_files": [
+    "tests/value-payback-cases.test.ts"
+  ]
+}
