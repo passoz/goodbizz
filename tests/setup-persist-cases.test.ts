@@ -49,7 +49,9 @@ describe("FR-008: casos da persistência do setupFee", () => {
     db.sqlite.exec(
       "INSERT INTO legacy_studies (id, created_at, updated_at, niche, description, city, monthly_ticket, num_ideas, pain_method, mock, artifact_dir, brief, state, step) VALUES ('antigo-1', '2026-01-01', '2026-01-01', 'nicho', '', '', 300, 1, 'mix', 1, '', '', 'done', '')",
     );
-    db.sqlite.exec("ALTER TABLE studies RENAME TO studies_new; ALTER TABLE legacy_studies RENAME TO studies;");
+    db.sqlite.exec(
+      "ALTER TABLE studies RENAME TO studies_new; ALTER TABLE legacy_studies RENAME TO studies;",
+    );
     const repo = new SqliteStudyRepository(db.db);
     const record = await repo.get("antigo-1");
     expect(record?.setupFee).toBe(1500);

@@ -29,8 +29,8 @@ describe("FR-008: aceitação da persistência do setupFee", () => {
     const created = await service.create(
       resolveStudyConfig({ niche: "cafés de bairro", mock: true, setupFee: 1800 }),
     );
-    const record = await service.get(created.id);
-    expect(record?.setupFee).toBe(1800);
+    const fresh = await new SqliteStudyRepository(db.db).get(created.id);
+    expect(fresh?.setupFee).toBe(1800);
 
     db.sqlite.exec(
       "CREATE TABLE legacy_studies (id text PRIMARY KEY NOT NULL, created_at text NOT NULL, updated_at text NOT NULL, niche text NOT NULL, description text NOT NULL DEFAULT '', city text NOT NULL DEFAULT '', monthly_ticket integer NOT NULL, num_ideas integer NOT NULL, pain_method text NOT NULL, mock integer NOT NULL DEFAULT false, artifact_dir text NOT NULL, brief text NOT NULL DEFAULT '', state text NOT NULL DEFAULT 'pending', step text NOT NULL DEFAULT '', error text, summary_json text, usage_json text, evidences_json text);",
@@ -38,7 +38,9 @@ describe("FR-008: aceitação da persistência do setupFee", () => {
     db.sqlite.exec(
       "INSERT INTO legacy_studies (id, created_at, updated_at, niche, description, city, monthly_ticket, num_ideas, pain_method, mock, artifact_dir, brief, state, step) VALUES ('antigo-1', '2026-01-01', '2026-01-01', 'nicho', '', '', 300, 1, 'mix', 1, '', '', 'done', '')",
     );
-    db.sqlite.exec("ALTER TABLE studies RENAME TO studies_new; ALTER TABLE legacy_studies RENAME TO studies;");
+    db.sqlite.exec(
+      "ALTER TABLE studies RENAME TO studies_new; ALTER TABLE legacy_studies RENAME TO studies;",
+    );
     const legacy = await new SqliteStudyRepository(db.db).get("antigo-1");
     expect(legacy?.setupFee).toBe(1500);
     db.sqlite.close();
