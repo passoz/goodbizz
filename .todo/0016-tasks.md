@@ -112,7 +112,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.5] Os prompts enquadram o consultor solo e proíbem o plano de startup
+### [x] [1.5] Os prompts enquadram o consultor solo e proíbem o plano de startup
 
 **Requirement:** FR-005
 **Depends on:** none
