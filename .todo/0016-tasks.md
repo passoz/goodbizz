@@ -66,7 +66,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.3] A chamada de premissas valida fatores, recuperação e fonte
+### [x] [1.3] A chamada de premissas valida fatores, recuperação e fonte
 
 **Requirement:** FR-001
 **Depends on:** none
