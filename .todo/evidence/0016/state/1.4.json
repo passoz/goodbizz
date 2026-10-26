@@ -1,0 +1,42 @@
+{
+  "baseline_commit": "ec163be0b7d388888c68127d7aaf40a1414fa3f2",
+  "baseline_implementation": {
+    "src/application/prompts.ts": {
+      "exists": true,
+      "sha256": "3bf8ed47e556d705364bc396f14698a7b248ef38a9ac03c1212eb7c8a9eeb694"
+    },
+    "src/application/generation.ts": {
+      "exists": true,
+      "sha256": "2a23c3955f209a9ed11cc5ba8e8955633eed5eb8ed76f10881db57b7833c5a5c"
+    }
+  },
+  "baseline_tests": {
+    "tests/value-block-cases.test.ts": {
+      "exists": true,
+      "sha256": "e06052a554be47db21430bf26236e67ead27bccd3076994b34d7031f317a6b66"
+    }
+  },
+  "contract": {
+    "id": "CTR-004",
+    "sha256": "addbcc9a61c18829f256bc29040c7fab56432664147ff63d821097c4d54c41cb"
+  },
+  "created_at": "2026-10-26T01:47:14.206Z",
+  "frozen_tests": [
+    {
+      "path": "tests/value-block-cases.test.ts",
+      "sha256": "e06052a554be47db21430bf26236e67ead27bccd3076994b34d7031f317a6b66"
+    }
+  ],
+  "implementation_files": [
+    "src/application/prompts.ts",
+    "src/application/generation.ts"
+  ],
+  "plan_path": ".todo/0016-tasks.md",
+  "red_tests": null,
+  "state_version": 2,
+  "task": "1.4",
+  "task_definition_sha256": "ae1323c2abe8c0a005d11e1ad15de06e2c6e958bd1b762b8bd2560e66f43f206",
+  "test_files": [
+    "tests/value-block-cases.test.ts"
+  ]
+}
