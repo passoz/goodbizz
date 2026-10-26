@@ -158,7 +158,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.7] O documento com número sem fonte é regerado uma vez
+### [x] [1.7] O documento com número sem fonte é regerado uma vez
 
 **Requirement:** FR-007
 **Depends on:** none
