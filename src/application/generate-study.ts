@@ -160,7 +160,9 @@ export function valueBlockFor(
 }
 /**
  * Conjunto permitido do guardrail (QR-001): medidos, calculados, evidências, premissas,
- * ticket, setup, equivalentes anuais e o 90 do título do roadmap.
+ * ticket, setup, equivalentes anuais e as constantes do framework do plano (prazo de
+ * implantação, meta de clientes e horizonte do retorno). Números do próprio enquadramento
+ * não são "número inventado de mercado".
  */
 function allowedNumbersFor(
   evaluation: IdeaEvaluation,
@@ -179,6 +181,13 @@ function allowedNumbersFor(
     String(evaluation.business.wtp),
     String(monthlyTicket),
     String(setupFee),
+    // Constantes do framework: implantação em 2 semanas, meta de 10 a 15 clientes em
+    // 24 meses, retorno anual em 12 meses.
+    "2",
+    "10",
+    "15",
+    "24",
+    "12",
   ];
   for (const evidence of own) {
     if (evidence.valor !== null) allowed.push(String(evidence.valor));
