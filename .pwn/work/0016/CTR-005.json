@@ -49,7 +49,12 @@
     "required_evidence": [
       "evidence.json"
     ],
-    "frozen_tests": []
+    "frozen_tests": [
+      {
+        "path": "tests/solo-framing.test.ts",
+        "sha256": "d3971ebf5ab057876062608a1e8bd7ed55fa064ce63d8cfb819d89f062d5ff1a"
+      }
+    ]
   },
   "scope_contract": {
     "write_allow": [
