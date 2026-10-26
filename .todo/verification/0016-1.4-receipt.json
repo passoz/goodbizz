@@ -1,5 +1,5 @@
 {
-  "receipt_id": "66a88483009d4ca53958ae9abce64ee57de26b2c1792cef4a5ef68adf1462d3d",
+  "receipt_id": "34ea8864af85f4c819f3f8ca6eed355b84815fe8eaf70ba77a5c9a4e8660e05b",
   "version": 1,
   "kind": "independent-acceptance",
   "work_id": "0016",
@@ -14,7 +14,7 @@
       "id": "AC-1",
       "outcome": "pass",
       "exit_code": 0,
-      "output_digest": "cb52e490db1396671f18b55032414ca8f6b4c9c516ac7a7d1ac8f5a1bc02951c",
+      "output_digest": "271673a96753ef09bddb84996dcd66f13b1a638f726c64df3fda64b2533b8c7d",
       "baseline_exit_code": 1,
       "baseline_suspect_environmental": false
     },
@@ -22,7 +22,7 @@
       "id": "REGRESSION",
       "outcome": "pass",
       "exit_code": 0,
-      "output_digest": "5e038198a21971b69184336993d24dabbc50c129815c6c8f13b6e0743d3c9a78",
+      "output_digest": "c834be06709d59a72030bcde1372c20f254706f6b5832da24a47197f6670e132",
       "baseline_exit_code": null,
       "baseline_suspect_environmental": false
     }
@@ -31,6 +31,6 @@
     "id": "note-2fc7b258",
     "public_key_fingerprint": "454a5cb63b7e7e28c5f8b05e73cd14773771ff414b15e0e1d087cb7a66f53615"
   },
-  "created_at": "2026-10-26T02:08:25.827Z",
-  "signature": "FhHS343k7E3JiK9o8rqWadKIFd0kwJGI93jSt3b0IwGNJSCwg8asvbOs6Q6guZwd4mgVFhxYDuLjAZWPEYWKDQ=="
+  "created_at": "2026-10-26T02:08:39.611Z",
+  "signature": "be5nRJWpFBBD3sIRNhfQvhvhvS7HBJCjUS/CET805vJmy5xsFNGtuGnVna/XWCnXfA6tl0DvherNm6vNm9JrAw=="
 }
