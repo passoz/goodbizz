@@ -1,6 +1,7 @@
 /**
  * Progresso em casos de borda (FR-001): passo tecnico sem numeracao nao quebra e passo antigo
- * [n/6] continua legivel com o rotulo equivalente.
+ * [n/6] continua legivel com o rotulo equivalente. Com 6 fases, o passo [1/7] da pesquisa cai no
+ * rotulo vazio; com 7 fases ele mostra "Pesquisa na web".
  */
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import type { Hono } from "hono";
