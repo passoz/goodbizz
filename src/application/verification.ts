@@ -87,6 +87,13 @@ export function numberVariants(value: unknown): Set<string> {
   return new Set([...variants].filter((variant) => variant.length > 0));
 }
 
+/**
+ * Extrai do documento os números sem fonte (stub do RED da 1.6: sempre vazio).
+ */
+export function extractUnsourcedNumbers(_text: string, _allowed: readonly string[] = []): string[] {
+  return [];
+}
+
 /** Retorna os problemas encontrados no documento (lista vazia = aprovado). */
 export function checkDocument(
   text: string,
