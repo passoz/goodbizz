@@ -15,7 +15,8 @@ const QUIET = createLogger("fatal");
 
 /**
  * Aceitação da task 1.13 (QR-003): o modo simulado produz premissas, valor e
- * seção 11 determinísticos e coerentes com o guardrail.
+ * seção 11 determinísticos e coerentes com o guardrail. Sem a impl, o fixture
+ * não ecoa o bloco VALOR e a premissa não cita evidência: a conta não confere.
  */
 describe("QR-003: aceitação do modo simulado com valor", () => {
   async function runOnce() {
@@ -34,7 +35,8 @@ describe("QR-003: aceitação do modo simulado com valor", () => {
       });
       const docs = Object.values(result.documents);
       return {
-        premises: result.premises.map((entry) => entry.premises),
+        result,
+        factors: result.premises.flatMap((entry) => entry.premises?.fatores ?? []),
         values: result.evaluations
           .filter((evaluation) => evaluation.value !== undefined)
           .map((evaluation) => evaluation.value),
@@ -46,12 +48,15 @@ describe("QR-003: aceitação do modo simulado com valor", () => {
       handle.sqlite.close();
     }
   }
-  test("duas execuções simuladas repetem premissas, valor e seção 11 sem número sem fonte em issues", async () => {
+  test("duas execuções simuladas repetem premissas com fonte em evidência e seção 11 com a conta", async () => {
     const first = await runOnce();
     const second = await runOnce();
     expect(first.values.length).toBeGreaterThan(0);
     expect(first.values.length).toBe(first.total);
-    expect(first.premises).toEqual(second.premises);
+    // A premissa cita evidência real do estudo (E-id), não só INFERENCE.
+    expect(first.factors.length).toBeGreaterThan(0);
+    expect(first.factors.some((factor) => /^E\d+$/.test(factor.fonte))).toBe(true);
+    expect(first.result.premises).toEqual(second.result.premises);
     expect(first.values).toEqual(second.values);
     expect(first.section11).toBe(first.total);
     expect(first.unsourced).toEqual([]);
