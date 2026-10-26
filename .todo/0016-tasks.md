@@ -296,7 +296,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.13] O modo simulado produz premissas, valor e seção 11 sem número sem fonte
+### [x] [1.13] O modo simulado produz premissas, valor e seção 11 sem número sem fonte
 
 **Requirement:** QR-003
 **Depends on:** none
