@@ -66,6 +66,7 @@ describe("busca simulada determinística", () => {
       expect(second).toEqual(first);
       expect(fetches).toBe(0);
       for (const evidence of first) expect(evidence.url).toContain("mock.busca.test");
+      for (const evidence of first) expect(evidence.trecho).toContain("[QR-001]");
     } finally {
       globalThis.fetch = realFetch;
     }
