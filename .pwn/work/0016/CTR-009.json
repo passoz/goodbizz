@@ -54,7 +54,7 @@
     "frozen_tests": [
       {
         "path": "tests/setup-form.test.ts",
-        "sha256": "7a374eee29658fbb7c91b300ccd7583dba8f8cc59dec4cbcca6cf18281e5352b"
+        "sha256": "69f0b51c494344d52dcf4dc1f06049252549dfb6f04aabf95c7accc34953638e"
       }
     ]
   },
