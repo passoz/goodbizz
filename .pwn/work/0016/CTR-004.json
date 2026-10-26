@@ -53,7 +53,7 @@
     "frozen_tests": [
       {
         "path": "tests/value-block-cases.test.ts",
-        "sha256": "e06052a554be47db21430bf26236e67ead27bccd3076994b34d7031f317a6b66"
+        "sha256": "6ca8ddba13387e247268cb4feb4e089ac7e9336091a82272b875a88ba2352b11"
       }
     ]
   },
