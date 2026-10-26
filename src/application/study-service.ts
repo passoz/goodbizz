@@ -31,6 +31,7 @@ import { nicheLengthError, titleCase } from "../domain/naming.ts";
 import { fullHtml } from "./render.ts";
 import { mdToHtml } from "./render.ts";
 import { summarizeStudy } from "./summary.ts";
+import { dropFromTournament } from "./tournament.ts";
 import { scrub } from "../config/redact.ts";
 import { cacheFingerprint, type ProviderConfig } from "../config/providers.ts";
 import { resolveStudyConfig, studyContext } from "../config/runtime.ts";
@@ -51,6 +52,7 @@ import type {
   StudyListItem,
   StudyRecord,
   StudySummary,
+  StudyTournament,
 } from "../domain/types.ts";
 import type { StudyCache } from "./cache.ts";
 
@@ -340,10 +342,12 @@ export class StudyService {
     if (!target) {
       throw new NotFoundError(`idea ${ideaId} not found in study ${id}`);
     }
-    const remaining = record.evaluations.filter((evaluation) => evaluation.id !== ideaId);
-
-    // `saveEvaluations` regrava `rank` pela posicao do array, entao a ordem nova zera em 1.
-    const summary = this.summaryOf(remaining);
+    // O torneio perde as partidas e a folga da ideia removida e as medias das outras sao
+    // recalculadas das partidas restantes, sem chamar o decisor.
+    const dropped = dropFromTournament(record.evaluations, record.summary?.tournament, ideaId);
+    const summary = this.summaryOf(dropped.ideas, dropped.tournament);
+    // A ordem nova e a do ranking recalculado; `saveEvaluations` regrava `rank` a partir de 1.
+    const remaining = summary.ordered;
     await this.options.repo.saveEvaluations(id, remaining, summary);
     this.reconcileIdeasOnDisk(record, target, remaining, summary);
     this.options.logger.info("idea removed", { id, ideaId, name: target.name });
@@ -495,10 +499,10 @@ export class StudyService {
    * Summary das ideias restantes. Com zero ideias a media populacional vira NaN e o `dados.json`
    * gravaria `null` no lugar de um numero, entao as medias sao normalizadas para 0.
    */
-  private summaryOf(ideas: readonly StudyIdea[]): StudySummary {
+  private summaryOf(ideas: readonly StudyIdea[], tournament: StudyTournament | null): StudySummary {
     // Mesmo vazio, devolve um resumo: `buildArtifactFiles` sempre serializa as medias, e devolver
     // `null` aqui era um `TypeError` esperando para quando a ultima ideia saisse do estudo.
-    const summary = summarizeStudy([...ideas]);
+    const summary = summarizeStudy([...ideas], tournament);
     for (const [key, value] of Object.entries(summary.means)) {
       if (!Number.isFinite(value)) summary.means[key as keyof StudySummary["means"]] = 0;
     }

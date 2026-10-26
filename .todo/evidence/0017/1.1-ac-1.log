@@ -1,0 +1,56 @@
+TASK: 1.1
+CHECK: AC-1
+COMMAND: bun --config=tests/bunfig.focus.toml test tests/tournament.test.ts -t rodadas
+EXIT: 0
+OUTPUT:
+bun test v1.4.2 (744846f84)
+
+ 2 pass
+ 7 filtered out
+ 0 fail
+ 19 expect() calls
+Ran 2 tests across 1 file. [59.00ms]
+
+MUTATION_EXIT: 1
+MUTATION_OUTPUT:
+bun test v1.4.2 (744846f84)
+
+tests/tournament.test.ts:
+121 |   test("rodadas: 8 ideias jogam 4 rodadas sem repetir adversario e fazem no maximo 32 duelos", async () => {
+122 |     const { handle, cache, cfg } = harness();
+123 |     const decider = new ScriptedDecider(byStrength);
+124 |     const outcome = await runTournament(cfg, eightIdeas(), { decider, cache });
+125 | 
+126 |     expect(outcome.tournament?.rounds).toBe(4);
+                                             ^
+error: expect(received).toBe(expected)
+
+Expected: 4
+Received: undefined
+
+      at <anonymous> (/home/passoz/dev/goodbizz-w0017/tests/tournament.test.ts:126:40)
+(fail) torneio suico > rodadas: 8 ideias jogam 4 rodadas sem repetir adversario e fazem no maximo 32 duelos [4.67ms]
+149 |     for (const match of matches.filter((item) => item.round === 1)) {
+150 |       afterFirst.set(match.a, match.pA);
+151 |       afterFirst.set(match.b, 1 - match.pA);
+152 |     }
+153 |     const second = matches.filter((match) => match.round === 2);
+154 |     expect(second).toHaveLength(4);
+                         ^
+error: expect(received).toHaveLength(expected)
+
+Expected length: 4
+Received length: 0
+
+      at <anonymous> (/home/passoz/dev/goodbizz-w0017/tests/tournament.test.ts:154:20)
+(fail) torneio suico > rodadas: cada rodada emparelha ideias de media proxima [1.18ms]
+
+ 0 pass
+ 7 filtered out
+ 2 fail
+ 2 expect() calls
+Ran 2 tests across 1 file. [46.00ms]
+
+MUTATION_VERDICT: PASS
+VERDICT: PASS
+CHAIN_HASH: 5f147a68415c7a94ea36266357fdbe348326ac69c60eb929eeda141f9a838bb1

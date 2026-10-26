@@ -1,0 +1,137 @@
+{
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bun",
+        "--config=tests/bunfig.focus.toml",
+        "test",
+        "tests/tournament-pipeline.test.ts",
+        "-t",
+        "pasta 01"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0017/1.3-ac-1.log",
+      "log_sha256": "ad4d2bbdc327adbe4eb7b811a439dbc36042ff7742ad57902d53dda06a5b1ce5",
+      "recorded_at": "2026-10-25T22:45:01.962Z",
+      "green_sha256": "d80c026a0ed028b33d340c2ff0f5711100eebd8122a792b9a488bca13a2a455b",
+      "vacuity": {
+        "exit_code": 1,
+        "verdict": "PASS"
+      }
+    },
+    "AC-2": {
+      "command": [
+        "bun",
+        "--config=tests/bunfig.focus.toml",
+        "test",
+        "tests/tournament-pipeline.test.ts",
+        "-t",
+        "desempate"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0017/1.3-ac-2.log",
+      "log_sha256": "ec58b8678bfdebe08471575f41e3b045ae608972478cc3f56e0f921d4fbd0c3c",
+      "recorded_at": "2026-10-25T22:45:02.162Z",
+      "green_sha256": "d80c026a0ed028b33d340c2ff0f5711100eebd8122a792b9a488bca13a2a455b",
+      "vacuity": {
+        "exit_code": 1,
+        "verdict": "PASS"
+      }
+    }
+  },
+  "baseline_commit": "996ff4c8b9ef8d92b1ea4b8190ea1e125c3560b7",
+  "baseline_implementation": {
+    "src/application/summary.ts": {
+      "exists": true,
+      "sha256": "cdd25ae36f5b426ec5df4f083bffb915958a3350b953671ee63a8e28e967ff28"
+    },
+    "src/application/generate-study.ts": {
+      "exists": true,
+      "sha256": "63b750a4ea4ff4bd7bec28069c9c1f631afef7dda5b41a5b05b48bbd31ee3b85"
+    },
+    "src/cli.ts": {
+      "exists": true,
+      "sha256": "1002ad25dd15f36a98d5d5b3fee9d44314ae6aa23134b494940bb68acd3a8b87"
+    }
+  },
+  "baseline_tests": {
+    "tests/tournament-pipeline.test.ts": {
+      "exists": true,
+      "sha256": "fb218da0c12b2433e1a614648b6e3b29137f23471592acbb35b8b3c29ed36d5c"
+    },
+    "tests/summary-ranking.test.ts": {
+      "exists": false,
+      "sha256": null
+    }
+  },
+  "contract": {
+    "id": "CTR-003",
+    "sha256": "267592864709a94ffe7ae2c1f6d686fa276520e16950a5f3023b7564cbd15019"
+  },
+  "created_at": "2026-10-25T22:44:23.160Z",
+  "frozen_tests": [
+    {
+      "path": "tests/tournament-pipeline.test.ts",
+      "sha256": "fb218da0c12b2433e1a614648b6e3b29137f23471592acbb35b8b3c29ed36d5c"
+    }
+  ],
+  "green_expect": null,
+  "green_implementation": {
+    "src/application/summary.ts": {
+      "exists": true,
+      "sha256": "256c432fd726e7f47bf17d00663115770b374e21cfe93a4c904d9317a893a6fa"
+    },
+    "src/application/generate-study.ts": {
+      "exists": true,
+      "sha256": "59b6b762d656a52a32c7f49bfa320a1c5ade19aa22cef449641dd4d48f6a95e3"
+    },
+    "src/cli.ts": {
+      "exists": true,
+      "sha256": "63164898ff135ff2c7b752a8f62f5cf305a331de6ddfb0c68e597a5e26302a64"
+    }
+  },
+  "green_tests": {
+    "tests/tournament-pipeline.test.ts": {
+      "exists": true,
+      "sha256": "fb218da0c12b2433e1a614648b6e3b29137f23471592acbb35b8b3c29ed36d5c"
+    },
+    "tests/summary-ranking.test.ts": {
+      "exists": true,
+      "sha256": "9ca4155a85660c0d89bb3300044a36f4b18d5d73cb97572ae808c89189eafdb9"
+    }
+  },
+  "implementation_files": [
+    "src/application/summary.ts",
+    "src/application/generate-study.ts",
+    "src/cli.ts"
+  ],
+  "plan_path": ".todo/0017-tasks.md",
+  "red_command": [
+    "bun",
+    "--config=tests/bunfig.focus.toml",
+    "test",
+    "tests/summary-ranking.test.ts"
+  ],
+  "red_expect": "ordered, tiers e alvos seguem a media do torneio",
+  "red_tests": {
+    "tests/tournament-pipeline.test.ts": {
+      "exists": true,
+      "sha256": "fb218da0c12b2433e1a614648b6e3b29137f23471592acbb35b8b3c29ed36d5c"
+    },
+    "tests/summary-ranking.test.ts": {
+      "exists": true,
+      "sha256": "9ca4155a85660c0d89bb3300044a36f4b18d5d73cb97572ae808c89189eafdb9"
+    }
+  },
+  "state_version": 2,
+  "task": "1.3",
+  "task_definition_sha256": "d303c845f37f3077cbd66fe63bcac818cc93493223ab0e064d26fc06ea7ed599",
+  "test_files": [
+    "tests/tournament-pipeline.test.ts",
+    "tests/summary-ranking.test.ts"
+  ]
+}

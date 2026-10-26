@@ -10,10 +10,12 @@ import type {
   Idea,
   IdeaEvaluation,
   IdeaValue,
+  RankedEvaluation,
   StudyConfig,
   StudySummary,
   Tier,
 } from "../domain/types.ts";
+import { rankIdeas } from "./tournament.ts";
 
 /**
  * Mapa campo do `StudyConfig` -> chave gravada em `config` dentro de dados.json.
@@ -190,8 +192,24 @@ function valueFromJson(raw: unknown): { value?: IdeaValue } {
   };
 }
 
+/** Resultado do torneio de uma ideia em `dados.json`; `null` quando não houve torneio. */
+function tournamentToJson(evaluation: RankedEvaluation): Record<string, number> | null {
+  const standing = evaluation.tournament;
+  if (!standing) return null;
+  return {
+    pontos: standing.points,
+    partidas: standing.games,
+    vitorias: standing.wins,
+    folgas: standing.byes,
+    media: standing.score,
+  };
+}
+
 /**
- * Serializa o conteúdo de dados.json.
+ * Serializa o conteúdo de dados.json, com as ideias na ordem do ranking.
+ *
+ * As chaves do baseline não mudam; o torneio entra como acréscimo: `torneio` no fim de cada ideia
+ * e `torneio_partidas` no fim do documento (`a`, `b` e `p_a`, a probabilidade média de `a`).
  * @param _brief guardado no banco, não em dados.json (o baseline não o grava aqui).
  * @param evidences chave aditiva `evidencias`: o leitor do baseline ignora chave que não conhece.
  */
@@ -199,7 +217,7 @@ export function serializeDados(
   cfg: StudyConfig,
   _brief: string,
   summary: StudySummary,
-  data: IdeaEvaluation[],
+  data: RankedEvaluation[],
   evidences: readonly Evidence[],
 ): string {
   const value = {
@@ -221,7 +239,10 @@ export function serializeDados(
     },
     grupos_dor: summary.painGroups,
     tiers: summary.tiers,
-    ideias: data.map(evaluationToJson),
+    ideias: rankIdeas(data).map((evaluation) => ({
+      ...evaluationToJson(evaluation),
+      torneio: tournamentToJson(evaluation),
+    })),
     evidencias: evidences.map((evidence) => ({
       id: evidence.id,
       tipo: evidence.tipo,
@@ -231,6 +252,12 @@ export function serializeDados(
       valor: evidence.valor,
       unidade: evidence.unidade,
       ideia: evidence.ideia,
+    })),
+    torneio_partidas: (summary.tournament?.matches ?? []).map((match) => ({
+      rodada: match.round,
+      a: match.aName,
+      b: match.bName,
+      p_a: match.pA,
     })),
   };
   return JSON.stringify(value, null, 1);

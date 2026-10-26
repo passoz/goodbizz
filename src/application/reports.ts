@@ -5,7 +5,8 @@
  * Os textos e o alinhamento das colunas são copiados do baseline Python — não altere.
  */
 import { studySubject } from "../domain/naming.ts";
-import type { Evidence, IdeaEvaluation, StudyConfig, StudySummary } from "../domain/types.ts";
+import type { Evidence, RankedEvaluation, StudyConfig, StudySummary } from "../domain/types.ts";
+import { rankIdeas } from "./tournament.ts";
 
 /** Normaliza um nome para pasta: NFD, sem acentos, minusculo, `-` no lugar do resto. */
 export function slug(name: string): string {
@@ -63,18 +64,21 @@ export function indexMarkdown(
     "",
     "## Ranking",
     "",
-    "Ordenado pelo Índice de Ação (média de fit e facilidade de venda).",
+    "Ordenado pelo torneio par a par no decisor: média de pontos por partida (0 a 1, maior é " +
+      "melhor), com empate decidido pelo Índice de Ação (média de fit e facilidade de venda) e " +
+      "depois pelo nome.",
+    "`Torneio` = média por partida e, entre parênteses, quantas partidas a ideia jogou.",
     "`WTP` = probabilidade de o dono pagar o ticket mensal assumido.",
     "",
-    "| # | Ideia | Setor | Índice | Tier | WTP | Dor verificada |",
-    "|---|---|---|---|---|---|---|",
+    "| # | Ideia | Setor | Torneio | Índice | Tier | WTP | Dor verificada |",
+    "|---|---|---|---|---|---|---|---|",
   ];
   summary.ordered.forEach((idea, position) => {
     const rank = position + 1;
     const folder = folderByName[idea.name] ?? folderName(rank, idea.name);
     lines.push(
       `| ${String(rank).padStart(2, "0")} | [${idea.name}](./${folder}/) | ${idea.sector || "-"} | ` +
-        `**${pythonFloat(idea.index)}** | ${idea.tier} | ${fixed(idea.business.wtp, 2)} | ` +
+        `${tournamentCell(idea)} | **${pythonFloat(idea.index)}** | ${idea.tier} | ${fixed(idea.business.wtp, 2)} | ` +
         `${idea.algorithm.label} |`,
     );
   });
@@ -115,39 +119,47 @@ export function indexMarkdown(
   return lines.join("\n");
 }
 
-/** Tabela markdown com todos os indicadores, ordenada pelo índice decrescente. */
-export function indicatorsTableMarkdown(cfg: StudyConfig, data: IdeaEvaluation[]): string {
+/** Célula do torneio: média por partida com 3 casas e o número de partidas; `-` sem torneio. */
+function tournamentCell(idea: RankedEvaluation): string {
+  const standing = idea.tournament;
+  return standing ? `${fixed(standing.score, 3)} (${standing.games})` : "-";
+}
+
+/** Tabela markdown com todos os indicadores, na ordem do ranking (torneio, índice, nome). */
+export function indicatorsTableMarkdown(cfg: StudyConfig, data: RankedEvaluation[]): string {
   const lines = [
     `# Tabelao de indicadores — ${cfg.niche}`,
     "",
     scopeNotice(cfg),
     "",
     "| # | Ideia | Setor | Fit | c | Venda | c | Disrupcao | c | Dor | Solo | Índice | " +
-      "Tier | Algo | Algo dor | Interna | Margem | Desvio | WTP | 30/24m | Preço | Perda mensal (R$) | Payback (meses) |",
-    "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+      "Tier | Algo | Algo dor | Interna | Margem | Desvio | WTP | 30/24m | Preço | Perda mensal (R$) | Payback (meses) | Torneio |",
+    "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
   ];
-  [...data]
-    .sort((a, b) => b.index - a.index)
-    .forEach((idea, position) => {
-      const i = idea.indicators;
-      const g = idea.business;
-      const a = idea.algorithm;
-      const value = (idea as { value?: { loss?: number; paybackMonths?: number | null } }).value;
-      lines.push(
-        `| ${String(position + 1).padStart(2, "0")} | ${idea.name} | ${idea.sector || "-"} | ` +
-          `${fixed(i.fit, 2)} | ${fixed(i.fitConf, 2)} | ${fixed(i.sale, 2)} | ` +
-          `${fixed(i.saleConf, 2)} | ${fixed(i.disruption, 2)} | ${fixed(i.disruptionConf, 2)} | ` +
-          `${i.pain} | ${fixed(i.solo, 2)} | **${pythonFloat(idea.index)}** | ${idea.tier} | ` +
-          `${a.label} | ${fixed(a.painScore, 2)} | ${fixed(a.internalScore, 2)} | ` +
-          `${signed(a.margin, 2)} | ${fixed(a.deviation, 3)} | ${fixed(g.wtp, 2)} | ` +
-          `${fixed(g.meta30, 2)} | ${fixed(g.price, 2)} | ` +
-          `${value?.loss ?? ""} | ${value?.paybackMonths ?? ""} |`,
-      );
-    });
+  rankIdeas(data).forEach((idea, position) => {
+    const i = idea.indicators;
+    const g = idea.business;
+    const a = idea.algorithm;
+    const value = (idea as { value?: { loss?: number; paybackMonths?: number | null } }).value;
+    lines.push(
+      `| ${String(position + 1).padStart(2, "0")} | ${idea.name} | ${idea.sector || "-"} | ` +
+        `${fixed(i.fit, 2)} | ${fixed(i.fitConf, 2)} | ${fixed(i.sale, 2)} | ` +
+        `${fixed(i.saleConf, 2)} | ${fixed(i.disruption, 2)} | ${fixed(i.disruptionConf, 2)} | ` +
+        `${i.pain} | ${fixed(i.solo, 2)} | **${pythonFloat(idea.index)}** | ${idea.tier} | ` +
+        `${a.label} | ${fixed(a.painScore, 2)} | ${fixed(a.internalScore, 2)} | ` +
+        `${signed(a.margin, 2)} | ${fixed(a.deviation, 3)} | ${fixed(g.wtp, 2)} | ` +
+        `${fixed(g.meta30, 2)} | ${fixed(g.price, 2)} | ` +
+        `${value?.loss ?? ""} | ${value?.paybackMonths ?? ""} | ${tournamentCell(idea)} |`,
+    );
+  });
   lines.push(
     "",
     "`c` = confiança (0 a 1). Confianca baixa significa que o modelo viu ambiguidade " +
       "real na ideia, não que o valor esteja errado.",
+    "",
+    "`Torneio` = média de pontos por partida no torneio par a par do decisor (0 a 1, maior é " +
+      "melhor) e, entre parênteses, o número de partidas. É ela que ordena a tabela; o índice " +
+      "desempata.",
     "",
   );
   return lines.join("\n");
@@ -178,12 +190,15 @@ const CSV_HEADERS = [
   "preco_conf",
   "perda_mes",
   "payback_meses",
+  // Colunas do torneio: no fim, para não mexer na posição das que o recalibrate já lê.
+  "torneio",
+  "partidas",
 ];
 
-/** Mesma tabela em CSV, com cabeçalho fixo lido pelo recalibrate. */
-export function indicatorsTableCsv(data: IdeaEvaluation[]): string {
+/** Mesma tabela em CSV, com cabeçalho fixo lido pelo recalibrate e a ordem do ranking. */
+export function indicatorsTableCsv(data: RankedEvaluation[]): string {
   const rows: string[] = [CSV_HEADERS.join(",")];
-  for (const idea of [...data].sort((a, b) => b.index - a.index)) {
+  for (const idea of rankIdeas(data)) {
     const i = idea.indicators;
     const g = idea.business;
     const a = idea.algorithm;
@@ -214,6 +229,8 @@ export function indicatorsTableCsv(data: IdeaEvaluation[]): string {
         fixed(g.priceConf, 2),
         value?.loss === undefined ? "" : String(value.loss),
         value?.paybackMonths === undefined || value.paybackMonths === null ? "" : String(value.paybackMonths),
+        idea.tournament ? fixed(idea.tournament.score, 3) : "",
+        idea.tournament ? String(idea.tournament.games) : "",
       ].join(","),
     );
   }

@@ -76,8 +76,10 @@ describe("end-to-end smoke (mock mode)", () => {
 
     expect(record.progress.state).toBe("done");
     expect(record.evaluations).toHaveLength(3);
-    const indices = record.evaluations.map((evaluation) => evaluation.index);
-    expect(indices).toEqual([...indices].sort((a, b) => b - a));
+    // A ordem do ranking é a média do torneio par a par (o índice só desempata).
+    const scores = record.evaluations.map((evaluation) => evaluation.tournament?.score ?? -1);
+    expect(scores.every((score) => score >= 0)).toBe(true);
+    expect(scores).toEqual([...scores].sort((a, b) => b - a));
     expect(record.summary?.means.fit).toBeGreaterThan(0);
     expect(record.summary?.tiers).toBeDefined();
 
@@ -107,7 +109,16 @@ describe("end-to-end smoke (mock mode)", () => {
       tiers: Record<string, string[]>;
       ideias: Array<Record<string, unknown>>;
     };
-    expect(Object.keys(parsed)).toEqual(["config", "medias", "grupos_dor", "tiers", "ideias", "evidencias"]);
+    // As chaves do baseline vêm primeiro; `evidencias` e `torneio_partidas` são acréscimos no fim.
+    expect(Object.keys(parsed)).toEqual([
+      "config",
+      "medias",
+      "grupos_dor",
+      "tiers",
+      "ideias",
+      "evidencias",
+      "torneio_partidas",
+    ]);
     expect(parsed.config).toHaveProperty("nicho");
     expect(parsed.config).toHaveProperty("ticket_mes");
     expect(parsed.medias).toHaveProperty("fit");

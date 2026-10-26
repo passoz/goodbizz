@@ -168,6 +168,8 @@ function publicStudy(record: StudyRecord) {
     error: record.progress.error === null ? null : explainFailure(record.progress.error),
     evaluations: record.evaluations,
     summary: record.summary,
+    /** Torneio par a par (rodadas, partidas, folgas, duelos sem resposta); `null` em estudo antigo. */
+    tournament: record.summary?.tournament ?? null,
     usage: record.usage,
     /** Número de evidências da pesquisa (estudo + ideias); estudo antigo abre com zero. */
     evidenceCount: record.evidences.length,

@@ -1,0 +1,59 @@
+TASK: 1.6
+CHECK: GREEN
+COMMAND: bun --config=tests/bunfig.focus.toml test tests/study-service-tournament.test.ts
+EXIT: 0
+OUTPUT:
+bun test v1.4.2 (744846f84)
+
+ 2 pass
+ 0 fail
+ 4 expect() calls
+Ran 2 tests across 1 file. [93.00ms]
+
+MUTATION_EXIT: 1
+MUTATION_OUTPUT:
+bun test v1.4.2 (744846f84)
+
+tests/study-service-tournament.test.ts:
+15 |     const study = await harness.service.run(created.id);
+16 |     const target = study.evaluations[1];
+17 |     const after = await harness.service.removeIdea(study.id, target?.id ?? "");
+18 |     const reloaded = await harness.service.get(study.id);
+19 | 
+20 |     expect(after.summary?.tournament?.rounds).toBe(study.summary?.tournament?.rounds);
+                                                   ^
+error: expect(received).toBe(expected)
+
+Expected: 3
+Received: undefined
+
+      at <anonymous> (/home/passoz/dev/goodbizz-w0017/tests/study-service-tournament.test.ts:20:47)
+(fail) remocao com torneio > o resumo gravado depois da remocao guarda as partidas restantes [36.01ms]
+32 |       resolveStudyConfig({ niche: "bares", numIdeas: 2, mock: true }),
+33 |     );
+34 |     const study = await harness.service.run(created.id);
+35 |     const after = await harness.service.removeIdea(study.id, study.evaluations[0]?.id ?? "");
+36 |     expect(after.summary?.tournament ?? null).toBeNull();
+37 |     expect(after.evaluations[0]?.tournament ?? null).toBeNull();
+                                                          ^
+error: expect(received).toBeNull()
+
+Received: {
+  points: 0.975,
+  games: 2,
+  wins: 0,
+  byes: 0,
+  score: 0.487,
+}
+
+      at <anonymous> (/home/passoz/dev/goodbizz-w0017/tests/study-service-tournament.test.ts:37:54)
+(fail) remocao com torneio > remover ate sobrar uma ideia apaga o torneio [9.69ms]
+
+ 0 pass
+ 2 fail
+ 3 expect() calls
+Ran 2 tests across 1 file. [91.00ms]
+
+MUTATION_VERDICT: PASS
+VERDICT: PASS
+CHAIN_HASH: 459b900afa8f9d74d0bb14126f5d780a348d1ebd71c960604c97292d49575b24

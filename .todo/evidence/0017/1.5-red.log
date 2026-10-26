@@ -1,0 +1,44 @@
+TASK: 1.5
+CHECK: RED
+COMMAND: bun --config=tests/bunfig.focus.toml test tests/repositories-tournament.test.ts
+EXIT: 1
+OUTPUT:
+bun test v1.4.2 (744846f84)
+
+tests/repositories-tournament.test.ts:
+64 |       summary: null,
+65 |       usage: null,
+66 |     });
+67 |     await repo.saveEvaluations("s", [idea("Alto", 1.9, 0.2), idea("Baixo", 1.0, 0.8)], null);
+68 |     const loaded = await repo.get("s");
+69 |     expect(loaded?.evaluations.map((item) => [item.name, item.tournament?.score])).toEqual([
+                                                                                        ^
+error: expect(received).toEqual(expected)
+
+@@ -2,8 +2,8 @@
+    [
+-     "Baixo",
+-     0.8,
++     "Alto",
++     undefined,
+    ],
+    [
+-     "Alto",
+-     0.2,
++     "Baixo",
++     undefined,
+    ],
+
+- Expected  - 4
++ Received  + 4
+
+      at <anonymous> (/home/passoz/dev/goodbizz-w0017/tests/repositories-tournament.test.ts:69:84)
+(fail) repositorio com torneio > a leitura devolve o torneio de cada ideia na ordem do ranking [11.16ms]
+
+ 0 pass
+ 1 fail
+ 1 expect() calls
+Ran 1 test across 1 file. [33.00ms]
+
+VERDICT: PASS
+CHAIN_HASH: 5047450eb7e25fbe9c59e48a80cd7e1124e8045d4803d35542ba63691b638edc

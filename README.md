@@ -141,12 +141,12 @@ configuração/subcomando desconhecido, `130` interrupcao por teclado.
 
 ```
 estudo/
-├── README.md              # indice executivo: ranking, medias e grupos de dor
+├── README.md              # indice executivo: ranking (ordem do torneio), medias e grupos de dor
 ├── 00-brief.md            # leitura de mercado que orientou as ideias
 ├── 00-evidencias.md       # evidências da pesquisa web: afirmação, trecho literal e URL
-├── 00-tabelao.md          # tabela comparativa de todos os indicadores, com Perda mensal (R$) e Payback (meses)
-├── 00-tabelao.csv         # a mesma tabela para planilha (`perda_mes`, `payback_meses`)
-├── dados.json             # dump completo (chaves do baseline, mais `evidencias` e `valor` por ideia; consumivel pelo recalibrate)
+├── 00-tabelao.md          # tabela comparativa de todos os indicadores, com Perda mensal (R$), Payback (meses) e Torneio
+├── 00-tabelao.csv         # a mesma tabela para planilha (`perda_mes`, `payback_meses`, `torneio`, `partidas`)
+├── dados.json             # dump completo (chaves do baseline, mais `evidencias`, `valor` por ideia e `torneio_partidas`; consumivel pelo recalibrate)
 ├── .cache.db              # cache de respostas por chave hash, escopada pelo id do estudo (SQLite)
 ├── 01-<ideia-campea>/README.md   # plano completo da ideia #1 do ranking
 ├── 02-<segunda-ideia>/README.md
@@ -381,6 +381,38 @@ Indicadores por ideia (decisor System One):
 | `preco`     | score  | 0–2      | preco abaixo, compativel ou acima do valor percebido    |
 
 **Índice de Acao** = `(fit + venda) / 2`; **Tier A** `>= 1.84`, **B** `>= 1.60`, **C** abaixo.
+
+### Torneio par a par (ordem do ranking)
+
+As notas absolutas do decisor saem quase iguais para todas as ideias (em estudos reais, 18 de 20
+ideias ficaram com índice entre 1,615 e 1,92). Por isso, depois da avaliação, o pipeline roda um
+torneio suíço no decisor (`src/application/tournament.ts`):
+
+- **Rodadas:** `teto(log2 N) + 1` para `N >= 2` ideias (8 ideias = 4 rodadas = 16 partidas = no máximo
+  32 perguntas). Com uma ideia só não há torneio.
+- **Emparelhamento:** cada rodada junta ideias de média próxima que ainda não se enfrentaram. Sem
+  combinação livre, repete a partida de menor diferença de média em vez de travar.
+- **Folga:** com `N` ímpar, a ideia de pior posição que ainda não folgou fica de fora da rodada. A
+  folga não conta partida nem ponto.
+- **Duelo:** pergunta `choice` `duelo` com `criteria` `{A, B}` ("qual destas duas soluções o dono
+  contrata primeiro?"), feita nas duas ordens. A ideia X recebe a média das duas probabilidades de ser
+  escolhida e a adversária, 1 menos esse valor: o viés de posição se anula. Sem `probabilities`, a
+  `choice` vale 1; sem nada, a ordem conta 0.5 e entra em `issues`.
+- **Cache:** cada ordem de cada partida tem chave própria (semente do estudo, impressão dos provedores,
+  nomes, descrições e ordem). Retomar, repetir partida ou acrescentar ideias reaproveita o que já foi
+  perguntado.
+- **Ordem:** ranking, pastas `NN-slug`, tabelão, CSV, `dados.json` e interface seguem a média de
+  pontos por partida; empate pelo índice de ação e depois pelo nome. Índice e tier não mudam e
+  continuam como colunas. Estudo anterior ao torneio (coluna `tournament_json` nula) segue o índice.
+- **Remoção e adição:** excluir uma ideia tira as partidas e a folga dela e recalcula as médias das
+  partidas restantes, sem chamar o decisor. Acrescentar ideias roda o torneio de novo sobre todas.
+
+Onde aparece: `tournament` em cada avaliação e `tournament` (rodadas, partidas, folgas, `issues`) no
+detalhe `GET /api/studies/:id`; coluna `torneio` + `partidas` no fim do CSV; chave `torneio`
+(`pontos`, `partidas`, `vitorias`, `folgas`, `media`) por ideia e `torneio_partidas` (`rodada`, `a`,
+`b`, `p_a`) no `dados.json`; coluna "Torneio" no ranking da página do estudo (`0.75 em 4 partidas`),
+no glossário e em `/como-ler`. O decisor simulado responde o duelo pela força fixa do texto de cada
+opção, então o torneio em `--mock` é determinístico e independente da posição.
 
 A dor tem dois metodos: `choice` (padrão, escolha forcada entre três consequencias concretas) e
 `noul` (legado, quatro sondas x três paráfrases com desvio e escalonamento). Limiares calibrados:

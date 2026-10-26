@@ -312,7 +312,9 @@ function printSummary(cfg: StudyConfig, result: GenerateStudyResult): void {
   for (const file of result.files) console.log(`  ${file.path}`);
   console.log(`  cache: ${result.cacheCount} respostas guardadas (${result.cacheHits} reaproveitadas)`);
   console.log(
-    "\nComo ler: índice de ação 0 a 2 (maior e melhor; Tier A >= 1.84, B >= 1.60) | " +
+    "\nComo ler: ordem do ranking = torneio par a par no decisor (média de pontos por partida, " +
+      "0 a 1, maior e melhor; empate pelo índice) | índice de ação 0 a 2 (maior e melhor; " +
+      "Tier A >= 1.84, B >= 1.60) | " +
       "dor FORTE >= 0.65 e dominante | desvio entre paráfrases menor e melhor (< 0.15) | " +
       "WTP e meta30 são probabilidades de 0 a 1 (maior e melhor) | ticket é teto, não piso.",
   );

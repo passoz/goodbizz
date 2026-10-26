@@ -1,9 +1,0 @@
-ideia,setor,indice,tier,fit,fit_conf,venda,venda_conf,disrupcao,disrupcao_conf,dor,dor_conf,solo,algo,algo_dor,algo_interna,algo_margem,algo_desvio,wtp,meta30,preco,preco_conf,perda_mes,payback_meses
-"Previsao de movimento","operacao",1.380,C,1.68,0.70,1.08,0.70,1.46,0.70,"dinheiro_direto",0.80,0.09,FORTE,1.000,0.000,+1.000,0.000,0.14,0.63,1.72,0.70,2600,1.8
-"Ideia Extra 1","operacao",1.290,C,0.96,0.70,1.62,0.70,1.12,0.70,"dinheiro_direto",0.80,0.76,FORTE,1.000,0.000,+1.000,0.000,0.75,0.17,1.64,0.70,4137,1.02
-"Livro de indicacoes","rede",0.890,C,1.66,0.70,0.12,0.70,1.32,0.70,"reputacao",0.80,0.79,FORTE,1.000,0.000,+1.000,0.000,0.33,0.93,0.76,0.70,5017,0.82
-"Confirmacao de horario","agenda",0.750,C,0.36,0.70,1.14,0.70,1.32,0.70,"dinheiro_direto",0.80,0.86,FORTE,1.000,0.000,+1.000,0.000,0.86,0.30,0.48,0.70,1792,3.02
-"Ficha do cliente","cadastro",0.710,C,0.82,0.70,0.60,0.70,1.26,0.70,"backoffice",0.80,0.94,FRACA,0.000,1.000,-1.000,0.000,0.02,0.92,1.70,0.70,2352,2.05
-"Triagem de WhatsApp","atendimento",0.650,C,0.86,0.70,0.44,0.70,0.82,0.70,"backoffice",0.80,0.96,FRACA,0.000,1.000,-1.000,0.000,0.47,0.47,1.42,0.70,4833,0.85
-"Ideia Extra 2","operacao",0.540,C,0.08,0.70,1.00,0.70,0.82,0.70,"reputacao",0.80,0.88,FORTE,1.000,0.000,+1.000,0.000,0.41,0.75,1.84,0.70,4472,0.93
-"Resgate de insatisfacao","reputacao",0.090,C,0.08,0.70,0.10,0.70,1.66,0.70,"backoffice",0.80,0.07,FRACA,0.000,1.000,-1.000,0.000,0.32,0.16,1.52,0.70,2288,2.13

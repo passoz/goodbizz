@@ -6,6 +6,12 @@ import type { DeciderClient } from "../domain/ports.ts";
 import type { DeciderAnswers, ProviderUsage, QuestionSet } from "../domain/types.ts";
 import { ratioFromDigest } from "../domain/hash.ts";
 
+/** Duelo do torneio: escolha entre exatamente duas opções, `A` e `B`. */
+function isDuel(criteria: Record<string, string>): boolean {
+  const keys = Object.keys(criteria).sort();
+  return keys.length === 2 && keys[0] === "A" && keys[1] === "B";
+}
+
 export class DeciderMock implements DeciderClient {
   private readonly seed: string;
   private calls = 0;
@@ -19,7 +25,9 @@ export class DeciderMock implements DeciderClient {
     const output: DeciderAnswers = {};
     for (const [qid, question] of Object.entries(questions)) {
       const base = ratioFromDigest(this.seed, state.slice(-120), qid);
-      if (question.type === "choice") {
+      if (question.type === "choice" && isDuel(question.criteria)) {
+        output[qid] = this.duel(question.criteria["A"] ?? "", question.criteria["B"] ?? "");
+      } else if (question.type === "choice") {
         const criteria = question.criteria ? Object.keys(question.criteria) : ["a", "b", "c"];
         const winner =
           criteria[Math.min(criteria.length - 1, Math.floor(base * criteria.length))] ?? criteria[0] ?? "";
@@ -38,6 +46,18 @@ export class DeciderMock implements DeciderClient {
       }
     }
     return output;
+  }
+
+  /**
+   * Duelo simulado: cada opção tem uma força fixa derivada do próprio texto (nome e descrição), e
+   * a probabilidade de A é a parte dela na soma das duas forças. A força não depende da posição nem
+   * do estado, então a mesma ideia é preferida nas duas ordens e o torneio simulado separa as ideias.
+   */
+  private duel(a: string, b: string): Record<string, unknown> {
+    const strengthA = 0.05 + ratioFromDigest(this.seed, "duelo", a);
+    const strengthB = 0.05 + ratioFromDigest(this.seed, "duelo", b);
+    const pA = strengthA / (strengthA + strengthB);
+    return { choice: pA >= 0.5 ? "A" : "B", probabilities: { A: pA, B: 1 - pA }, confidence: 0.8 };
   }
 
   /** Consumo do modo simulado: só as chamadas (o mock não usa provedor nem tokens). */

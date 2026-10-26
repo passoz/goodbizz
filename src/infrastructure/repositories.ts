@@ -9,6 +9,7 @@ import type { Database } from "bun:sqlite";
 
 import type { Db } from "./db.ts";
 import { evaluations, studies } from "./schema.ts";
+import { rankIdeas } from "../application/tournament.ts";
 import type { StudyRepository } from "../domain/ports.ts";
 import type {
   Evidence,
@@ -23,6 +24,7 @@ import type {
   StudySummary,
   StudyUsage,
   Tier,
+  TournamentStanding,
 } from "../domain/types.ts";
 
 /** Idea object exactly as written to `dados.json` by the baseline. */
@@ -287,14 +289,16 @@ export class SqliteStudyRepository implements StudyRepository {
       id: r.ideaId ?? `legacy-${r.studyId}-${String(r.rank).padStart(8, "0")}`,
       // A data de geracao vive em coluna propria pela mesma razao; ideia antiga nao tem.
       ...(r.generatedAt === null ? {} : { generatedAt: r.generatedAt }),
+      // O torneio tambem: estudo anterior a ele volta com `null` e ordena pelo indice.
+      tournament: r.tournamentJson === null ? null : (JSON.parse(r.tournamentJson) as TournamentStanding),
     }));
     const summary = row.summaryJson ? (JSON.parse(row.summaryJson) as StudySummary) : null;
     // Estudos gravados antes da migration 0003 guardaram `summary_json` sem `id` em `ordered`.
     // A tabela `evaluations` e a fonte da identidade (o backfill preencheu `idea_id`), entao
-    // `ordered` e remontado dela — mesma ordenacao por indice decrescente que `summarizeStudy`
-    // usa — em vez do blob denormalizado, que ficaria sem id para sempre.
+    // `ordered` e remontado dela — mesma ordem do ranking que `summarizeStudy` usa (torneio,
+    // indice, nome) — em vez do blob denormalizado, que ficaria sem id para sempre.
     if (summary) {
-      summary.ordered = [...ideas].sort((left, right) => right.index - left.index);
+      summary.ordered = rankIdeas(ideas);
     }
     return {
       id: row.id,
@@ -348,7 +352,8 @@ export class SqliteStudyRepository implements StudyRepository {
     evaluations_: StudyIdea[],
     summary: StudyRecord["summary"],
   ): Promise<void> {
-    const ordered = [...evaluations_].sort((a, b) => b.index - a.index);
+    // O rank gravado e a ordem do ranking: media do torneio, depois indice, depois nome.
+    const ordered = rankIdeas(evaluations_);
     this.db.transaction((tx) => {
       tx.delete(evaluations).where(eq(evaluations.studyId, studyId)).run();
       if (ordered.length > 0) {
@@ -365,6 +370,7 @@ export class SqliteStudyRepository implements StudyRepository {
               payloadJson: JSON.stringify(evaluationToIdeaJson(e)),
               ideaId: e.id,
               generatedAt: e.generatedAt ?? null,
+              tournamentJson: e.tournament ? JSON.stringify(e.tournament) : null,
             })),
           )
           .run();

@@ -1,0 +1,14 @@
+TASK: 1.3
+CHECK: VERIFY
+COMMAND: bun --config=tests/bunfig.focus.toml test tests/summary-ranking.test.ts
+EXIT: 0
+OUTPUT:
+bun test v1.4.2 (744846f84)
+
+ 2 pass
+ 0 fail
+ 5 expect() calls
+Ran 2 tests across 1 file. [28.00ms]
+
+VERDICT: PASS
+CHAIN_HASH: 98f2ecc858c806c29b7e5f6b5b543c9b3838c1c52baf5f240598197360147169

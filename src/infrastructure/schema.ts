@@ -56,6 +56,12 @@ export const evaluations = sqliteTable(
      * vive fora do `payload_json` para nao mexer na forma do baseline (CON-006).
      */
     generatedAt: text("generated_at"),
+    /**
+     * Resultado da ideia no torneio par a par (pontos, partidas, vitórias, folgas e média), em
+     * JSON. Nulo em estudos anteriores ao torneio e em estudo de uma ideia só; fora do
+     * `payload_json` pela mesma razão do `generated_at` (CON-006).
+     */
+    tournamentJson: text("tournament_json"),
   },
   (table) => [
     primaryKey({ columns: [table.studyId, table.rank] }),

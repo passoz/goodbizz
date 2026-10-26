@@ -112,8 +112,12 @@ describe("evidências no estado do decisor", () => {
     const repeated = await run(cache, "falha");
     const changed = await run(cache, "ok");
     handle.sqlite.close();
-    expect(first.states.length).toBeGreaterThan(0);
+    // Duelos do torneio não veem evidências (só nomes e descrições): partida já disputada
+    // sai do cache. Só os estados de avaliação contam aqui.
+    const evals = (states: string[]) =>
+      states.filter((state) => !state.includes("Comparação direta entre duas ideias"));
+    expect(evals(first.states).length).toBeGreaterThan(0);
     expect(repeated.states).toHaveLength(0);
-    expect(changed.states.length).toBe(first.states.length);
+    expect(evals(changed.states).length).toBe(evals(first.states).length);
   });
 });

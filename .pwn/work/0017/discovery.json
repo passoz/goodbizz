@@ -1,0 +1,26 @@
+{
+  "work_id": "0017",
+  "title": "O ranking sai de um torneio par a par no decisor",
+  "imported_from": ".prompts/0017-change.md (origem .sources/0006-propostas-de-valor.md)",
+  "grilling_depth": "medium",
+  "problem": "As notas absolutas do decisor saem quase iguais para todas as ideias e o ranking e decidido por diferencas de 0,01 a 0,03 no indice (18 de 20 ideias reais entre 1,615 e 1,92). O operador escolheu a comparacao par a par no decisor para separar as ideias.",
+  "actors": [
+    "ACT-001 Operador/consultor (CLI)",
+    "ACT-003 Usuario da interface web"
+  ],
+  "objectives": [
+    "SC-001: bun test passa com as assercoes de rodadas, vies, folga, desempate, remocao, adicao e contagem",
+    "SC-002: bun run cli generate \"depositos de bebidas\" --ideas 5 --mock grava tabelao e CSV com a coluna torneio e pastas na ordem do torneio",
+    "SC-003: bun run check, bunx eslint . e bunx prettier --check . passam",
+    "SC-004: pwn work gate --all aprovado e .specs/system.json reconciliada com BR-001 e BR-010 novas"
+  ],
+  "constraints": [
+    "QR-001: Com o decisor simulado, o torneio produz a mesma ordem e os mesmos pontos para a mesma entrada",
+    "QR-002: Indice e tier continuam das notas e as chaves existentes do dados.json e do CSV nao mudam",
+    "QR-003: Estudo antigo sem torneio abre com a ordem pelo indice e a coluna do torneio vazia",
+    "QR-004: Um estudo de 8 ideias faz no maximo 32 chamadas de duelo",
+    "Drizzle sem SQL cru; migracao aditiva gerada por drizzle-kit",
+    "src/domain nao importa application nem infrastructure",
+    "Testes offline e deterministicos"
+  ]
+}

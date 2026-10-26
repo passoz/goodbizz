@@ -125,14 +125,16 @@ describe("study API", () => {
 
     const detail = (await (await api().request(`/studies/${id}`)).json()) as {
       state: string;
-      evaluations: Array<{ name: string; index: number; tier: string }>;
+      evaluations: Array<{ name: string; index: number; tier: string; tournament: { score: number } | null }>;
       summary: { ordered: Array<{ name: string }> } | null;
       artifacts: string[];
     };
     expect(detail.state).toBe("done");
     expect(detail.evaluations).toHaveLength(3);
-    const indices = detail.evaluations.map((evaluation) => evaluation.index);
-    expect(indices).toEqual([...indices].sort((a, b) => b - a));
+    // A ordem do ranking é a média do torneio par a par (o índice só desempata).
+    const scores = detail.evaluations.map((evaluation) => evaluation.tournament?.score ?? -1);
+    expect(scores.every((score) => score >= 0)).toBe(true);
+    expect(scores).toEqual([...scores].sort((a, b) => b - a));
     const top = detail.evaluations[0];
     expect(top).toBeDefined();
     expect(detail.summary?.ordered[0]?.name).toBe(top?.name);

@@ -57,6 +57,13 @@
       "when": 1792450000000,
       "tag": "0007_study_setup_fee",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1792985761342,
+      "tag": "0008_tournament",
+      "breakpoints": true
     }
   ]
 }

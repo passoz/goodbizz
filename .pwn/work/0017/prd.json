@@ -1,0 +1,155 @@
+{
+  "$schema": "../../../pwn/schemas/prd.schema.json",
+  "id": "PRD-0017",
+  "meta": {
+    "version": "1.0",
+    "created_at": "2026-10-25T00:00:00.000Z",
+    "author": "omp"
+  },
+  "title": "O ranking sai de um torneio par a par no decisor",
+  "status": "approved",
+  "scenario": "brownfield",
+  "problem": {
+    "statement": "O ranking do GoodBizz ordena pelo indice de acao, mas as notas absolutas do decisor ficam quase iguais para todas as ideias e o topo e decidido por 0,01 a 0,03."
+  },
+  "solution": {
+    "statement": "Depois da avaliacao, um torneio suico pergunta ao decisor qual de duas ideias o dono contrata primeiro, nas duas ordens; o ranking, as pastas, o tabelao, o CSV, o dados.json e a UI seguem a media de pontos por partida, com o indice e o tier mantidos como colunas."
+  },
+  "decisions": [
+    {
+      "id": "DEC-001",
+      "statement": "Torneio suico com teto(log2 N)+1 rodadas; cada rodada emparelha medias proximas sem repetir partida; sem alternativa, repete a de menor diferenca.",
+      "status": "accepted",
+      "made_by": "operador"
+    },
+    {
+      "id": "DEC-002",
+      "statement": "Cada partida pergunta o duelo `choice` com criteria {A, B} nas duas ordens; X recebe a media das duas probabilidades de ser escolhida; sem probabilities usa a choice como 1; sem nada conta 0.5 e registra em issues.",
+      "status": "accepted",
+      "made_by": "operador"
+    },
+    {
+      "id": "DEC-003",
+      "statement": "A ordem do ranking (summary.ordered, rank gravado, pastas, tabelao, CSV, dados.json e UI) e a media de pontos por partida, depois o indice de acao, depois o nome; indice e tier nao mudam.",
+      "status": "accepted",
+      "made_by": "operador"
+    },
+    {
+      "id": "DEC-004",
+      "statement": "Os pontos de cada ideia vivem na coluna nullable `tournament_json` das avaliacoes (fora do payload_json do baseline) e as partidas vivem em `summary.tournament`.",
+      "status": "accepted",
+      "made_by": "operador"
+    },
+    {
+      "id": "DEC-005",
+      "statement": "Cada pergunta de duelo e cacheada por semente do estudo, impressao dos provedores, nicho, cidade, nomes, descricoes e ordem; a remocao recalcula das partidas restantes sem chamar o decisor e a adicao roda o torneio de novo sobre o cache.",
+      "status": "accepted",
+      "made_by": "operador"
+    },
+    {
+      "id": "DEC-006",
+      "statement": "O decisor simulado responde o duelo pela forca deterministica do texto de cada opcao, independente da posicao.",
+      "status": "accepted",
+      "made_by": "operador"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "FR-001",
+      "type": "functional",
+      "statement": "FR-001: O torneio tem teto de log2 de N mais 1 rodadas e emparelha medias proximas sem repetir partida",
+      "acceptance_criteria": [
+        "bun --config=tests/bunfig.focus.toml test tests/tournament.test.ts -t \"rodadas\" — 8 ideias jogam 4 rodadas e ninguem repete adversario"
+      ]
+    },
+    {
+      "id": "FR-002",
+      "type": "functional",
+      "statement": "FR-002: Cada partida e perguntada nas duas ordens e X recebe a media das duas probabilidades",
+      "acceptance_criteria": [
+        "bun --config=tests/bunfig.focus.toml test tests/tournament.test.ts -t \"vies de posicao\" — o decisor que sempre escolhe A da 0.5 a cada lado"
+      ]
+    },
+    {
+      "id": "FR-003",
+      "type": "functional",
+      "statement": "FR-003: Com numero impar, a pior posicao que ainda nao folgou recebe a folga, sem partida nem ponto",
+      "acceptance_criteria": [
+        "bun --config=tests/bunfig.focus.toml test tests/tournament.test.ts -t \"folga\" — 3 ideias, 3 rodadas, uma folga por ideia"
+      ]
+    },
+    {
+      "id": "FR-004",
+      "type": "functional",
+      "statement": "FR-004: summary.ordered, pastas, tabelao, CSV, dados.json e UI seguem a media por partida, com desempate por indice e nome",
+      "acceptance_criteria": [
+        "bun --config=tests/bunfig.focus.toml test tests/tournament-pipeline.test.ts -t \"pasta 01\" — a ideia preferida pelo decisor ocupa a pasta 01-"
+      ]
+    },
+    {
+      "id": "FR-005",
+      "type": "functional",
+      "statement": "FR-005: A remocao recalcula as medias das partidas restantes sem chamar o decisor e a adicao roda o torneio de novo",
+      "acceptance_criteria": [
+        "bun --config=tests/bunfig.focus.toml test tests/tournament-study.test.ts -t \"remocao\" — zero chamadas de duelo na remocao"
+      ]
+    },
+    {
+      "id": "FR-006",
+      "type": "functional",
+      "statement": "FR-006: Cada pergunta de duelo usa chave de cache com semente, impressao dos provedores, nomes, descricoes e ordem",
+      "acceptance_criteria": [
+        "bun --config=tests/bunfig.focus.toml test tests/tournament.test.ts -t \"cache\" — a segunda execucao nao chama o decisor e a ordem inversa e outra chave"
+      ]
+    },
+    {
+      "id": "FR-007",
+      "type": "functional",
+      "statement": "FR-007: Pagina do estudo, glossario, /como-ler, tabelao e CSV mostram a media do torneio e as partidas",
+      "acceptance_criteria": [
+        "bun --config=tests/bunfig.focus.toml test tests/tournament-ui.test.ts -t \"torneio\" — o ranking mostra 'em 4 partidas' e o glossario tem o termo"
+      ]
+    }
+  ],
+  "stakeholders": [
+    {
+      "name": "Operador/consultor",
+      "role": "ACT-001"
+    },
+    {
+      "name": "Usuario da interface web",
+      "role": "ACT-003"
+    }
+  ],
+  "scope": {
+    "in_scope": [
+      "Modulo do torneio, duelo no decisor com cache, etapa no pipeline/adicao/remocao, ordem pelos pontos, coluna tournament_json, UI, /como-ler, decisor simulado e README"
+    ],
+    "out_of_scope": [
+      "Mudar notas absolutas, indice ou tiers",
+      "Pesquisa web (Work 0015) e documento (Work 0016)",
+      "Torneio entre estudos"
+    ]
+  },
+  "accepted_requirements": [
+    "FR-001",
+    "FR-002",
+    "FR-003",
+    "FR-004",
+    "FR-005",
+    "FR-006",
+    "FR-007",
+    "QR-001",
+    "QR-002",
+    "QR-003",
+    "QR-004",
+    "EC-001",
+    "EC-002",
+    "EC-003",
+    "EC-004",
+    "SC-001",
+    "SC-002",
+    "SC-003",
+    "SC-004"
+  ]
+}

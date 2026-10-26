@@ -1,0 +1,14 @@
+TASK: 1.2
+CHECK: VERIFY
+COMMAND: bun --config=tests/bunfig.focus.toml test tests/decider-mock-duel.test.ts
+EXIT: 0
+OUTPUT:
+bun test v1.4.2 (744846f84)
+
+ 3 pass
+ 0 fail
+ 7 expect() calls
+Ran 3 tests across 1 file. [10.00ms]
+
+VERDICT: PASS
+CHAIN_HASH: 677795b18935c46ffe9e9ab39c5ccfd8a9660937a4dec1fc6553827c55dc7385

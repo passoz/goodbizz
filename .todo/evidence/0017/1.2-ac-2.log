@@ -1,0 +1,42 @@
+TASK: 1.2
+CHECK: AC-2
+COMMAND: bun --config=tests/bunfig.focus.toml test tests/tournament-mock.test.ts -t 'torneio simulado'
+EXIT: 0
+OUTPUT:
+bun test v1.4.2 (744846f84)
+
+ 2 pass
+ 1 filtered out
+ 0 fail
+ 4 expect() calls
+Ran 2 tests across 1 file. [82.00ms]
+
+MUTATION_EXIT: 1
+MUTATION_OUTPUT:
+bun test v1.4.2 (744846f84)
+
+tests/tournament-mock.test.ts:
+102 |   });
+103 | 
+104 |   test("torneio simulado: as medias separam as ideias", async () => {
+105 |     const outcome = await simulatedTournament();
+106 |     const scores = outcome.ideas.map((item) => item.tournament?.score ?? -1);
+107 |     expect(new Set(scores).size).toBeGreaterThan(1);
+                                       ^
+error: expect(received).toBeGreaterThan(expected)
+
+Expected: > 1
+Received: 1
+
+      at <anonymous> (/home/passoz/dev/goodbizz-w0017/tests/tournament-mock.test.ts:107:34)
+(fail) decisor simulado no torneio > torneio simulado: as medias separam as ideias [3.29ms]
+
+ 1 pass
+ 1 filtered out
+ 1 fail
+ 3 expect() calls
+Ran 2 tests across 1 file. [57.00ms]
+
+MUTATION_VERDICT: PASS
+VERDICT: PASS
+CHAIN_HASH: 9599b5c25cc27b55115278c0fc3426532b8ad004ce5a71adbf7147064b105ea3

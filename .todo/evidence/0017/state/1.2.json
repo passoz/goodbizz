@@ -1,0 +1,119 @@
+{
+  "audit_checks": {
+    "AC-1": {
+      "command": [
+        "bun",
+        "--config=tests/bunfig.focus.toml",
+        "test",
+        "tests/tournament-mock.test.ts",
+        "-t",
+        "duelo simulado"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0017/1.2-ac-1.log",
+      "log_sha256": "09ed8608bfc25c10eb91f245190c10db89fb472d70282d175430f6ce9f531a37",
+      "recorded_at": "2026-10-25T22:43:13.548Z",
+      "green_sha256": "758de197db7e26bab01464b9ca5319d59057633b74e2b1f697c38623cb9f7c01",
+      "vacuity": {
+        "exit_code": 1,
+        "verdict": "PASS"
+      }
+    },
+    "AC-2": {
+      "command": [
+        "bun",
+        "--config=tests/bunfig.focus.toml",
+        "test",
+        "tests/tournament-mock.test.ts",
+        "-t",
+        "torneio simulado"
+      ],
+      "expect": null,
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": ".todo/evidence/0017/1.2-ac-2.log",
+      "log_sha256": "e18f0cd69242194a23e8525839efeddf93206209c032d8ebfa4afac3f6c59118",
+      "recorded_at": "2026-10-25T22:43:13.750Z",
+      "green_sha256": "758de197db7e26bab01464b9ca5319d59057633b74e2b1f697c38623cb9f7c01",
+      "vacuity": {
+        "exit_code": 1,
+        "verdict": "PASS"
+      }
+    }
+  },
+  "baseline_commit": "cbf235ba3645aae8484fcc6b3d37e7e2b1f1febb",
+  "baseline_implementation": {
+    "src/infrastructure/decider-mock.ts": {
+      "exists": true,
+      "sha256": "68b16b633aec42ce93a187560fb3159faae15cab7585903d1ead783a1e293452"
+    }
+  },
+  "baseline_tests": {
+    "tests/tournament-mock.test.ts": {
+      "exists": true,
+      "sha256": "b5d0c411675521848039e53583ad47e012d823d5a3a3b1043e905612bfe67807"
+    },
+    "tests/decider-mock-duel.test.ts": {
+      "exists": false,
+      "sha256": null
+    }
+  },
+  "contract": {
+    "id": "CTR-002",
+    "sha256": "5543d7655e172d22a0ba79c808c12ae687fd891643c703210bbd58bd3b1b9172"
+  },
+  "created_at": "2026-10-25T22:42:48.753Z",
+  "frozen_tests": [
+    {
+      "path": "tests/tournament-mock.test.ts",
+      "sha256": "b5d0c411675521848039e53583ad47e012d823d5a3a3b1043e905612bfe67807"
+    }
+  ],
+  "green_expect": null,
+  "green_implementation": {
+    "src/infrastructure/decider-mock.ts": {
+      "exists": true,
+      "sha256": "71563c1d36ab614f7db12d7e38e4c5dd11688abcb78dae3bf48c50a7bd0e3339"
+    }
+  },
+  "green_tests": {
+    "tests/tournament-mock.test.ts": {
+      "exists": true,
+      "sha256": "b5d0c411675521848039e53583ad47e012d823d5a3a3b1043e905612bfe67807"
+    },
+    "tests/decider-mock-duel.test.ts": {
+      "exists": true,
+      "sha256": "d747deb25765b82db41ae9240c9ed18325b3448b8b460093302e51004510b989"
+    }
+  },
+  "implementation_files": [
+    "src/infrastructure/decider-mock.ts"
+  ],
+  "plan_path": ".todo/0017-tasks.md",
+  "red_command": [
+    "bun",
+    "--config=tests/bunfig.focus.toml",
+    "test",
+    "tests/decider-mock-duel.test.ts"
+  ],
+  "red_expect": "probabilidades de A e B somam 1 e a choice e a maior",
+  "red_tests": {
+    "tests/tournament-mock.test.ts": {
+      "exists": true,
+      "sha256": "b5d0c411675521848039e53583ad47e012d823d5a3a3b1043e905612bfe67807"
+    },
+    "tests/decider-mock-duel.test.ts": {
+      "exists": true,
+      "sha256": "d747deb25765b82db41ae9240c9ed18325b3448b8b460093302e51004510b989"
+    }
+  },
+  "state_version": 2,
+  "task": "1.2",
+  "task_definition_sha256": "315d59d389ede4f235bccf6acb20e57ec8f44071227036b1548bf0d6cb0aaaa2",
+  "test_files": [
+    "tests/tournament-mock.test.ts",
+    "tests/decider-mock-duel.test.ts"
+  ]
+}

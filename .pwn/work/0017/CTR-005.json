@@ -1,0 +1,103 @@
+{
+  "contract_version": "4.0",
+  "task_id": "1.5",
+  "work_id": "0017",
+  "title": "Coluna tournament_json e partidas no detalhe do estudo",
+  "risk": {
+    "level": "L2",
+    "reasons": [
+      "A mudanca altera a ordem do ranking e o que fica gravado no estudo",
+      "Sem segredo, sem auth e sem pagamento"
+    ]
+  },
+  "validation_strategy": "tdd-strict",
+  "behavioral_contract": {
+    "scenarios": [
+      {
+        "id": "SCENARIO-1.5-01",
+        "given": "Dado o comportamento declarado: a coluna nullable tournament_json grava os pontos de cada ideia, o rank segue o torneio e estudo antigo abre pela ordem do indice",
+        "when": "Quando `bun --config=tests/bunfig.focus.toml test tests/tournament-persistence.test.ts -t \"tournament_json\"` e executado",
+        "then": "Entao os pontos de cada ideia voltam do banco e o rank segue o torneio"
+      },
+      {
+        "id": "SCENARIO-1.5-02",
+        "given": "Dado o comportamento declarado: a coluna nullable tournament_json grava os pontos de cada ideia, o rank segue o torneio e estudo antigo abre pela ordem do indice",
+        "when": "Quando `bun --config=tests/bunfig.focus.toml test tests/tournament-persistence.test.ts -t \"estudo antigo\"` e executado",
+        "then": "Entao tournament_json nulo devolve a ordem pelo indice"
+      }
+    ]
+  },
+  "change_contract": {
+    "target_files": [
+      "src/infrastructure/schema.ts",
+      "src/infrastructure/repositories.ts",
+      "src/infrastructure/http/api.ts",
+      "tests/tournament-persistence.test.ts",
+      "tests/repositories-tournament.test.ts",
+      "drizzle/0006_tournament.sql",
+      "drizzle/meta/_journal.json",
+      "drizzle/meta/0006_snapshot.json"
+    ],
+    "affected_components": [
+      "persistence"
+    ]
+  },
+  "architecture_contract": {
+    "invariants": [
+      "src/domain nao importa application nem infrastructure",
+      "Drizzle sem SQL cru",
+      "Indice de acao e tier continuam calculados so das notas",
+      "Nenhum segredo em log, resposta ou artefato"
+    ]
+  },
+  "acceptance_contract": {
+    "commands": [
+      "bun --config=tests/bunfig.focus.toml test tests/repositories-tournament.test.ts",
+      "bun --config=tests/bunfig.focus.toml test tests/tournament-persistence.test.ts -t \"tournament_json\"",
+      "bun --config=tests/bunfig.focus.toml test tests/tournament-persistence.test.ts -t \"estudo antigo\""
+    ],
+    "required_evidence": [
+      "evidence.json"
+    ],
+    "frozen_tests": [
+      {
+        "path": "tests/tournament-persistence.test.ts",
+        "sha256": "e128d454decf1ab29dafb902011bc754ee8504e61c7fb5571bb529f9bbf4dcc3"
+      }
+    ]
+  },
+  "scope_contract": {
+    "write_allow": [
+      "src/infrastructure/schema.ts",
+      "src/infrastructure/repositories.ts",
+      "src/infrastructure/http/api.ts",
+      "tests/tournament-persistence.test.ts",
+      "tests/repositories-tournament.test.ts",
+      "drizzle/0006_tournament.sql",
+      "drizzle/meta/_journal.json",
+      "drizzle/meta/0006_snapshot.json"
+    ],
+    "write_deny": [
+      ".git/**",
+      "package.json",
+      ".env*"
+    ],
+    "out_of_scope": [
+      "Arquivos fora de: src/infrastructure/schema.ts, src/infrastructure/repositories.ts, src/infrastructure/http/api.ts, tests/tournament-persistence.test.ts, tests/repositories-tournament.test.ts, drizzle/0006_tournament.sql, drizzle/meta/_journal.json, drizzle/meta/0006_snapshot.json"
+    ]
+  },
+  "budget_contract": {
+    "max_tokens": 50000,
+    "max_cost_usd": 0.5,
+    "max_duration_minutes": 15,
+    "max_agent_attempts": 5,
+    "max_llm_calls": 30,
+    "max_tool_calls": 60,
+    "max_shell_executions": 15
+  },
+  "escalation_contract": {
+    "on_write_violation": "block_and_escalate",
+    "on_budget_exceeded": "escalate_to_strong_agent",
+    "on_attempt_failed": "retry_with_strong"
+  }
+}

@@ -406,9 +406,22 @@ describe("remocao de ideia por id", () => {
         (typeof before.evaluations)[number],
         (typeof before.evaluations)[number],
       ];
-      // Gemea: mesmo nome, id novo. E o par que so a remocao por id distingue.
+      // Gemea: mesmo nome, id novo. E o par que so a remocao por id distingue. Ela joga as mesmas
+      // partidas da original, entao a remocao da original nao muda a media dela.
       const twin = { ...first!, id: "id-gemeo" };
-      await repo.saveEvaluations(id, [twin, first!, third!], (await service.get(id)).summary);
+      const summary = (await service.get(id)).summary!;
+      const tournament = summary.tournament!;
+      const twinMatches = tournament.matches
+        .filter((match) => match.a === first!.id || match.b === first!.id)
+        .map((match) => ({
+          ...match,
+          a: match.a === first!.id ? twin.id : match.a,
+          b: match.b === first!.id ? twin.id : match.b,
+        }));
+      await repo.saveEvaluations(id, [twin, first!, third!], {
+        ...summary,
+        tournament: { ...tournament, matches: [...tournament.matches, ...twinMatches] },
+      });
       // As duas ocupam 01 e 02 com o mesmo slug; a gêmea precisa de pasta propria.
       const slugA = folderName(1, first!.name);
       const twinDoc = readFileSync(join(before.artifactDir, slugA, "README.md"), "utf8");

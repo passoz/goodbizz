@@ -911,8 +911,12 @@ table.rank td:first-child { color: var(--muted); font-family: var(--mono); }
 `;
 
 export const GLOSSARY: Record<string, string> = {
+  torneio:
+    "Comparação par a par no decisor: em cada partida ele escolhe qual de duas ideias o dono contrata primeiro, " +
+    "perguntado nas duas ordens para anular o viés de posição. A nota é a média de pontos por partida, de 0 a 1; " +
+    "maior é melhor, e ela define a ordem do ranking.",
   "Índice de Ação":
-    "Média entre fit e facilidade de venda. Vai de 0 a 2, e maior é melhor. É o critério de priorização entre as ideias.",
+    "Média entre fit e facilidade de venda. Vai de 0 a 2, e maior é melhor. Desempata o torneio na ordem do ranking.",
   Tier: "Faixa de prioridade: A a partir de 1.84, B a partir de 1.60, C abaixo disso.",
   fit: "Aderência ao balcão. 2 = resolve a correria do dia sem exigir mudança de hábito; 0 = exige escala corporativa.",
   venda:

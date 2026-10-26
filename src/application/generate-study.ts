@@ -1,5 +1,6 @@
 /**
- * Study pipeline: research -> brief -> ideas -> decider evaluation -> pain -> documents -> reports -> PDF.
+ * Study pipeline: research -> brief -> ideas -> decider evaluation -> premises -> pairwise
+ * tournament -> pain -> documents -> reports -> PDF.
  *
  * Ported from `generate_study.py::execute`. Numbers are always produced by code; the LLM only
  * writes prose around the measured data block and is checked against it afterwards.
@@ -17,6 +18,7 @@ import { evidenceHash, evidencesFor, mapLimit, researchIdeas, researchStudy } fr
 import { requestPremises, type PremisesResult } from "./premises.ts";
 import { calculateValue } from "./value.ts";
 import { summarizeStudy } from "./summary.ts";
+import { runTournament } from "./tournament.ts";
 import { checkDocument, extractUnsourcedNumbers } from "./verification.ts";
 import type { Logger, LlmClient, DeciderClient, ArtifactFile, SearchClient } from "../domain/ports.ts";
 import type {
@@ -361,8 +363,14 @@ export async function generateAddition(
   progress(`[4/7] Avaliei as ${newEvaluations.length} ideias novas com o decisor`);
   attachValue(newEvaluations, additionPremises, cfg.monthlyTicket, cfg.setupFee);
 
-  const evaluations = [...existing, ...newEvaluations];
-  const summary = summarizeStudy(evaluations);
+  // O torneio roda de novo sobre todas as ideias: partida já disputada vem do cache do duelo.
+  const tournament = await runTournament(cfg, [...existing, ...newEvaluations], {
+    decider,
+    cache,
+    onProgress: progress,
+  });
+  const evaluations = tournament.ideas;
+  const summary = summarizeStudy(evaluations, tournament.tournament);
   const folders: Record<string, string> = {};
   summary.ordered.forEach((evaluation, position) => {
     folders[evaluation.name] = folderName(position + 1, evaluation.name);
@@ -384,7 +392,7 @@ export async function generateAddition(
       folders: {},
       documents: {},
       files: [],
-      issues: [...researchIssues, ...additionPremisesIssues],
+      issues: [...researchIssues, ...additionPremisesIssues, ...(tournament.tournament?.issues ?? [])],
       premises: additionPremises,
       evidences,
       cacheHits: cache.hits,
@@ -393,7 +401,7 @@ export async function generateAddition(
   }
 
   const byId = new Map(newEvaluations.map((evaluation) => [evaluation.id, evaluation]));
-  const issues: string[] = [...researchIssues];
+  const issues: string[] = [...researchIssues, ...(tournament.tournament?.issues ?? [])];
   const documents: Record<string, string> = {};
 
   // Só as novas ideias ganham documento: reescrever as antigas custaria o mesmo token de novo.
@@ -550,7 +558,7 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
     progress,
   );
 
-  const evaluations = await mapLimit(ideas, cfg.concurrency, async (idea) => {
+  const evaluated = await mapLimit(ideas, cfg.concurrency, async (idea) => {
     const key = scopedKey(
       cfg.cacheSeed,
       "aval",
@@ -570,7 +578,7 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
     return evaluated;
   });
 
-  for (const evaluation of [...evaluations].sort((a, b) => b.index - a.index)) {
+  for (const evaluation of [...evaluated].sort((a, b) => b.index - a.index)) {
     progress(
       `[4/7] Avaliei "${evaluation.name.slice(0, 38)}" com o decisor: índice ${evaluation.index.toFixed(3)} ` +
         `de 2 (maior é melhor), tier ${evaluation.tier}, dor ${evaluation.algorithm.label} ` +
@@ -578,9 +586,12 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
     );
   }
 
+  // Torneio par a par depois da avaliação: a ordem do ranking e das pastas sai dele.
+  const tournament = await runTournament(cfg, evaluated, { decider, cache, onProgress: progress });
+  const evaluations = tournament.ideas;
   attachValue(evaluations, premises, cfg.monthlyTicket, cfg.setupFee);
 
-  const summary = summarizeStudy(evaluations);
+  const summary = summarizeStudy(evaluations, tournament.tournament);
   const folders: Record<string, string> = {};
   summary.ordered.forEach((evaluation, position) => {
     folders[evaluation.name] = folderName(position + 1, evaluation.name);
@@ -603,7 +614,7 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
       folders: {},
       documents: {},
       files: [],
-      issues: [...researchIssues, ...premisesIssues],
+      issues: [...researchIssues, ...premisesIssues, ...(tournament.tournament?.issues ?? [])],
       premises,
       evidences,
       cacheHits: cache.hits,
@@ -618,7 +629,7 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
   );
 
   const byName = new Map(evaluations.map((evaluation) => [evaluation.name, evaluation]));
-  const issues: string[] = [...researchIssues, ...premisesIssues];
+  const issues: string[] = [...researchIssues, ...premisesIssues, ...(tournament.tournament?.issues ?? [])];
   const documents: Record<string, string> = {};
 
   const written = await mapLimit(summary.ordered, cfg.concurrency, async (ordered) => {
