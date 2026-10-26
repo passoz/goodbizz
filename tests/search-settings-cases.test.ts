@@ -1,6 +1,7 @@
 /**
  * Casos do tipo search na API (FR-009): o tipo search cadastra sem modelo (o llm exige), o tipo
- * desconhecido e recusado e a listagem traz a chave mascarada com o ativo de busca.
+ * desconhecido e recusado e a listagem traz a chave mascarada com o ativo de busca. RED: sem o
+ * tipo search no schema da API o cadastro responde 422 e a assercao do 201 falha.
  */
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import type { Hono } from "hono";
