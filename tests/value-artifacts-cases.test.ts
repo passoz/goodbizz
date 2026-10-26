@@ -3,7 +3,7 @@ import { indicatorsTableCsv, indicatorsTableMarkdown } from "../src/application/
 import { evaluationFromJson, evaluationToJson, serializeDados } from "../src/application/dados.ts";
 import { loadCases } from "../src/application/recalibrate.ts";
 import { resolveStudyConfig } from "../src/config/runtime.ts";
-import type { StudyIdea, StudySummary } from "../src/domain/types.ts";
+import type { StudyIdea, StudyIdea as Idea, StudySummary } from "../src/domain/types.ts";
 
 function idea(partial: Partial<StudyIdea> & { name: string }): StudyIdea {
   return {
@@ -57,7 +57,9 @@ function summary(): StudySummary {
     ordered: [withValue],
     means: { fit: 0.8, sale: 0.7, disruption: 0.6, solo: 0.75, wtp: 350, meta30: 0.5 },
     painGroups: { forte: ["ideia-a"], mista: [], fraca: [] },
-    tiers: { A: 1, B: 0, C: 0 },
+    tiers: { A: ["ideia-a"], B: [], C: [] },
+    attack: [],
+    review: [],
   } as StudySummary;
 }
 
@@ -88,8 +90,8 @@ describe("FR-009: casos dos artefatos de valor", () => {
     const parsed = JSON.parse(raw) as { ideias: unknown[] };
     expect(parsed.ideias[0]).toHaveProperty("valor");
     const back = evaluationFromJson(parsed.ideias[0]);
-    expect(back.value?.loss).toBe(2800);
-    expect(back.value?.paybackMonths).toBe(1.43);
+    expect((back as Idea).value?.loss).toBe(2800);
+    expect((back as Idea).value?.paybackMonths).toBe(1.43);
     const parsed2 = JSON.parse(raw) as unknown;
     const cases = loadCases([parsed2], 1.4);
     expect(cases.cases.length + cases.ignored.length).toBe(1);
@@ -104,6 +106,6 @@ describe("FR-009: casos dos artefatos de valor", () => {
     expect(row).not.toContain("NaN");
     const back = evaluationFromJson(evaluationToJson(plain));
     expect(back.index).toBe(plain.index);
-    expect(back.value).toBeUndefined();
+    expect((back as Idea).value).toBeUndefined();
   });
 });

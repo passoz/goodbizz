@@ -1,0 +1,1187 @@
+{
+ "config": {
+  "nicho": "Cafés De Bairro",
+  "cidade": "",
+  "ticket_mes": 300,
+  "n_ideias": 8,
+  "mock": true,
+  "so_avaliar": false
+ },
+ "medias": {
+  "fit": 0.812,
+  "venda": 0.763,
+  "disrupcao": 1.223,
+  "solo": 0.669,
+  "wtp": 0.413,
+  "meta30": 0.541
+ },
+ "grupos_dor": {
+  "forte": [
+   "Confirmacao de horario",
+   "Previsao de movimento",
+   "Livro de indicacoes",
+   "Ideia Extra 1",
+   "Ideia Extra 2"
+  ],
+  "mista": [],
+  "fraca": [
+   "Triagem de WhatsApp",
+   "Ficha do cliente",
+   "Resgate de insatisfacao"
+  ]
+ },
+ "tiers": {
+  "A": [],
+  "B": [],
+  "C": [
+   "Previsao de movimento",
+   "Ideia Extra 1",
+   "Livro de indicacoes",
+   "Confirmacao de horario",
+   "Ficha do cliente",
+   "Triagem de WhatsApp",
+   "Ideia Extra 2",
+   "Resgate de insatisfacao"
+  ]
+ },
+ "ideias": [
+  {
+   "nome": "Triagem de WhatsApp",
+   "setor": "atendimento",
+   "descricao": "Lê as mensagens que chegam, separa dúvida simples de intenção real e avisa quem decide.",
+   "indicadores": {
+    "fit": 0.86,
+    "fit_conf": 0.7,
+    "venda": 0.44,
+    "venda_conf": 0.7,
+    "disrupcao": 0.82,
+    "disrupcao_conf": 0.7,
+    "dor": "backoffice",
+    "dor_probs": {
+     "dinheiro_direto": 0,
+     "reputacao": 0,
+     "backoffice": 1
+    },
+    "dor_conf": 0.8,
+    "solo": 0.96
+   },
+   "negocio": {
+    "wtp": 0.47,
+    "meta30": 0.47,
+    "preco": 1.42,
+    "preco_conf": 0.7
+   },
+   "algoritmo": {
+    "rotulo": "FRACA",
+    "escore_dor": 0,
+    "escore_interna": 1,
+    "margem": -1,
+    "desvio": 0,
+    "sondas": {
+     "dinheiro": 0,
+     "reputacao": 0,
+     "processo": 1,
+     "tecnologia": 0
+    },
+    "por_parafrase": {
+     "P1": {
+      "dinheiro": 0,
+      "reputacao": 0,
+      "processo": 1
+     },
+     "P2": {
+      "dinheiro": 0,
+      "reputacao": 0,
+      "processo": 1
+     },
+     "P3": {
+      "dinheiro": 0,
+      "reputacao": 0,
+      "processo": 1
+     }
+    }
+   },
+   "indice": 0.65,
+   "tier": "C",
+   "valor": {
+    "premissas": [
+     {
+      "nome": "ocorrências por mês",
+      "valor": 27,
+      "unidade": "ocorrências/mês",
+      "fonte": "INFERENCE"
+     },
+     {
+      "nome": "custo por ocorrência",
+      "valor": 179,
+      "unidade": "R$",
+      "fonte": "INFERENCE"
+     }
+    ],
+    "recuperacao": 0.5,
+    "perda_mes": 4833,
+    "ganho_mes": 2416.5,
+    "saldo_mes": 2116.5,
+    "payback_meses": 0.85,
+    "retorno_12m": 23598,
+    "setup_fee": 1800
+   }
+  },
+  {
+   "nome": "Confirmacao de horario",
+   "setor": "agenda",
+   "descricao": "Confirma compromissos algumas horas antes e realoca a vaga quando alguém desmarca.",
+   "indicadores": {
+    "fit": 0.36,
+    "fit_conf": 0.7,
+    "venda": 1.14,
+    "venda_conf": 0.7,
+    "disrupcao": 1.32,
+    "disrupcao_conf": 0.7,
+    "dor": "dinheiro_direto",
+    "dor_probs": {
+     "dinheiro_direto": 1,
+     "reputacao": 0,
+     "backoffice": 0
+    },
+    "dor_conf": 0.8,
+    "solo": 0.86
+   },
+   "negocio": {
+    "wtp": 0.86,
+    "meta30": 0.3,
+    "preco": 0.48,
+    "preco_conf": 0.7
+   },
+   "algoritmo": {
+    "rotulo": "FORTE",
+    "escore_dor": 1,
+    "escore_interna": 0,
+    "margem": 1,
+    "desvio": 0,
+    "sondas": {
+     "dinheiro": 1,
+     "reputacao": 0,
+     "processo": 0,
+     "tecnologia": 0
+    },
+    "por_parafrase": {
+     "P1": {
+      "dinheiro": 1,
+      "reputacao": 0,
+      "processo": 0
+     },
+     "P2": {
+      "dinheiro": 1,
+      "reputacao": 0,
+      "processo": 0
+     },
+     "P3": {
+      "dinheiro": 1,
+      "reputacao": 0,
+      "processo": 0
+     }
+    }
+   },
+   "indice": 0.75,
+   "tier": "C",
+   "valor": {
+    "premissas": [
+     {
+      "nome": "ocorrências por mês",
+      "valor": 14,
+      "unidade": "ocorrências/mês",
+      "fonte": "INFERENCE"
+     },
+     {
+      "nome": "custo por ocorrência",
+      "valor": 128,
+      "unidade": "R$",
+      "fonte": "INFERENCE"
+     }
+    ],
+    "recuperacao": 0.5,
+    "perda_mes": 1792,
+    "ganho_mes": 896,
+    "saldo_mes": 596,
+    "payback_meses": 3.02,
+    "retorno_12m": 5352,
+    "setup_fee": 1800
+   }
+  },
+  {
+   "nome": "Ficha do cliente",
+   "setor": "cadastro",
+   "descricao": "Extrai os dados do cliente a partir do documento e preenche o cadastro obrigatório.",
+   "indicadores": {
+    "fit": 0.82,
+    "fit_conf": 0.7,
+    "venda": 0.6,
+    "venda_conf": 0.7,
+    "disrupcao": 1.26,
+    "disrupcao_conf": 0.7,
+    "dor": "backoffice",
+    "dor_probs": {
+     "dinheiro_direto": 0,
+     "reputacao": 0,
+     "backoffice": 1
+    },
+    "dor_conf": 0.8,
+    "solo": 0.94
+   },
+   "negocio": {
+    "wtp": 0.02,
+    "meta30": 0.92,
+    "preco": 1.7,
+    "preco_conf": 0.7
+   },
+   "algoritmo": {
+    "rotulo": "FRACA",
+    "escore_dor": 0,
+    "escore_interna": 1,
+    "margem": -1,
+    "desvio": 0,
+    "sondas": {
+     "dinheiro": 0,
+     "reputacao": 0,
+     "processo": 1,
+     "tecnologia": 0
+    },
+    "por_parafrase": {
+     "P1": {
+      "dinheiro": 0,
+      "reputacao": 0,
+      "processo": 1
+     },
+     "P2": {
+      "dinheiro": 0,
+      "reputacao": 0,
+      "processo": 1
+     },
+     "P3": {
+      "dinheiro": 0,
+      "reputacao": 0,
+      "processo": 1
+     }
+    }
+   },
+   "indice": 0.71,
+   "tier": "C",
+   "valor": {
+    "premissas": [
+     {
+      "nome": "ocorrências por mês",
+      "valor": 14,
+      "unidade": "ocorrências/mês",
+      "fonte": "INFERENCE"
+     },
+     {
+      "nome": "custo por ocorrência",
+      "valor": 168,
+      "unidade": "R$",
+      "fonte": "INFERENCE"
+     }
+    ],
+    "recuperacao": 0.5,
+    "perda_mes": 2352,
+    "ganho_mes": 1176,
+    "saldo_mes": 876,
+    "payback_meses": 2.05,
+    "retorno_12m": 8712,
+    "setup_fee": 1800
+   }
+  },
+  {
+   "nome": "Resgate de insatisfacao",
+   "setor": "reputacao",
+   "descricao": "Lê as conversas em andamento, detecta insatisfação e avisa antes de virar avaliação pública.",
+   "indicadores": {
+    "fit": 0.08,
+    "fit_conf": 0.7,
+    "venda": 0.1,
+    "venda_conf": 0.7,
+    "disrupcao": 1.66,
+    "disrupcao_conf": 0.7,
+    "dor": "backoffice",
+    "dor_probs": {
+     "dinheiro_direto": 0,
+     "reputacao": 0,
+     "backoffice": 1
+    },
+    "dor_conf": 0.8,
+    "solo": 0.07
+   },
+   "negocio": {
+    "wtp": 0.32,
+    "meta30": 0.16,
+    "preco": 1.52,
+    "preco_conf": 0.7
+   },
+   "algoritmo": {
+    "rotulo": "FRACA",
+    "escore_dor": 0,
+    "escore_interna": 1,
+    "margem": -1,
+    "desvio": 0,
+    "sondas": {
+     "dinheiro": 0,
+     "reputacao": 0,
+     "processo": 1,
+     "tecnologia": 0
+    },
+    "por_parafrase": {
+     "P1": {
+      "dinheiro": 0,
+      "reputacao": 0,
+      "processo": 1
+     },
+     "P2": {
+      "dinheiro": 0,
+      "reputacao": 0,
+      "processo": 1
+     },
+     "P3": {
+      "dinheiro": 0,
+      "reputacao": 0,
+      "processo": 1
+     }
+    }
+   },
+   "indice": 0.09,
+   "tier": "C",
+   "valor": {
+    "premissas": [
+     {
+      "nome": "ocorrências por mês",
+      "valor": 22,
+      "unidade": "ocorrências/mês",
+      "fonte": "INFERENCE"
+     },
+     {
+      "nome": "custo por ocorrência",
+      "valor": 104,
+      "unidade": "R$",
+      "fonte": "INFERENCE"
+     }
+    ],
+    "recuperacao": 0.5,
+    "perda_mes": 2288,
+    "ganho_mes": 1144,
+    "saldo_mes": 844,
+    "payback_meses": 2.13,
+    "retorno_12m": 8328,
+    "setup_fee": 1800
+   }
+  },
+  {
+   "nome": "Previsao de movimento",
+   "setor": "operacao",
+   "descricao": "Prevê o movimento do dia e gera lista de compras e de preparo.",
+   "indicadores": {
+    "fit": 1.68,
+    "fit_conf": 0.7,
+    "venda": 1.08,
+    "venda_conf": 0.7,
+    "disrupcao": 1.46,
+    "disrupcao_conf": 0.7,
+    "dor": "dinheiro_direto",
+    "dor_probs": {
+     "dinheiro_direto": 1,
+     "reputacao": 0,
+     "backoffice": 0
+    },
+    "dor_conf": 0.8,
+    "solo": 0.09
+   },
+   "negocio": {
+    "wtp": 0.14,
+    "meta30": 0.63,
+    "preco": 1.72,
+    "preco_conf": 0.7
+   },
+   "algoritmo": {
+    "rotulo": "FORTE",
+    "escore_dor": 1,
+    "escore_interna": 0,
+    "margem": 1,
+    "desvio": 0,
+    "sondas": {
+     "dinheiro": 1,
+     "reputacao": 0,
+     "processo": 0,
+     "tecnologia": 0
+    },
+    "por_parafrase": {
+     "P1": {
+      "dinheiro": 1,
+      "reputacao": 0,
+      "processo": 0
+     },
+     "P2": {
+      "dinheiro": 1,
+      "reputacao": 0,
+      "processo": 0
+     },
+     "P3": {
+      "dinheiro": 1,
+      "reputacao": 0,
+      "processo": 0
+     }
+    }
+   },
+   "indice": 1.38,
+   "tier": "C",
+   "valor": {
+    "premissas": [
+     {
+      "nome": "ocorrências por mês",
+      "valor": 20,
+      "unidade": "ocorrências/mês",
+      "fonte": "INFERENCE"
+     },
+     {
+      "nome": "custo por ocorrência",
+      "valor": 130,
+      "unidade": "R$",
+      "fonte": "INFERENCE"
+     }
+    ],
+    "recuperacao": 0.5,
+    "perda_mes": 2600,
+    "ganho_mes": 1300,
+    "saldo_mes": 1000,
+    "payback_meses": 1.8,
+    "retorno_12m": 10200,
+    "setup_fee": 1800
+   }
+  },
+  {
+   "nome": "Livro de indicacoes",
+   "setor": "rede",
+   "descricao": "Registra quem indicou quem e fecha o acerto do mês.",
+   "indicadores": {
+    "fit": 1.66,
+    "fit_conf": 0.7,
+    "venda": 0.12,
+    "venda_conf": 0.7,
+    "disrupcao": 1.32,
+    "disrupcao_conf": 0.7,
+    "dor": "reputacao",
+    "dor_probs": {
+     "dinheiro_direto": 0,
+     "reputacao": 1,
+     "backoffice": 0
+    },
+    "dor_conf": 0.8,
+    "solo": 0.79
+   },
+   "negocio": {
+    "wtp": 0.33,
+    "meta30": 0.93,
+    "preco": 0.76,
+    "preco_conf": 0.7
+   },
+   "algoritmo": {
+    "rotulo": "FORTE",
+    "escore_dor": 1,
+    "escore_interna": 0,
+    "margem": 1,
+    "desvio": 0,
+    "sondas": {
+     "dinheiro": 0,
+     "reputacao": 1,
+     "processo": 0,
+     "tecnologia": 0
+    },
+    "por_parafrase": {
+     "P1": {
+      "dinheiro": 0,
+      "reputacao": 1,
+      "processo": 0
+     },
+     "P2": {
+      "dinheiro": 0,
+      "reputacao": 1,
+      "processo": 0
+     },
+     "P3": {
+      "dinheiro": 0,
+      "reputacao": 1,
+      "processo": 0
+     }
+    }
+   },
+   "indice": 0.89,
+   "tier": "C",
+   "valor": {
+    "premissas": [
+     {
+      "nome": "ocorrências por mês",
+      "valor": 29,
+      "unidade": "ocorrências/mês",
+      "fonte": "INFERENCE"
+     },
+     {
+      "nome": "custo por ocorrência",
+      "valor": 173,
+      "unidade": "R$",
+      "fonte": "INFERENCE"
+     }
+    ],
+    "recuperacao": 0.5,
+    "perda_mes": 5017,
+    "ganho_mes": 2508.5,
+    "saldo_mes": 2208.5,
+    "payback_meses": 0.82,
+    "retorno_12m": 24702,
+    "setup_fee": 1800
+   }
+  },
+  {
+   "nome": "Ideia Extra 1",
+   "setor": "operacao",
+   "descricao": "ideia adicional do modo simulado, distinta das que ja existem",
+   "indicadores": {
+    "fit": 0.96,
+    "fit_conf": 0.7,
+    "venda": 1.62,
+    "venda_conf": 0.7,
+    "disrupcao": 1.12,
+    "disrupcao_conf": 0.7,
+    "dor": "dinheiro_direto",
+    "dor_probs": {
+     "dinheiro_direto": 1,
+     "reputacao": 0,
+     "backoffice": 0
+    },
+    "dor_conf": 0.8,
+    "solo": 0.76
+   },
+   "negocio": {
+    "wtp": 0.75,
+    "meta30": 0.17,
+    "preco": 1.64,
+    "preco_conf": 0.7
+   },
+   "algoritmo": {
+    "rotulo": "FORTE",
+    "escore_dor": 1,
+    "escore_interna": 0,
+    "margem": 1,
+    "desvio": 0,
+    "sondas": {
+     "dinheiro": 1,
+     "reputacao": 0,
+     "processo": 0,
+     "tecnologia": 0
+    },
+    "por_parafrase": {
+     "P1": {
+      "dinheiro": 1,
+      "reputacao": 0,
+      "processo": 0
+     },
+     "P2": {
+      "dinheiro": 1,
+      "reputacao": 0,
+      "processo": 0
+     },
+     "P3": {
+      "dinheiro": 1,
+      "reputacao": 0,
+      "processo": 0
+     }
+    }
+   },
+   "indice": 1.29,
+   "tier": "C",
+   "valor": {
+    "premissas": [
+     {
+      "nome": "ocorrências por mês",
+      "valor": 21,
+      "unidade": "ocorrências/mês",
+      "fonte": "INFERENCE"
+     },
+     {
+      "nome": "custo por ocorrência",
+      "valor": 197,
+      "unidade": "R$",
+      "fonte": "INFERENCE"
+     }
+    ],
+    "recuperacao": 0.5,
+    "perda_mes": 4137,
+    "ganho_mes": 2068.5,
+    "saldo_mes": 1768.5,
+    "payback_meses": 1.02,
+    "retorno_12m": 19422,
+    "setup_fee": 1800
+   }
+  },
+  {
+   "nome": "Ideia Extra 2",
+   "setor": "operacao",
+   "descricao": "ideia adicional do modo simulado, distinta das que ja existem",
+   "indicadores": {
+    "fit": 0.08,
+    "fit_conf": 0.7,
+    "venda": 1,
+    "venda_conf": 0.7,
+    "disrupcao": 0.82,
+    "disrupcao_conf": 0.7,
+    "dor": "reputacao",
+    "dor_probs": {
+     "dinheiro_direto": 0,
+     "reputacao": 1,
+     "backoffice": 0
+    },
+    "dor_conf": 0.8,
+    "solo": 0.88
+   },
+   "negocio": {
+    "wtp": 0.41,
+    "meta30": 0.75,
+    "preco": 1.84,
+    "preco_conf": 0.7
+   },
+   "algoritmo": {
+    "rotulo": "FORTE",
+    "escore_dor": 1,
+    "escore_interna": 0,
+    "margem": 1,
+    "desvio": 0,
+    "sondas": {
+     "dinheiro": 0,
+     "reputacao": 1,
+     "processo": 0,
+     "tecnologia": 0
+    },
+    "por_parafrase": {
+     "P1": {
+      "dinheiro": 0,
+      "reputacao": 1,
+      "processo": 0
+     },
+     "P2": {
+      "dinheiro": 0,
+      "reputacao": 1,
+      "processo": 0
+     },
+     "P3": {
+      "dinheiro": 0,
+      "reputacao": 1,
+      "processo": 0
+     }
+    }
+   },
+   "indice": 0.54,
+   "tier": "C",
+   "valor": {
+    "premissas": [
+     {
+      "nome": "ocorrências por mês",
+      "valor": 26,
+      "unidade": "ocorrências/mês",
+      "fonte": "INFERENCE"
+     },
+     {
+      "nome": "custo por ocorrência",
+      "valor": 172,
+      "unidade": "R$",
+      "fonte": "INFERENCE"
+     }
+    ],
+    "recuperacao": 0.5,
+    "perda_mes": 4472,
+    "ganho_mes": 2236,
+    "saldo_mes": 1936,
+    "payback_meses": 0.93,
+    "retorno_12m": 21432,
+    "setup_fee": 1800
+   }
+  }
+ ],
+ "evidencias": [
+  {
+   "id": "E1",
+   "tipo": "preco",
+   "afirmacao": "Achado da busca \"preço de sistema para cafés de bairro\": Guia 1 sobre preço de sistema para cafés de bairro",
+   "trecho": "[QR-001] Resultado 1 para \"preço de sistema para cafés de bairro\".",
+   "url": "https://mock.busca.test/preco-de-sistema-para-cafes-de-bairro/snrcxx-1",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": ""
+  },
+  {
+   "id": "E2",
+   "tipo": "preco",
+   "afirmacao": "Achado da busca \"preço de sistema para cafés de bairro\": Guia 2 sobre preço de sistema para cafés de bairro",
+   "trecho": "[QR-001] Resultado 2 para \"preço de sistema para cafés de bairro\".",
+   "url": "https://mock.busca.test/preco-de-sistema-para-cafes-de-bairro/snrcxx-2",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": ""
+  },
+  {
+   "id": "E3",
+   "tipo": "concorrente",
+   "afirmacao": "Achado da busca \"concorrentes de automação para cafés de bairro\": Guia 1 sobre concorrentes de automação para cafés de bairro",
+   "trecho": "[QR-001] Resultado 1 para \"concorrentes de automação para cafés de bairro\".",
+   "url": "https://mock.busca.test/concorrentes-de-automacao-para-cafes-de-bairro/1vuo2m3-1",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": ""
+  },
+  {
+   "id": "E4",
+   "tipo": "concorrente",
+   "afirmacao": "Achado da busca \"concorrentes de automação para cafés de bairro\": Guia 2 sobre concorrentes de automação para cafés de bairro",
+   "trecho": "[QR-001] Resultado 2 para \"concorrentes de automação para cafés de bairro\".",
+   "url": "https://mock.busca.test/concorrentes-de-automacao-para-cafes-de-bairro/1vuo2m3-2",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": ""
+  },
+  {
+   "id": "E5",
+   "tipo": "reclamacao",
+   "afirmacao": "Achado da busca \"reclamações de clientes de cafés de bairro\": Guia 1 sobre reclamações de clientes de cafés de bairro",
+   "trecho": "[QR-001] Resultado 1 para \"reclamações de clientes de cafés de bairro\".",
+   "url": "https://mock.busca.test/reclamacoes-de-clientes-de-cafes-de-bairro/l27u2n-1",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": ""
+  },
+  {
+   "id": "E6",
+   "tipo": "reclamacao",
+   "afirmacao": "Achado da busca \"reclamações de clientes de cafés de bairro\": Guia 2 sobre reclamações de clientes de cafés de bairro",
+   "trecho": "[QR-001] Resultado 2 para \"reclamações de clientes de cafés de bairro\".",
+   "url": "https://mock.busca.test/reclamacoes-de-clientes-de-cafes-de-bairro/l27u2n-2",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": ""
+  },
+  {
+   "id": "E7",
+   "tipo": "custo",
+   "afirmacao": "Achado da busca \"custos e perdas na operação de cafés de bairro\": Guia 1 sobre custos e perdas na operação de cafés de bairro",
+   "trecho": "[QR-001] Resultado 1 para \"custos e perdas na operação de cafés de bairro\".",
+   "url": "https://mock.busca.test/custos-e-perdas-na-operacao-de-cafes-de-bairro/e19c1u-1",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": ""
+  },
+  {
+   "id": "E8",
+   "tipo": "custo",
+   "afirmacao": "Achado da busca \"custos e perdas na operação de cafés de bairro\": Guia 2 sobre custos e perdas na operação de cafés de bairro",
+   "trecho": "[QR-001] Resultado 2 para \"custos e perdas na operação de cafés de bairro\".",
+   "url": "https://mock.busca.test/custos-e-perdas-na-operacao-de-cafes-de-bairro/e19c1u-2",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": ""
+  },
+  {
+   "id": "E9",
+   "tipo": "mercado",
+   "afirmacao": "Achado da busca \"quantos negócios de cafés de bairro\": Guia 1 sobre quantos negócios de cafés de bairro",
+   "trecho": "[QR-001] Resultado 1 para \"quantos negócios de cafés de bairro\".",
+   "url": "https://mock.busca.test/quantos-negocios-de-cafes-de-bairro/v65wec-1",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": ""
+  },
+  {
+   "id": "E10",
+   "tipo": "mercado",
+   "afirmacao": "Achado da busca \"quantos negócios de cafés de bairro\": Guia 2 sobre quantos negócios de cafés de bairro",
+   "trecho": "[QR-001] Resultado 2 para \"quantos negócios de cafés de bairro\".",
+   "url": "https://mock.busca.test/quantos-negocios-de-cafes-de-bairro/v65wec-2",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": ""
+  },
+  {
+   "id": "E11",
+   "tipo": "regulacao",
+   "afirmacao": "Achado da busca \"regulação e licença para cafés de bairro\": Guia 1 sobre regulação e licença para cafés de bairro",
+   "trecho": "[QR-001] Resultado 1 para \"regulação e licença para cafés de bairro\".",
+   "url": "https://mock.busca.test/regulacao-e-licenca-para-cafes-de-bairro/1s3e4ui-1",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": ""
+  },
+  {
+   "id": "E12",
+   "tipo": "regulacao",
+   "afirmacao": "Achado da busca \"regulação e licença para cafés de bairro\": Guia 2 sobre regulação e licença para cafés de bairro",
+   "trecho": "[QR-001] Resultado 2 para \"regulação e licença para cafés de bairro\".",
+   "url": "https://mock.busca.test/regulacao-e-licenca-para-cafes-de-bairro/1s3e4ui-2",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": ""
+  },
+  {
+   "id": "E13",
+   "tipo": "mercado",
+   "afirmacao": "Achado da busca \"atendimento pelo WhatsApp em cafés de bairro\": Guia 1 sobre atendimento pelo WhatsApp em cafés de bairro",
+   "trecho": "[QR-001] Resultado 1 para \"atendimento pelo WhatsApp em cafés de bairro\".",
+   "url": "https://mock.busca.test/atendimento-pelo-whatsapp-em-cafes-de-bairro/p7tf3z-1",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": ""
+  },
+  {
+   "id": "E14",
+   "tipo": "mercado",
+   "afirmacao": "Achado da busca \"atendimento pelo WhatsApp em cafés de bairro\": Guia 2 sobre atendimento pelo WhatsApp em cafés de bairro",
+   "trecho": "[QR-001] Resultado 2 para \"atendimento pelo WhatsApp em cafés de bairro\".",
+   "url": "https://mock.busca.test/atendimento-pelo-whatsapp-em-cafes-de-bairro/p7tf3z-2",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": ""
+  },
+  {
+   "id": "E15",
+   "tipo": "mercado",
+   "afirmacao": "Achado da busca \"ticket médio de cafés de bairro\": Guia 1 sobre ticket médio de cafés de bairro",
+   "trecho": "[QR-001] Resultado 1 para \"ticket médio de cafés de bairro\".",
+   "url": "https://mock.busca.test/ticket-medio-de-cafes-de-bairro/iwej2s-1",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": ""
+  },
+  {
+   "id": "E16",
+   "tipo": "mercado",
+   "afirmacao": "Achado da busca \"ticket médio de cafés de bairro\": Guia 2 sobre ticket médio de cafés de bairro",
+   "trecho": "[QR-001] Resultado 2 para \"ticket médio de cafés de bairro\".",
+   "url": "https://mock.busca.test/ticket-medio-de-cafes-de-bairro/iwej2s-2",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": ""
+  },
+  {
+   "id": "E17",
+   "tipo": "concorrente",
+   "afirmacao": "Achado da busca \"Triagem de WhatsApp para cafés de bairro: concorrentes e sistemas parecidos\": Guia 1 sobre Triagem de WhatsApp para cafés de bairro: concorrentes e sistemas parecidos",
+   "trecho": "[QR-001] Resultado 1 para \"Triagem de WhatsApp para cafés de bairro: concorrentes e sistemas parecidos\".",
+   "url": "https://mock.busca.test/triagem-de-whatsapp-para-cafes-de-bairro-concorr/1ysg4q4-1",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Triagem de WhatsApp"
+  },
+  {
+   "id": "E18",
+   "tipo": "concorrente",
+   "afirmacao": "Achado da busca \"Triagem de WhatsApp para cafés de bairro: concorrentes e sistemas parecidos\": Guia 2 sobre Triagem de WhatsApp para cafés de bairro: concorrentes e sistemas parecidos",
+   "trecho": "[QR-001] Resultado 2 para \"Triagem de WhatsApp para cafés de bairro: concorrentes e sistemas parecidos\".",
+   "url": "https://mock.busca.test/triagem-de-whatsapp-para-cafes-de-bairro-concorr/1ysg4q4-2",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Triagem de WhatsApp"
+  },
+  {
+   "id": "E19",
+   "tipo": "preco",
+   "afirmacao": "Achado da busca \"Triagem de WhatsApp para cafés de bairro: preço da mensalidade\": Guia 1 sobre Triagem de WhatsApp para cafés de bairro: preço da mensalidade",
+   "trecho": "[QR-001] Resultado 1 para \"Triagem de WhatsApp para cafés de bairro: preço da mensalidade\".",
+   "url": "https://mock.busca.test/triagem-de-whatsapp-para-cafes-de-bairro-preco-d/18itdsq-1",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Triagem de WhatsApp"
+  },
+  {
+   "id": "E20",
+   "tipo": "preco",
+   "afirmacao": "Achado da busca \"Triagem de WhatsApp para cafés de bairro: preço da mensalidade\": Guia 2 sobre Triagem de WhatsApp para cafés de bairro: preço da mensalidade",
+   "trecho": "[QR-001] Resultado 2 para \"Triagem de WhatsApp para cafés de bairro: preço da mensalidade\".",
+   "url": "https://mock.busca.test/triagem-de-whatsapp-para-cafes-de-bairro-preco-d/18itdsq-2",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Triagem de WhatsApp"
+  },
+  {
+   "id": "E21",
+   "tipo": "concorrente",
+   "afirmacao": "Achado da busca \"Confirmacao de horario para cafés de bairro: concorrentes e sistemas parecidos\": Guia 1 sobre Confirmacao de horario para cafés de bairro: concorrentes e sistemas parecidos",
+   "trecho": "[QR-001] Resultado 1 para \"Confirmacao de horario para cafés de bairro: concorrentes e sistemas parecidos\".",
+   "url": "https://mock.busca.test/confirmacao-de-horario-para-cafes-de-bairro-conc/1h6f8yn-1",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Confirmacao de horario"
+  },
+  {
+   "id": "E22",
+   "tipo": "concorrente",
+   "afirmacao": "Achado da busca \"Confirmacao de horario para cafés de bairro: concorrentes e sistemas parecidos\": Guia 2 sobre Confirmacao de horario para cafés de bairro: concorrentes e sistemas parecidos",
+   "trecho": "[QR-001] Resultado 2 para \"Confirmacao de horario para cafés de bairro: concorrentes e sistemas parecidos\".",
+   "url": "https://mock.busca.test/confirmacao-de-horario-para-cafes-de-bairro-conc/1h6f8yn-2",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Confirmacao de horario"
+  },
+  {
+   "id": "E23",
+   "tipo": "preco",
+   "afirmacao": "Achado da busca \"Confirmacao de horario para cafés de bairro: preço da mensalidade\": Guia 1 sobre Confirmacao de horario para cafés de bairro: preço da mensalidade",
+   "trecho": "[QR-001] Resultado 1 para \"Confirmacao de horario para cafés de bairro: preço da mensalidade\".",
+   "url": "https://mock.busca.test/confirmacao-de-horario-para-cafes-de-bairro-prec/f3f0yr-1",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Confirmacao de horario"
+  },
+  {
+   "id": "E24",
+   "tipo": "preco",
+   "afirmacao": "Achado da busca \"Confirmacao de horario para cafés de bairro: preço da mensalidade\": Guia 2 sobre Confirmacao de horario para cafés de bairro: preço da mensalidade",
+   "trecho": "[QR-001] Resultado 2 para \"Confirmacao de horario para cafés de bairro: preço da mensalidade\".",
+   "url": "https://mock.busca.test/confirmacao-de-horario-para-cafes-de-bairro-prec/f3f0yr-2",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Confirmacao de horario"
+  },
+  {
+   "id": "E25",
+   "tipo": "concorrente",
+   "afirmacao": "Achado da busca \"Ficha do cliente para cafés de bairro: concorrentes e sistemas parecidos\": Guia 1 sobre Ficha do cliente para cafés de bairro: concorrentes e sistemas parecidos",
+   "trecho": "[QR-001] Resultado 1 para \"Ficha do cliente para cafés de bairro: concorrentes e sistemas parecidos\".",
+   "url": "https://mock.busca.test/ficha-do-cliente-para-cafes-de-bairro-concorrent/85jgj6-1",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Ficha do cliente"
+  },
+  {
+   "id": "E26",
+   "tipo": "concorrente",
+   "afirmacao": "Achado da busca \"Ficha do cliente para cafés de bairro: concorrentes e sistemas parecidos\": Guia 2 sobre Ficha do cliente para cafés de bairro: concorrentes e sistemas parecidos",
+   "trecho": "[QR-001] Resultado 2 para \"Ficha do cliente para cafés de bairro: concorrentes e sistemas parecidos\".",
+   "url": "https://mock.busca.test/ficha-do-cliente-para-cafes-de-bairro-concorrent/85jgj6-2",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Ficha do cliente"
+  },
+  {
+   "id": "E27",
+   "tipo": "preco",
+   "afirmacao": "Achado da busca \"Ficha do cliente para cafés de bairro: preço da mensalidade\": Guia 1 sobre Ficha do cliente para cafés de bairro: preço da mensalidade",
+   "trecho": "[QR-001] Resultado 1 para \"Ficha do cliente para cafés de bairro: preço da mensalidade\".",
+   "url": "https://mock.busca.test/ficha-do-cliente-para-cafes-de-bairro-preco-da-m/ypo2cw-1",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Ficha do cliente"
+  },
+  {
+   "id": "E28",
+   "tipo": "preco",
+   "afirmacao": "Achado da busca \"Ficha do cliente para cafés de bairro: preço da mensalidade\": Guia 2 sobre Ficha do cliente para cafés de bairro: preço da mensalidade",
+   "trecho": "[QR-001] Resultado 2 para \"Ficha do cliente para cafés de bairro: preço da mensalidade\".",
+   "url": "https://mock.busca.test/ficha-do-cliente-para-cafes-de-bairro-preco-da-m/ypo2cw-2",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Ficha do cliente"
+  },
+  {
+   "id": "E29",
+   "tipo": "concorrente",
+   "afirmacao": "Achado da busca \"Resgate de insatisfacao para cafés de bairro: concorrentes e sistemas parecidos\": Guia 1 sobre Resgate de insatisfacao para cafés de bairro: concorrentes e sistemas parecidos",
+   "trecho": "[QR-001] Resultado 1 para \"Resgate de insatisfacao para cafés de bairro: concorrentes e sistemas parecidos\".",
+   "url": "https://mock.busca.test/resgate-de-insatisfacao-para-cafes-de-bairro-con/14d6qeh-1",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Resgate de insatisfacao"
+  },
+  {
+   "id": "E30",
+   "tipo": "concorrente",
+   "afirmacao": "Achado da busca \"Resgate de insatisfacao para cafés de bairro: concorrentes e sistemas parecidos\": Guia 2 sobre Resgate de insatisfacao para cafés de bairro: concorrentes e sistemas parecidos",
+   "trecho": "[QR-001] Resultado 2 para \"Resgate de insatisfacao para cafés de bairro: concorrentes e sistemas parecidos\".",
+   "url": "https://mock.busca.test/resgate-de-insatisfacao-para-cafes-de-bairro-con/14d6qeh-2",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Resgate de insatisfacao"
+  },
+  {
+   "id": "E31",
+   "tipo": "preco",
+   "afirmacao": "Achado da busca \"Resgate de insatisfacao para cafés de bairro: preço da mensalidade\": Guia 1 sobre Resgate de insatisfacao para cafés de bairro: preço da mensalidade",
+   "trecho": "[QR-001] Resultado 1 para \"Resgate de insatisfacao para cafés de bairro: preço da mensalidade\".",
+   "url": "https://mock.busca.test/resgate-de-insatisfacao-para-cafes-de-bairro-pre/16ay479-1",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Resgate de insatisfacao"
+  },
+  {
+   "id": "E32",
+   "tipo": "preco",
+   "afirmacao": "Achado da busca \"Resgate de insatisfacao para cafés de bairro: preço da mensalidade\": Guia 2 sobre Resgate de insatisfacao para cafés de bairro: preço da mensalidade",
+   "trecho": "[QR-001] Resultado 2 para \"Resgate de insatisfacao para cafés de bairro: preço da mensalidade\".",
+   "url": "https://mock.busca.test/resgate-de-insatisfacao-para-cafes-de-bairro-pre/16ay479-2",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Resgate de insatisfacao"
+  },
+  {
+   "id": "E33",
+   "tipo": "concorrente",
+   "afirmacao": "Achado da busca \"Previsao de movimento para cafés de bairro: concorrentes e sistemas parecidos\": Guia 1 sobre Previsao de movimento para cafés de bairro: concorrentes e sistemas parecidos",
+   "trecho": "[QR-001] Resultado 1 para \"Previsao de movimento para cafés de bairro: concorrentes e sistemas parecidos\".",
+   "url": "https://mock.busca.test/previsao-de-movimento-para-cafes-de-bairro-conco/111ulsa-1",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Previsao de movimento"
+  },
+  {
+   "id": "E34",
+   "tipo": "concorrente",
+   "afirmacao": "Achado da busca \"Previsao de movimento para cafés de bairro: concorrentes e sistemas parecidos\": Guia 2 sobre Previsao de movimento para cafés de bairro: concorrentes e sistemas parecidos",
+   "trecho": "[QR-001] Resultado 2 para \"Previsao de movimento para cafés de bairro: concorrentes e sistemas parecidos\".",
+   "url": "https://mock.busca.test/previsao-de-movimento-para-cafes-de-bairro-conco/111ulsa-2",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Previsao de movimento"
+  },
+  {
+   "id": "E35",
+   "tipo": "preco",
+   "afirmacao": "Achado da busca \"Previsao de movimento para cafés de bairro: preço da mensalidade\": Guia 1 sobre Previsao de movimento para cafés de bairro: preço da mensalidade",
+   "trecho": "[QR-001] Resultado 1 para \"Previsao de movimento para cafés de bairro: preço da mensalidade\".",
+   "url": "https://mock.busca.test/previsao-de-movimento-para-cafes-de-bairro-preco/2wk73c-1",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Previsao de movimento"
+  },
+  {
+   "id": "E36",
+   "tipo": "preco",
+   "afirmacao": "Achado da busca \"Previsao de movimento para cafés de bairro: preço da mensalidade\": Guia 2 sobre Previsao de movimento para cafés de bairro: preço da mensalidade",
+   "trecho": "[QR-001] Resultado 2 para \"Previsao de movimento para cafés de bairro: preço da mensalidade\".",
+   "url": "https://mock.busca.test/previsao-de-movimento-para-cafes-de-bairro-preco/2wk73c-2",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Previsao de movimento"
+  },
+  {
+   "id": "E37",
+   "tipo": "concorrente",
+   "afirmacao": "Achado da busca \"Livro de indicacoes para cafés de bairro: concorrentes e sistemas parecidos\": Guia 1 sobre Livro de indicacoes para cafés de bairro: concorrentes e sistemas parecidos",
+   "trecho": "[QR-001] Resultado 1 para \"Livro de indicacoes para cafés de bairro: concorrentes e sistemas parecidos\".",
+   "url": "https://mock.busca.test/livro-de-indicacoes-para-cafes-de-bairro-concorr/8ltyov-1",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Livro de indicacoes"
+  },
+  {
+   "id": "E38",
+   "tipo": "concorrente",
+   "afirmacao": "Achado da busca \"Livro de indicacoes para cafés de bairro: concorrentes e sistemas parecidos\": Guia 2 sobre Livro de indicacoes para cafés de bairro: concorrentes e sistemas parecidos",
+   "trecho": "[QR-001] Resultado 2 para \"Livro de indicacoes para cafés de bairro: concorrentes e sistemas parecidos\".",
+   "url": "https://mock.busca.test/livro-de-indicacoes-para-cafes-de-bairro-concorr/8ltyov-2",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Livro de indicacoes"
+  },
+  {
+   "id": "E39",
+   "tipo": "preco",
+   "afirmacao": "Achado da busca \"Livro de indicacoes para cafés de bairro: preço da mensalidade\": Guia 1 sobre Livro de indicacoes para cafés de bairro: preço da mensalidade",
+   "trecho": "[QR-001] Resultado 1 para \"Livro de indicacoes para cafés de bairro: preço da mensalidade\".",
+   "url": "https://mock.busca.test/livro-de-indicacoes-para-cafes-de-bairro-preco-d/4chplv-1",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Livro de indicacoes"
+  },
+  {
+   "id": "E40",
+   "tipo": "preco",
+   "afirmacao": "Achado da busca \"Livro de indicacoes para cafés de bairro: preço da mensalidade\": Guia 2 sobre Livro de indicacoes para cafés de bairro: preço da mensalidade",
+   "trecho": "[QR-001] Resultado 2 para \"Livro de indicacoes para cafés de bairro: preço da mensalidade\".",
+   "url": "https://mock.busca.test/livro-de-indicacoes-para-cafes-de-bairro-preco-d/4chplv-2",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Livro de indicacoes"
+  },
+  {
+   "id": "E41",
+   "tipo": "concorrente",
+   "afirmacao": "Achado da busca \"Ideia Extra 1 para cafés de bairro: concorrentes e sistemas parecidos\": Guia 1 sobre Ideia Extra 1 para cafés de bairro: concorrentes e sistemas parecidos",
+   "trecho": "[QR-001] Resultado 1 para \"Ideia Extra 1 para cafés de bairro: concorrentes e sistemas parecidos\".",
+   "url": "https://mock.busca.test/ideia-extra-1-para-cafes-de-bairro-concorrentes-/z7al6z-1",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Ideia Extra 1"
+  },
+  {
+   "id": "E42",
+   "tipo": "concorrente",
+   "afirmacao": "Achado da busca \"Ideia Extra 1 para cafés de bairro: concorrentes e sistemas parecidos\": Guia 2 sobre Ideia Extra 1 para cafés de bairro: concorrentes e sistemas parecidos",
+   "trecho": "[QR-001] Resultado 2 para \"Ideia Extra 1 para cafés de bairro: concorrentes e sistemas parecidos\".",
+   "url": "https://mock.busca.test/ideia-extra-1-para-cafes-de-bairro-concorrentes-/z7al6z-2",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Ideia Extra 1"
+  },
+  {
+   "id": "E43",
+   "tipo": "preco",
+   "afirmacao": "Achado da busca \"Ideia Extra 1 para cafés de bairro: preço da mensalidade\": Guia 1 sobre Ideia Extra 1 para cafés de bairro: preço da mensalidade",
+   "trecho": "[QR-001] Resultado 1 para \"Ideia Extra 1 para cafés de bairro: preço da mensalidade\".",
+   "url": "https://mock.busca.test/ideia-extra-1-para-cafes-de-bairro-preco-da-mens/kn3a7-1",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Ideia Extra 1"
+  },
+  {
+   "id": "E44",
+   "tipo": "preco",
+   "afirmacao": "Achado da busca \"Ideia Extra 1 para cafés de bairro: preço da mensalidade\": Guia 2 sobre Ideia Extra 1 para cafés de bairro: preço da mensalidade",
+   "trecho": "[QR-001] Resultado 2 para \"Ideia Extra 1 para cafés de bairro: preço da mensalidade\".",
+   "url": "https://mock.busca.test/ideia-extra-1-para-cafes-de-bairro-preco-da-mens/kn3a7-2",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Ideia Extra 1"
+  },
+  {
+   "id": "E45",
+   "tipo": "concorrente",
+   "afirmacao": "Achado da busca \"Ideia Extra 2 para cafés de bairro: concorrentes e sistemas parecidos\": Guia 1 sobre Ideia Extra 2 para cafés de bairro: concorrentes e sistemas parecidos",
+   "trecho": "[QR-001] Resultado 1 para \"Ideia Extra 2 para cafés de bairro: concorrentes e sistemas parecidos\".",
+   "url": "https://mock.busca.test/ideia-extra-2-para-cafes-de-bairro-concorrentes-/13has4m-1",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Ideia Extra 2"
+  },
+  {
+   "id": "E46",
+   "tipo": "concorrente",
+   "afirmacao": "Achado da busca \"Ideia Extra 2 para cafés de bairro: concorrentes e sistemas parecidos\": Guia 2 sobre Ideia Extra 2 para cafés de bairro: concorrentes e sistemas parecidos",
+   "trecho": "[QR-001] Resultado 2 para \"Ideia Extra 2 para cafés de bairro: concorrentes e sistemas parecidos\".",
+   "url": "https://mock.busca.test/ideia-extra-2-para-cafes-de-bairro-concorrentes-/13has4m-2",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Ideia Extra 2"
+  },
+  {
+   "id": "E47",
+   "tipo": "preco",
+   "afirmacao": "Achado da busca \"Ideia Extra 2 para cafés de bairro: preço da mensalidade\": Guia 1 sobre Ideia Extra 2 para cafés de bairro: preço da mensalidade",
+   "trecho": "[QR-001] Resultado 1 para \"Ideia Extra 2 para cafés de bairro: preço da mensalidade\".",
+   "url": "https://mock.busca.test/ideia-extra-2-para-cafes-de-bairro-preco-da-mens/dn4tfo-1",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Ideia Extra 2"
+  },
+  {
+   "id": "E48",
+   "tipo": "preco",
+   "afirmacao": "Achado da busca \"Ideia Extra 2 para cafés de bairro: preço da mensalidade\": Guia 2 sobre Ideia Extra 2 para cafés de bairro: preço da mensalidade",
+   "trecho": "[QR-001] Resultado 2 para \"Ideia Extra 2 para cafés de bairro: preço da mensalidade\".",
+   "url": "https://mock.busca.test/ideia-extra-2-para-cafes-de-bairro-preco-da-mens/dn4tfo-2",
+   "valor": 1,
+   "unidade": "unidades",
+   "ideia": "Ideia Extra 2"
+  }
+ ]
+}

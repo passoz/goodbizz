@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { indicatorsTableCsv, indicatorsTableMarkdown } from "../src/application/reports.ts";
 import { evaluationFromJson, serializeDados } from "../src/application/dados.ts";
 import { resolveStudyConfig } from "../src/config/runtime.ts";
-import type { StudyIdea, StudySummary } from "../src/domain/types.ts";
+import type { StudyIdea, StudyIdea as Idea, StudySummary } from "../src/domain/types.ts";
 
 /**
  * Aceitação da task 1.11 (FR-009): a perda e o payback aparecem no tabelão,
@@ -60,10 +60,12 @@ describe("FR-009: aceitação dos artefatos de valor", () => {
       ordered: [idea],
       means: { fit: 0.8, sale: 0.7, disruption: 0.6, solo: 0.75, wtp: 350, meta30: 0.5 },
       painGroups: { forte: ["ideia-a"], mista: [], fraca: [] },
-      tiers: { A: 1, B: 0, C: 0 },
+      tiers: { A: ["ideia-a"], B: [], C: [] },
+      attack: [],
+      review: [],
     } as StudySummary;
     const raw = JSON.parse(serializeDados(cfg, "", summary, [idea], [])) as { ideias: unknown[] };
     expect(raw.ideias[0]).toHaveProperty("valor");
-    expect(evaluationFromJson(raw.ideias[0]).value?.loss).toBe(2800);
+    expect((evaluationFromJson(raw.ideias[0]) as Idea).value?.loss).toBe(2800);
   });
 });
