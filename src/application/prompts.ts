@@ -88,6 +88,12 @@ Estrutura obrigatória, exatamente estes títulos de nível 2 e nesta ordem:
     mitigação, 9.3 4 Ps, 9.4 roadmap de 90 dias em tabela, 9.5 KPIs)
 ## 10. Próximos passos
    (lista de 5 itens concretos)
+## 11. Proposta de valor e retorno
+   (11.1 a proposta em uma frase, 11.2 a tabela de premissas com fonte, 11.3 o escopo
+    de entrega do consultor solo, 11.4 a conta do retorno com perda mensal, ganho mensal,
+    saldo, setup, payback e retorno em 12 meses, 11.5 a primeira mensagem ao dono do
+    negócio, 11.6 o critério de descarte; sem evidência, diga que a conta inteira é
+    estimativa a confirmar)
 
 Escreva entre 250 e 450 linhas. Não use cerca de código em volta do documento inteiro.
 Responda apenas o documento.`;
@@ -104,6 +110,7 @@ export const DOC_SECTIONS: string[] = [
   "8. Business Model Canvas",
   "9. Ferramentas complementares",
   "10. Próximos passos",
+  "11. Proposta de valor e retorno",
 ];
 
 /** Frases que o guardrail espera encontrar em um plano completo. */

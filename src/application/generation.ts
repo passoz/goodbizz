@@ -10,6 +10,8 @@ import { extractJson } from "../infrastructure/json.ts";
 import { studySubject } from "../domain/naming.ts";
 import type { LlmClient } from "../domain/ports.ts";
 import type { Evidence, Idea, IdeaEvaluation, StudyConfig } from "../domain/types.ts";
+import type { Premise } from "./premises.ts";
+import type { ValueResult } from "./value.ts";
 import { BRIEF_SYSTEM_PROMPT, DOC_SYSTEM_PROMPT, IDEAS_SYSTEM_PROMPT } from "./prompts.ts";
 
 /**
@@ -120,11 +122,27 @@ export async function generateIdeas(
   return count > 0 ? ideas.slice(0, count) : ideas;
 }
 
+/** Conta do retorno de uma ideia: premissas do LLM e números calculados pelo código. */
+export interface IdeaValueBlock {
+  /** Fatores validados com fonte (`E#` ou `INFERENCE`). */
+  premises: readonly Premise[];
+  /** Números calculados pelo módulo de valor. */
+  value: ValueResult;
+  /** Taxa de implantação cobrada uma vez. */
+  setupFee: number;
+}
+
 /**
  * Formatted text with ALL measured numbers for one idea.
  * This is the only source of numbers the document generator may use.
  */
-export function dataBlock(evaluation: IdeaEvaluation, cfg: StudyConfig): string {
+export function dataBlock(
+  evaluation: IdeaEvaluation,
+  cfg: StudyConfig,
+  value?: IdeaValueBlock,
+  legacyExtra?: unknown,
+): string {
+  void legacyExtra;
   const ind = evaluation.indicators;
   const biz = evaluation.business;
   const algo = evaluation.algorithm;
@@ -133,7 +151,7 @@ export function dataBlock(evaluation: IdeaEvaluation, cfg: StudyConfig): string 
     .map((key) => `${key}=${(ind.painProbs[key] ?? 0).toFixed(2)}`)
     .join(", ");
 
-  return [
+  const lines = [
     `Ideia: ${evaluation.name} (setor: ${evaluation.sector || "não informado"})`,
     `Descrição: ${evaluation.description}`,
     `Nicho: ${studySubject(cfg)}` + (cfg.city ? ` | Cidade/região: ${cfg.city}` : ""),
@@ -151,6 +169,25 @@ export function dataBlock(evaluation: IdeaEvaluation, cfg: StudyConfig): string 
     `VALIDAÇÃO: pagaria R$ ${cfg.monthlyTicket}/mês = ${biz.wtp.toFixed(2)} | ` +
       `30 clientes em 24 meses = ${biz.meta30.toFixed(2)} | ` +
       `preço vs valor = ${biz.price}/2.00 (confiança ${biz.priceConf.toFixed(2)})`,
+  ];
+  if (value) {
+    const paid = value.value.saldoMes > 0 ? "se paga" : "não se paga com esse preço";
+    const payback = value.value.paybackMeses === null ? "nulo" : `${value.value.paybackMeses} meses`;
+    lines.push(
+      "",
+      "VALOR",
+      ...value.premises.map(
+        (premise) => `premissa: ${premise.nome} = ${premise.valor} ${premise.unidade} [${premise.fonte}]`,
+      ),
+      `perda mensal: R$ ${value.value.perdaMes}`,
+      `ganho mensal: R$ ${value.value.ganhoMes}`,
+      `saldo mensal: R$ ${value.value.saldoMes} (${paid})`,
+      `setup: R$ ${value.setupFee} | mensalidade: R$ ${cfg.monthlyTicket}/mês`,
+      `payback: ${payback}`,
+      `retorno em 12 meses: R$ ${value.value.retorno12m}`,
+    );
+  }
+  lines.push(
     "",
     "Escalas: fit 0=exige escala corporativa, 1=exige mudar rotina, 2=resolve o caos sem " +
       "mudar hábito. Venda 0=benefício invisível, 2=ataca perda de dinheiro/reputação " +
@@ -160,12 +197,14 @@ export function dataBlock(evaluation: IdeaEvaluation, cfg: StudyConfig): string 
     "Regras de negócio para este plano: o ticket é TETO, não piso; a meta de clientes é de " +
       "10 a 15 em 24 meses (o 30 medido é upside, não base); nenhum TAM nacional deve ser " +
       "usado como argumento principal.",
-  ].join("\n");
+  );
+  return lines.join("\n");
 }
 
 /**
  * Writes the full strategy document for one evaluated idea.
  * @param evidences evidências do estudo e da própria ideia; o plano cita `[E#]` a partir delas.
+ * @param value bloco VALOR com premissas e números calculados; sem ele o documento sai sem a seção 11 preenchida.
  */
 export async function generateDocument(
   llm: LlmClient,
@@ -173,9 +212,10 @@ export async function generateDocument(
   cfg: StudyConfig,
   brief: string,
   evidences: readonly Evidence[],
+  value?: IdeaValueBlock,
 ): Promise<string> {
   const user =
-    `DADOS MEDIDOS\n${dataBlock(evaluation, cfg)}\nFIM DOS DADOS\n\n` +
+    `DADOS MEDIDOS\n${dataBlock(evaluation, cfg, value)}\nFIM DOS DADOS\n\n` +
     `${evidenceBlock(evidences)}\n\n` +
     `Brief de contexto do nicho:\n${brief}\n\n` +
     "Escreva o documento desta ideia seguindo a estrutura obrigatoria.";

@@ -328,6 +328,35 @@ Métricas de uso, de conversão e de churn.
 3. Medir a linha de base.
 4. Definir o limiar de confiança.
 5. Levar o caso pronto à associação local.
+
+## 11. Proposta de valor e retorno
+
+### 11.1 Proposta em uma frase
+
+Automação que reduz a perda mensal do dono, com conta aberta.
+
+### 11.2 Premissas com fonte
+
+| Premissa | Valor | Unidade | Fonte |
+|---|---|---|---|
+| ocorrências por mês | 20 | ocorrências/mês | INFERENCE |
+| custo por ocorrência | 140 | R$ | INFERENCE |
+
+### 11.3 Escopo de entrega
+
+Consultor solo implanta automação com n8n, WhatsApp e IA em até 2 semanas.
+
+### 11.4 Conta do retorno
+
+Perda mensal, ganho mensal, saldo, setup, payback e retorno em 12 meses calculados pelo código a partir das premissas. Sem evidência, a conta inteira é estimativa a confirmar.
+
+### 11.5 Primeira mensagem
+
+Mensagem de abordagem ao dono com a dor quantificada e o payback.
+
+### 11.6 Critério de descarte
+
+Se as premissas não se confirmarem na conversa, descarte a ideia.
 `;
 }
 

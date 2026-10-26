@@ -170,11 +170,12 @@ describe("dataBlock", () => {
 });
 
 describe("prompts", () => {
-  test("document structure is the ten mandated sections", () => {
-    expect(DOC_SECTIONS).toHaveLength(10);
+  test("document structure is the eleven mandated sections", () => {
+    expect(DOC_SECTIONS).toHaveLength(11);
     for (const title of DOC_SECTIONS) {
       expect(DOC_SYSTEM_PROMPT).toContain(title);
     }
+    expect(DOC_SECTIONS[10]).toBe("11. Proposta de valor e retorno");
     expect(DOC_LITERALS).toEqual(["Tier", "SWOT", "Business Model Canvas", "Porter", "Próximos passos"]);
   });
 });

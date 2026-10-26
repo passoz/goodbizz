@@ -9,12 +9,13 @@ import { scopedKey } from "./cache.ts";
 import type { StudyCache } from "./cache.ts";
 import { loadIdeas } from "./dados.ts";
 import { evaluateIdea } from "./evaluate.ts";
-import { generateBrief, generateDocument, generateIdeas } from "./generation.ts";
+import { generateBrief, generateDocument, generateIdeas, type IdeaValueBlock } from "./generation.ts";
 import { DOC_LITERALS } from "./prompts.ts";
 import { fullHtml, mdToHtml } from "./render.ts";
 import { folderName, sourcesSection } from "./reports.ts";
 import { evidenceHash, evidencesFor, mapLimit, researchIdeas, researchStudy } from "./research.ts";
 import { requestPremises, type PremisesResult } from "./premises.ts";
+import { calculateValue } from "./value.ts";
 import { summarizeStudy } from "./summary.ts";
 import { checkDocument } from "./verification.ts";
 import type { Logger, LlmClient, DeciderClient, ArtifactFile, SearchClient } from "../domain/ports.ts";
@@ -130,6 +131,31 @@ async function requestIdeaPremises(
   });
   progress(`[3/7] Declarei as premissas de ${collected.length} ideias com fonte em evidência ou INFERENCE`);
   return collected;
+}
+
+/**
+ * Monta o bloco VALOR de uma ideia a partir das premissas validadas. Sem premissas (falha
+ * dupla), devolve `undefined` e o documento sai sem a conta. O setup é fixo em 1500 até a
+ * task 1.8 parametrizar o `setupFee` no estudo.
+ */
+export function valueBlockFor(
+  premises: readonly IdeaPremises[],
+  ideaName: string,
+  monthlyTicket: number,
+): IdeaValueBlock | undefined {
+  const found = premises.find((entry) => entry.ideaName === ideaName)?.premises;
+  if (found === null || found === undefined) return undefined;
+  const setupFee = 1500;
+  return {
+    premises: found.fatores,
+    value: calculateValue({
+      factors: found.fatores.map((factor) => factor.valor),
+      recovery: found.recuperacao,
+      setupFee,
+      monthlyTicket,
+    }),
+    setupFee,
+  };
 }
 
 /** O que a adição conhece do estudo: o brief já pago e as ideias que já existem. */
@@ -279,7 +305,14 @@ export async function generateAddition(
     );
     let text = await cache.get<string>(key);
     if (text === null) {
-      text = await generateDocument(llm, evaluation, cfg, brief, own);
+      text = await generateDocument(
+        llm,
+        evaluation,
+        cfg,
+        brief,
+        own,
+        valueBlockFor(additionPremises, evaluation.name, cfg.monthlyTicket),
+      );
       await cache.put(key, text);
     }
     text = `${text.replace(/\r\n/g, "\n").trim()}\n`;
@@ -489,7 +522,14 @@ export async function generateStudy(cfg: StudyConfig, deps: GenerateStudyDeps): 
     );
     let text = await cache.get<string>(key);
     if (text === null) {
-      text = await generateDocument(llm, evaluation, cfg, brief, own);
+      text = await generateDocument(
+        llm,
+        evaluation,
+        cfg,
+        brief,
+        own,
+        valueBlockFor(premises, evaluation.name, cfg.monthlyTicket),
+      );
       await cache.put(key, text);
     }
     text = `${text.replace(/\r\n/g, "\n").trim()}\n`;
