@@ -273,7 +273,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.12] A API e o ranking mostram perda mensal e payback
+### [x] [1.12] A API e o ranking mostram perda mensal e payback
 
 **Requirement:** QR-002
 **Depends on:** 1.11
