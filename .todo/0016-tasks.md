@@ -250,7 +250,7 @@
 **Visual:** N/A
 **Documentation:** N/A
 
-### [ ] [1.11] O tabelão, o CSV e o dados.json mostram perda e payback
+### [x] [1.11] O tabelão, o CSV e o dados.json mostram perda e payback
 
 **Requirement:** FR-009
 **Depends on:** none
