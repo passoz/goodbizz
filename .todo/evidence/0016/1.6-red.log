@@ -1,0 +1,22 @@
+TASK: 1.6
+CHECK: RED
+COMMAND: bun --config=tests/bunfig.focus.toml test tests/value-guardrail-cases.test.ts -t FR-006
+EXIT: 1
+OUTPUT:
+bun test v1.4.2 (744846f84)
+
+tests/value-guardrail-cases.test.ts:
+
+# Unhandled error between tests
+-------------------------------
+SyntaxError: Export named 'extractUnsourcedNumbers' not found in module '/home/passoz/dev/goodbizz/src/application/verification.ts'.
+-------------------------------
+
+
+ 0 pass
+ 1 fail
+ 1 error
+Ran 1 test across 1 file. [5.00ms]
+
+VERDICT: FAIL
+CHAIN_HASH: fc7c635c9e27df3442ffc5b5b1b2561a9647cdce847b97542984eed1276c7903
