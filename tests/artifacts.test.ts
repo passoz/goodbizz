@@ -49,6 +49,9 @@ const config: StudyConfig = {
   deciderUrl: "",
   deciderModel: "",
   deciderKey: "",
+  mockSearch: true,
+  searchBaseUrl: "https://api.tavily.com",
+  searchApiKey: "",
 };
 
 interface EvaluationInit {
@@ -292,7 +295,7 @@ describe("evaluation <-> json", () => {
 
 describe("serializeDados", () => {
   test("identado com 1 espaco e sem o brief", () => {
-    const text = serializeDados(config, brief, summary, data);
+    const text = serializeDados(config, brief, summary, data, []);
     expect(text).toContain('\n "config": {');
     expect(text).not.toContain(brief);
     expect(JSON.parse(text)["ideias"]).toHaveLength(2);

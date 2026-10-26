@@ -40,6 +40,10 @@ function env(overrides: Partial<Env> = {}): Env {
     GOODBIZZ_PRICE_DECIDER_INPUT_PER_MTOK: 0.042,
     GOODBIZZ_PRICE_DECIDER_OUTPUT_PER_MTOK: 0,
     GOODBIZZ_USD_BRL: 0,
+    GOODBIZZ_PRICE_SEARCH_PER_1K: 0,
+    SEARCH_API_URL: "https://api.tavily.com",
+    SEARCH_API_KEY: "",
+    GOODBIZZ_MOCK_SEARCH: false,
     ...overrides,
   };
 }

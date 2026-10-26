@@ -13,12 +13,13 @@ const PRICES: PriceTable = {
   llmOutputPerMTok: 0.28,
   deciderInputPerMTok: 0,
   deciderOutputPerMTok: 0,
+  searchPer1k: 0,
   usdBrl: 0,
 };
 
 function usage(llm: Partial<StudyUsage["llm"]> = {}, decider: Partial<StudyUsage["llm"]> = {}): StudyUsage {
   const base = { calls: 1, inputTokens: 0, cachedInputTokens: 0, outputTokens: 0 };
-  return { llm: { ...base, ...llm }, decider: { ...base, ...decider } };
+  return { llm: { ...base, ...llm }, decider: { ...base, ...decider }, search: { ...base } };
 }
 
 describe("estimateCost", () => {

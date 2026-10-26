@@ -73,7 +73,7 @@ async function captureRunConfig(): Promise<StudyConfig> {
     artifactsRoot: tempDir("goodbizz-timeout-"),
     clientsFor: (cfg) => {
       captured.push(cfg);
-      return { llm: new LlmMock(), decider: new DeciderMock() };
+      return { llm: new LlmMock(), decider: new DeciderMock(), search: new SearchMock() };
     },
   });
   const record = await service.create(resolveStudyConfig({ niche: "clinicas", numIdeas: 2 }));
@@ -126,7 +126,7 @@ describe("limite por chamada de IA na execução do estudo", () => {
       timeout: 900,
       clientsFor: (cfg) => {
         captured.push(cfg);
-        return { llm: new LlmMock(), decider: new DeciderMock() };
+        return { llm: new LlmMock(), decider: new DeciderMock(), search: new SearchMock() };
       },
     });
     const record = await service.create(resolveStudyConfig({ niche: "clinicas", numIdeas: 2 }));
@@ -150,6 +150,7 @@ describe("identidade estavel por ideia", () => {
       { name: "Agenda Vazada", sector: "s", description: "d" },
       new DeciderMock(),
       cfg,
+      [],
     );
 
     expect(typeof evaluated.id).toBe("string");
@@ -160,8 +161,8 @@ describe("identidade estavel por ideia", () => {
     const cfg = resolveStudyConfig({ niche: "clinicas", numIdeas: 1, mock: true });
     const decider = new DeciderMock();
 
-    const first = await evaluateIdea({ name: "Agenda Vazada", sector: "s", description: "d" }, decider, cfg);
-    const second = await evaluateIdea({ name: "Agenda Vazada", sector: "s", description: "d" }, decider, cfg);
+    const first = await evaluateIdea({ name: "Agenda Vazada", sector: "s", description: "d" }, decider, cfg, []);
+    const second = await evaluateIdea({ name: "Agenda Vazada", sector: "s", description: "d" }, decider, cfg, []);
 
     // Mesmo name: so o id separa as duas linhas.
     expect(first.name).toBe(second.name);
@@ -182,9 +183,7 @@ describe("identidade estavel por ideia", () => {
     const result = await generateStudy(cfg, {
       llm: new LlmMock(),
       decider: new DeciderMock(),
-      cache,
-      logger: silentLogger(),
-search: new SearchMock(),
+      search: new SearchMock(),
       cache,
       logger: silentLogger(),
     });
@@ -207,6 +206,7 @@ search: new SearchMock(),
     const result = await generateStudy(cfg, {
       llm: new LlmMock(),
       decider: new DeciderMock(),
+      search: new SearchMock(),
       cache: new StudyCache(new SqliteCacheStore(handle.db)),
       logger: silentLogger(),
     });

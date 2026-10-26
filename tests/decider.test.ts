@@ -36,6 +36,9 @@ function makeConfig(overrides: Partial<StudyConfig> = {}): StudyConfig {
     deciderUrl: "",
     deciderModel: "",
     deciderKey: "",
+  mockSearch: true,
+  searchBaseUrl: "https://api.tavily.com",
+  searchApiKey: "",
     ...overrides,
   };
 }

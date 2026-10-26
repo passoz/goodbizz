@@ -37,6 +37,7 @@ async function runMockStudy(niche: string, ideas: number) {
     cache: new StudyCache(new SqliteCacheStore(db.db)),
     llm: new LlmMock(),
     decider: new DeciderMock(),
+    search: new SearchMock(),
     logger,
     artifactsRoot,
   });

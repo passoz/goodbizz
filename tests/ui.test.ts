@@ -539,6 +539,7 @@ describe("marca, renomear, progresso humano, falha e consumo", () => {
       usage: {
         llm: { calls: 3, inputTokens: 12480, cachedInputTokens: 2000, outputTokens: 5000 },
         decider: { calls: 42, inputTokens: 900, cachedInputTokens: 0, outputTokens: 300 },
+        search: { calls: 0, inputTokens: 0, cachedInputTokens: 0, outputTokens: 0 },
       },
     });
     const body = await (await harness.app.request(`/studies/${study.id}`)).text();
@@ -568,6 +569,7 @@ describe("marca, renomear, progresso humano, falha e consumo", () => {
       usage: {
         llm: { calls: 2, inputTokens: 200000, cachedInputTokens: 0, outputTokens: 100000 },
         decider: { calls: 5, inputTokens: 0, cachedInputTokens: 0, outputTokens: 0 },
+        search: { calls: 0, inputTokens: 0, cachedInputTokens: 0, outputTokens: 0 },
       },
     });
     const noUsage = await harness.service.create(resolveStudyConfig({ niche: "padarias", mock: true }));

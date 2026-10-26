@@ -60,6 +60,7 @@ function makeRecord(): StudyRecord {
     evaluations: [],
     summary: null,
     usage: null,
+    evidences: [],
   };
 }
 

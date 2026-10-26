@@ -7,6 +7,7 @@ import { StudyService } from "../src/application/study-service.ts";
 import { resolveStudyConfig } from "../src/config/runtime.ts";
 import { SqliteCacheStore } from "../src/infrastructure/cache-repository.ts";
 import { DeciderMock } from "../src/infrastructure/decider-mock.ts";
+import { SearchMock } from "../src/infrastructure/search-mock.ts";
 import { buildApiApp } from "../src/infrastructure/http/api.ts";
 import { SqliteStudyRepository } from "../src/infrastructure/repositories.ts";
 import { makeHarness, silentLogger, type TestHarness } from "./helpers.ts";
@@ -318,6 +319,7 @@ describe("consumo e custo estimado", () => {
       usage: {
         llm: { calls: 2, inputTokens: 1_000_000, cachedInputTokens: 0, outputTokens: 0 },
         decider: { calls: 7, inputTokens: 0, cachedInputTokens: 0, outputTokens: 0 },
+        search: { calls: 0, inputTokens: 0, cachedInputTokens: 0, outputTokens: 0 },
       },
     });
 

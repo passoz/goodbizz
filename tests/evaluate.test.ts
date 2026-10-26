@@ -79,6 +79,9 @@ function studyConfig(painMethod: StudyConfig["painMethod"] = "choice"): StudyCon
     deciderUrl: "",
     deciderModel: "",
     deciderKey: "",
+  mockSearch: true,
+  searchBaseUrl: "https://api.tavily.com",
+  searchApiKey: "",
   };
 }
 
