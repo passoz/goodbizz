@@ -153,6 +153,17 @@ function documentFixture(user: string): string {
 
   const lines: Record<string, string> = {};
   for (const line of rawData.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (
+      trimmed.startsWith("premissa:") ||
+      trimmed.startsWith("perda mensal:") ||
+      trimmed.startsWith("ganho mensal:") ||
+      trimmed.startsWith("saldo mensal:") ||
+      trimmed.startsWith("setup:") ||
+      trimmed.startsWith("payback:") ||
+      trimmed.startsWith("retorno em 12 meses:")
+    )
+      continue;
     const colon = line.indexOf(":");
     if (colon < 0) continue;
     lines[line.slice(0, colon).trim()] = line.slice(colon + 1).trim();
@@ -176,6 +187,43 @@ function documentFixture(user: string): string {
   const pain = complete("tipo de dor", complete("pain type", "-"));
   const algo = complete("ALGORITMO DA DOR", complete("PAIN ALGORITHM", "-"));
   const val = complete("VALIDAÇÃO", complete("VALIDATION", "-"));
+  const valorLines = rawData
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(
+      (line) =>
+        line.startsWith("premissa:") ||
+        line.startsWith("perda mensal:") ||
+        line.startsWith("ganho mensal:") ||
+        line.startsWith("saldo mensal:") ||
+        line.startsWith("setup:") ||
+        line.startsWith("payback:") ||
+        line.startsWith("retorno em 12 meses:"),
+    );
+  const premiseRows = rawData
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith("premissa:"))
+    .map((line) => {
+      const body = line.slice("premissa:".length).trim();
+      const source = (/\[(E\d+|INFERENCE)\]/.exec(body)?.[1] ?? "INFERENCE").trim();
+      const left = body.replace(/\[.*?\]/, "").trim();
+      const name = beforeFirst(left, "=").trim() || "premissa";
+      const rest = afterFirst(left, "=")?.trim() ?? "";
+      const value = beforeFirst(rest, " ").trim() || rest;
+      const unit = afterFirst(rest, " ")?.trim() ?? "";
+      return `| ${name} | ${value} | ${unit} | ${source} |`;
+    });
+  const accountLine = (prefix: string): string => {
+    const found = valorLines.find((line) => line.startsWith(prefix));
+    return found ?? `${prefix} -`;
+  };
+  const lossLine = accountLine("perda mensal:");
+  const gainLine = accountLine("ganho mensal:");
+  const balanceLine = accountLine("saldo mensal:");
+  const setupLine = accountLine("setup:");
+  const paybackLine = accountLine("payback:");
+  const returnLine = accountLine("retorno em 12 meses:");
   let ticket = "300";
   for (const part of val.split("R$ ")) {
     if (part.includes("por mês") || part.includes("por mes") || part.includes("per month")) {
@@ -339,8 +387,7 @@ Automação que reduz a perda mensal do dono, com conta aberta.
 
 | Premissa | Valor | Unidade | Fonte |
 |---|---|---|---|
-| ocorrências por mês | 20 | ocorrências/mês | INFERENCE |
-| custo por ocorrência | 140 | R$ | INFERENCE |
+${premiseRows.length > 0 ? premiseRows.join("\n") : "| - | - | - | INFERENCE |"}
 
 ### 11.3 Escopo de entrega
 
@@ -348,7 +395,14 @@ Consultor solo implanta automação com n8n, WhatsApp e IA em até 2 semanas.
 
 ### 11.4 Conta do retorno
 
-Perda mensal, ganho mensal, saldo, setup, payback e retorno em 12 meses calculados pelo código a partir das premissas. Sem evidência, a conta inteira é estimativa a confirmar.
+${lossLine}
+${gainLine}
+${balanceLine}
+${setupLine}
+${paybackLine}
+${returnLine}
+
+Os números acima repetem o bloco VALOR calculado pelo código a partir das premissas. Sem evidência, a conta inteira é estimativa a confirmar.
 
 ### 11.5 Primeira mensagem
 
@@ -369,14 +423,20 @@ function mockPremises(user: string): {
   fatores: Array<{ nome: string; valor: number; unidade: string; fonte: string }>;
   recuperacao: number;
 } {
+  const ideaName = (/^Ideia: (.+)$/m.exec(user)?.[1] ?? "ideia").trim();
   let seed = 0;
-  for (const char of user) seed = (seed * 31 + char.charCodeAt(0)) % 1000;
+  for (const char of ideaName) seed = (seed * 31 + char.charCodeAt(0)) % 1000;
   const first = 10 + (seed % 20);
   const second = 100 + ((seed * 7) % 100);
+  const cited = [...user.matchAll(/\b(E\d+)\b/g)]
+    .map((match) => match[1] as string)
+    .filter((id, index, all) => all.indexOf(id) === index);
+  const firstSource = cited[0] ?? "INFERENCE";
+  const secondSource = cited[1] ?? "INFERENCE";
   return {
     fatores: [
-      { nome: "ocorrências por mês", valor: first, unidade: "ocorrências/mês", fonte: "INFERENCE" },
-      { nome: "custo por ocorrência", valor: second, unidade: "R$", fonte: "INFERENCE" },
+      { nome: "ocorrências por mês", valor: first, unidade: "ocorrências/mês", fonte: firstSource },
+      { nome: "custo por ocorrência", valor: second, unidade: "R$", fonte: secondSource },
     ],
     recuperacao: 0.5,
   };
