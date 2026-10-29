@@ -22,7 +22,8 @@ function mockLlm(first: string, second: string): LlmClient {
   let docCalls = 0;
   const inner = {
     generateText: async (system: string) => {
-      if (system.includes("IDEIAS")) return JSON.stringify([{ nome: "Ideia A", setor: "S", descricao: "Faz X." }]);
+      if (system.includes("IDEIAS"))
+        return JSON.stringify([{ nome: "Ideia A", setor: "S", descricao: "Faz X." }]);
       if (system.includes("PREMISSAS")) {
         return JSON.stringify({
           fatores: [

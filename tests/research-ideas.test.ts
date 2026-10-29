@@ -33,7 +33,14 @@ async function run() {
       if (system.includes("PALAVRA-CHAVE: EVIDENCIAS")) {
         const url = /URL: (\S+)/.exec(user)?.[1] ?? "";
         return Promise.resolve(
-          JSON.stringify([{ tipo: "concorrente", afirmacao: "existe concorrente", trecho: "Concorrente vende por R$ 150.", url }]),
+          JSON.stringify([
+            {
+              tipo: "concorrente",
+              afirmacao: "existe concorrente",
+              trecho: "Concorrente vende por R$ 150.",
+              url,
+            },
+          ]),
         );
       }
       return mock.generateText(system, user);
@@ -44,13 +51,22 @@ async function run() {
     search(query) {
       queries.push(query);
       return Promise.resolve([
-        { title: query, url: `https://busca.test/${encodeURIComponent(query)}`, content: "Concorrente vende por R$ 150." },
+        {
+          title: query,
+          url: `https://busca.test/${encodeURIComponent(query)}`,
+          content: "Concorrente vende por R$ 150.",
+        },
       ]);
     },
   };
   const handle = openMigratedDatabase(":memory:");
   const cfg = {
-    ...resolveStudyConfig({ niche: "distribuidora de bebidas", city: "Arraial do Cabo", numIdeas: 2, mock: true }),
+    ...resolveStudyConfig({
+      niche: "distribuidora de bebidas",
+      city: "Arraial do Cabo",
+      numIdeas: 2,
+      mock: true,
+    }),
     outputDir: mkdtempSync(join(tmpdir(), "goodbizz-ideas-")),
   };
   const result = await generateStudy(cfg, {
@@ -86,6 +102,8 @@ describe("pesquisa por ideia", () => {
       result.evidences.map((_evidence, index) => `E${index + 1}`),
     );
     const dados = JSON.parse(String(result.files.find((file) => file.path === "dados.json")?.content));
-    expect((dados.evidencias as Array<{ ideia: string }>).filter((row) => row.ideia === "Alerta de estoque")).toHaveLength(2);
+    expect(
+      (dados.evidencias as Array<{ ideia: string }>).filter((row) => row.ideia === "Alerta de estoque"),
+    ).toHaveLength(2);
   });
 });

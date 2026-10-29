@@ -33,7 +33,12 @@ function requires(label: string, value: string): void {
 /** Valida e normaliza o que a borda mandou: a busca nao tem modelo; os outros tipos exigem. */
 function validate(input: ProviderProfileInput | Partial<ProviderProfileInput>): void {
   if (input.name !== undefined) requires("o nome do provedor", clean(input.name));
-  if (input.kind !== undefined && input.kind !== "llm" && input.kind !== "decider" && input.kind !== "search") {
+  if (
+    input.kind !== undefined &&
+    input.kind !== "llm" &&
+    input.kind !== "decider" &&
+    input.kind !== "search"
+  ) {
     throw new ValidationError("tipo de provedor inválido");
   }
   if (input.url !== undefined) requires("a URL do provedor", clean(input.url));

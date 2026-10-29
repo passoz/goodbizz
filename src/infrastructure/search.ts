@@ -58,7 +58,8 @@ function statusMessage(status: number, detail: string): string {
       suffix
     );
   }
-  if (status >= 500) return `O provedor de busca devolveu erro interno (5xx). Tente de novo em alguns minutos.${suffix}`;
+  if (status >= 500)
+    return `O provedor de busca devolveu erro interno (5xx). Tente de novo em alguns minutos.${suffix}`;
   return `O provedor de busca recusou a busca (HTTP ${status}).${suffix}`;
 }
 
@@ -88,7 +89,12 @@ function parseResults(body: unknown): SearchResult[] | null {
 
 export class SearchHttp implements SearchClient {
   private readonly url: string;
-  private readonly consumed: ProviderUsage = { calls: 0, inputTokens: 0, cachedInputTokens: 0, outputTokens: 0 };
+  private readonly consumed: ProviderUsage = {
+    calls: 0,
+    inputTokens: 0,
+    cachedInputTokens: 0,
+    outputTokens: 0,
+  };
 
   /**
    * @param timeout segundos por chamada.
@@ -110,7 +116,10 @@ export class SearchHttp implements SearchClient {
   }
 
   async search(query: string): Promise<SearchResult[]> {
-    const headers: Record<string, string> = { "Content-Type": "application/json", "User-Agent": "goodbizz/2.0" };
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      "User-Agent": "goodbizz/2.0",
+    };
     if (this.key.trim() !== "") headers["Authorization"] = `Bearer ${this.key.trim()}`;
     const body = JSON.stringify({ query, max_results: SEARCH_MAX_RESULTS, search_depth: "basic" });
     let last: SearchError | null = null;

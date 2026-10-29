@@ -113,7 +113,9 @@ function evidenceMarkdown(cfg: StudyConfig, evidences: readonly Evidence[]): str
     group.push(evidence);
     groups.set(evidence.ideia, group);
   }
-  for (const [idea, group] of [...groups].sort(([left], [right]) => (left === "" ? -1 : right === "" ? 1 : 0))) {
+  for (const [idea, group] of [...groups].sort(([left], [right]) =>
+    left === "" ? -1 : right === "" ? 1 : 0,
+  )) {
     lines.push(idea === "" ? "## Evidências do estudo" : `## Evidências da ideia ${idea}`, "");
     for (const evidence of group) lines.push(evidenceEntry(evidence), "");
   }

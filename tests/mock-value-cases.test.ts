@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { LlmMock } from "../src/infrastructure/llm-mock.ts";
 import { PREMISES_SYSTEM_PROMPT } from "../src/application/premises.ts";
-import { extractUnsourcedNumbers } from "../src/application/verification.ts"
+import { extractUnsourcedNumbers } from "../src/application/verification.ts";
 import { calculateValue } from "../src/application/value.ts";
 
 const PREMISE_USER =
@@ -14,7 +14,9 @@ describe("QR-003: casos do modo simulado com valor", () => {
       fatores: Array<{ nome: string; valor: number }>;
       recuperacao: number;
     };
-    const second = JSON.parse(await new LlmMock().generateText(PREMISES_SYSTEM_PROMPT, PREMISE_USER)) as typeof first;
+    const second = JSON.parse(
+      await new LlmMock().generateText(PREMISES_SYSTEM_PROMPT, PREMISE_USER),
+    ) as typeof first;
     expect(first).toEqual(second);
     expect(first.fatores.length).toBeGreaterThanOrEqual(2);
     const expected = calculateValue({

@@ -21,7 +21,9 @@ async function queriesFor(plannerAnswer: string): Promise<{ queries: string[]; i
   const mock = new LlmMock();
   const llm: LlmClient = {
     generateText: (system, user) =>
-      system.includes("PALAVRA-CHAVE: BUSCAS") ? Promise.resolve(plannerAnswer) : mock.generateText(system, user),
+      system.includes("PALAVRA-CHAVE: BUSCAS")
+        ? Promise.resolve(plannerAnswer)
+        : mock.generateText(system, user),
   };
   const queries: string[] = [];
   const search: SearchClient = {

@@ -94,7 +94,13 @@ describe("torneio no pipeline", () => {
   test("pasta 01: a ideia que o decisor sempre escolhe fica em primeiro com media 1.0", async () => {
     const { handle, cache, cfg } = setup(EIGHT);
     const decider = new ControlledDecider(EIGHT_SCORES, preferFiado);
-    const result = await generateStudy(cfg, { llm: new LlmMock(), decider, search: new SearchMock(), cache, logger: silentLogger() });
+    const result = await generateStudy(cfg, {
+      llm: new LlmMock(),
+      decider,
+      search: new SearchMock(),
+      cache,
+      logger: silentLogger(),
+    });
 
     const fiado = result.evaluations.find((item) => item.name === "Fiado Digital");
     expect(Math.min(...result.evaluations.map((item) => item.index))).toBe(fiado?.index ?? -1);
@@ -110,7 +116,13 @@ describe("torneio no pipeline", () => {
   test("pasta 01: o modo --so-avaliar tambem ordena pelo torneio", async () => {
     const { handle, cache, cfg } = setup(EIGHT, { evaluateOnly: true });
     const decider = new ControlledDecider(EIGHT_SCORES, preferFiado);
-    const result = await generateStudy(cfg, { llm: new LlmMock(), decider, search: new SearchMock(), cache, logger: silentLogger() });
+    const result = await generateStudy(cfg, {
+      llm: new LlmMock(),
+      decider,
+      search: new SearchMock(),
+      cache,
+      logger: silentLogger(),
+    });
     expect(result.summary.ordered[0]?.name).toBe("Fiado Digital");
     expect(result.evaluations.every((item) => (item.tournament?.games ?? 0) > 0)).toBe(true);
     handle.sqlite.close();
@@ -121,7 +133,13 @@ describe("torneio no pipeline", () => {
     const { handle, cache, cfg } = setup(names);
     // Sempre A: as duas ordens se anulam e toda ideia termina com 0.5 por partida.
     const decider = new ControlledDecider({ Beta: 1.5, Alfa: 1.5, Gama: 1.8 }, () => "A");
-    const result = await generateStudy(cfg, { llm: new LlmMock(), decider, search: new SearchMock(), cache, logger: silentLogger() });
+    const result = await generateStudy(cfg, {
+      llm: new LlmMock(),
+      decider,
+      search: new SearchMock(),
+      cache,
+      logger: silentLogger(),
+    });
 
     expect(result.summary.ordered.map((item) => item.tournament?.score)).toEqual([0.5, 0.5, 0.5]);
     expect(result.summary.ordered.map((item) => item.name)).toEqual(["Gama", "Alfa", "Beta"]);
@@ -132,7 +150,13 @@ describe("torneio no pipeline", () => {
   test("adicao: o torneio roda de novo sobre todas as ideias", async () => {
     const { handle, cache, cfg } = setup(["Agenda Viva", "Fiado Digital", "Rota Certa"]);
     const decider = new ControlledDecider(EIGHT_SCORES, preferFiado);
-    const study = await generateStudy(cfg, { llm: new LlmMock(), decider, search: new SearchMock(), cache, logger: silentLogger() });
+    const study = await generateStudy(cfg, {
+      llm: new LlmMock(),
+      decider,
+      search: new SearchMock(),
+      cache,
+      logger: silentLogger(),
+    });
 
     const added = await generateAddition(
       { ...cfg, ideasFile: "" },

@@ -45,12 +45,15 @@ function llm(): LlmClient {
   const mock = new LlmMock();
   return {
     generateText(system, user) {
-      if (system.includes("PALAVRA-CHAVE: BUSCAS")) return Promise.resolve(JSON.stringify(["m1", "m2", "m3", "m4", "m5", "m6"]));
+      if (system.includes("PALAVRA-CHAVE: BUSCAS"))
+        return Promise.resolve(JSON.stringify(["m1", "m2", "m3", "m4", "m5", "m6"]));
       if (system.includes("PALAVRA-CHAVE: IDEIAS")) return Promise.resolve(JSON.stringify(IDEAS));
       if (system.includes("PALAVRA-CHAVE: EVIDENCIAS")) {
         const url = /URL: (\S+)/.exec(user)?.[1] ?? "";
         const trecho = /CONTEÚDO:\n(.+)/.exec(user)?.[1] ?? "";
-        return Promise.resolve(JSON.stringify([{ tipo: "mercado", afirmacao: `fato de ${url}`, trecho, url }]));
+        return Promise.resolve(
+          JSON.stringify([{ tipo: "mercado", afirmacao: `fato de ${url}`, trecho, url }]),
+        );
       }
       return mock.generateText(system, user);
     },
@@ -68,7 +71,11 @@ function search(mode: "ok" | "falha"): SearchClient {
       const relevant = query === "m1" || query.includes("concorrentes");
       if (!relevant) return Promise.resolve([]);
       return Promise.resolve([
-        { title: query, url: `https://fonte.test/${encodeURIComponent(query)}`, content: `Página sobre ${query}.` },
+        {
+          title: query,
+          url: `https://fonte.test/${encodeURIComponent(query)}`,
+          content: `Página sobre ${query}.`,
+        },
       ]);
     },
   };
@@ -82,7 +89,13 @@ async function run(cache: StudyCache, version: "ok" | "falha") {
     evaluateOnly: true,
     concurrency: 1,
   };
-  const result = await generateStudy(cfg, { llm: llm(), decider, search: search(version), cache, logger: QUIET });
+  const result = await generateStudy(cfg, {
+    llm: llm(),
+    decider,
+    search: search(version),
+    cache,
+    logger: QUIET,
+  });
   return { result, states };
 }
 

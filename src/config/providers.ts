@@ -23,7 +23,8 @@ export interface ProviderConfig {
 
 /** Perfil ativo de um tipo, ou `null` quando a vez é do ambiente. */
 export function activeProfile(settings: ProviderSettings, kind: ProviderKind): ProviderProfile | null {
-  const id = kind === "llm" ? settings.activeLlm : kind === "decider" ? settings.activeDecider : settings.activeSearch;
+  const id =
+    kind === "llm" ? settings.activeLlm : kind === "decider" ? settings.activeDecider : settings.activeSearch;
   if (typeof id !== "string" || id.length === 0) return null;
   return (settings.profiles ?? []).find((profile) => profile.id === id && profile.kind === kind) ?? null;
 }

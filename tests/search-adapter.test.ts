@@ -47,22 +47,36 @@ describe("adaptador de busca Tavily", () => {
         ],
       }),
     );
-    const result = await probeProvider({ kind: "search", url: "https://api.tavily.test/", model: "", apiKey: KEY });
+    const result = await probeProvider({
+      kind: "search",
+      url: "https://api.tavily.test/",
+      model: "",
+      apiKey: KEY,
+    });
     expect(seen).toHaveLength(1);
     expect(seen[0]?.url).toBe("https://api.tavily.test/search");
     expect(seen[0]?.method).toBe("POST");
     expect(seen[0]?.headers["authorization"]).toBe(`Bearer ${KEY}`);
     expect(seen[0]?.body).toMatchObject({ max_results: 5, search_depth: "basic" });
     const body = seen[0]?.body;
-    expect(body !== null && typeof body === "object" && "query" in body && typeof body.query === "string").toBe(true);
+    expect(
+      body !== null && typeof body === "object" && "query" in body && typeof body.query === "string",
+    ).toBe(true);
     expect(result.ok).toBe(true);
     expect(result.detail).toContain("2 resultado");
     expect(JSON.stringify(result)).not.toContain("SEGREDO");
   });
 
   test("QR-002: 401 vira a frase da credencial de busca com o detalhe cru e sem a chave", async () => {
-    fakeFetch(() => Response.json({ detail: { error: `Unauthorized: invalid API key ${KEY}` } }, { status: 401 }));
-    const result = await probeProvider({ kind: "search", url: "https://api.tavily.test", model: "", apiKey: KEY });
+    fakeFetch(() =>
+      Response.json({ detail: { error: `Unauthorized: invalid API key ${KEY}` } }, { status: 401 }),
+    );
+    const result = await probeProvider({
+      kind: "search",
+      url: "https://api.tavily.test",
+      model: "",
+      apiKey: KEY,
+    });
     expect(result.ok).toBe(false);
     expect(result.status).toBe(401);
     expect(result.detail).toContain("credencial");
@@ -74,13 +88,23 @@ describe("adaptador de busca Tavily", () => {
 
   test("QR-002: 429 vira a frase de limite de uso e rede vira a frase de rede", async () => {
     fakeFetch(() => Response.json({ detail: { error: "rate limit exceeded" } }, { status: 429 }));
-    const limited = await probeProvider({ kind: "search", url: "https://api.tavily.test", model: "", apiKey: KEY });
+    const limited = await probeProvider({
+      kind: "search",
+      url: "https://api.tavily.test",
+      model: "",
+      apiKey: KEY,
+    });
     expect(limited.ok).toBe(false);
     expect(limited.detail).toContain("limite de uso");
     expect(limited.detail).toContain("rate limit exceeded");
 
     fakeFetch(() => Promise.reject(new TypeError("fetch failed: getaddrinfo ENOTFOUND api.tavily.test")));
-    const offline = await probeProvider({ kind: "search", url: "https://api.tavily.test", model: "", apiKey: KEY });
+    const offline = await probeProvider({
+      kind: "search",
+      url: "https://api.tavily.test",
+      model: "",
+      apiKey: KEY,
+    });
     expect(offline.ok).toBe(false);
     expect(offline.status).toBeNull();
     expect(offline.detail).toContain("rede ou DNS");

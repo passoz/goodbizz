@@ -13,14 +13,15 @@ coverage/
 *.db-shm
 *.db-wal
 
+# Artefatos internos de planejamento e do harness (não versionados)
+.pwn/
+.todo/
+.prompts/
+.sources/
+.specs/*
+!.specs/system.json
+
 # pwn (runtime do harness)
-.pwn/sandboxes/
-.pwn/metrics.jsonl
-.pwn/RUN-*.jsonl
-.pwn/learnings.json
-.pwn/gate-cache/
-# chave de assinatura do cache de gates (ver docs/MANUAL.md): local e secreta
-.pwn/.verifier_key
 .piwerness
 
 # Ambientes virtuais Python (baseline de referencia)
@@ -44,6 +45,9 @@ coleta-*/
 /estudo-completo.pdf
 *.pdf
 *.html
+
+# Estudos gerados fora de GOODBIZZ_STUDIES_DIR (testes e execuções locais)
+/*-*-*-*-*/
 
 # IDEs e editores
 .vscode/

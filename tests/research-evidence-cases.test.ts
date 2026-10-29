@@ -58,9 +58,20 @@ async function run(scenario: Scenario) {
   return { result, prompts };
 }
 
-const PAGE: SearchResult = { title: "Pão", url: "https://padaria.test/pao", content: "O pão francês custa R$ 18 o quilo." };
+const PAGE: SearchResult = {
+  title: "Pão",
+  url: "https://padaria.test/pao",
+  content: "O pão francês custa R$ 18 o quilo.",
+};
 const LITERAL = JSON.stringify([
-  { tipo: "preco", afirmacao: "preço do pão", trecho: "O pão francês custa R$ 18 o quilo.", url: PAGE.url, valor: 18, unidade: "R$/kg" },
+  {
+    tipo: "preco",
+    afirmacao: "preço do pão",
+    trecho: "O pão francês custa R$ 18 o quilo.",
+    url: PAGE.url,
+    valor: 18,
+    unidade: "R$/kg",
+  },
 ]);
 
 describe("extração de evidências", () => {
@@ -70,7 +81,9 @@ describe("extração de evidências", () => {
       extractor: (_user, attempt) => (attempt === 1 ? "sem json aqui" : LITERAL),
     });
     expect(prompts).toHaveLength(2);
-    expect(result.evidences.map((evidence) => evidence.trecho)).toEqual(["O pão francês custa R$ 18 o quilo."]);
+    expect(result.evidences.map((evidence) => evidence.trecho)).toEqual([
+      "O pão francês custa R$ 18 o quilo.",
+    ]);
   });
 
   test("FR-003 / EC-002: duas respostas inválidas deixam a busca sem evidência e registram em issues", async () => {
@@ -81,7 +94,11 @@ describe("extração de evidências", () => {
   });
 
   test("FR-003 / EC-003: a mesma URL em duas buscas entra uma vez antes da extração", async () => {
-    const other: SearchResult = { title: "Café", url: "https://padaria.test/cafe", content: "O café custa R$ 6." };
+    const other: SearchResult = {
+      title: "Café",
+      url: "https://padaria.test/cafe",
+      content: "O café custa R$ 6.",
+    };
     const { prompts } = await run({
       results: { b1: [PAGE], b2: [{ ...PAGE, url: `${PAGE.url}/` }, other] },
       extractor: () => "[]",

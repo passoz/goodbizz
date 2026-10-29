@@ -46,7 +46,12 @@ describe("evidências no decisor em casos de borda", () => {
   test("FR-006: sem evidência o estado não ganha o bloco de evidências", async () => {
     const { decider, states } = recording();
     const cfg = resolveStudyConfig({ niche: "deposito", mock: true });
-    await evaluateIdea({ name: "Sem fonte", sector: "", description: "Ideia sem pesquisa." }, decider, cfg, []);
+    await evaluateIdea(
+      { name: "Sem fonte", sector: "", description: "Ideia sem pesquisa." },
+      decider,
+      cfg,
+      [],
+    );
     expect(states.some((state) => state.includes("Evidências"))).toBe(false);
   });
 });

@@ -10,6 +10,7 @@ const TOUCHED = [
   "LLM_API_KEY",
   "DECISION_API_URL",
   "SESSION_SECRET",
+  "APP_ENV",
   "GOODBIZZ_MOCK",
   "GOODBIZZ_MOCK_LLM",
   "GOODBIZZ_MOCK_DECIDER",
@@ -49,6 +50,22 @@ describe("environment validation", () => {
     Bun.env.GOODBIZZ_LLM_TIMEOUT = "45";
     resetEnv();
     expect(loadEnv().GOODBIZZ_LLM_TIMEOUT).toBe(45);
+  });
+
+  test("recusa o segredo de desenvolvimento em produção", () => {
+    remember();
+    Bun.env.APP_ENV = "production";
+    Bun.env.SESSION_SECRET = "dev-only-session-secret-change-me-32b";
+    resetEnv();
+    expect(() => loadEnv()).toThrow(ConfigError);
+  });
+
+  test("aceita um segredo próprio em produção", () => {
+    remember();
+    Bun.env.APP_ENV = "production";
+    Bun.env.SESSION_SECRET = "a".repeat(32);
+    resetEnv();
+    expect(loadEnv().APP_ENV).toBe("production");
   });
 
   test("reads overrides from the process environment", () => {

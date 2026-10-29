@@ -63,7 +63,10 @@ describe("relatorios com torneio", () => {
 
   test("o dados.json grava torneio nulo e lista de partidas vazia sem torneio", () => {
     const data = [idea("Sem", 1.5, null)];
-    const dados = JSON.parse(serializeDados(cfg, "", summarizeStudy(data), data, [])) as Record<string, unknown>;
+    const dados = JSON.parse(serializeDados(cfg, "", summarizeStudy(data), data, [])) as Record<
+      string,
+      unknown
+    >;
     expect(dados["torneio_partidas"]).toEqual([]);
     expect((dados["ideias"] as Array<Record<string, unknown>>)[0]?.["torneio"]).toBeNull();
   });

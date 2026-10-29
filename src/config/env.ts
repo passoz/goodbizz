@@ -50,6 +50,9 @@ export interface Env {
   GOODBIZZ_USD_BRL: number;
 }
 
+/** Valor aceitável apenas em desenvolvimento; produção recusa este segredo. */
+const DEV_SESSION_SECRET = "dev-only-session-secret-change-me-32b";
+
 function buildEnv() {
   return createEnv({
     server: {
@@ -65,7 +68,7 @@ function buildEnv() {
       DATABASE_URL: z.string().min(1).default("app.db"),
       LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
       APP_ENV: z.enum(["development", "production", "test"]).default("development"),
-      SESSION_SECRET: z.string().min(32).default("dev-only-session-secret-change-me-32b"),
+      SESSION_SECRET: z.string().min(32).default(DEV_SESSION_SECRET),
 
       GOODBIZZ_STUDIES_DIR: z.string().min(1).default("estudo"),
       GOODBIZZ_MOCK: booleanFlag("0"),
@@ -115,7 +118,11 @@ let cached: Env | undefined;
 /** Validate and memoize the environment. Throws ConfigError on any invalid value. */
 export function loadEnv(): Env {
   if (cached) return cached;
-  cached = buildEnv() satisfies Env;
+  const env = buildEnv() satisfies Env;
+  if (env.APP_ENV === "production" && env.SESSION_SECRET === DEV_SESSION_SECRET) {
+    throw new ConfigError("SESSION_SECRET must be set to a non-default value when APP_ENV=production");
+  }
+  cached = env;
   return cached;
 }
 

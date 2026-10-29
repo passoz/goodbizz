@@ -25,7 +25,8 @@ function asString(value: unknown): string {
 function asProfile(value: unknown): ProviderProfile | null {
   if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
   const raw = value as Record<string, unknown>;
-  const kind = raw.kind === "decider" ? "decider" : raw.kind === "llm" ? "llm" : raw.kind === "search" ? "search" : null;
+  const kind =
+    raw.kind === "decider" ? "decider" : raw.kind === "llm" ? "llm" : raw.kind === "search" ? "search" : null;
   const id = asString(raw.id).trim();
   const name = asString(raw.name).trim();
   if (kind === null || id.length === 0 || name.length === 0) return null;

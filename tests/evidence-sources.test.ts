@@ -22,10 +22,13 @@ async function run(plan: string) {
   const mock = new LlmMock();
   const llm: LlmClient = {
     generateText(system, user) {
-      if (system.includes("PALAVRA-CHAVE: BUSCAS")) return Promise.resolve(JSON.stringify(["q1", "q2", "q3", "q4", "q5", "q6"]));
+      if (system.includes("PALAVRA-CHAVE: BUSCAS"))
+        return Promise.resolve(JSON.stringify(["q1", "q2", "q3", "q4", "q5", "q6"]));
       if (system.includes("PALAVRA-CHAVE: EVIDENCIAS")) {
         const url = /URL: (\S+)/.exec(user)?.[1] ?? "";
-        return Promise.resolve(JSON.stringify([{ tipo: "mercado", afirmacao: `Fato de ${url}`, trecho: "Fato verificado.", url }]));
+        return Promise.resolve(
+          JSON.stringify([{ tipo: "mercado", afirmacao: `Fato de ${url}`, trecho: "Fato verificado.", url }]),
+        );
       }
       if (system.includes("PALAVRA-CHAVE: BRIEF") || system.includes("PALAVRA-CHAVE: IDEIAS")) {
         return mock.generateText(system, user);
@@ -35,7 +38,9 @@ async function run(plan: string) {
   };
   const search: SearchClient = {
     search: (query) =>
-      Promise.resolve([{ title: query, url: `https://fonte.test/${encodeURIComponent(query)}`, content: "Fato verificado." }]),
+      Promise.resolve([
+        { title: query, url: `https://fonte.test/${encodeURIComponent(query)}`, content: "Fato verificado." },
+      ]),
   };
   const handle = openMigratedDatabase(":memory:");
   const cfg = {
@@ -67,7 +72,9 @@ function lastSection(markdown: string): { title: string; body: string } {
 
 describe("seção Fontes", () => {
   test("FR-007: o README termina com Fontes listando exatamente E2 e E7 com URL", async () => {
-    const { result, readmes } = await run("# Plano\n\n## 1. Resumo executivo\n\nPreço [E2]. Concorrente [E7]. De novo [E2].\n");
+    const { result, readmes } = await run(
+      "# Plano\n\n## 1. Resumo executivo\n\nPreço [E2]. Concorrente [E7]. De novo [E2].\n",
+    );
     expect(readmes).toHaveLength(2);
     const e2 = result.evidences.find((evidence) => evidence.id === "E2");
     const e7 = result.evidences.find((evidence) => evidence.id === "E7");

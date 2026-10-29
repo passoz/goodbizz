@@ -63,7 +63,7 @@ describe("rotas da interface com torneio", () => {
       cache: new StudyCache(new SqliteCacheStore(db.db)),
       llm: new LlmMock(),
       decider: new DeciderMock(),
-    search: new SearchMock(),
+      search: new SearchMock(),
       logger: createLogger("error"),
       artifactsRoot,
     });

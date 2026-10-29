@@ -19,9 +19,7 @@ describe("FR-008: casos do setupFee no config", () => {
   test("fora de 0 a 100000 ou não inteiro é recusado", () => {
     const bad = [-1, 100001, 1.5, Number.NaN];
     for (const setupFee of bad) {
-      expect(() =>
-        resolveStudyConfig({ niche: "bebidas", mock: true, setupFee }),
-      ).toThrow();
+      expect(() => resolveStudyConfig({ niche: "bebidas", mock: true, setupFee })).toThrow();
     }
   });
 

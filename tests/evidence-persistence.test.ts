@@ -26,7 +26,11 @@ function service() {
     search(query) {
       calls += 1;
       return Promise.resolve([
-        { title: query, url: `https://persiste.test/${encodeURIComponent(query)}`, content: `Fato sobre ${query}. Resto.` },
+        {
+          title: query,
+          url: `https://persiste.test/${encodeURIComponent(query)}`,
+          content: `Fato sobre ${query}. Resto.`,
+        },
       ]);
     },
     usage: () => ({ calls, inputTokens: 0, cachedInputTokens: 0, outputTokens: 0 }),
@@ -46,7 +50,9 @@ function service() {
 describe("evidências persistidas", () => {
   test("EC-005: o estudo executado guarda as evidências e o consumo de busca", async () => {
     const { handle, svc, calls } = service();
-    const created = await svc.create(resolveStudyConfig({ niche: "deposito de bebidas", numIdeas: 2, mock: true }));
+    const created = await svc.create(
+      resolveStudyConfig({ niche: "deposito de bebidas", numIdeas: 2, mock: true }),
+    );
     await svc.run(created.id);
     const record = await svc.get(created.id);
     expect(record.progress.state).toBe("done");

@@ -158,7 +158,9 @@ async function runSearch(
     try {
       results = await deps.search.search(query);
     } catch (error) {
-      issues.push(`pesquisa: a busca "${query}" falhou: ${error instanceof Error ? error.message : String(error)}`);
+      issues.push(
+        `pesquisa: a busca "${query}" falhou: ${error instanceof Error ? error.message : String(error)}`,
+      );
       return [];
     }
     await deps.cache.put(key, results);
@@ -221,7 +223,9 @@ function candidateOf(raw: unknown, ideia: string, pages: ReadonlyMap<string, str
   const tipo = text(row.tipo).toLowerCase();
   const informed = typeof row.valor === "number" && Number.isFinite(row.valor) ? row.valor : null;
   const valor =
-    informed !== null && numbersIn(trecho).some((value) => Math.abs(value - informed) < 1e-9) ? informed : null;
+    informed !== null && numbersIn(trecho).some((value) => Math.abs(value - informed) < 1e-9)
+      ? informed
+      : null;
   return {
     tipo: KINDS[tipo] === true ? tipo : "mercado",
     afirmacao: text(row.afirmacao) || trecho,
@@ -282,7 +286,9 @@ async function extract(
     await deps.cache.put(key, raw);
   }
   const pages = new Map(results.map((result) => [urlKey(result.url), squash(result.content)]));
-  return raw.map((item) => candidateOf(item, ideia, pages)).filter((item): item is Candidate => item !== null);
+  return raw
+    .map((item) => candidateOf(item, ideia, pages))
+    .filter((item): item is Candidate => item !== null);
 }
 
 /**

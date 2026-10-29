@@ -94,7 +94,10 @@ afterEach(() => {
 describe("evidencias em casos de borda", () => {
   test("FR-011: 4 evidencias ainda avisam e 6 nao avisam", async () => {
     const weak = await service.create(resolveStudyConfig({ niche: "padarias quase", mock: true }));
-    await repo.update(weak.id, { evidences: [evidence(1), evidence(2), evidence(3), evidence(4)], summary: summary() });
+    await repo.update(weak.id, {
+      evidences: [evidence(1), evidence(2), evidence(3), evidence(4)],
+      summary: summary(),
+    });
     const weakBody = await (await app.request(`/studies/${weak.id}`)).text();
     expect(weakBody).toContain("4 evidências");
     expect(weakBody).toContain("pesquisa fraca");

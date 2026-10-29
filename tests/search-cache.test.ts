@@ -24,7 +24,13 @@ import type { ProviderUsage, SearchResult } from "../src/domain/types.ts";
 const savedEnv: Record<string, string | undefined> = {};
 
 function withSearchEnv(url: string, key: string): void {
-  for (const name of ["LLM_API_KEY", "DECISION_API_KEY", "DECISION_API_URL", "SEARCH_API_URL", "SEARCH_API_KEY"] as const) {
+  for (const name of [
+    "LLM_API_KEY",
+    "DECISION_API_KEY",
+    "DECISION_API_URL",
+    "SEARCH_API_URL",
+    "SEARCH_API_KEY",
+  ] as const) {
     if (!(name in savedEnv)) savedEnv[name] = Bun.env[name];
   }
   Bun.env.LLM_API_KEY = "chave-teste";
@@ -52,7 +58,11 @@ function countingSearch(counter: { calls: number }): SearchClient {
     search(query: string): Promise<SearchResult[]> {
       counter.calls += 1;
       return Promise.resolve([
-        { title: query, url: `https://cache.test/${counter.calls}`, content: `Pagina ${counter.calls} com o plano basico.` },
+        {
+          title: query,
+          url: `https://cache.test/${counter.calls}`,
+          content: `Pagina ${counter.calls} com o plano basico.`,
+        },
       ]);
     },
     usage: () => ({ ...ZERO, calls: counter.calls }),
@@ -106,7 +116,13 @@ describe("perfil de busca no catalogo", () => {
           effectiveProviders(loadEnv(), { profiles: [], activeLlm: null, activeDecider: null }),
         ),
       };
-      const deps = { llm: new LlmMock(), decider: new DeciderMock(), search: countingSearch(counter), cache, logger: QUIET };
+      const deps = {
+        llm: new LlmMock(),
+        decider: new DeciderMock(),
+        search: countingSearch(counter),
+        cache,
+        logger: QUIET,
+      };
       const first = await generateStudy(cfg, deps);
       const made = counter.calls;
       expect(made).toBeGreaterThan(0);

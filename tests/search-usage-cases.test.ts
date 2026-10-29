@@ -31,10 +31,16 @@ const PRICES = {
 
 describe("consumo de busca em casos de borda", () => {
   test("FR-010: com preço zero a busca não custa nem aparece na nota", () => {
-    const cost = estimateCost({ llm: ZERO, decider: ZERO, search: { ...ZERO, calls: 500 } }, { ...PRICES, searchPer1k: 0 });
+    const cost = estimateCost(
+      { llm: ZERO, decider: ZERO, search: { ...ZERO, calls: 500 } },
+      { ...PRICES, searchPer1k: 0 },
+    );
     expect(cost?.usd).toBe(0);
     expect(cost?.note).not.toContain("busca");
-    const paid = estimateCost({ llm: ZERO, decider: ZERO, search: { ...ZERO, calls: 500 } }, { ...PRICES, searchPer1k: 4 });
+    const paid = estimateCost(
+      { llm: ZERO, decider: ZERO, search: { ...ZERO, calls: 500 } },
+      { ...PRICES, searchPer1k: 4 },
+    );
     expect(paid?.usd).toBe(2);
   });
 

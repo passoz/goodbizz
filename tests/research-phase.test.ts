@@ -102,7 +102,9 @@ async function run(queryCount: number) {
 describe("fase de pesquisa", () => {
   test("FR-002: as buscas acontecem antes do brief e ficam entre 6 e 10", async () => {
     const { events } = await run(12);
-    const briefAt = events.findIndex((event) => event.kind === "llm" && event.system.includes("PALAVRA-CHAVE: BRIEF"));
+    const briefAt = events.findIndex(
+      (event) => event.kind === "llm" && event.system.includes("PALAVRA-CHAVE: BRIEF"),
+    );
     const beforeBrief = events.slice(0, briefAt).filter((event) => event.kind === "search");
     expect(briefAt).toBeGreaterThan(0);
     expect(beforeBrief.length).toBe(10);
@@ -110,7 +112,9 @@ describe("fase de pesquisa", () => {
 
   test("FR-002: menos de 6 buscas do LLM são completadas até 6", async () => {
     const { events, result } = await run(3);
-    const briefAt = events.findIndex((event) => event.kind === "llm" && event.system.includes("PALAVRA-CHAVE: BRIEF"));
+    const briefAt = events.findIndex(
+      (event) => event.kind === "llm" && event.system.includes("PALAVRA-CHAVE: BRIEF"),
+    );
     const queries = events
       .slice(0, briefAt)
       .filter((event): event is Extract<Event, { kind: "search" }> => event.kind === "search")

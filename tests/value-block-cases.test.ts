@@ -44,19 +44,38 @@ describe("FR-004: bloco VALOR e seção 11", () => {
   test("FR-004: dataBlock lista as premissas com fonte e os números calculados", () => {
     const handle = openMigratedDatabase(":memory:");
     try {
-      const cfg = resolveStudyConfig({ niche: "depositos de bebidas", city: "Cabo Frio", numIdeas: 1, mock: true });
+      const cfg = resolveStudyConfig({
+        niche: "depositos de bebidas",
+        city: "Cabo Frio",
+        numIdeas: 1,
+        mock: true,
+      });
       const evaluations = [
         {
           name: "Ideia X",
           sector: "operacao",
           description: "descricao",
           indicators: {
-            fit: 1, fitConf: 0.5, sale: 1, saleConf: 0.5, disruption: 1, disruptionConf: 0.5,
-            pain: "perda", painProbs: { perda: 1 }, painConf: 0.5, solo: 1,
+            fit: 1,
+            fitConf: 0.5,
+            sale: 1,
+            saleConf: 0.5,
+            disruption: 1,
+            disruptionConf: 0.5,
+            pain: "perda",
+            painProbs: { perda: 1 },
+            painConf: 0.5,
+            solo: 1,
           },
           business: { wtp: 0.5, meta30: 0.5, price: 1, priceConf: 0.5 },
           algorithm: {
-            label: "forte", painScore: 1, internalScore: 1, margin: 0, deviation: 0, probes: {}, byParaphrase: [],
+            label: "forte",
+            painScore: 1,
+            internalScore: 1,
+            margin: 0,
+            deviation: 0,
+            probes: {},
+            byParaphrase: [],
           },
           index: 1.5,
           tier: "A",

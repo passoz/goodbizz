@@ -24,7 +24,9 @@ describe("evidências persistidas em casos de borda", () => {
     const handle = openMigratedDatabase(":memory:");
     const search: SearchClient = {
       search: (query) =>
-        Promise.resolve([{ title: query, url: `https://r.test/${encodeURIComponent(query)}`, content: `Dado de ${query}.` }]),
+        Promise.resolve([
+          { title: query, url: `https://r.test/${encodeURIComponent(query)}`, content: `Dado de ${query}.` },
+        ]),
     };
     const svc = new StudyService({
       repo: new SqliteStudyRepository(handle.db),
@@ -41,7 +43,9 @@ describe("evidências persistidas em casos de borda", () => {
     await svc.removeIdea(created.id, record.evaluations[0]?.id ?? "");
     const dados = JSON.parse(readFileSync(join(record.artifactDir, "dados.json"), "utf8"));
     expect(dados.evidencias).toEqual(record.evidences);
-    expect(readFileSync(join(record.artifactDir, "00-evidencias.md"), "utf8")).toContain(record.evidences[0]?.trecho ?? "?");
+    expect(readFileSync(join(record.artifactDir, "00-evidencias.md"), "utf8")).toContain(
+      record.evidences[0]?.trecho ?? "?",
+    );
     handle.sqlite.close();
   });
 });

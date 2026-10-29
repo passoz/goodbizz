@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 
-const README = readFileSync("README.md", "utf8");
+const README = readFileSync("docs/manual.md", "utf8");
 const SPEC = JSON.parse(readFileSync(".specs/system.json", "utf8")) as {
   rules: Array<{ id: string; statement: string }>;
 };

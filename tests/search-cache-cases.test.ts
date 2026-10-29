@@ -50,7 +50,12 @@ describe("perfil de busca em casos de borda", () => {
 
   test("QR-003: ativo de outro tipo nao serve para a busca", async () => {
     const { db, store: settings } = store();
-    const created = await settings.create({ name: "Texto", kind: "llm", url: "https://llm.test", model: "m" });
+    const created = await settings.create({
+      name: "Texto",
+      kind: "llm",
+      url: "https://llm.test",
+      model: "m",
+    });
     const llm = created.profiles?.find((profile) => profile.kind === "llm");
     await expect(settings.setActive("search", llm?.id ?? "x")).rejects.toThrow();
     db.sqlite.close();

@@ -22,7 +22,10 @@ describe("pesquisa por ideia em casos de borda", () => {
   test("FR-005: ideia lida de arquivo é pesquisada e a busca que falha vira aviso com o nome dela", async () => {
     const dir = mkdtempSync(join(tmpdir(), "goodbizz-ideas-cases-"));
     const ideasFile = join(dir, "ideias.json");
-    writeFileSync(ideasFile, JSON.stringify([{ nome: "Cobrança de fiado", descricao: "Cobra o fiado no WhatsApp." }]));
+    writeFileSync(
+      ideasFile,
+      JSON.stringify([{ nome: "Cobrança de fiado", descricao: "Cobra o fiado no WhatsApp." }]),
+    );
     const mock = new LlmMock();
     const llm: LlmClient = {
       generateText: (system, user) =>
@@ -31,7 +34,12 @@ describe("pesquisa por ideia em casos de borda", () => {
           : system.includes("PALAVRA-CHAVE: EVIDENCIAS")
             ? Promise.resolve(
                 JSON.stringify([
-                  { tipo: "preco", afirmacao: "preço", trecho: "Plano de cobrança a R$ 49.", url: "https://cobra.test/" },
+                  {
+                    tipo: "preco",
+                    afirmacao: "preço",
+                    trecho: "Plano de cobrança a R$ 49.",
+                    url: "https://cobra.test/",
+                  },
                 ]),
               )
             : mock.generateText(system, user),
@@ -42,7 +50,9 @@ describe("pesquisa por ideia em casos de borda", () => {
         queries.push(query);
         if (query.includes("concorrentes")) return Promise.reject(new Error("provedor de busca fora do ar"));
         if (!query.includes("Cobrança de fiado")) return Promise.resolve([]);
-        return Promise.resolve([{ title: "Cobra", url: "https://cobra.test", content: "Plano de cobrança a R$ 49." }]);
+        return Promise.resolve([
+          { title: "Cobra", url: "https://cobra.test", content: "Plano de cobrança a R$ 49." },
+        ]);
       },
     };
     const handle = openMigratedDatabase(":memory:");
@@ -61,9 +71,9 @@ describe("pesquisa por ideia em casos de borda", () => {
     handle.sqlite.close();
     expect(queries.filter((query) => query.includes("Cobrança de fiado"))).toHaveLength(2);
     expect(result.evaluations).toHaveLength(1);
-    expect(result.issues.some((issue) => issue.includes("Cobrança de fiado") && issue.includes("fora do ar"))).toBe(
-      true,
-    );
+    expect(
+      result.issues.some((issue) => issue.includes("Cobrança de fiado") && issue.includes("fora do ar")),
+    ).toBe(true);
     expect(result.evidences).toEqual([
       {
         id: "E1",

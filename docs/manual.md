@@ -1,0 +1,474 @@
+# GoodBizz
+
+Um prompt pequeno entra, um estudo de negócio completo sai — agora como **serviço Bun/TypeScript**:
+CLI, API HTTP e interface web sobre a mesma lógica, com persistencia SQLite.
+
+Voce informa um **titulo curto** (o nicho, ate 50 caracteres, com cada palavra capitalizada) e, se quiser,
+uma **descricao de contexto** que entra no prompt junto do titulo sem aparecer no cabecalho. A ferramenta gera ideias de produto, avalia cada uma
+em um **decisor System One** (modelo probabilistico que mede chances reais em vez de alucinar texto) e
+redige planos de negócio executivos: estratégia comercial, marketing, precificação, análise SWOT,
+Business Model Canvas, 5 Forcas de Porter, matriz de risco, roadmap de implantacao e KPIs.
+
+The original Python implementation is kept in this repository as the reference baseline
+(`legacy/python/`). The runtime that is built,
+shipped and tested is the TypeScript one under `src/`.
+
+---
+
+## Arquitetura
+
+```
+src/
+  domain/            tipos, portas e erros puros (nao importa application/infrastructure)
+    types.ts         Idea, IdeaEvaluation, StudyRecord, StudySummary, ...
+    ports.ts         LlmClient, DeciderClient, StudyRepository, CacheStore, Logger, ArtifactStore
+    errors.ts        DomainError + codigo/status HTTP por classe
+    pain.ts          sondas e limiares calibrados
+    hash.ts          sha256 deterministico (mock e cache)
+    naming.ts        titulo do estudo (Title Case, limite de 50) e sujeito concatenado com a descricao
+  application/       casos de uso
+    generate-study.ts  pipeline brief -> ideias -> avaliacao -> dor -> documentos -> relatorios -> html
+    study-service.ts   fachada usada pela CLI, pela API e pela web
+    evaluate.ts, summary.ts, pain-algorithm.ts, pain-choice.ts
+    generation.ts, prompts.ts            prompts e bloco de dados medidos
+    reports.ts, artifacts.ts, dados.ts   relatorios deterministicos e formato em disco
+    render.ts, normalize.ts, verification.ts, pdf.ts
+    diagnose.ts, recalibrate.ts, cache.ts
+  infrastructure/    adapters
+    llm.ts, llm-mock.ts, json.ts         provedor OpenAI-compativel
+    decider.ts, decider-mock.ts          protocolo System One
+    schema.ts, db.ts, repositories.ts, cache-repository.ts
+    http/{app,api,health,errors}.ts      servico HTTP
+    http/ui/*                            interface web (hono/jsx)
+  config/            env validado (Zod), resolucao da configuracao, redacao de segredos
+  cli.ts             CLI
+  index.ts           bootstrap do servico
+tests/               suite Bun (offline e deterministica)
+.pwn/, .specs/, .prompts/, .sources/, .todo/   governanca do harness pwn
+```
+
+Regra de dependencia: `domain` não importa `application` nem `infrastructure`. Nenhum acesso a dados
+escreve SQL cru — tudo via Drizzle sobre `bun:sqlite`.
+
+**Nada de inferencia local.** LLM e decisor continuam endpoints HTTP externos; a imagem não carrega
+pesos nem runtime de modelo.
+
+---
+
+## Requisitos
+
+- [Bun](https://bun.sh) 1.4+ (runtime único: CLI, serviço e testes)
+- Chromium (opcional) apenas para gerar PDF
+- Docker (opcional) para a imagem
+
+```bash
+bun install
+bun run check        # typecheck estrito
+bun test             # suite offline
+```
+
+---
+
+## Configuração (12-factor)
+
+Segredos vivem **apenas** no ambiente. O contrato das chaves esta versionado em `.env.example`.
+
+| `SEARCH_API_URL` | `https://api.tavily.com` | base do provedor de busca (protocolo Tavily `POST /search`) |
+
+| `SEARCH_API_KEY`                           | —                           | chave do provedor de busca (obrigatoria fora do modo mock)                              |
+| ------------------------------------------ | --------------------------- | --------------------------------------------------------------------------------------- |
+| `LLM_API_URL`                              | `https://api.openai.com/v1` | base URL compativel com `/chat/completions`                                             |
+| `LLM_API_KEY`                              | —                           | chave do provedor LLM (obrigatoria fora do modo mock)                                   |
+| `LLM_API_MODEL`                            | `gpt-4o-mini`               | modelo do LLM                                                                           |
+| `DECISION_API_URL`                         | —                           | endpoint System One (Jev, Laya, runtime local)                                          |
+| `DECISION_API_KEY`                         | —                           | chave do decisor (Bearer e `x-api-key`)                                                 |
+| `DECISION_API_MODEL`                       | `systemone-latest`          | modelo do decisor                                                                       |
+| `PORT`                                     | `3000`                      | porta do servico HTTP                                                                   |
+| `DATABASE_URL`                             | `app.db`                    | SQLite (`:memory:` aceito)                                                              |
+| `LOG_LEVEL`                                | `info`                      | `debug` \| `info` \| `warn` \| `error`                                                  |
+| `APP_ENV`                                  | `development`               | `production` liga HTTPS/HSTS e cookies `secure`                                         |
+| `SESSION_SECRET`                           | placeholder de dev          | >= 32 caracteres, assina o cookie de CSRF                                               |
+| `GOODBIZZ_STUDIES_DIR`                     | `estudo`                    | raiz dos artefatos por estudo                                                           |
+| `GOODBIZZ_MOCK`                            | `0`                         | `1` simula LLM, decisor e busca                                                         |
+| `GOODBIZZ_MOCK_LLM`                        | `0`                         | `1` simula apenas o texto, mantendo o decisor real                                      |
+| `GOODBIZZ_MOCK_DECIDER`                    | `0`                         | `1` simula apenas os numeros, mantendo o LLM real                                       |
+| `GOODBIZZ_MOCK_SEARCH`                     | `0`                         | `1` simula apenas a busca, mantendo LLM e decisor reais                                 |
+| `GOODBIZZ_LLM_TIMEOUT`                     | `300`                       | segundos por chamada de IA (5–3600); o default antigo (60) cortava os documentos longos |
+| `GOODBIZZ_PRICE_LLM_INPUT_PER_MTOK`        | `0.15`                      | US$/1M de tokens de entrada, tabela oficial off-peak do `deepseek-flash`                |
+| `GOODBIZZ_PRICE_LLM_CACHED_INPUT_PER_MTOK` | `0.0028`                    | US$/1M de tokens de entrada servidos do cache                                           |
+| `GOODBIZZ_PRICE_LLM_OUTPUT_PER_MTOK`       | `0.28`                      | US$/1M de tokens de saída                                                               |
+| `GOODBIZZ_PRICE_DECIDER_INPUT_PER_MTOK`    | `0`                         | US$/1M de tokens de entrada do decisor (0 = grátis)                                     |
+| `GOODBIZZ_PRICE_DECIDER_OUTPUT_PER_MTOK`   | `0`                         | US$/1M de tokens de saída do decisor                                                    |
+| `GOODBIZZ_PRICE_SEARCH_PER_1K`             | `0`                         | US$/1.000 buscas para a estimativa de custo                                             |
+| `GOODBIZZ_USD_BRL`                         | `0`                         | Cotação só para exibir o custo também em R$ (0 desliga)                                 |
+
+Modo misto: o serviço aceita simular um provedor e usar os outros de verdade, igual a CLI
+(`--mock-llm`, `--mock-decider`, `--mock-search`). A pagina `/new` mostra o que esta ativo. Provedores reais
+impoem fail-fast no startup: sem `LLM_API_KEY` (ou `DECISION_API_URL`, ou `SEARCH_API_KEY`) o processo não sobe, a
+menos que aquele provedor esteja marcado como simulado.
+
+O processo falha no startup quando uma chave obrigatoria do modo real esta ausente, e nenhuma chave
+aparece em log, resposta HTTP ou artefato (redacao por `src/config/redact.ts`).
+
+---
+
+## CLI
+
+```bash
+bun run cli generate "oficinas mecanicas de bairro" --ideas 5 --mock --pdf
+bun run cli diagnose --ideas exemplos.json --niche "pousadas historicas"
+bun run cli recalibrate coleta/dados.json --cutoff 1.40
+bun run cli serve
+bun run cli help
+```
+
+`bin/goodbizz` e o dispatcher (pode ser linkado no `PATH`); ele aceita `generate|gerar|study|estudo`,
+`diagnose|diagnosticar`, `recalibrate|recalibrar`, `serve|serviço|server` e `help|ajuda`.
+
+Flags de `generate` (com aliases do baseline): `--niche/--nicho` (o titulo do estudo: ate 50 caracteres
+digitados, cada palavra capitalizada), `--description/--descricao` (contexto concatenado ao titulo nos
+prompts), `--city/--cidade`, `--ticket`,
+`--ideas/--ideias`, `--output/--saida`, `--ideas-file/--ideias-arquivo`,
+`--pain-method/--método-dor`, `--eval-only/--so-avaliar`, `--setup/--implantacao` (taxa de implantação em R$, inteiro de 0 a 100000, padrão 1500; entra na conta do payback e na chave de cache do documento), `--mock`, `--mock-llm`,
+`--mock-decider/--mock-decisor`, `--mock-search`, `--pdf`, `--concurrency/--paralelo`, `--timeout` (padrão: `GOODBIZZ_LLM_TIMEOUT`, 300 s), `--llm-url`,
+`--llm-model`, `--llm-key`, `--decider-url/--decisor-url`, `--decider-model/--decisor-model`,
+`--decider-key/--decisor-key`, `--search-url`, `--search-key`.
+
+Codigos de saida: `0` sucesso, `1` falha (ou menos de 3 sondas úteis no diagnose), `2` erro de
+configuração/subcomando desconhecido, `130` interrupcao por teclado.
+
+### O que sai no final
+
+```
+estudo/
+├── README.md              # indice executivo: ranking (ordem do torneio), medias e grupos de dor
+├── 00-brief.md            # leitura de mercado que orientou as ideias
+├── 00-evidencias.md       # evidências da pesquisa web: afirmação, trecho literal e URL
+├── 00-tabelao.md          # tabela comparativa de todos os indicadores, com Perda mensal (R$), Payback (meses) e Torneio
+├── 00-tabelao.csv         # a mesma tabela para planilha (`perda_mes`, `payback_meses`, `torneio`, `partidas`)
+├── dados.json             # dump completo (chaves do baseline, mais `evidencias`, `valor` por ideia e `torneio_partidas`; consumivel pelo recalibrate)
+├── .cache.db              # cache de respostas por chave hash, escopada pelo id do estudo (SQLite)
+├── 01-<ideia-campea>/README.md   # plano completo da ideia #1 do ranking
+├── 02-<segunda-ideia>/README.md
+├── estudo-completo.html   # com --pdf
+└── estudo-completo.pdf    # com --pdf e Chromium instalado
+```
+
+### Pesquisa web e evidências
+
+Antes do brief, o app pesquisa a web sozinho: gera de 6 a 10 buscas sobre o nicho (concorrentes e
+preços, reclamações de clientes, custos e perdas, tamanho do mercado local, regulação) e mais 2 por
+ideia (concorrente direto e preço da solução). Cada evidência guarda afirmação, trecho literal do
+resultado e URL; trecho que não aparece literalmente no conteúdo é descartado. Brief, ideias, estado
+do decisor e plano recebem as evidências e citam `[E#]`; o plano de cada ideia termina com a seção
+"Fontes". O estudo grava `00-evidencias.md` e a chave `evidencias` no `dados.json`, e a página do
+estudo mostra a contagem com aviso de pesquisa fraca (menos de 5 evidências). O provedor padrão é o
+Tavily (1.000 créditos grátis por mês, sem cartão; 1 busca básica = 1 crédito): cadastre a chave em
+`/settings` ou em `SEARCH_API_KEY`. As buscas entram no cache do estudo e no consumo medido.
+
+---
+
+## API HTTP
+
+Prefixo `/api`. Sem CSRF (autentique no proxy, se necessário).
+
+| Método   | Rota                             | Efeito                                                                                            |
+| -------- | -------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `GET`    | `/api/config`                    | quais provedores estao configurados (booleanos)                                                   |
+| `POST`   | `/api/studies`                   | cria um estudo e inicia a execucao (201); aceita `description` e limita o `niche` a 50 caracteres |
+| `GET`    | `/api/studies`                   | lista os estudos com estado e topo do ranking                                                     |
+| `GET`    | `/api/studies/:id`               | detalhe: avaliações ordenadas, resumo, artefatos, **consumo e custo estimado**                    |
+| `PATCH`  | `/api/studies/:id`               | renomeia o estudo (`{"niche":"..."}`); `422` inválido, `404` inexistente                          |
+| `POST`   | `/api/studies/:id/run`           | reexecuta o pipeline do estudo                                                                    |
+| `DELETE` | `/api/studies/:id`               | apaga o estudo, as avaliações e os artefatos (`204`; `409` se estiver rodando)                    |
+| `GET`    | `/api/studies/:id/artifacts`     | lista os caminhos relativos dos artefatos                                                         |
+| `GET`    | `/api/studies/:id/artifacts.zip` | baixa tudo em um ZIP (pasta com o slug do nicho)                                                  |
+| `GET`    | `/api/studies/:id/artifacts/*`   | conteudo do artefato (markdown, csv, json, html, pdf)                                             |
+| `POST`   | `/api/diagnose`                  | coerencia e estabilidade das sondas                                                               |
+| `POST`   | `/api/recalibrate`               | busca em grade de limiares sobre `dados.json`                                                     |
+| `GET`    | `/healthz`                       | liveness (nao toca o banco)                                                                       |
+| `GET`    | `/readyz`                        | readiness (`select 1` no SQLite)                                                                  |
+
+```bash
+curl -s localhost:3000/api/studies \
+  -H 'content-type: application/json' \
+  -d '{"niche":"clinicas odontologicas","description":"bairro, uma cadeira, agenda no papel","numIdeas":3,"mock":true}'
+curl -s localhost:3000/api/studies/<id> | jq '.evaluations[].name, .evaluations[].tier'
+```
+
+Erros: `422` payload invalido (com detalhes de validação), `404` estudo ou artefato inexistente,
+`500` erro interno sem stack trace. Nenhuma resposta inclui caminho de arquivo ou credencial.
+
+**Titulo e descricao.** O `niche` vira o cabecalho do estudo: o limite de 50 caracteres vale sobre o
+texto digitado (`422` acima disso) e cada palavra e capitalizada ao ser gravada. A `description`
+(ate 300 caracteres) e concatenada ao titulo antes de cada chamada a provedor — ela orienta o brief,
+as ideias, o bloco de dados e o decisor, e nao aparece como texto proprio na tela.
+
+**Cache com dono.** Cada estudo grava as respostas de API sob o proprio id e sob a impressao dos
+provedores ativos (`<id>::<hash>`). Dois estudos com o mesmo titulo nunca compartilham resposta,
+excluir um estudo apaga as respostas dele, trocar de provedor invalida as gravadas pelo anterior, e
+reexecutar um estudo que falhou retoma do ponto onde parou, sem repetir as fases ja concluidas.
+
+---
+
+## Interface web
+
+Quatro rotas: `GET /` lista os estudos como cartoes, `GET /new` traz o formulario de criacao,
+`GET /studies/:id` abre um estudo e `GET /como-ler` reune as regras de leitura. O cartao inteiro abre
+o estudo: o título carrega um link esticado que cobre a area e o selo "Abrir estudo" mostra a ação. O
+identificador aparece so como nota de rodapé, para chamadas de API.
+
+No estudo, **"Baixar .zip"** e a ação do cabecalho (ao lado do título) e entrega a arvore inteira em
+um único arquivo, dentro de uma pasta com o slug do nicho. O ZIP e escrito pelo próprio runtime
+(`buildZip` em `src/application/artifacts.ts`, PKZIP com deflate e fallback para store): `Bun.Archive`
+escreve tar, não zip, e assim a imagem não depende de binario externo. Cada artefato também baixa
+direto (`download` no link), sem renderizar markdown dentro da pagina.
+
+**Progresso ao vivo.** Enquanto o pipeline roda, a pagina do estudo mostra o painel de progresso — o
+passo atual gravado pelo serviço (`[3/6] ...`), a barra de seis fases e o selo do estado — e consulta
+`GET /api/studies/:id` a cada 2 s, recarregando sozinha quando o estudo termina. Sem JavaScript o
+texto do passo continua no HTML renderizado (recarregue a mao); a regiao usa `aria-live="polite"`.
+
+**Tema claro e escuro.** O cabecalho traz três estados — `Auto` (segue `prefers-color-scheme`), `Claro`
+e `Escuro` — persistidos em `localStorage` e aplicados antes do primeiro paint por um guarda inline em
+`<head>`, sem piscar. O tema escuro e o padrão; o claro reescreve superficie, linha, texto forte e
+selos em `src/infrastructure/http/ui/layout.tsx`.
+
+**Como ler.** A legenda da metodologia (indicadores, limiares de tier e de dor, escala de cor) vive em
+`/como-ler`, alcançável pela navegação, em vez de ocupar o meio do estudo.
+
+**Plano em modal.** Clicar no nome de uma ideia (ranking) abre o plano dela num `<dialog>` nativo, com ESC
+e clique no fundo para fechar. O markdown vem renderizado pelo servidor (`GET /studies/:id/ideas/:n`, o
+mesmo `mdToHtml` do HTML/PDF exportado) — o navegador não carrega renderizador de markdown, e sem
+JavaScript o link cai no artefato cru.
+
+**Excluir estudo.** Cada cartão da lista e o cabeçalho do estudo têm "Excluir" (variante `btn-danger`,
+vermelho da escala). Com JavaScript há um diálogo de confirmação seguido de `DELETE /api/studies/:id`;
+sem JS o formulário posta em `/ui/studies/:id/delete` com token CSRF. Estudo em execução é recusado
+com `409`.
+
+**Paleta com significado.** As cores `#DD5855` `#D78133` `#BFC115` `#9FDB43` `#72CE3B` formam a
+escala do sistema: vermelho aponta sinal ruim ou quente, laranja pede atencao, amarelo e medio,
+limao e verde apontam sinal bom. A mesma escala colore o fundo, o índice de ação, o tier, a dor, o
+desvio, o estado do estudo e a disposição a pagar, sempre com o limiar explicado na legenda.
+
+**Leitura guiada.** Todo dado apresentado vem com o seu helper, no formato `dado 0.89 (maior e
+melhor)`: direcao, escala e o que o número significa. Cada coluna de tabela, bloco de metrica,
+selo e card de artefato carrega essa leitura.
+
+**Glossario no hover.** Passar o mouse (ou focar pelo teclado) em uma sigla ou nome abre uma caixa
+com a explicacao curta: `WTP`, `Tier`, `fit`, `venda`, `disrupção`, `desvio`, `FORTE`, `FRACA`,
+`INSTÁVEL`, `System One`, `LLM`, `guardrail`, `CSRF`, `ticket`, `[INFERENCE]` e outros. As
+explicacoes vivem em uma fonte unica (`GLOSSARY` em `src/infrastructure/http/ui/layout.tsx`) e o
+texto fica no DOM, portanto e alcancavel por leitor de tela.
+
+**Estilo.** Glassmorphism em CSS nativo: fundo saturado com cinco blobs, paineis com filme
+translucido, borda luminosa, brilho especular e sombra profunda, com `backdrop-filter` (blur ao
+vivo) habilitado quando o navegador suporta e fallback solido para
+`prefers-reduced-transparency`. Sem animacao de entrada (conteúdo nunca depende de um frame para
+aparecer) e transicoes desligadas em `prefers-reduced-motion`.
+
+A interface consome a **mesma API** (`POST /api/studies` via `fetch`) e mantem um caminho sem
+JavaScript (`POST /ui/studies`) protegido por CSRF: mesma origem (`Origin`/`Referer`, fail-closed)
+mais token double-submit em cookie assinado, comparado em tempo constante. O token e emitido uma vez
+por sessao: rotacionar a cada resposta invalidaria qualquer formulario já aberto.
+
+---
+
+## Configuração em runtime (`/settings`)
+
+A aba **Configurações** (`/settings`) mantém um catálogo nomeado de provedores (nome, URL, modelo e
+chave por perfil de LLM e de decisão) e escolhe qual está ativo por função.
+
+- **Precedência:** o perfil ativo **sobrepõe** `LLM_API_*`/`DECISION_API_*`; sem perfil ativo
+  ("padrão do ambiente") cada campo herda o ambiente. Na CLI a ordem é _flag explícita > /settings >
+  ambiente_.
+- **Vale na hora:** os clientes releem a configuração a cada chamada, e os provedores efetivos entram
+  na **impressão de cache** das respostas: reexecutar um estudo depois de trocar de provedor gera no
+  provedor novo, em vez de servir a resposta gravada pelo anterior. O consumo medido sobrevive à troca.
+- **Testar:** o botão Testar fala com o provedor (`GET {base}/models`, com fallback de 1 token). Quando
+  o provedor expõe modelos, o campo Modelo vira dropdown com a lista — em adicionar e em editar
+  provedor (os campos seguem a ordem Nome, URL, Chave da API, Modelo).
+- **Excluir:** confirmado em diálogo próprio, como estudo e ideia (o app não usa `alert`/`confirm`
+  nativos em lugar nenhum).
+- **Chaves:** são gravadas no SQLite do serviço (`settings`) e nunca voltam em claro pela API nem pela
+  página — `GET /api/settings` e `/settings` devolvem apenas a máscara (`sk-abc...1234`). Editar com a
+  chave vazia mantém a guardada, e o Testar usa a chave do provedor salvo quando o campo está vazio.
+  Como o serviço é acessível só pela tailnet e não tem autenticação própria, trate essa aba como área
+  administrativa.
+- **API:** `POST /api/settings/providers` (cria; fica ativo no tipo dele), `PATCH
+/api/settings/providers/:id` (edita; sem `kind` — o tipo é imutável), `DELETE
+/api/settings/providers/:id`, `PUT /api/settings/active` (`{kind, id}`; `null` herda o ambiente) e
+  `POST /api/settings/test` (`{kind, url, model?, apiKey?, id?}` → veredito e a lista de modelos,
+  quando houver). Sem JS, o formulário de escolha posta em `/ui/settings/active` com CSRF.
+
+## Consumo e custo estimado
+
+Cada estudo guarda o consumo medido no pipeline: tokens de entrada, de entrada em cache e de saída,
+além do número de chamadas ao LLM e ao decisor. A medição vem do `usage` que o provedor devolve
+(OpenAI-compatível) e do `usage` do envelope do decisor, quando existir; o pipeline tira a
+**diferença antes/depois** da execução, porque os clientes vivem no processo inteiro.
+
+O custo é uma **estimativa** com os preços do ambiente (`GOODBIZZ_PRICE_*`): o código não adivinha o
+preço do seu plano. Com dois estudos rodando ao mesmo tempo o consumo é somado no mesmo contador e a
+diferença pode ficar trocada entre eles — rode um estudo por vez se precisar de números exatos por
+estudo. Os padrões são o preço de tabela do `deepseek-v4-flash` e decisor a custo zero
+(motor `jev` do 9router). O valor aparece no detalhe do estudo e como chip na lista; `/api/studies/:id`
+devolve `usage` e `cost: {usd, brl, note}`.
+
+## Progresso e falhas em linguagem humana
+
+O passo do pipeline é escrito para ser lido por gente (`[3/6] Avaliei "Radar de Estoque" com o
+decisor: índice 1.420 de 2 (maior é melhor), tier B, dor FORTE`), e a página do estudo mostra a fase
+com rótulo (`Fase 3 de 6 — Avaliando cada ideia com o decisor System One`).
+
+Quando algo falha, o erro guardado no estudo é uma explicação com ação — não o JSON do provedor:
+
+| Situação                   | Texto (resumido)                                                                                                                 |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `429` / cota               | "O provedor de IA recusou por limite de uso (429 / cota). Isso passa sozinho: espere alguns minutos e execute o estudo de novo." |
+| `401`/`403`                | "O provedor recusou a credencial… confira `LLM_API_KEY`/`DECISION_API_KEY`."                                                     |
+| rede/DNS                   | "Não foi possível falar com o provedor de IA (rede ou DNS)."                                                                     |
+| `5xx`                      | "O provedor devolveu erro interno (5xx). Tente de novo em alguns minutos."                                                       |
+| sem credencial no roteador | "O modelo escolhido não tem credencial ativa no roteador de IA…"                                                                 |
+
+O erro cru entra entre parênteses (`detalhe: [429]: {...}`) e continua inteiro no log do processo.
+A página do estudo mostra o texto e um botão **"Executar de novo"**.
+
+## Docker
+
+```bash
+docker build -t goodbizz .
+docker run --rm -p 3000:3000 -e GOODBIZZ_MOCK=1 \
+  -e SESSION_SECRET=uma-chave-de-32-bytes-ou-mais goodbizz
+# ou
+docker compose up --build
+```
+
+Imagem multi-stage sobre `oven/bun:1.4`, usuário não-root, `HEALTHCHECK` em `/healthz`, dados em
+`/app/data` (`DATABASE_URL=/app/data/app.db`, `GOODBIZZ_STUDIES_DIR=/app/data/estudos`).
+Sem Chromium na imagem: o PDF não e gerado e a mensagem explica como instalar.
+
+Publique via `docker compose` local ou pelo workflow de imagem (abaixo).
+
+---
+
+## CI/CD
+
+| Workflow                      | O que faz                                                                                                                                            |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.github/workflows/ci.yml`    | jobs `quality` (typecheck, lint, format), `test` (`bun test --coverage`), `security` (`bun audit`, gitleaks), `build` (imagem + smoke em `/healthz`) |
+| `.github/workflows/image.yml` | buildx multi-arquitetura, login em `ghcr.io`, push por tag/branch/SHA e cache GHA                                                                    |
+
+Migracoes rodam no boot do processo (`runMigrations`) e são aditivas; para implantacoes com varias
+replicas, rode `bun run db:migrate` como passo separado antes do deploy.
+
+---
+
+## Metodologia
+
+Indicadores por ideia (decisor System One):
+
+| Indicador   | Tipo   | Escala   | O que mede                                              |
+| ----------- | ------ | -------- | ------------------------------------------------------- |
+| `fit`       | score  | 0–2      | aderencia ao balcao, sem exigir mudanca de habito       |
+| `venda`     | score  | 0–2      | facilidade comercial; ataca perda de dinheiro ou imagem |
+| `disrupcao` | score  | 0–2      | grau de inovacao do modelo de operacao                  |
+| `dor`       | choice | 3 opcoes | dinheiro direto, reputacao publica ou backoffice        |
+| `solo`      | noul   | 0–1      | um consultor solo mantem 30 clientes sem colapsar       |
+| `wtp`       | noul   | 0–1      | disposicao a pagar o ticket mensal                      |
+| `meta30`    | noul   | 0–1      | 30 clientes pagantes em 24 meses na regiao              |
+| `preco`     | score  | 0–2      | preco abaixo, compativel ou acima do valor percebido    |
+
+**Índice de Acao** = `(fit + venda) / 2`; **Tier A** `>= 1.84`, **B** `>= 1.60`, **C** abaixo.
+
+### Torneio par a par (ordem do ranking)
+
+As notas absolutas do decisor saem quase iguais para todas as ideias (em estudos reais, 18 de 20
+ideias ficaram com índice entre 1,615 e 1,92). Por isso, depois da avaliação, o pipeline roda um
+torneio suíço no decisor (`src/application/tournament.ts`):
+
+- **Rodadas:** `teto(log2 N) + 1` para `N >= 2` ideias (8 ideias = 4 rodadas = 16 partidas = no máximo
+  32 perguntas). Com uma ideia só não há torneio.
+- **Emparelhamento:** cada rodada junta ideias de média próxima que ainda não se enfrentaram. Sem
+  combinação livre, repete a partida de menor diferença de média em vez de travar.
+- **Folga:** com `N` ímpar, a ideia de pior posição que ainda não folgou fica de fora da rodada. A
+  folga não conta partida nem ponto.
+- **Duelo:** pergunta `choice` `duelo` com `criteria` `{A, B}` ("qual destas duas soluções o dono
+  contrata primeiro?"), feita nas duas ordens. A ideia X recebe a média das duas probabilidades de ser
+  escolhida e a adversária, 1 menos esse valor: o viés de posição se anula. Sem `probabilities`, a
+  `choice` vale 1; sem nada, a ordem conta 0.5 e entra em `issues`.
+- **Cache:** cada ordem de cada partida tem chave própria (semente do estudo, impressão dos provedores,
+  nomes, descrições e ordem). Retomar, repetir partida ou acrescentar ideias reaproveita o que já foi
+  perguntado.
+- **Ordem:** ranking, pastas `NN-slug`, tabelão, CSV, `dados.json` e interface seguem a média de
+  pontos por partida; empate pelo índice de ação e depois pelo nome. Índice e tier não mudam e
+  continuam como colunas. Estudo anterior ao torneio (coluna `tournament_json` nula) segue o índice.
+- **Remoção e adição:** excluir uma ideia tira as partidas e a folga dela e recalcula as médias das
+  partidas restantes, sem chamar o decisor. Acrescentar ideias roda o torneio de novo sobre todas.
+
+Onde aparece: `tournament` em cada avaliação e `tournament` (rodadas, partidas, folgas, `issues`) no
+detalhe `GET /api/studies/:id`; coluna `torneio` + `partidas` no fim do CSV; chave `torneio`
+(`pontos`, `partidas`, `vitorias`, `folgas`, `media`) por ideia e `torneio_partidas` (`rodada`, `a`,
+`b`, `p_a`) no `dados.json`; coluna "Torneio" no ranking da página do estudo (`0.75 em 4 partidas`),
+no glossário e em `/como-ler`. O decisor simulado responde o duelo pela força fixa do texto de cada
+opção, então o torneio em `--mock` é determinístico e independente da posição.
+
+A dor tem dois metodos: `choice` (padrão, escolha forcada entre três consequencias concretas) e
+`noul` (legado, quatro sondas x três paráfrases com desvio e escalonamento). Limiares calibrados:
+`STRONG_THRESHOLD=0.65`, `WEAK_THRESHOLD=0.50`, `UNSTABLE_THRESHOLD=0.15`, minimo de 3 paráfrases.
+
+**Guardrail numerico:** o código calcula todos os números; o LLM so escreve prosa em volta do bloco
+`DADOS MEDIDOS` e e proibido de inventar valor de mercado. Todo valor em R$, percentual e quantidade de
+tempo precisa estar no conjunto permitido (medidos, calculados, evidências, premissas, ticket, setup,
+equivalentes anuais e o 90 do roadmap) ou na mesma linha de `[INFERENCE]`; o documento que viola é
+regenerado uma vez com a lista do que violou, e o que restar entra em `issues` com o nome da ideia.
+
+**Proposta de valor (seção 11):** cada plano termina com "11. Proposta de valor e retorno" (subseções
+11.1 proposta em uma frase, 11.2 premissas com fonte, 11.3 escopo de entrega, 11.4 conta do retorno,
+11.5 primeira mensagem, 11.6 critério de descarte). O resumo executivo abre com a perda mensal e o
+payback. O ranking, o detalhe da API (`value` por avaliação) e a coluna `setup_fee` usam o setup do
+estudo (padrão 1500, configurável na CLI, na API e no formulário `/new`).
+
+---
+
+## Desenvolvimento
+
+```bash
+bun run dev            # servico com watch
+bun run check          # tsc --noEmit
+bunx eslint .          # lint
+bun test --coverage    # suite + gate de cobertura
+bun run format         # prettier
+bun run bench          # benchmarks (tinybench)
+bunx drizzle-kit generate   # nova migracao apos mudar src/infrastructure/schema.ts
+```
+
+`bun run cli generate --help` lista todas as flags. `--mock` roda o pipeline inteiro offline e
+determinístico em menos de um segundo — útil para inspecionar a estrutura dos artefatos; **a saida
+simulada não tem valor analitico de mercado**.
+
+---
+
+## Processo
+
+O trabalho foi conduzido com o harness [`passoz/pwn`](https://github.com/passoz/pwn). Os artefatos de
+planejamento, os contratos e os recibos do harness ficam fora do repositório; o que é publicado é o
+código, os testes e a documentação.
+
+---
+
+## Convenções e limites
+
+1. **Português do Brasil com acentuação.** Documentos gerados, prompts, interface e artefatos usam
+   acentuação correta — a convenção anterior (remover diacríticos antes de gravar, herdada do baseline
+   Python) foi revogada. Fica em ASCII apenas o que é identificador: nome de pasta (`01-nome-slug`),
+   chaves de `dados.json`, cabeçalho do CSV e nome de flag da CLI.
+2. **Hipótese vs pesquisa.** O estudo pesquisa a web antes de escrever (ver "Pesquisa web e
+   evidências"); afirmação com fonte cita `[E#]`, e número sem fonte sai marcado `[INFERENCE]`.
+3. **Uso em rede confiável.** Não há autenticação multiusuário nem multitenancy: coloque a API atrás de
+   um proxy autenticado se for exposta.
+4. **Privacidade.** Nunca coloque dado pessoal, segredo comercial ou informacao sensivel no nicho: o
+   texto e transmitido aos endpoints configurados.
+5. **Baseline Python.** Os arquivos `*.py` ficam em `legacy/python/` como referência; o runtime
+   suportado é o Bun.
