@@ -10,7 +10,7 @@ executivo com estratégia, preço, riscos, payback e roadmap.
 
 O mesmo núcleo atende três superfícies: CLI, API HTTP e interface web renderizada no servidor.
 
-![Interface web do GoodBizz](docs/goodbizz.webp)
+![Interface de um estudo de demonstração em modo mock](docs/goodbizz.webp)
 
 ## O que faz
 
@@ -52,7 +52,7 @@ src/
   config/           ambiente validado com Zod e redação de segredos
   cli.ts            CLI
   index.ts          bootstrap do serviço
-tests/              604 testes, suíte offline e determinística
+tests/              mais de 600 testes, suíte offline e determinística
 legacy/python/      implementação original em Python, mantida como referência
 docs/manual.md      manual completo (API, UI, metodologia, operação)
 ```
