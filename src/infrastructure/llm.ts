@@ -2,12 +2,30 @@
  * Cliente HTTP minimo para endpoints compativeis com chat/completions (OpenAI),
  * com reenvio e backoff linear. Sem dependencias externas.
  */
+import { randomUUID } from "node:crypto";
+
 import type { LlmClient } from "../domain/ports.ts";
 import type { StudyConfig } from "../domain/types.ts";
 import { LlmError } from "../domain/errors.ts";
 import type { ProviderUsage } from "../domain/types.ts";
 import { scrub } from "../config/redact.ts";
 import { LlmMock } from "./llm-mock.ts";
+
+/**
+ * O gateway OpenCode Go recusa `/chat/completions` sem `x-opencode-session` (HTTP 400
+ * `MissingSessionID`). A sessão e estavel por cliente para o gateway rotear e cachear a
+ * conversa; para os outros provedores, o cabecalho nao e enviado.
+ */
+export function sessionRoutingHeaders(baseUrl: string): Record<string, string> {
+  let host = "";
+  try {
+    host = new URL(baseUrl).hostname;
+  } catch {
+    return {};
+  }
+  if (host !== "opencode.ai" && !host.endsWith(".opencode.ai")) return {};
+  return { "x-opencode-session": `ses_${randomUUID()}` };
+}
 
 interface ChatCompletion {
   choices?: Array<{ message?: { content?: string } }>;
@@ -84,6 +102,7 @@ function addUsage(target: ProviderUsage, usage: ChatCompletion["usage"]): void {
 
 export class LlmHttp implements LlmClient {
   private readonly url: string;
+  private readonly routingHeaders: Record<string, string>;
   private readonly consumed: ProviderUsage = {
     calls: 0,
     inputTokens: 0,
@@ -99,6 +118,7 @@ export class LlmHttp implements LlmClient {
     private readonly retries = 3,
   ) {
     this.url = baseUrl.replace(/\/+$/, "") + "/chat/completions";
+    this.routingHeaders = sessionRoutingHeaders(baseUrl);
   }
 
   async generateText(system: string, user: string): Promise<string> {
@@ -121,7 +141,9 @@ export class LlmHttp implements LlmClient {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "User-Agent": "goodbizz/2.0",
             Authorization: `Bearer ${this.key}`,
+            ...this.routingHeaders,
           },
           body: payload,
           signal: AbortSignal.timeout(this.timeout * 1000),

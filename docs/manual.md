@@ -302,6 +302,22 @@ chave por perfil de LLM e de decisão) e escolhe qual está ativo por função.
   `POST /api/settings/test` (`{kind, url, model?, apiKey?, id?}` → veredito e a lista de modelos,
   quando houver). Sem JS, o formulário de escolha posta em `/ui/settings/active` com CSRF.
 
+### OpenCode Go
+
+O gateway do OpenCode Go pede a URL base da API e a chave `oc_sk_...` do Console.
+
+- **Texto (LLM):** URL `https://opencode.ai/inference/go/openai/v1` e o id do modelo que
+  `GET {base}/models` lista (por exemplo, `deepseek-v4.1-flash`). O cliente envia
+  `x-opencode-session` com um id estável por cliente; sem esse cabeçalho o gateway responde
+  HTTP 400 `MissingSessionID`. O cliente também se identifica como `goodbizz/2.0`.
+- **Decisão (System One):** URL `https://opencode.ai/inference/go/systemone/v1/systemone` e um
+  modelo de decisão, por exemplo `jev-1.14`. Esta rota não exige `x-opencode-session`.
+- **Plano:** a chave precisa vir de um workspace com a assinatura Go ativa. Chave sem a assinatura
+  recebe HTTP 403 `EntitlementError`.
+- **Uso:** a documentação do Go define o plano para agentes de código. O tráfego do goodbizz é de
+  geração de texto analítico e pode ser tratado como abuso. Use por sua conta e risco.
+
+
 ## Consumo e custo estimado
 
 Cada estudo guarda o consumo medido no pipeline: tokens de entrada, de entrada em cache e de saída,

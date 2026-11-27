@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { LlmError, ValidationError } from "../src/domain/errors.ts";
 import type { Idea, StudyConfig } from "../src/domain/types.ts";
 import { extractJson } from "../src/infrastructure/json.ts";
-import { createLlmClient, LlmHttp } from "../src/infrastructure/llm.ts";
+import { createLlmClient, LlmHttp, sessionRoutingHeaders } from "../src/infrastructure/llm.ts";
 import { LlmMock, MOCK_BRIEF, MOCK_IDEAS } from "../src/infrastructure/llm-mock.ts";
 
 const SECTION_HEADINGS = [
@@ -135,6 +135,15 @@ describe("createLlmClient", () => {
   test("returns an LlmHttp when mockLlm is false", () => {
     const client = createLlmClient(baseConfig({ mockLlm: false }));
     expect(client).toBeInstanceOf(LlmHttp);
+  });
+});
+
+describe("sessionRoutingHeaders", () => {
+  test("sends an opencode session id only to the opencode gateway", () => {
+    const go = sessionRoutingHeaders("https://opencode.ai/inference/go/openai/v1");
+    expect(go["x-opencode-session"]).toMatch(/^ses_[0-9a-f-]{36}$/);
+    expect(sessionRoutingHeaders("https://api.openai.com/v1")).toEqual({});
+    expect(sessionRoutingHeaders("not a url")).toEqual({});
   });
 });
 

@@ -9,6 +9,7 @@
 import { scrub } from "../config/redact.ts";
 import { SearchError } from "../domain/errors.ts";
 import { extractAnswers, normalizeDeciderUrl } from "./decider.ts";
+import { sessionRoutingHeaders } from "./llm.ts";
 import { SearchHttp } from "./search.ts";
 import type { ProviderKind } from "../domain/types.ts";
 
@@ -147,6 +148,7 @@ async function probeLlm(input: ProviderProbeInput, timeoutMs: number): Promise<P
   const chatHeaders: Record<string, string> = {
     "Content-Type": "application/json",
     "User-Agent": "goodbizz/2.0",
+    ...sessionRoutingHeaders(base),
   };
   if (key.length > 0) chatHeaders["Authorization"] = `Bearer ${key}`;
   const payload = JSON.stringify({
