@@ -13,7 +13,7 @@ import { DeciderHttp } from "./decider.ts";
 import { DeciderMock } from "./decider-mock.ts";
 import { LlmHttp } from "./llm.ts";
 import { LlmMock } from "./llm-mock.ts";
-import { SearchHttp } from "./search.ts";
+import { createSearch } from "./search.ts";
 import { SearchMock } from "./search-mock.ts";
 
 const ZERO: ProviderUsage = { calls: 0, inputTokens: 0, cachedInputTokens: 0, outputTokens: 0 };
@@ -107,7 +107,7 @@ export class RoutingDeciderClient implements DeciderClient {
 
 /**
  * Busca que resolve a configuração a cada chamada: simulada determinística com mock, adaptador
- * Tavily com chave. A troca por impressão digital segue os clientes de texto e de decisor.
+ * de busca adequado à URL (Bing RSS sem chave, Tavily com chave). A troca por impressão digital segue os clientes de texto e de decisor.
  */
 export class RoutingSearchClient implements SearchClient {
   private inner: SearchClient | null = null;
@@ -123,7 +123,7 @@ export class RoutingSearchClient implements SearchClient {
       this.retired = sumUsage(this.retired, this.inner?.usage?.());
       this.inner = this.options.mock
         ? new SearchMock()
-        : new SearchHttp(cfg.searchBaseUrl, cfg.searchApiKey, this.options.timeout ?? 60);
+        : createSearch(cfg.searchBaseUrl, cfg.searchApiKey, this.options.timeout ?? 60);
       this.fingerprint = fingerprint;
     }
     const inner = this.inner;

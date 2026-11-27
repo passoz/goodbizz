@@ -15,9 +15,9 @@ export interface ProviderConfig {
   deciderUrl: string;
   deciderApiKey: string;
   deciderModel: string;
-  /** Base do provedor de busca (protocolo Tavily: `POST {base}/search`). Sem modelo: busca não tem. */
+  /** Base do provedor de busca: `https://www.bing.com` (RSS, sem chave) ou Tavily (`POST {base}/search`). Sem modelo: busca não tem. */
   searchBaseUrl: string;
-  /** Chave do provedor de busca; vazia fora do modo simulado impede o startup. */
+  /** Chave do provedor de busca; o Bing RSS não usa chave. */
   searchApiKey: string;
 }
 
@@ -116,6 +116,20 @@ export function profileViews(settings: ProviderSettings): ProviderProfileView[] 
     apiKey: maskSecret(profile.apiKey),
     hasKey: profile.apiKey.trim().length > 0,
   }));
+}
+
+/** Hosts de busca que funcionam sem chave (Bing RSS) em vez do protocolo Tavily. */
+const KEYLESS_SEARCH_HOSTS = ["bing.com"];
+
+/** `false` para provedores de busca sem chave (Bing RSS); `true` para os que exigem credencial. */
+export function searchProviderNeedsKey(baseUrl: string): boolean {
+  let host = "";
+  try {
+    host = new URL(baseUrl).hostname.toLowerCase();
+  } catch {
+    return true;
+  }
+  return !KEYLESS_SEARCH_HOSTS.some((suffix) => host === suffix || host.endsWith(`.${suffix}`));
 }
 
 /** O que o ambiente oferece quando nenhum perfil está ativo — a primeira opção de cada lista. */

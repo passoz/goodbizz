@@ -10,7 +10,7 @@ import { scrub } from "../config/redact.ts";
 import { SearchError } from "../domain/errors.ts";
 import { extractAnswers, normalizeDeciderUrl } from "./decider.ts";
 import { sessionRoutingHeaders } from "./llm.ts";
-import { SearchHttp } from "./search.ts";
+import { createSearch } from "./search.ts";
 import type { ProviderKind } from "../domain/types.ts";
 
 export interface ProviderProbeInput {
@@ -249,10 +249,10 @@ async function probeDecider(input: ProviderProbeInput, timeoutMs: number): Promi
   };
 }
 
-/** Testar de busca: uma busca real mínima pelo adaptador Tavily; a chave nunca volta. */
+/** Testar de busca: uma busca real mínima (Bing RSS ou Tavily); a chave nunca volta. */
 async function probeSearch(input: ProviderProbeInput, timeoutMs: number): Promise<ProviderProbeResult> {
   const seconds = Math.max(1, Math.round(timeoutMs / 1000));
-  const adapter = new SearchHttp(input.url, input.apiKey, seconds, 1, 0);
+  const adapter = createSearch(input.url, input.apiKey, seconds, 1, 0);
   try {
     const results = await adapter.search("teste de conexão da busca");
     return { ok: true, status: 200, detail: `busca respondeu com ${results.length} resultado(s).` };

@@ -621,7 +621,7 @@ describe("configuracao dos provedores", () => {
     expect(body).toContain("Configuração dos provedores");
     expect(body).toContain("<legend>Provedor de texto (LLM)</legend>");
     expect(body).toContain("<legend>Provedor de decisão (System One)</legend>");
-    expect(body).toContain("<legend>Provedor de busca (Tavily)</legend>");
+    expect(body).toContain("<legend>Provedor de busca (Bing ou Tavily)</legend>");
     expect(body).toContain('action="/ui/settings/active"');
 
     // Três listas; cada uma abre com o padrao do ambiente e fecha com "adicionar provedor".

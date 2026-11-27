@@ -285,7 +285,7 @@ export interface StudyProgress {
 }
 
 /**
- * Provedor externo: texto (LLM), decisao (System One) ou busca na web (Tavily).
+ * Provedor externo: texto (LLM), decisao (System One) ou busca na web (Bing RSS ou Tavily).
  */
 export type ProviderKind = "llm" | "decider" | "search";
 

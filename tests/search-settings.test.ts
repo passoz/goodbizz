@@ -91,6 +91,6 @@ describe("tipo search na pagina de configuracoes", () => {
     const pickers = body.match(/<form[^>]*data-provider-picker/g) ?? [];
     expect(pickers).toHaveLength(3);
     expect(body).toContain('data-kind="search"');
-    expect(body).toContain("Provedor de busca (Tavily)");
+    expect(body).toContain("Provedor de busca (Bing ou Tavily)");
   });
 });

@@ -48,9 +48,12 @@ describe("CLI com busca", () => {
 
   test("SC-002: generate sem chave e sem simulado exige a chave de busca", async () => {
     const previousKey = Bun.env.SEARCH_API_KEY;
+    const previousUrl = Bun.env.SEARCH_API_URL;
     const previousMock = Bun.env.GOODBIZZ_MOCK;
     const previousMockSearch = Bun.env.GOODBIZZ_MOCK_SEARCH;
     delete Bun.env.SEARCH_API_KEY;
+    // Tavily exige chave; o Bing RSS (padrão) não. O caso é sobre provedor com credencial.
+    Bun.env.SEARCH_API_URL = "https://api.tavily.com";
     delete Bun.env.GOODBIZZ_MOCK;
     delete Bun.env.GOODBIZZ_MOCK_SEARCH;
     resetEnv();
@@ -71,6 +74,8 @@ describe("CLI com busca", () => {
       restore();
       if (previousKey === undefined) delete Bun.env.SEARCH_API_KEY;
       else Bun.env.SEARCH_API_KEY = previousKey;
+      if (previousUrl === undefined) delete Bun.env.SEARCH_API_URL;
+      else Bun.env.SEARCH_API_URL = previousUrl;
       if (previousMock === undefined) delete Bun.env.GOODBIZZ_MOCK;
       else Bun.env.GOODBIZZ_MOCK = previousMock;
       if (previousMockSearch === undefined) delete Bun.env.GOODBIZZ_MOCK_SEARCH;

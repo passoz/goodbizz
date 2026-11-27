@@ -41,9 +41,9 @@ export interface Env {
   GOODBIZZ_PRICE_DECIDER_OUTPUT_PER_MTOK: number;
   /** Preço de mil buscas na web (US$); a Tavily cobra por chamada. */
   GOODBIZZ_PRICE_SEARCH_PER_1K: number;
-  /** Base do provedor de busca (protocolo Tavily: `POST {base}/search`). */
+  /** Base do provedor de busca: Bing RSS (`https://www.bing.com`) ou Tavily (`POST {base}/search`). */
   SEARCH_API_URL: string;
-  /** Chave do provedor de busca; vazia fora do modo simulado impede o startup. */
+  /** Chave do provedor de busca; vazia só impede o startup quando o provedor exige chave (Tavily). */
   SEARCH_API_KEY: string;
   /** Simula apenas a busca (evidências determinísticas) mantendo LLM e decisor reais. */
   GOODBIZZ_MOCK_SEARCH: boolean;
@@ -82,9 +82,9 @@ function buildEnv() {
       GOODBIZZ_MOCK_DECIDER: booleanFlag("0"),
       /** Simula apenas a busca (evidências determinísticas) mantendo LLM e decisor reais. */
       GOODBIZZ_MOCK_SEARCH: booleanFlag("0"),
-      /** Base do provedor de busca (protocolo Tavily: `POST {base}/search`). */
-      SEARCH_API_URL: z.string().min(1).default("https://api.tavily.com"),
-      /** Chave do provedor de busca; vazia fora do modo simulado impede o startup. */
+      /** Base do provedor de busca: Bing RSS (`https://www.bing.com`) ou Tavily (`POST {base}/search`). */
+      SEARCH_API_URL: z.string().min(1).default("https://www.bing.com"),
+      /** Chave da busca (Tavily). O Bing RSS nao usa chave. */
       SEARCH_API_KEY: z.string().default(""),
 
       // Preços para a estimativa de custo por estudo (US$ por 1M de tokens). Padrões = tabelas

@@ -15,7 +15,7 @@ import { ProviderSettingsStore } from "./application/settings.ts";
 import { StudyService } from "./application/study-service.ts";
 import { createLogger } from "./config/runtime.ts";
 import { loadEnv, type Env } from "./config/env.ts";
-import { effectiveProviders, providerLabels } from "./config/providers.ts";
+import { effectiveProviders, providerLabels, searchProviderNeedsKey } from "./config/providers.ts";
 import { ConfigError } from "./domain/errors.ts";
 import { SqliteCacheStore } from "./infrastructure/cache-repository.ts";
 import { openDatabase, runMigrations, studies, type DatabaseHandle } from "./infrastructure/db.ts";
@@ -70,7 +70,7 @@ export async function buildService(env: Env = loadEnv()): Promise<ServiceBundle>
   if (!mockDecider && effective.deciderUrl === "") {
     throw new ConfigError("DECISION_API_URL is required unless the decider is mocked");
   }
-  if (!mockSearch && effective.searchApiKey.trim() === "") {
+  if (!mockSearch && effective.searchApiKey.trim() === "" && searchProviderNeedsKey(effective.searchBaseUrl)) {
     throw new ConfigError("SEARCH_API_KEY is required unless the search is mocked");
   }
 

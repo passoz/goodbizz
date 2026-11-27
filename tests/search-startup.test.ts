@@ -55,6 +55,23 @@ describe("startup da busca", () => {
     }
   });
 
+  test("FR-008: Bing RSS sem chave sobe, porque esse provedor não exige credencial", async () => {
+    remember();
+    delete Bun.env.SEARCH_API_KEY;
+    resetEnv();
+    try {
+      const env = {
+        ...baseEnv(),
+        SEARCH_API_URL: "https://www.bing.com",
+        SEARCH_API_KEY: "",
+      };
+      const bundle = await buildService(env);
+      bundle.handle.sqlite.close();
+    } finally {
+      restore();
+    }
+  });
+
   test("FR-008: com busca simulada, o serviço sobe sem chave", async () => {
     remember();
     delete Bun.env.SEARCH_API_KEY;

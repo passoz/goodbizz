@@ -71,7 +71,7 @@ export interface GenerateStudyResult {
 export interface GenerateStudyDeps {
   llm: LlmClient;
   decider: DeciderClient;
-  /** Provedor de busca da fase de pesquisa (Tavily ou simulado). */
+  /** Provedor de busca da fase de pesquisa (Bing RSS, Tavily ou simulado). */
   search: SearchClient;
   cache: StudyCache;
   logger: Logger;

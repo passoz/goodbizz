@@ -8,6 +8,7 @@
  * frase que o operador lê e o detalhe cru entre parênteses, sem a chave.
  */
 import { scrub } from "../config/redact.ts";
+import { searchProviderNeedsKey } from "../config/providers.ts";
 import { SearchError } from "../domain/errors.ts";
 import type { SearchClient } from "../domain/ports.ts";
 import type { ProviderUsage, SearchResult, StudyConfig } from "../domain/types.ts";
@@ -42,9 +43,16 @@ function errorDetail(raw: string): string {
 }
 
 /** Frase humana por status, no mesmo tom de `explainFailure`. */
-function statusMessage(status: number, detail: string): string {
+function statusMessage(status: number, detail: string, keyless = false): string {
   const suffix = ` (detalhe: HTTP ${status}: ${detail})`;
   if (status === 401 || status === 403) {
+    if (keyless) {
+      return (
+        "O provedor de busca bloqueou o pedido (401/403), normalmente por excesso de consultas " +
+        "automaticas. Espere alguns minutos e execute o estudo de novo, ou troque SEARCH_API_URL." +
+        suffix
+      );
+    }
     return (
       "O provedor de busca recusou a credencial (401/403). Confira a chave de busca " +
       "(SEARCH_API_KEY ou o perfil de busca em /settings)." +
@@ -83,6 +91,44 @@ function parseResults(body: unknown): SearchResult[] | null {
       url,
       content: typeof row["content"] === "string" ? row["content"] : "",
     });
+  }
+  return parsed;
+}
+
+/** Texto do RSS sem marcação e com as entidades XML (`&amp;`, `&#39;` e as numéricas) resolvidas. */
+function rssText(value: string): string {
+  return value
+    .replace(/<[^>]+>/g, " ")
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;|&#39;/g, "'")
+    .replace(/&#x([0-9a-f]+);/gi, (_, code: string) => String.fromCodePoint(parseInt(code, 16)))
+    .replace(/&#(\d+);/g, (_, code: string) => String.fromCodePoint(Number(code)))
+    .replace(/&amp;/g, "&")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Resultados do RSS do Bing (`GET {base}/search?q=...&format=rss`), que não exige chave.
+ * `null` quando o corpo não é o RSS (página de bloqueio ou HTML de erro).
+ */
+export function parseBingRss(xml: string): SearchResult[] | null {
+  if (!/<rss[\s>]/i.test(xml)) return null;
+  const parsed: SearchResult[] = [];
+  for (const match of xml.matchAll(/<item\b[^>]*>([\s\S]*?)<\/item>/gi)) {
+    const block = match[1] ?? "";
+    const link = /<link>\s*([\s\S]*?)\s*<\/link>/i.exec(block)?.[1] ?? "";
+    const url = rssText(link);
+    if (url === "") continue;
+    parsed.push({
+      title: rssText(/<title>\s*([\s\S]*?)\s*<\/title>/i.exec(block)?.[1] ?? ""),
+      url,
+      content: rssText(/<description>\s*([\s\S]*?)\s*<\/description>/i.exec(block)?.[1] ?? ""),
+    });
+    if (parsed.length === SEARCH_MAX_RESULTS) break;
   }
   return parsed;
 }
@@ -177,8 +223,105 @@ export class SearchHttp implements SearchClient {
   }
 }
 
-/** Monta o cliente de busca da CLI a partir da configuração resolvida (simulado ou Tavily). */
+/** Busca sem chave pelo RSS do Bing; retomada e mensagens iguais às do protocolo Tavily. */
+export class SearchBing implements SearchClient {
+  private readonly url: string;
+  private readonly consumed: ProviderUsage = {
+    calls: 0,
+    inputTokens: 0,
+    cachedInputTokens: 0,
+    outputTokens: 0,
+  };
+
+  constructor(
+    baseUrl: string,
+    private readonly timeout = 60,
+    private readonly retries = 3,
+    private readonly backoffMs = 1_500,
+  ) {
+    const base = baseUrl.trim().replace(/\/+$/, "");
+    this.url = /\/search$/i.test(base) ? base : `${base}/search`;
+  }
+
+  async search(query: string): Promise<SearchResult[]> {
+    const params = new URLSearchParams({
+      q: query,
+      format: "rss",
+      count: String(SEARCH_MAX_RESULTS * 2),
+      mkt: "pt-BR",
+    });
+    const target = `${this.url}?${params.toString()}`;
+    let last: SearchError | null = null;
+    for (let attempt = 0; attempt < this.retries; attempt++) {
+      if (attempt > 0 && this.backoffMs > 0) {
+        const { promise, resolve } = Promise.withResolvers<void>();
+        setTimeout(resolve, this.backoffMs * attempt);
+        await promise;
+      }
+      let response: Response;
+      try {
+        response = await fetch(target, {
+          headers: {
+            "User-Agent": "goodbizz/2.0",
+            Accept: "application/rss+xml, application/xml;q=0.9",
+            "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
+          },
+          signal: AbortSignal.timeout(this.timeout * 1000),
+        });
+      } catch (error) {
+        const raw = error instanceof Error ? error.message : String(error);
+        last = new SearchError(
+          "Não foi possível falar com o provedor de busca (rede ou DNS): a busca não chegou lá. " +
+            `Confira SEARCH_API_URL e a conexão e execute o estudo de novo. (detalhe: ${scrub(raw).slice(0, 300)})`,
+        );
+        continue;
+      }
+      if (!response.ok) {
+        const detail = scrub(await response.text().catch(() => "")).slice(0, 300);
+        const failure = new SearchError(statusMessage(response.status, detail, true), response.status);
+        if (!retryable(response.status)) throw failure;
+        last = failure;
+        continue;
+      }
+      let parsed: SearchResult[] | null = null;
+      try {
+        parsed = parseBingRss(await response.text());
+      } catch {
+        parsed = null;
+      }
+      if (parsed === null) {
+        throw new SearchError(
+          "O provedor de busca respondeu fora do protocolo de busca (o corpo não é o RSS do Bing). " +
+            "Confira se SEARCH_API_URL aponta para https://www.bing.com.",
+          response.status,
+        );
+      }
+      this.consumed.calls += 1;
+      return parsed;
+    }
+    throw last ?? new SearchError("O provedor de busca não respondeu.");
+  }
+
+  usage(): ProviderUsage {
+    return { ...this.consumed };
+  }
+}
+
+/** Escolhe o adaptador pela URL: Bing RSS sem chave; o resto fala o protocolo Tavily. */
+export function createSearch(
+  baseUrl: string,
+  key: string,
+  timeout = 60,
+  retries = 3,
+  backoffMs = 1_500,
+): SearchClient {
+  return searchProviderNeedsKey(baseUrl)
+    ? new SearchHttp(baseUrl, key, timeout, retries, backoffMs)
+    : new SearchBing(baseUrl, timeout, retries, backoffMs);
+}
+
+/** Monta o cliente de busca a partir da configuração resolvida (simulado, Bing ou Tavily). */
 export function createSearchClient(cfg: StudyConfig): SearchClient {
   if (cfg.mock || cfg.mockSearch) return new SearchMock();
-  return new SearchHttp(cfg.searchBaseUrl, cfg.searchApiKey, cfg.timeout);
+  return createSearch(cfg.searchBaseUrl, cfg.searchApiKey, cfg.timeout);
 }

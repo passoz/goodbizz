@@ -31,7 +31,7 @@ export interface DeciderClient {
   usage?(): ProviderUsage;
 }
 
-/** Web search provider (Tavily protocol): results carry the extracted page content. */
+/** Web search provider (Bing RSS or Tavily): resultados trazem o texto extraído da página. */
 export interface SearchClient {
   search(query: string): Promise<SearchResult[]>;
   /** Consumo acumulado desde o início do processo (só chamadas: busca não tem tokens). */

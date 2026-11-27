@@ -1002,9 +1002,10 @@ const PROVIDER_KIND_TEXT: Record<ProviderKind, { title: string; description: str
       "Responde as probabilidades que viram índice de ação, tier e natureza da dor. Não escreve prosa.",
   },
   search: {
-    title: "Provedor de busca (Tavily)",
+    title: "Provedor de busca (Bing ou Tavily)",
     description:
-      "Pesquisa a web na fase de pesquisa; cada afirmação cita evidência com trecho literal e URL.",
+      "Pesquisa a web na fase de pesquisa; cada afirmação cita evidência com trecho literal e URL. " +
+      "Use https://www.bing.com (sem chave) ou https://api.tavily.com (com chave).",
   },
 };
 

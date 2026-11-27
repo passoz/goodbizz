@@ -3,6 +3,7 @@
  * or API payload. Mirrors the validation rules of the Python baseline's Config.
  */
 import { loadEnv } from "./env.ts";
+import { searchProviderNeedsKey } from "./providers.ts";
 import { ConfigError, ValidationError } from "../domain/errors.ts";
 import { nicheLengthError, studySubject, titleCase } from "../domain/naming.ts";
 import type { Logger } from "../domain/ports.ts";
@@ -127,7 +128,7 @@ export function resolveStudyConfig(overrides: StudyConfigOverrides): StudyConfig
   if (!cfg.deciderUrl && !cfg.mockDecider) {
     throw new ConfigError("define the decider URL (DECISION_API_URL or --decider-url) or use --mock");
   }
-  if (!cfg.mockSearch && cfg.searchApiKey.trim() === "") {
+  if (!cfg.mockSearch && cfg.searchApiKey.trim() === "" && searchProviderNeedsKey(cfg.searchBaseUrl)) {
     throw new ConfigError("define the search API key (SEARCH_API_KEY or --search-key) or use --mock-search");
   }
   return cfg;

@@ -233,8 +233,8 @@ Opcoes:
   --mock-llm                         simula apenas o LLM (usa o decisor real)
   --mock-decider, --mock-decisor     simula apenas o decisor (usa o LLM real)
   --mock-search                      simula apenas a busca (usa LLM e decisor reais)
-  --search-url <url>                 URL base do provedor de busca (protocolo Tavily)
-  --search-key <chave>               chave da API de busca
+  --search-url <url>                 URL base da busca: https://www.bing.com (RSS, sem chave) ou Tavily
+  --search-key <chave>               chave da API de busca (só o Tavily exige)
   --pdf                              compila um PDF único do estudo
   --concurrency, --paralelo <inteiro>  chamadas concorrentes (padrão: 8)
   --timeout <segundos>               timeout por chamada (padrão: GOODBIZZ_LLM_TIMEOUT, 300)

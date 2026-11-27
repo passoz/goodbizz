@@ -50,7 +50,7 @@ const ProviderProfileInput = z
     name: z.string().trim().min(1, "o nome do provedor é obrigatório").max(60),
     kind: ProviderKindInput,
     url: z.string().trim().min(1, "a URL do provedor é obrigatória").max(500),
-    // A busca nao tem modelo (protocolo Tavily): o campo e opcional e o search cadastra sem ele.
+    // A busca nao tem modelo (Bing RSS ou Tavily): o campo e opcional e o search cadastra sem ele.
     model: z.string().trim().max(200).optional(),
     apiKey: z.string().trim().max(500).optional(),
   })

@@ -73,10 +73,10 @@ bun test             # suite offline
 
 Segredos vivem **apenas** no ambiente. O contrato das chaves esta versionado em `.env.example`.
 
-| `SEARCH_API_URL` | `https://api.tavily.com` | base do provedor de busca (protocolo Tavily `POST /search`) |
-
-| `SEARCH_API_KEY`                           | —                           | chave do provedor de busca (obrigatoria fora do modo mock)                              |
+| Variável | Padrão | Descrição |
 | ------------------------------------------ | --------------------------- | --------------------------------------------------------------------------------------- |
+| `SEARCH_API_URL`                           | `https://www.bing.com`      | base do provedor de busca: Bing RSS (sem chave) ou Tavily (`POST /search`)              |
+| `SEARCH_API_KEY`                           | —                           | chave do provedor de busca; só o Tavily exige, o Bing RSS não                          |
 | `LLM_API_URL`                              | `https://api.openai.com/v1` | base URL compativel com `/chat/completions`                                             |
 | `LLM_API_KEY`                              | —                           | chave do provedor LLM (obrigatoria fora do modo mock)                                   |
 | `LLM_API_MODEL`                            | `gpt-4o-mini`               | modelo do LLM                                                                           |
@@ -162,9 +162,11 @@ ideia (concorrente direto e preço da solução). Cada evidência guarda afirma�
 resultado e URL; trecho que não aparece literalmente no conteúdo é descartado. Brief, ideias, estado
 do decisor e plano recebem as evidências e citam `[E#]`; o plano de cada ideia termina com a seção
 "Fontes". O estudo grava `00-evidencias.md` e a chave `evidencias` no `dados.json`, e a página do
-estudo mostra a contagem com aviso de pesquisa fraca (menos de 5 evidências). O provedor padrão é o
-Tavily (1.000 créditos grátis por mês, sem cartão; 1 busca básica = 1 crédito): cadastre a chave em
-`/settings` ou em `SEARCH_API_KEY`. As buscas entram no cache do estudo e no consumo medido.
+estudo mostra a contagem com aviso de pesquisa fraca (menos de 5 evidências). O padrão é o **Bing
+RSS** (`SEARCH_API_URL=https://www.bing.com`), que não exige chave: o app lê o RSS de
+`/search?q=...&format=rss`. A alternativa é o Tavily (`https://api.tavily.com`, chave
+`tvly-...`, 1.000 créditos grátis por mês): informe a chave em `/settings` ou em `SEARCH_API_KEY`.
+As buscas entram no cache do estudo e no consumo medido.
 
 ---
 
