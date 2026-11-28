@@ -18,6 +18,8 @@ export interface ProviderProbeInput {
   url: string;
   model: string;
   apiKey: string;
+  /** Base de `GET {base}/models` quando o provedor não expõe catálogo na própria URL. */
+  catalogUrl?: string;
 }
 
 export interface ProviderProbeResult {
@@ -181,6 +183,36 @@ async function probeLlm(input: ProviderProbeInput, timeoutMs: number): Promise<P
   };
 }
 
+/** Bases candidatas de catálogo para o decisor: a informada, a URL e a URL sem `/systemone`. */
+function deciderCatalogBases(input: ProviderProbeInput): string[] {
+  const bases = new Set<string>();
+  if (input.catalogUrl !== undefined && baseUrl(input.catalogUrl) !== "") {
+    bases.add(baseUrl(input.catalogUrl));
+  }
+  const raw = baseUrl(input.url);
+  if (raw !== "") bases.add(raw);
+  const normalized = baseUrl(normalizeDeciderUrl(input.url));
+  if (normalized !== "") bases.add(normalized);
+  for (const candidate of [...bases]) {
+    const withoutSystemOne = candidate.replace(/\/systemone$/i, "");
+    if (withoutSystemOne !== candidate) bases.add(withoutSystemOne);
+  }
+  return [...bases].slice(0, 4);
+}
+
+/** Primeiro catálogo que responder com modelos; `null` quando nenhum expõe. */
+async function findModelCatalog(
+  input: ProviderProbeInput,
+  key: string,
+  timeoutMs: number,
+): Promise<string[] | null> {
+  for (const base of deciderCatalogBases(input)) {
+    const ids = await tryModelCatalog(base, key, timeoutMs);
+    if (ids !== null) return ids;
+  }
+  return null;
+}
+
 async function probeDecider(input: ProviderProbeInput, timeoutMs: number): Promise<ProviderProbeResult> {
   const url = normalizeDeciderUrl(input.url);
   const key = input.apiKey.trim();
@@ -238,9 +270,9 @@ async function probeDecider(input: ProviderProbeInput, timeoutMs: number): Promi
       detail: `a resposta não segue o contrato System One: ${scrub(String(error))}`,
     };
   }
-  // Gateway System One costuma expor modelos em `GET {base}/models` (o contrato so tem POST):
-  // tenta o catalogo, e se houver, o "Testar" da tela vira dropdown tambem para o decisor.
-  const catalog = await tryModelCatalog(baseUrl(input.url), key, timeoutMs);
+  // Gateway System One costuma expor modelos em outro caminho (`GET {base}/models`): tenta a
+  // lista informada e as derivadas da URL, e o "Testar" da tela vira dropdown tambem para o decisor.
+  const catalog = await findModelCatalog(input, key, timeoutMs);
   return {
     ok: true,
     status: response.status,

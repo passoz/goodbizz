@@ -83,6 +83,8 @@ const ProviderTestInput = z
     url: z.string().trim().min(1, "a URL do provedor é obrigatória").max(500),
     model: z.string().trim().max(200).optional(),
     apiKey: z.string().trim().max(500).optional(),
+    /** Base onde listar modelos quando o provedor não expõe catálogo na URL principal. */
+    catalogUrl: z.string().trim().max(500).optional(),
   })
   .strict();
 
@@ -251,6 +253,7 @@ export function buildApiApp(deps: ApiDeps): Hono {
       url: input.url,
       model: input.model ?? "",
       apiKey,
+      ...(input.catalogUrl === undefined ? {} : { catalogUrl: input.catalogUrl }),
     });
     return c.json(result);
   });

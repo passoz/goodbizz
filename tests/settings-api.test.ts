@@ -147,6 +147,22 @@ describe("API do catálogo de provedores", () => {
     expect(missingModel.status).toBe(422);
   });
 
+  test("provedor de busca é criado sem modelo", async () => {
+    const response = await jsonRequest("/settings/providers", "POST", {
+      name: "Bing",
+      kind: "search",
+      url: "https://www.bing.com",
+    });
+    expect(response.status).toBe(201);
+    const body = (await response.json()) as {
+      profiles: Array<{ kind: string; model: string; name: string }>;
+      active: { search: string | null };
+    };
+    expect(body.profiles[0]?.kind).toBe("search");
+    expect(body.profiles[0]?.model).toBe("");
+    expect(body.active.search).toBeString();
+  });
+
   test("edita sem chave e mantém a chave anterior", async () => {
     const created = await jsonRequest("/settings/providers", "POST", {
       name: "Um",

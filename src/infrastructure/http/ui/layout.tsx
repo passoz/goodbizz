@@ -73,6 +73,8 @@ export const GLASS_CSS = `
 }
 
 * { box-sizing: border-box; }
+/* O atributo hidden vence as classes que definem display (field, btn, select). */
+[hidden] { display: none !important; }
 
 html { color-scheme: dark; }
 html[data-theme="light"] { color-scheme: light; }
@@ -373,7 +375,8 @@ body::after {
 a { color: inherit; text-decoration: none; }
 :focus-visible { outline: 3px solid var(--r-lime); outline-offset: 3px; border-radius: 8px; }
 
-.shell { max-width: 1180px; margin: 0 auto; padding: 26px 22px 76px; }
+/* Container fluido: usa a largura da janela até 1600px (acima disso o texto fica longo demais). */
+.shell { width: 100%; max-width: 1600px; margin: 0 auto; padding: 26px clamp(16px, 2.2vw, 34px) 76px; }
 
 /* ── Cabecalho ─────────────────────────────────────────────────────────── */
 .topbar {
@@ -696,7 +699,7 @@ html[data-theme="light"] .rename-inline {
 /* ── Hints e selos ─────────────────────────────────────────────────────── */
 .hint { font-size: var(--fs-micro); color: var(--muted); font-weight: 480; letter-spacing: 0.012em; }
 .badge {
-  display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px;
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; white-space: nowrap;
   border-radius: var(--r-pill); font-size: var(--fs-micro); font-weight: 660; letter-spacing: 0.012em;
   color: var(--paper); background: oklch(1 0 0 / 0.1);
   box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.12);
@@ -783,8 +786,8 @@ html[data-theme="light"] .rename-inline {
 
 /* ── Tabelas ───────────────────────────────────────────────────────────── */
 .table-wrap { overflow: visible; border-radius: var(--r-panel); }
-@media (max-width: 900px) {
-  /* Abaixo disso a tabela rola na horizontal; o tooltip fica com o title nativo do navegador. */
+@media (max-width: 1180px) {
+  /* Abaixo da largura mínima da tabela o wrap rola na horizontal. */
   .table-wrap { overflow-x: auto; }
 }
 table { width: 100%; border-collapse: collapse; font-size: var(--fs-small); }
@@ -795,6 +798,11 @@ tbody tr:last-child td { border-bottom: none; }
 td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
 td.num { color: #fff; white-space: nowrap; }
 table.rank td:first-child { color: var(--muted); font-family: var(--mono); }
+/* 12 colunas: largura em % acompanha o container fluido; o min-width mantém a leitura e
+   abaixo de 1180 o wrap rola na horizontal, em vez de vazar para fora do painel. */
+table.rank { table-layout: fixed; width: 100%; min-width: 1071px; }
+table.rank th, table.rank td { padding: 12px 10px; overflow-wrap: anywhere; }
+table.rank td.num, table.rank th.num { white-space: normal; }
 .rank-bar { display: block; height: 5px; border-radius: var(--r-pill); background: var(--tone, rgb(255 255 255 / .3)); margin-top: 6px; }
 
 /* ── Grupos de dor ─────────────────────────────────────────────────────── */
@@ -869,13 +877,13 @@ table.rank td:first-child { color: var(--muted); font-family: var(--mono); }
     0 24px 48px -22px rgb(0 0 0 / 0.95);
   border: 0;
   font: 400 var(--fs-small)/1.55 var(--sans); letter-spacing: 0; text-align: left; white-space: normal;
-  opacity: 0; visibility: hidden; transform: translateY(4px); pointer-events: none;
+  opacity: 0; visibility: hidden; transform: translateY(4px); pointer-events: none; display: none;
 }
 .tip-end { left: auto; right: 0; }
 .tip-end::after { left: auto; right: 18px; }
 .has-tip:hover > .tip,
 .has-tip:focus > .tip,
-.has-tip:focus-visible > .tip { opacity: 1; visibility: visible; transform: none; }
+.has-tip:focus-visible > .tip { display: block; opacity: 1; visibility: visible; transform: none; }
 .tip::after {
   content: ""; position: absolute; left: 18px; top: 100%;
   border: 7px solid transparent; border-top-color: rgb(18 14 13 / .97);
@@ -902,7 +910,10 @@ table.rank td:first-child { color: var(--muted); font-family: var(--mono); }
 @media (max-width: 760px) {
   :root { --fs-h1: 34px; --fs-h2: 26px; }
   .panel { padding: 20px 18px; }
-  .topbar { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .topbar { flex-direction: column; align-items: flex-start; gap: 12px; padding: 12px 14px; }
+  .topbar-actions { width: 100%; }
+  .nav { flex-wrap: wrap; width: 100%; }
+  .nav a { padding: 8px 12px; }
   .study-card { flex-direction: column; align-items: flex-start; gap: 18px; }
   .study-side { align-items: flex-start; }
   .page-head { flex-direction: column; align-items: flex-start; }

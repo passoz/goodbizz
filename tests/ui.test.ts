@@ -623,6 +623,10 @@ describe("configuracao dos provedores", () => {
     expect(body).toContain("<legend>Provedor de decisão (System One)</legend>");
     expect(body).toContain("<legend>Provedor de busca (Bing ou Tavily)</legend>");
     expect(body).toContain('action="/ui/settings/active"');
+    expect(body).toContain('id="provider-preset"');
+    for (const preset of ["OpenCode Go", "OpenAI", "Anthropic", "OpenRouter", "TypeSafe (Jev)", "Bing (sem chave)", "Tavily"]) {
+      expect(body).toContain(preset);
+    }
 
     // Três listas; cada uma abre com o padrao do ambiente e fecha com "adicionar provedor".
     const selects = body.match(/<select[^>]*name="id"[^>]*>[\s\S]*?<\/select>/g) ?? [];
@@ -727,7 +731,7 @@ describe("configuracao dos provedores", () => {
     // do Testar/Salvar sem kind e a API respondia 422 no caminho de edicao.
     const profile = body.slice(
       body.indexOf("function selectedProfile(picker)"),
-      body.indexOf("Array.prototype.slice.call"),
+      body.indexOf('document.querySelectorAll("[data-provider-picker]")'),
     );
     expect(profile).toContain('kind: picker.getAttribute("data-kind")');
     expect(profile).not.toContain("select.getAttribute");
@@ -751,8 +755,8 @@ describe("configuracao dos provedores", () => {
     expect(body).toContain("Array.isArray(body.models)");
     expect(body).toContain("showModels(body.models)");
     expect(body).toContain("__custom");
-    // O que for escolhido no dropdown entra no corpo do salvar/testar.
-    expect(body).toContain("model: currentModel()");
+    // O que for escolhido no dropdown entra no corpo do salvar/testar; a busca nao tem modelo.
+    expect(body).toContain('model: field("kind").value === "search" ? "" : currentModel()');
   });
 
   test("o testar do provedor salvo manda o id para a sonda usar a chave guardada", async () => {

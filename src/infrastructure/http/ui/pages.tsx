@@ -17,6 +17,7 @@ import { folderName } from "../../../application/reports.ts";
 import { rankIdeas } from "../../../application/tournament.ts";
 import { MAX_DESCRIPTION_LENGTH, MAX_NICHE_LENGTH } from "../../../domain/naming.ts";
 import type { ProviderDefaultView, ProviderProfileView } from "../../../config/providers.ts";
+import { PROVIDER_PRESETS } from "../../../config/provider-presets.ts";
 import type {
   ProviderKind,
   StudyIdea,
@@ -1035,6 +1036,10 @@ const SETTINGS_SCRIPT = `
 
   function field(name) { return form.querySelector('[data-field="' + name + '"]'); }
   var modelInput = field("model");
+  var presetSelect = field("preset");
+  var presetField = document.getElementById("provider-preset-field");
+  var catalogInput = field("catalog");
+  var modelField = document.getElementById("provider-model-field");
   function token() { return form.querySelector('input[name="_csrf"]').value; }
   function setStatus(text, tone) {
     status.textContent = text || "";
@@ -1105,11 +1110,37 @@ const SETTINGS_SCRIPT = `
     field("name").value = data.name || "";
     field("url").value = data.url || "";
     field("model").value = data.model || "";
+    field("catalog").value = "";
     field("key").placeholder = data.hasKey ? "•••• (deixe vazio para manter)" : "";
+    if (presetField) presetField.hidden = mode === "edit";
+    if (presetSelect) {
+      Array.prototype.slice.call(presetSelect.options).forEach(function (option) {
+        var kind = option.getAttribute("data-preset-kind");
+        option.hidden = kind !== null && kind !== data.kind;
+        option.disabled = kind !== null && kind !== data.kind;
+      });
+      presetSelect.value = "";
+    }
+    if (modelField) modelField.hidden = data.kind === "search";
     title.textContent = mode === "edit" ? "Editar provedor" : "Adicionar provedor";
     modal.dataset.mode = mode;
     modal.dataset.picker = data.kind;
     modal.showModal();
+  }
+
+  if (presetSelect) {
+    presetSelect.addEventListener("change", function () {
+      var option = presetSelect.options[presetSelect.selectedIndex];
+      if (!option || option.value === "") return;
+      field("name").value = option.getAttribute("data-name") || "";
+      field("url").value = option.getAttribute("data-url") || "";
+      field("model").value = option.getAttribute("data-model") || "";
+      if (catalogInput) catalogInput.value = option.getAttribute("data-catalog") || "";
+      if (modelField) modelField.hidden = field("kind").value === "search";
+      hideModels();
+      setError("");
+      setStatus("configuração pronta: informe a chave e clique Testar");
+    });
   }
 
   function payload() {
@@ -1117,7 +1148,7 @@ const SETTINGS_SCRIPT = `
       kind: field("kind").value,
       name: field("name").value.trim(),
       url: field("url").value.trim(),
-      model: currentModel(),
+      model: field("kind").value === "search" ? "" : currentModel(),
       apiKey: field("key").value.trim(),
     };
   }
@@ -1130,6 +1161,8 @@ const SETTINGS_SCRIPT = `
   function probePayload() {
     var input = payload();
     var body = { kind: input.kind, url: input.url, model: input.model, apiKey: input.apiKey };
+    var catalog = catalogInput ? catalogInput.value.trim() : "";
+    if (catalog !== "") body.catalogUrl = catalog;
     if (modal.dataset.mode === "edit") body.id = field("id").value;
     return body;
   }
@@ -1255,8 +1288,9 @@ const SETTINGS_SCRIPT = `
   save.addEventListener("click", function () {
     var input = payload();
     var editing = modal.dataset.mode === "edit";
-    if (input.name === "" || input.url === "" || input.model === "") {
-      setError("nome, URL e modelo são obrigatórios");
+    var needsModel = input.kind !== "search";
+    if (input.name === "" || input.url === "" || (needsModel && input.model === "")) {
+      setError(needsModel ? "nome, URL e modelo são obrigatórios" : "nome e URL são obrigatórios");
       return;
     }
     setError("");
@@ -1388,11 +1422,31 @@ export const SettingsPage: FC<{ view: SettingsView; token: string }> = (props) =
         <input type="hidden" name="_csrf" value={props.token} />
         <input type="hidden" data-field="id" />
         <input type="hidden" data-field="kind" />
+        <input type="hidden" data-field="catalog" />
         <div class="modal-head">
           <h3 id="provider-modal-title">Adicionar provedor</h3>
         </div>
         <div class="modal-body">
           <div class="form-grid">
+            <div class="field" id="provider-preset-field">
+              <label for="provider-preset">Configuração pronta</label>
+              <select id="provider-preset" data-field="preset">
+                <option value="">personalizada</option>
+                {PROVIDER_PRESETS.map((preset) => (
+                  <option
+                    value={preset.id}
+                    data-preset-kind={preset.kind}
+                    data-name={preset.name}
+                    data-url={preset.url}
+                    data-model={preset.model}
+                    data-catalog={preset.catalogUrl ?? ""}
+                  >
+                    {preset.name}
+                  </option>
+                ))}
+              </select>
+              <span class="hint">preenche nome, URL e modelo; falta só a chave</span>
+            </div>
             <div class="field">
               <label for="provider-name">Nome</label>
               <input id="provider-name" data-field="name" maxlength="60" spellcheck={false} />
@@ -1405,7 +1459,7 @@ export const SettingsPage: FC<{ view: SettingsView; token: string }> = (props) =
               <label for="provider-key">Chave da API</label>
               <input id="provider-key" data-field="key" type="password" autocomplete="off" />
             </div>
-            <div class="field">
+            <div class="field" id="provider-model-field">
               <label for="provider-model">Modelo</label>
               <input id="provider-model" data-field="model" spellcheck={false} />
               {/* Preenchido pelo "Testar": quando o provedor expoe modelos, ele vira a escolha. */}
@@ -1767,6 +1821,20 @@ export const StudyDetail: FC<{ study: StudyRecord; artifacts: string[]; token: s
         ) : (
           <div class="table-wrap">
             <table id="ranking" class="rank">
+              <colgroup>
+                <col style="width:40px" />
+                <col style="width:16%" />
+                <col style="width:12%" />
+                <col style="width:8%" />
+                <col style="width:7%" />
+                <col style="width:5%" />
+                <col style="width:7%" />
+                <col style="width:7%" />
+                <col style="width:8%" />
+                <col style="width:7%" />
+                <col style="width:10%" />
+                <col style="width:88px" />
+              </colgroup>
               <thead>
                 <tr>
                   <th>#</th>
